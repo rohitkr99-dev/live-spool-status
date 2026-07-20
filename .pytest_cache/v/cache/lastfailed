@@ -1,0 +1,5 @@
+{
+  "tests/test_cleaner.py::test_trim_text_columns_does_not_stringify_none": true,
+  "tests/test_summary.py::test_stage_ageing_summary_excludes_negative_gaps": true,
+  "tests/test_summary.py::test_stage_ageing_summary_excludes_negative_fitup_gap": true
+}
