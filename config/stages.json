@@ -1,0 +1,46 @@
+{
+"stages": [
+{
+"sequence": 1,
+"name": "Fit-Up",
+"date_field": "First Fit-Up",
+"display_name": "Fit-Up"
+},
+{
+"sequence": 2,
+"name": "Welding",
+"date_field": "First Welding",
+"display_name": "Welding"
+},
+{
+"sequence": 3,
+"name": "PDQC",
+"date_field": "PDQC",
+"display_name": "PDQC"
+},
+{
+"sequence": 4,
+"name": "RFP",
+"date_field": "RFP",
+"display_name": "Ready for Painting"
+},
+{
+"sequence": 5,
+"name": "PDI",
+"date_field": "PDI",
+"display_name": "Under Painting"
+},
+{
+"sequence": 6,
+"name": "Packing",
+"date_field": "Packing",
+"display_name": "Packing"
+},
+{
+"sequence": 7,
+"name": "Dispatch",
+"date_field": "Dispatch",
+"display_name": "Dispatch"
+}
+]
+}

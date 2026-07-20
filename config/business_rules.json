@@ -1,0 +1,62 @@
+{
+"planned_spool": {
+"age_start_field": "Planned Start"
+},
+
+"unplanned_spool": {
+"first_activity_fields": [
+"First Fit-Up",
+"First Welding"
+]
+},
+
+"prod_order_release": {
+"field": "Prod Order Release",
+"not_released_label": "Production Order Not Released"
+},
+
+"line_history_override": {
+"enabled": true,
+"joint_no_field": "Joint No",
+"fitup_date_field": "Weld FitUp Date",
+"weld_run_date_field": "Welding FRun Date",
+"comment": "When a spool's Composite Key is found in the uploaded Line History Sheet with at least one non-blank Joint No. row: if any of that spool's Weld FitUp Date (AG) values is blank, stage is Fit-Up; else if any Welding FRun Date (AL) value is blank, stage is Welding; else stage is PDQC. The last entry in override_stage_order (PDQC) is where this override stops - PDQC/RFP/PDI/Packing/Dispatch are still decided by the normal date-field-based logic below. If the Composite Key isn't found in the sheet, or has no non-blank Joint No. rows, the existing date-field-based logic is used unchanged for that spool.",
+"override_stage_order": ["Fit-Up", "Welding", "PDQC"]
+},
+
+"completed": {
+"completion_field": "Packing",
+"current_stage_label": "Completed",
+"stage_age_when_completed": 0
+},
+
+"ageing": {
+"negative_age_value": 0,
+"calculate_stage_age": true,
+"calculate_total_age": true,
+"total_age_anchor_fields": ["Planned Start", "First Fit-Up", "First Welding"],
+"total_age_anchor_fallback_fields": ["PDQC", "Prod Order Release"]
+},
+
+"current_stage": {
+"rule": "latest_reached_stage"
+},
+
+"status_messages": {
+"Not Released": "Production Order Not Released",
+"Fit-Up": "Fabrication Yet to Start",
+"Welding": "Waiting for Welding",
+"PDQC": "Waiting for PDQC",
+"RFP": "Waiting for RFP",
+"PDI": "Waiting for Under Painting",
+"Packing": "Waiting for Packing",
+"Dispatch": "Waiting for Dispatch",
+"Completed": "Spool Dispatched"
+},
+
+"dashboard": {
+"show_completed": true,
+"show_planned": true,
+"show_unplanned": true
+}
+}

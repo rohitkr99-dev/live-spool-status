@@ -1,0 +1,49 @@
+{
+"fabrication": {
+"required_columns": [
+"Project Code",
+"Drawing No",
+"Spool No",
+"Material",
+"Total Joints",
+"PDQC",
+"RFP",
+"PDI",
+"Packing",
+"Dispatch"
+]
+},
+
+"planning": {
+"master_planning_required_columns": [
+"Project Code",
+"Drawing No",
+"Spool No",
+"Week",
+"Group",
+"Planned Start"
+],
+
+"fitup_required_columns": [
+"Project Code",
+"Drawing No",
+"Spool No",
+"Activity Date"
+],
+
+"welding_required_columns": [
+"Project Code",
+"Drawing No",
+"Spool No",
+"Activity Date"
+]
+
+},
+
+"composite_key": [
+"Project Code",
+"Drawing No",
+"Spool No"
+]
+}
+

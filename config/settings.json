@@ -1,0 +1,72 @@
+{
+"application": {
+"name": "Live Spool Status & Ageing System",
+"version": "1.0.0",
+"environment": "development"
+},
+
+"paths": {
+"upload_folder": "data/upload",
+"archive_folder": "data/archive",
+"processed_folder": "processed",
+"logs_folder": "logs",
+"website_data_folder": "website/data"
+},
+
+"input_files": {
+"fabrication": {
+"enabled": true,
+"file_pattern": "*DPR*.xlsb",
+"sheet_name": "Detailed Sheet",
+"header_row": 0
+},
+"planning": {
+"enabled": true,
+"file_pattern": "*Weekly*.xlsb",
+"master_sheet": "Master Planning Sheet",
+"master_sheet_header_row": 1,
+"fitup_sheet": "Fit-Up DB",
+"fitup_sheet_header_row": 0,
+"welding_sheet": "Welding DB",
+"welding_sheet_header_row": 0,
+"activity_date_field": "Activity Date"
+},
+"line_history": {
+"enabled": true,
+"file_pattern": "*Line*History*.xlsb",
+"sheet_name": "Sheet2",
+"header_row": 0
+}
+},
+
+"output_files": {
+"master_spools": "master_spools.json",
+"dashboard_summary": "dashboard_summary.json",
+"project_summary": "project_summary.json",
+"weekly_summary": "weekly_summary.json",
+"group_summary": "group_summary.json",
+"stage_ageing_summary": "stage_ageing_summary.json",
+"fitup_summary": "fitup_summary.json",
+"welding_summary": "welding_summary.json",
+"activity_metrics": "activity_metrics.json",
+"exceptions": "exceptions.json",
+"validation_report": "validation_report.json",
+"dashboard_bundle": "dashboard_data.json"
+},
+
+"refresh": {
+"auto_refresh": true,
+"watch_folder": true,
+"refresh_interval_seconds": 60
+},
+
+"publishing": {
+"publish_to_website": true,
+"comment": "When true, every pipeline run also copies dashboard_data.json into paths.website_data_folder (website/data/dashboard_data.json by default) - that's the file the hosted website auto-loads for every viewer. Set to false if you only want the local upload-a-file workflow and don't want the published copy touched."
+},
+
+"logging": {
+"level": "INFO",
+"log_file": "logs/application.log"
+}
+}
