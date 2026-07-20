@@ -1,0 +1,59 @@
+# ============================================
+
+# Live Spool Status & Ageing System
+
+# Python 3.12
+
+# ============================================
+
+# Core Data Processing
+
+pandas==2.3.1
+numpy==2.3.1
+
+# Excel Support
+
+openpyxl==3.1.5
+pyxlsb==1.0.10
+xlsxwriter==3.2.5
+
+# File Monitoring
+
+watchdog==6.0.0
+
+# Template Engine
+
+Jinja2==3.1.6
+
+# Date Utilities
+
+python-dateutil==2.9.0.post0
+
+# JSON Validation
+
+jsonschema==4.25.0
+
+# Logging (structured logging)
+
+colorlog==6.9.0
+
+# Progress Bars (optional for large datasets)
+
+tqdm==4.67.1
+
+# Testing
+
+pytest==8.4.1
+pytest-cov==6.2.1
+
+# Code Quality
+
+black==25.1.0
+isort==6.0.1
+flake8==7.3.0
+mypy==1.17.0
+
+# Type Stubs
+
+pandas-stubs==2.3.0.250703
+types-openpyxl==3.1.5.20250602
