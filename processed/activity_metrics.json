@@ -1,0 +1,2592 @@
+[
+  {
+    "date": "2025-07-29",
+    "week_number": 18,
+    "week_label": "Week 18",
+    "week_start": "2025-07-27",
+    "month_label": "Jul 2025",
+    "fitup_inch_dia": 1.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-20",
+    "week_number": 21,
+    "week_label": "Week 21",
+    "week_start": "2025-08-17",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 8.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-21",
+    "week_number": 21,
+    "week_label": "Week 21",
+    "week_start": "2025-08-17",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 142.0,
+    "welding_inch_dia": 36.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-22",
+    "week_number": 21,
+    "week_label": "Week 21",
+    "week_start": "2025-08-17",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 298.0,
+    "welding_inch_dia": 273.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-25",
+    "week_number": 22,
+    "week_label": "Week 22",
+    "week_start": "2025-08-24",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 518.0,
+    "welding_inch_dia": 331.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-26",
+    "week_number": 22,
+    "week_label": "Week 22",
+    "week_start": "2025-08-24",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 426.0,
+    "welding_inch_dia": 505.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-27",
+    "week_number": 22,
+    "week_label": "Week 22",
+    "week_start": "2025-08-24",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 438.5,
+    "welding_inch_dia": 464.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-28",
+    "week_number": 22,
+    "week_label": "Week 22",
+    "week_start": "2025-08-24",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 362.5,
+    "welding_inch_dia": 483.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-08-29",
+    "week_number": 22,
+    "week_label": "Week 22",
+    "week_start": "2025-08-24",
+    "month_label": "Aug 2025",
+    "fitup_inch_dia": 374.5,
+    "welding_inch_dia": 307.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-01",
+    "week_number": 23,
+    "week_label": "Week 23",
+    "week_start": "2025-08-31",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 38.47,
+    "welding_inch_dia": 132.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-02",
+    "week_number": 23,
+    "week_label": "Week 23",
+    "week_start": "2025-08-31",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 125.0,
+    "welding_inch_dia": 59.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-03",
+    "week_number": 23,
+    "week_label": "Week 23",
+    "week_start": "2025-08-31",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 156.0,
+    "welding_inch_dia": 170.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-04",
+    "week_number": 23,
+    "week_label": "Week 23",
+    "week_start": "2025-08-31",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 88.75,
+    "welding_inch_dia": 110.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-05",
+    "week_number": 23,
+    "week_label": "Week 23",
+    "week_start": "2025-08-31",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 84.0,
+    "welding_inch_dia": 89.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-08",
+    "week_number": 24,
+    "week_label": "Week 24",
+    "week_start": "2025-09-07",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 45.0,
+    "welding_inch_dia": 71.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-09",
+    "week_number": 24,
+    "week_label": "Week 24",
+    "week_start": "2025-09-07",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 203.0,
+    "welding_inch_dia": 119.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-10",
+    "week_number": 24,
+    "week_label": "Week 24",
+    "week_start": "2025-09-07",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 190.5,
+    "welding_inch_dia": 233.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-11",
+    "week_number": 24,
+    "week_label": "Week 24",
+    "week_start": "2025-09-07",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 90.0,
+    "welding_inch_dia": 107.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-12",
+    "week_number": 24,
+    "week_label": "Week 24",
+    "week_start": "2025-09-07",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 100.0,
+    "welding_inch_dia": 170.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-15",
+    "week_number": 25,
+    "week_label": "Week 25",
+    "week_start": "2025-09-14",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 586.0,
+    "welding_inch_dia": 373.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-16",
+    "week_number": 25,
+    "week_label": "Week 25",
+    "week_start": "2025-09-14",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 359.5,
+    "welding_inch_dia": 429.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-17",
+    "week_number": 25,
+    "week_label": "Week 25",
+    "week_start": "2025-09-14",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 227.0,
+    "welding_inch_dia": 429.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-18",
+    "week_number": 25,
+    "week_label": "Week 25",
+    "week_start": "2025-09-14",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 219.5,
+    "welding_inch_dia": 189.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-19",
+    "week_number": 25,
+    "week_label": "Week 25",
+    "week_start": "2025-09-14",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 336.0,
+    "welding_inch_dia": 200.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-22",
+    "week_number": 26,
+    "week_label": "Week 26",
+    "week_start": "2025-09-21",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 290.0,
+    "welding_inch_dia": 465.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-23",
+    "week_number": 26,
+    "week_label": "Week 26",
+    "week_start": "2025-09-21",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 303.5,
+    "welding_inch_dia": 251.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-24",
+    "week_number": 26,
+    "week_label": "Week 26",
+    "week_start": "2025-09-21",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 281.0,
+    "welding_inch_dia": 241.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-25",
+    "week_number": 26,
+    "week_label": "Week 26",
+    "week_start": "2025-09-21",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 214.0,
+    "welding_inch_dia": 254.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-26",
+    "week_number": 26,
+    "week_label": "Week 26",
+    "week_start": "2025-09-21",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 144.0,
+    "welding_inch_dia": 168.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-29",
+    "week_number": 27,
+    "week_label": "Week 27",
+    "week_start": "2025-09-28",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 432.36,
+    "welding_inch_dia": 272.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-09-30",
+    "week_number": 27,
+    "week_label": "Week 27",
+    "week_start": "2025-09-28",
+    "month_label": "Sep 2025",
+    "fitup_inch_dia": 901.0,
+    "welding_inch_dia": 625.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-01",
+    "week_number": 27,
+    "week_label": "Week 27",
+    "week_start": "2025-09-28",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 315.0,
+    "welding_inch_dia": 335.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-02",
+    "week_number": 27,
+    "week_label": "Week 27",
+    "week_start": "2025-09-28",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 230.0,
+    "welding_inch_dia": 401.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-03",
+    "week_number": 27,
+    "week_label": "Week 27",
+    "week_start": "2025-09-28",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 280.86,
+    "welding_inch_dia": 318.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-06",
+    "week_number": 28,
+    "week_label": "Week 28",
+    "week_start": "2025-10-05",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 188.75,
+    "welding_inch_dia": 240.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-07",
+    "week_number": 28,
+    "week_label": "Week 28",
+    "week_start": "2025-10-05",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 201.25,
+    "welding_inch_dia": 224.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-08",
+    "week_number": 28,
+    "week_label": "Week 28",
+    "week_start": "2025-10-05",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 114.5,
+    "welding_inch_dia": 131.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-09",
+    "week_number": 28,
+    "week_label": "Week 28",
+    "week_start": "2025-10-05",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 160.0,
+    "welding_inch_dia": 145.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-10",
+    "week_number": 28,
+    "week_label": "Week 28",
+    "week_start": "2025-10-05",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 97.5,
+    "welding_inch_dia": 220.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-14",
+    "week_number": 29,
+    "week_label": "Week 29",
+    "week_start": "2025-10-12",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 51.5,
+    "welding_inch_dia": 55.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-15",
+    "week_number": 29,
+    "week_label": "Week 29",
+    "week_start": "2025-10-12",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 216.0,
+    "welding_inch_dia": 140.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-16",
+    "week_number": 29,
+    "week_label": "Week 29",
+    "week_start": "2025-10-12",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 74.0,
+    "welding_inch_dia": 247.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-17",
+    "week_number": 29,
+    "week_label": "Week 29",
+    "week_start": "2025-10-12",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 629.0,
+    "welding_inch_dia": 172.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-20",
+    "week_number": 30,
+    "week_label": "Week 30",
+    "week_start": "2025-10-19",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 230.5,
+    "welding_inch_dia": 301.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-21",
+    "week_number": 30,
+    "week_label": "Week 30",
+    "week_start": "2025-10-19",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 348.0,
+    "welding_inch_dia": 389.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-22",
+    "week_number": 30,
+    "week_label": "Week 30",
+    "week_start": "2025-10-19",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 600.0,
+    "welding_inch_dia": 445.0,
+    "painting_surface_area_out": 35.58
+  },
+  {
+    "date": "2025-10-24",
+    "week_number": 30,
+    "week_label": "Week 30",
+    "week_start": "2025-10-19",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 791.0,
+    "welding_inch_dia": 537.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-27",
+    "week_number": 31,
+    "week_label": "Week 31",
+    "week_start": "2025-10-26",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 313.0,
+    "welding_inch_dia": 558.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-28",
+    "week_number": 31,
+    "week_label": "Week 31",
+    "week_start": "2025-10-26",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 449.5,
+    "welding_inch_dia": 668.0,
+    "painting_surface_area_out": 41.71
+  },
+  {
+    "date": "2025-10-29",
+    "week_number": 31,
+    "week_label": "Week 31",
+    "week_start": "2025-10-26",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 351.36,
+    "welding_inch_dia": 622.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-10-30",
+    "week_number": 31,
+    "week_label": "Week 31",
+    "week_start": "2025-10-26",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 239.5,
+    "welding_inch_dia": 379.0,
+    "painting_surface_area_out": 7.36
+  },
+  {
+    "date": "2025-10-31",
+    "week_number": 31,
+    "week_label": "Week 31",
+    "week_start": "2025-10-26",
+    "month_label": "Oct 2025",
+    "fitup_inch_dia": 179.5,
+    "welding_inch_dia": 337.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-03",
+    "week_number": 32,
+    "week_label": "Week 32",
+    "week_start": "2025-11-02",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 107.5,
+    "welding_inch_dia": 164.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-04",
+    "week_number": 32,
+    "week_label": "Week 32",
+    "week_start": "2025-11-02",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 97.5,
+    "welding_inch_dia": 95.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-05",
+    "week_number": 32,
+    "week_label": "Week 32",
+    "week_start": "2025-11-02",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 180.0,
+    "welding_inch_dia": 147.0,
+    "painting_surface_area_out": 21.17
+  },
+  {
+    "date": "2025-11-06",
+    "week_number": 32,
+    "week_label": "Week 32",
+    "week_start": "2025-11-02",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 135.5,
+    "welding_inch_dia": 237.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-07",
+    "week_number": 32,
+    "week_label": "Week 32",
+    "week_start": "2025-11-02",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 247.0,
+    "welding_inch_dia": 231.0,
+    "painting_surface_area_out": 10.64
+  },
+  {
+    "date": "2025-11-10",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 542.0,
+    "welding_inch_dia": 359.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-11",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 579.0,
+    "welding_inch_dia": 640.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-12",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 655.72,
+    "welding_inch_dia": 586.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-13",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 371.5,
+    "welding_inch_dia": 375.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-14",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 298.0,
+    "welding_inch_dia": 627.0,
+    "painting_surface_area_out": 101.46
+  },
+  {
+    "date": "2025-11-15",
+    "week_number": 33,
+    "week_label": "Week 33",
+    "week_start": "2025-11-09",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 141.0,
+    "welding_inch_dia": 1.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-17",
+    "week_number": 34,
+    "week_label": "Week 34",
+    "week_start": "2025-11-16",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 315.5,
+    "welding_inch_dia": 427.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-18",
+    "week_number": 34,
+    "week_label": "Week 34",
+    "week_start": "2025-11-16",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 309.0,
+    "welding_inch_dia": 338.5,
+    "painting_surface_area_out": 30.66
+  },
+  {
+    "date": "2025-11-19",
+    "week_number": 34,
+    "week_label": "Week 34",
+    "week_start": "2025-11-16",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 241.5,
+    "welding_inch_dia": 349.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-20",
+    "week_number": 34,
+    "week_label": "Week 34",
+    "week_start": "2025-11-16",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 298.0,
+    "welding_inch_dia": 328.5,
+    "painting_surface_area_out": 62.29
+  },
+  {
+    "date": "2025-11-21",
+    "week_number": 34,
+    "week_label": "Week 34",
+    "week_start": "2025-11-16",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 83.25,
+    "welding_inch_dia": 194.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-24",
+    "week_number": 35,
+    "week_label": "Week 35",
+    "week_start": "2025-11-23",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 351.0,
+    "welding_inch_dia": 219.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-25",
+    "week_number": 35,
+    "week_label": "Week 35",
+    "week_start": "2025-11-23",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 173.0,
+    "welding_inch_dia": 276.0,
+    "painting_surface_area_out": 16.87
+  },
+  {
+    "date": "2025-11-26",
+    "week_number": 35,
+    "week_label": "Week 35",
+    "week_start": "2025-11-23",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 230.75,
+    "welding_inch_dia": 195.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-11-27",
+    "week_number": 35,
+    "week_label": "Week 35",
+    "week_start": "2025-11-23",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 188.0,
+    "welding_inch_dia": 307.0,
+    "painting_surface_area_out": 101.59
+  },
+  {
+    "date": "2025-11-28",
+    "week_number": 35,
+    "week_label": "Week 35",
+    "week_start": "2025-11-23",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 32.25,
+    "welding_inch_dia": 98.75,
+    "painting_surface_area_out": 80.34
+  },
+  {
+    "date": "2025-11-30",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Nov 2025",
+    "fitup_inch_dia": 30.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-01",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 37.0,
+    "welding_inch_dia": 65.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-02",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 90.75,
+    "welding_inch_dia": 70.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-03",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 48.25,
+    "welding_inch_dia": 60.0,
+    "painting_surface_area_out": 9.58
+  },
+  {
+    "date": "2025-12-04",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 113.5,
+    "welding_inch_dia": 2.75,
+    "painting_surface_area_out": 25.77
+  },
+  {
+    "date": "2025-12-05",
+    "week_number": 36,
+    "week_label": "Week 36",
+    "week_start": "2025-11-30",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 24.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-08",
+    "week_number": 37,
+    "week_label": "Week 37",
+    "week_start": "2025-12-07",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 220.36,
+    "welding_inch_dia": 115.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-09",
+    "week_number": 37,
+    "week_label": "Week 37",
+    "week_start": "2025-12-07",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 5.0,
+    "welding_inch_dia": 36.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-10",
+    "week_number": 37,
+    "week_label": "Week 37",
+    "week_start": "2025-12-07",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 56.5,
+    "welding_inch_dia": 39.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-11",
+    "week_number": 37,
+    "week_label": "Week 37",
+    "week_start": "2025-12-07",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 24.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-12",
+    "week_number": 37,
+    "week_label": "Week 37",
+    "week_start": "2025-12-07",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 129.0,
+    "welding_inch_dia": 16.0,
+    "painting_surface_area_out": 110.42
+  },
+  {
+    "date": "2025-12-15",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 135.36,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-16",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 9.0,
+    "welding_inch_dia": 169.0,
+    "painting_surface_area_out": 33.32
+  },
+  {
+    "date": "2025-12-17",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 13.0,
+    "welding_inch_dia": 154.25,
+    "painting_surface_area_out": 130.71
+  },
+  {
+    "date": "2025-12-18",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 8.0,
+    "welding_inch_dia": 50.0,
+    "painting_surface_area_out": 10.13
+  },
+  {
+    "date": "2025-12-19",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 34.5,
+    "welding_inch_dia": 102.0,
+    "painting_surface_area_out": 95.59
+  },
+  {
+    "date": "2025-12-20",
+    "week_number": 38,
+    "week_label": "Week 38",
+    "week_start": "2025-12-14",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 48.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-22",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 443.5,
+    "welding_inch_dia": 76.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-23",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 321.98,
+    "welding_inch_dia": 375.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-24",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 331.17,
+    "welding_inch_dia": 329.0,
+    "painting_surface_area_out": 70.0
+  },
+  {
+    "date": "2025-12-25",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 250.0,
+    "welding_inch_dia": 283.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-26",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 232.5,
+    "welding_inch_dia": 288.75,
+    "painting_surface_area_out": 44.17
+  },
+  {
+    "date": "2025-12-27",
+    "week_number": 39,
+    "week_label": "Week 39",
+    "week_start": "2025-12-21",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 61.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-29",
+    "week_number": 40,
+    "week_label": "Week 40",
+    "week_start": "2025-12-28",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 132.0,
+    "welding_inch_dia": 257.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2025-12-30",
+    "week_number": 40,
+    "week_label": "Week 40",
+    "week_start": "2025-12-28",
+    "month_label": "Dec 2025",
+    "fitup_inch_dia": 74.25,
+    "welding_inch_dia": 124.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-01",
+    "week_number": 40,
+    "week_label": "Week 40",
+    "week_start": "2025-12-28",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 1.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-05",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 85.0,
+    "welding_inch_dia": 155.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-06",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 123.0,
+    "welding_inch_dia": 188.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-07",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 271.66,
+    "welding_inch_dia": 173.0,
+    "painting_surface_area_out": 113.86
+  },
+  {
+    "date": "2026-01-08",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 61.73,
+    "welding_inch_dia": 297.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-09",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 141.5,
+    "welding_inch_dia": 286.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-10",
+    "week_number": 41,
+    "week_label": "Week 41",
+    "week_start": "2026-01-04",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 15.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-12",
+    "week_number": 42,
+    "week_label": "Week 42",
+    "week_start": "2026-01-11",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 338.44,
+    "welding_inch_dia": 263.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-13",
+    "week_number": 42,
+    "week_label": "Week 42",
+    "week_start": "2026-01-11",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 113.76,
+    "welding_inch_dia": 130.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-14",
+    "week_number": 42,
+    "week_label": "Week 42",
+    "week_start": "2026-01-11",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 274.89,
+    "welding_inch_dia": 203.0,
+    "painting_surface_area_out": 41.64
+  },
+  {
+    "date": "2026-01-15",
+    "week_number": 42,
+    "week_label": "Week 42",
+    "week_start": "2026-01-11",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 125.66,
+    "welding_inch_dia": 263.25,
+    "painting_surface_area_out": 19.52
+  },
+  {
+    "date": "2026-01-19",
+    "week_number": 43,
+    "week_label": "Week 43",
+    "week_start": "2026-01-18",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 103.5,
+    "welding_inch_dia": 194.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-20",
+    "week_number": 43,
+    "week_label": "Week 43",
+    "week_start": "2026-01-18",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 43.63,
+    "welding_inch_dia": 63.5,
+    "painting_surface_area_out": 48.21
+  },
+  {
+    "date": "2026-01-21",
+    "week_number": 43,
+    "week_label": "Week 43",
+    "week_start": "2026-01-18",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 243.5,
+    "welding_inch_dia": 129.0,
+    "painting_surface_area_out": 124.27
+  },
+  {
+    "date": "2026-01-22",
+    "week_number": 43,
+    "week_label": "Week 43",
+    "week_start": "2026-01-18",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 242.37,
+    "welding_inch_dia": 238.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-23",
+    "week_number": 43,
+    "week_label": "Week 43",
+    "week_start": "2026-01-18",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 124.0,
+    "welding_inch_dia": 233.0,
+    "painting_surface_area_out": 82.49
+  },
+  {
+    "date": "2026-01-26",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 384.86,
+    "welding_inch_dia": 248.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-27",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 385.68,
+    "welding_inch_dia": 167.0,
+    "painting_surface_area_out": 45.86
+  },
+  {
+    "date": "2026-01-28",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 354.0,
+    "welding_inch_dia": 360.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-29",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 304.25,
+    "welding_inch_dia": 410.0,
+    "painting_surface_area_out": 76.93
+  },
+  {
+    "date": "2026-01-30",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 755.01,
+    "welding_inch_dia": 464.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-01-31",
+    "week_number": 44,
+    "week_label": "Week 44",
+    "week_start": "2026-01-25",
+    "month_label": "Jan 2026",
+    "fitup_inch_dia": 104.25,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-02",
+    "week_number": 45,
+    "week_label": "Week 45",
+    "week_start": "2026-02-01",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 350.5,
+    "welding_inch_dia": 520.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-03",
+    "week_number": 45,
+    "week_label": "Week 45",
+    "week_start": "2026-02-01",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 543.19,
+    "welding_inch_dia": 506.5,
+    "painting_surface_area_out": 1.12
+  },
+  {
+    "date": "2026-02-04",
+    "week_number": 45,
+    "week_label": "Week 45",
+    "week_start": "2026-02-01",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 763.62,
+    "welding_inch_dia": 754.0,
+    "painting_surface_area_out": 54.72
+  },
+  {
+    "date": "2026-02-05",
+    "week_number": 45,
+    "week_label": "Week 45",
+    "week_start": "2026-02-01",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 663.0,
+    "welding_inch_dia": 875.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-06",
+    "week_number": 45,
+    "week_label": "Week 45",
+    "week_start": "2026-02-01",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 691.44,
+    "welding_inch_dia": 622.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-09",
+    "week_number": 46,
+    "week_label": "Week 46",
+    "week_start": "2026-02-08",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 455.25,
+    "welding_inch_dia": 627.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-10",
+    "week_number": 46,
+    "week_label": "Week 46",
+    "week_start": "2026-02-08",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 475.0,
+    "welding_inch_dia": 667.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-11",
+    "week_number": 46,
+    "week_label": "Week 46",
+    "week_start": "2026-02-08",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 326.5,
+    "welding_inch_dia": 472.5,
+    "painting_surface_area_out": 138.32
+  },
+  {
+    "date": "2026-02-12",
+    "week_number": 46,
+    "week_label": "Week 46",
+    "week_start": "2026-02-08",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 277.75,
+    "welding_inch_dia": 217.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-13",
+    "week_number": 46,
+    "week_label": "Week 46",
+    "week_start": "2026-02-08",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 235.5,
+    "welding_inch_dia": 238.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-16",
+    "week_number": 47,
+    "week_label": "Week 47",
+    "week_start": "2026-02-15",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 50.0,
+    "welding_inch_dia": 108.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-17",
+    "week_number": 47,
+    "week_label": "Week 47",
+    "week_start": "2026-02-15",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 207.59,
+    "welding_inch_dia": 80.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-18",
+    "week_number": 47,
+    "week_label": "Week 47",
+    "week_start": "2026-02-15",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 160.0,
+    "welding_inch_dia": 231.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-19",
+    "week_number": 47,
+    "week_label": "Week 47",
+    "week_start": "2026-02-15",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 186.25,
+    "welding_inch_dia": 165.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-20",
+    "week_number": 47,
+    "week_label": "Week 47",
+    "week_start": "2026-02-15",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 306.0,
+    "welding_inch_dia": 251.25,
+    "painting_surface_area_out": 94.35
+  },
+  {
+    "date": "2026-02-23",
+    "week_number": 48,
+    "week_label": "Week 48",
+    "week_start": "2026-02-22",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 687.63,
+    "welding_inch_dia": 479.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-24",
+    "week_number": 48,
+    "week_label": "Week 48",
+    "week_start": "2026-02-22",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 404.8,
+    "welding_inch_dia": 513.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-25",
+    "week_number": 48,
+    "week_label": "Week 48",
+    "week_start": "2026-02-22",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 468.5,
+    "welding_inch_dia": 462.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-26",
+    "week_number": 48,
+    "week_label": "Week 48",
+    "week_start": "2026-02-22",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 328.0,
+    "welding_inch_dia": 345.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-02-27",
+    "week_number": 48,
+    "week_label": "Week 48",
+    "week_start": "2026-02-22",
+    "month_label": "Feb 2026",
+    "fitup_inch_dia": 328.0,
+    "welding_inch_dia": 405.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-02",
+    "week_number": 49,
+    "week_label": "Week 49",
+    "week_start": "2026-03-01",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 402.5,
+    "welding_inch_dia": 316.0,
+    "painting_surface_area_out": 19.09
+  },
+  {
+    "date": "2026-03-04",
+    "week_number": 49,
+    "week_label": "Week 49",
+    "week_start": "2026-03-01",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 405.0,
+    "welding_inch_dia": 430.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-05",
+    "week_number": 49,
+    "week_label": "Week 49",
+    "week_start": "2026-03-01",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 560.0,
+    "welding_inch_dia": 457.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-06",
+    "week_number": 49,
+    "week_label": "Week 49",
+    "week_start": "2026-03-01",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 393.5,
+    "welding_inch_dia": 456.0,
+    "painting_surface_area_out": 86.29
+  },
+  {
+    "date": "2026-03-09",
+    "week_number": 50,
+    "week_label": "Week 50",
+    "week_start": "2026-03-08",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 295.5,
+    "welding_inch_dia": 349.0,
+    "painting_surface_area_out": 16.63
+  },
+  {
+    "date": "2026-03-10",
+    "week_number": 50,
+    "week_label": "Week 50",
+    "week_start": "2026-03-08",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 530.0,
+    "welding_inch_dia": 376.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-11",
+    "week_number": 50,
+    "week_label": "Week 50",
+    "week_start": "2026-03-08",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 372.0,
+    "welding_inch_dia": 308.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-12",
+    "week_number": 50,
+    "week_label": "Week 50",
+    "week_start": "2026-03-08",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 464.0,
+    "welding_inch_dia": 433.5,
+    "painting_surface_area_out": 57.27
+  },
+  {
+    "date": "2026-03-13",
+    "week_number": 50,
+    "week_label": "Week 50",
+    "week_start": "2026-03-08",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 653.0,
+    "welding_inch_dia": 471.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-15",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 77.5,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-16",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 256.5,
+    "welding_inch_dia": 466.0,
+    "painting_surface_area_out": 38.62
+  },
+  {
+    "date": "2026-03-17",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 674.5,
+    "welding_inch_dia": 737.5,
+    "painting_surface_area_out": 29.93
+  },
+  {
+    "date": "2026-03-18",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 522.5,
+    "welding_inch_dia": 545.0,
+    "painting_surface_area_out": 96.14
+  },
+  {
+    "date": "2026-03-19",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 564.0,
+    "welding_inch_dia": 505.0,
+    "painting_surface_area_out": 46.41
+  },
+  {
+    "date": "2026-03-20",
+    "week_number": 51,
+    "week_label": "Week 51",
+    "week_start": "2026-03-15",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 436.5,
+    "welding_inch_dia": 647.5,
+    "painting_surface_area_out": 42.62
+  },
+  {
+    "date": "2026-03-23",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 409.5,
+    "welding_inch_dia": 578.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-24",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 626.5,
+    "welding_inch_dia": 459.0,
+    "painting_surface_area_out": 117.56
+  },
+  {
+    "date": "2026-03-25",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 567.0,
+    "welding_inch_dia": 616.5,
+    "painting_surface_area_out": 38.77
+  },
+  {
+    "date": "2026-03-26",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 669.0,
+    "welding_inch_dia": 685.5,
+    "painting_surface_area_out": 153.68
+  },
+  {
+    "date": "2026-03-27",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 378.0,
+    "welding_inch_dia": 515.25,
+    "painting_surface_area_out": 38.05
+  },
+  {
+    "date": "2026-03-28",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 66.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-29",
+    "week_number": 52,
+    "week_label": "Week 52",
+    "week_start": "2026-03-22",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 10.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-03-30",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 437.75,
+    "welding_inch_dia": 491.75,
+    "painting_surface_area_out": 29.52
+  },
+  {
+    "date": "2026-03-31",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Mar 2026",
+    "fitup_inch_dia": 288.75,
+    "welding_inch_dia": 495.25,
+    "painting_surface_area_out": 61.63
+  },
+  {
+    "date": "2026-04-01",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 527.0,
+    "welding_inch_dia": 326.25,
+    "painting_surface_area_out": 151.63
+  },
+  {
+    "date": "2026-04-02",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 668.25,
+    "welding_inch_dia": 444.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-03",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 645.25,
+    "welding_inch_dia": 690.0,
+    "painting_surface_area_out": 63.2
+  },
+  {
+    "date": "2026-04-04",
+    "week_number": 1,
+    "week_label": "Week 1",
+    "week_start": "2026-03-30",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 11.5,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-06",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 752.5,
+    "welding_inch_dia": 586.5,
+    "painting_surface_area_out": 64.5
+  },
+  {
+    "date": "2026-04-07",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 794.74,
+    "welding_inch_dia": 920.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-08",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 1130.91,
+    "welding_inch_dia": 836.5,
+    "painting_surface_area_out": 78.87
+  },
+  {
+    "date": "2026-04-09",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 526.5,
+    "welding_inch_dia": 820.25,
+    "painting_surface_area_out": 7.53
+  },
+  {
+    "date": "2026-04-10",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 532.75,
+    "welding_inch_dia": 490.0,
+    "painting_surface_area_out": 123.84
+  },
+  {
+    "date": "2026-04-11",
+    "week_number": 2,
+    "week_label": "Week 2",
+    "week_start": "2026-04-06",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 9.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-16",
+    "week_number": 3,
+    "week_label": "Week 3",
+    "week_start": "2026-04-13",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 62.0,
+    "welding_inch_dia": 258.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-17",
+    "week_number": 3,
+    "week_label": "Week 3",
+    "week_start": "2026-04-13",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 70.5,
+    "welding_inch_dia": 224.25,
+    "painting_surface_area_out": 137.38
+  },
+  {
+    "date": "2026-04-19",
+    "week_number": 3,
+    "week_label": "Week 3",
+    "week_start": "2026-04-13",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 18.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-20",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 872.75,
+    "welding_inch_dia": 581.25,
+    "painting_surface_area_out": 26.73
+  },
+  {
+    "date": "2026-04-21",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 621.75,
+    "welding_inch_dia": 458.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-22",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 577.75,
+    "welding_inch_dia": 733.75,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-23",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 722.25,
+    "welding_inch_dia": 652.25,
+    "painting_surface_area_out": 188.21
+  },
+  {
+    "date": "2026-04-24",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 726.75,
+    "welding_inch_dia": 480.25,
+    "painting_surface_area_out": 62.32
+  },
+  {
+    "date": "2026-04-25",
+    "week_number": 4,
+    "week_label": "Week 4",
+    "week_start": "2026-04-20",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 4.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-27",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 971.75,
+    "welding_inch_dia": 886.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-04-28",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 834.75,
+    "welding_inch_dia": 860.5,
+    "painting_surface_area_out": 55.42
+  },
+  {
+    "date": "2026-04-29",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 925.5,
+    "welding_inch_dia": 899.0,
+    "painting_surface_area_out": 51.62
+  },
+  {
+    "date": "2026-04-30",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "Apr 2026",
+    "fitup_inch_dia": 1181.5,
+    "welding_inch_dia": 967.25,
+    "painting_surface_area_out": 63.26
+  },
+  {
+    "date": "2026-05-01",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 30.0,
+    "welding_inch_dia": 55.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-02",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 23.0,
+    "welding_inch_dia": 20.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-03",
+    "week_number": 5,
+    "week_label": "Week 5",
+    "week_start": "2026-04-27",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 20.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-04",
+    "week_number": 6,
+    "week_label": "Week 6",
+    "week_start": "2026-05-04",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 961.25,
+    "welding_inch_dia": 1377.25,
+    "painting_surface_area_out": 63.96
+  },
+  {
+    "date": "2026-05-05",
+    "week_number": 6,
+    "week_label": "Week 6",
+    "week_start": "2026-05-04",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 579.5,
+    "welding_inch_dia": 819.25,
+    "painting_surface_area_out": 172.43
+  },
+  {
+    "date": "2026-05-06",
+    "week_number": 6,
+    "week_label": "Week 6",
+    "week_start": "2026-05-04",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 702.5,
+    "welding_inch_dia": 840.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-07",
+    "week_number": 6,
+    "week_label": "Week 6",
+    "week_start": "2026-05-04",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 693.5,
+    "welding_inch_dia": 704.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-08",
+    "week_number": 6,
+    "week_label": "Week 6",
+    "week_start": "2026-05-04",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 477.5,
+    "welding_inch_dia": 495.0,
+    "painting_surface_area_out": 253.91
+  },
+  {
+    "date": "2026-05-11",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 1477.2,
+    "welding_inch_dia": 987.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-12",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 675.75,
+    "welding_inch_dia": 752.25,
+    "painting_surface_area_out": 172.86
+  },
+  {
+    "date": "2026-05-13",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 547.25,
+    "welding_inch_dia": 560.25,
+    "painting_surface_area_out": 105.18
+  },
+  {
+    "date": "2026-05-14",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 578.75,
+    "welding_inch_dia": 416.5,
+    "painting_surface_area_out": 123.01
+  },
+  {
+    "date": "2026-05-15",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 650.25,
+    "welding_inch_dia": 587.0,
+    "painting_surface_area_out": 75.14
+  },
+  {
+    "date": "2026-05-16",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 45.0,
+    "welding_inch_dia": 115.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-17",
+    "week_number": 7,
+    "week_label": "Week 7",
+    "week_start": "2026-05-11",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 60.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-18",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 956.0,
+    "welding_inch_dia": 867.25,
+    "painting_surface_area_out": 170.22
+  },
+  {
+    "date": "2026-05-19",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 831.25,
+    "welding_inch_dia": 872.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-20",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 663.11,
+    "welding_inch_dia": 766.25,
+    "painting_surface_area_out": 212.51
+  },
+  {
+    "date": "2026-05-21",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 586.25,
+    "welding_inch_dia": 797.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-22",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 599.75,
+    "welding_inch_dia": 698.5,
+    "painting_surface_area_out": 130.05
+  },
+  {
+    "date": "2026-05-23",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 53.0,
+    "welding_inch_dia": 167.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-24",
+    "week_number": 8,
+    "week_label": "Week 8",
+    "week_start": "2026-05-18",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 3.0,
+    "welding_inch_dia": 125.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-25",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 652.5,
+    "welding_inch_dia": 534.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-05-26",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 687.5,
+    "welding_inch_dia": 681.5,
+    "painting_surface_area_out": 188.11
+  },
+  {
+    "date": "2026-05-27",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 759.25,
+    "welding_inch_dia": 709.25,
+    "painting_surface_area_out": 190.15
+  },
+  {
+    "date": "2026-05-28",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 519.25,
+    "welding_inch_dia": 830.5,
+    "painting_surface_area_out": 113.4
+  },
+  {
+    "date": "2026-05-29",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 663.25,
+    "welding_inch_dia": 743.5,
+    "painting_surface_area_out": 100.56
+  },
+  {
+    "date": "2026-05-30",
+    "week_number": 9,
+    "week_label": "Week 9",
+    "week_start": "2026-05-25",
+    "month_label": "May 2026",
+    "fitup_inch_dia": 550.5,
+    "welding_inch_dia": 9.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-01",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 610.0,
+    "welding_inch_dia": 761.25,
+    "painting_surface_area_out": 80.38
+  },
+  {
+    "date": "2026-06-02",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 865.32,
+    "welding_inch_dia": 902.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-03",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 262.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-04",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 816.75,
+    "welding_inch_dia": 1039.0,
+    "painting_surface_area_out": 287.06
+  },
+  {
+    "date": "2026-06-05",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 669.25,
+    "welding_inch_dia": 1012.0,
+    "painting_surface_area_out": 228.22
+  },
+  {
+    "date": "2026-06-06",
+    "week_number": 10,
+    "week_label": "Week 10",
+    "week_start": "2026-06-01",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 29.5,
+    "welding_inch_dia": 86.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-08",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 788.0,
+    "welding_inch_dia": 822.25,
+    "painting_surface_area_out": 195.54
+  },
+  {
+    "date": "2026-06-09",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 938.0,
+    "welding_inch_dia": 945.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-10",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 709.0,
+    "welding_inch_dia": 711.25,
+    "painting_surface_area_out": 206.91
+  },
+  {
+    "date": "2026-06-11",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 983.5,
+    "welding_inch_dia": 763.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-12",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 763.39,
+    "welding_inch_dia": 714.5,
+    "painting_surface_area_out": 190.27
+  },
+  {
+    "date": "2026-06-13",
+    "week_number": 11,
+    "week_label": "Week 11",
+    "week_start": "2026-06-08",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 20.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-15",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 2051.65,
+    "welding_inch_dia": 1029.0,
+    "painting_surface_area_out": 15.61
+  },
+  {
+    "date": "2026-06-16",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 490.05,
+    "welding_inch_dia": 978.25,
+    "painting_surface_area_out": 0.82
+  },
+  {
+    "date": "2026-06-17",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 696.0,
+    "welding_inch_dia": 971.25,
+    "painting_surface_area_out": 277.87
+  },
+  {
+    "date": "2026-06-18",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 708.05,
+    "welding_inch_dia": 984.5,
+    "painting_surface_area_out": 22.63
+  },
+  {
+    "date": "2026-06-19",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 680.0,
+    "welding_inch_dia": 731.0,
+    "painting_surface_area_out": 256.13
+  },
+  {
+    "date": "2026-06-21",
+    "week_number": 12,
+    "week_label": "Week 12",
+    "week_start": "2026-06-15",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 10.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-22",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 1422.25,
+    "welding_inch_dia": 827.0,
+    "painting_surface_area_out": 15.62
+  },
+  {
+    "date": "2026-06-23",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 662.5,
+    "welding_inch_dia": 1083.5,
+    "painting_surface_area_out": 119.58
+  },
+  {
+    "date": "2026-06-24",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 667.11,
+    "welding_inch_dia": 983.0,
+    "painting_surface_area_out": 186.05
+  },
+  {
+    "date": "2026-06-25",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 424.75,
+    "welding_inch_dia": 808.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-26",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 683.75,
+    "welding_inch_dia": 697.75,
+    "painting_surface_area_out": 125.37
+  },
+  {
+    "date": "2026-06-27",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 13.5,
+    "welding_inch_dia": 27.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-28",
+    "week_number": 13,
+    "week_label": "Week 13",
+    "week_start": "2026-06-22",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 131.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-06-29",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 1329.0,
+    "welding_inch_dia": 735.25,
+    "painting_surface_area_out": 77.51
+  },
+  {
+    "date": "2026-06-30",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jun 2026",
+    "fitup_inch_dia": 366.25,
+    "welding_inch_dia": 714.25,
+    "painting_surface_area_out": 111.68
+  },
+  {
+    "date": "2026-07-01",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 535.5,
+    "welding_inch_dia": 748.75,
+    "painting_surface_area_out": 232.47
+  },
+  {
+    "date": "2026-07-02",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 628.9,
+    "welding_inch_dia": 609.25,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-07-03",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 498.25,
+    "welding_inch_dia": 709.5,
+    "painting_surface_area_out": 100.6
+  },
+  {
+    "date": "2026-07-04",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 54.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-07-05",
+    "week_number": 14,
+    "week_label": "Week 14",
+    "week_start": "2026-06-29",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 48.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-07-06",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 1148.25,
+    "welding_inch_dia": 760.25,
+    "painting_surface_area_out": 98.88
+  },
+  {
+    "date": "2026-07-07",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 839.5,
+    "welding_inch_dia": 1158.75,
+    "painting_surface_area_out": 36.42
+  },
+  {
+    "date": "2026-07-08",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 1008.8,
+    "welding_inch_dia": 884.5,
+    "painting_surface_area_out": 132.08
+  },
+  {
+    "date": "2026-07-09",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 708.75,
+    "welding_inch_dia": 873.5,
+    "painting_surface_area_out": 38.48
+  },
+  {
+    "date": "2026-07-10",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 727.25,
+    "welding_inch_dia": 727.75,
+    "painting_surface_area_out": 17.86
+  },
+  {
+    "date": "2026-07-11",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 19.5,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-07-12",
+    "week_number": 15,
+    "week_label": "Week 15",
+    "week_start": "2026-07-06",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 40.0,
+    "welding_inch_dia": 40.0,
+    "painting_surface_area_out": 0.0
+  },
+  {
+    "date": "2026-07-13",
+    "week_number": 16,
+    "week_label": "Week 16",
+    "week_start": "2026-07-13",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 1019.25,
+    "welding_inch_dia": 963.0,
+    "painting_surface_area_out": 148.16
+  },
+  {
+    "date": "2026-07-14",
+    "week_number": 16,
+    "week_label": "Week 16",
+    "week_start": "2026-07-13",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 760.75,
+    "welding_inch_dia": 987.75,
+    "painting_surface_area_out": 72.98
+  },
+  {
+    "date": "2026-07-15",
+    "week_number": 16,
+    "week_label": "Week 16",
+    "week_start": "2026-07-13",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 1116.75,
+    "welding_inch_dia": 968.5,
+    "painting_surface_area_out": 114.85
+  },
+  {
+    "date": "2026-07-16",
+    "week_number": 16,
+    "week_label": "Week 16",
+    "week_start": "2026-07-13",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 331.5,
+    "welding_inch_dia": 686.25,
+    "painting_surface_area_out": 45.05
+  },
+  {
+    "date": "2026-07-17",
+    "week_number": 16,
+    "week_label": "Week 16",
+    "week_start": "2026-07-13",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 420.75,
+    "welding_inch_dia": 556.25,
+    "painting_surface_area_out": 7.39
+  }
+]

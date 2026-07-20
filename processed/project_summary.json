@@ -1,0 +1,119 @@
+[
+  {
+    "Project Code": "TJ/22-23/097",
+    "total_spools": 39,
+    "planned": 39,
+    "unplanned": 0,
+    "completed": 39,
+    "average_total_age_days": 15.0,
+    "current_stage_breakdown": {
+      "Completed": 39
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/172",
+    "total_spools": 1138,
+    "planned": 4,
+    "unplanned": 1134,
+    "completed": 1138,
+    "average_total_age_days": 77.0,
+    "current_stage_breakdown": {
+      "Dispatch": 1138
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/182",
+    "total_spools": 1024,
+    "planned": 1004,
+    "unplanned": 20,
+    "completed": 473,
+    "average_total_age_days": 43.8,
+    "current_stage_breakdown": {
+      "Fit-Up": 6,
+      "Welding": 1,
+      "PDQC": 3,
+      "Ready for Painting": 15,
+      "Under Painting": 506,
+      "Dispatch": 66,
+      "Completed": 407,
+      "Production Order Not Released": 20
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/183",
+    "total_spools": 2082,
+    "planned": 1086,
+    "unplanned": 996,
+    "completed": 820,
+    "average_total_age_days": 31.3,
+    "current_stage_breakdown": {
+      "Fit-Up": 502,
+      "Welding": 3,
+      "PDQC": 23,
+      "Ready for Painting": 209,
+      "Under Painting": 340,
+      "Dispatch": 75,
+      "Completed": 745,
+      "Production Order Not Released": 185
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/184",
+    "total_spools": 1314,
+    "planned": 19,
+    "unplanned": 1295,
+    "completed": 1312,
+    "average_total_age_days": 53.6,
+    "current_stage_breakdown": {
+      "Packing": 2,
+      "Completed": 1312
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/188",
+    "total_spools": 1920,
+    "planned": 1446,
+    "unplanned": 474,
+    "completed": 298,
+    "average_total_age_days": 18.9,
+    "current_stage_breakdown": {
+      "Fit-Up": 346,
+      "Welding": 60,
+      "PDQC": 328,
+      "Ready for Painting": 139,
+      "Under Painting": 416,
+      "Packing": 12,
+      "Dispatch": 298,
+      "Production Order Not Released": 321
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/189",
+    "total_spools": 720,
+    "planned": 628,
+    "unplanned": 92,
+    "completed": 100,
+    "average_total_age_days": 13.7,
+    "current_stage_breakdown": {
+      "Fit-Up": 360,
+      "Welding": 8,
+      "PDQC": 30,
+      "Ready for Painting": 19,
+      "Under Painting": 111,
+      "Dispatch": 100,
+      "Production Order Not Released": 92
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/206",
+    "total_spools": 644,
+    "planned": 92,
+    "unplanned": 552,
+    "completed": 0,
+    "average_total_age_days": 0.2,
+    "current_stage_breakdown": {
+      "Fit-Up": 128,
+      "Production Order Not Released": 516
+    }
+  }
+]
