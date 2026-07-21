@@ -241,10 +241,10 @@
   {
     "Week": "Unassigned",
     "total_spools": 4563,
-    "planned": 0,
-    "unplanned": 4563,
+    "planned": 597,
+    "unplanned": 3966,
     "completed": 2758,
-    "average_total_age_days": 40.0,
+    "average_total_age_days": 39.5,
     "current_stage_breakdown": {
       "Fit-Up": 666,
       "Ready for Painting": 1,
