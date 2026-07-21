@@ -43,9 +43,11 @@ JOINT_NO = "Joint No"
 WELD_FITUP_DATE = "Weld FitUp Date"
 WELDING_FRUN_DATE = "Welding FRun Date"
 LINE_HISTORY_STAGE = "Line History Stage"
-LH_FITUP_AGE = "LH Fit-Up Age"
+LH_FITUP_LAST_DATE = "LH Fit-Up Last Date"
 LH_WELDING_AGE = "LH Welding Age"
 LH_LAST_WELDING_FRUN = "LH Last Welding FRun Date"
+
+SIOP_PLANNED_START = "SIOP Planned Start"
 
 CURRENT_STAGE = "Current Stage"
 NEXT_STAGE = "Next Stage"
@@ -65,6 +67,7 @@ COMPLETED_FLAG = "Completed"
 FABRICATION = "fabrication"
 PLANNING = "planning"
 LINE_HISTORY = "line_history"
+SIOP_PLANNED = "siop_planned"
 
 # ==================================================
 # Log Messages

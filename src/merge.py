@@ -40,11 +40,13 @@ from config_loader import load_business_rules
 from constants import (
     COMPOSITE_KEY,
     DRAWING_NO,
-    LH_FITUP_AGE,
+    LH_FITUP_LAST_DATE,
     LH_LAST_WELDING_FRUN,
     LH_WELDING_AGE,
     LINE_HISTORY_STAGE,
+    PLANNED_START,
     PROJECT_CODE,
+    SIOP_PLANNED_START,
     SPOOL_NO,
 )
 from logger import logger
@@ -188,7 +190,7 @@ class MergeEngine:
                                          history(), which is what
                                          actually consumes this
                                          column.
-            LH Fit-Up Age             - see fitup_age below
+            LH Fit-Up Last Date       - see fitup_last_date below
             LH Welding Age            - see welding_age below
             LH Last Welding FRun Date - see last_welding_frun below
 
@@ -211,9 +213,18 @@ class MergeEngine:
         consumed by ageing.py / summary.py via line_history_ageing.py,
         which apply the fallback when these come back blank):
 
-            fitup_age
-                Only when EVERY joint's Weld FitUp Date is filled:
-                the LATEST Weld FitUp Date minus the EARLIEST one.
+            fitup_last_date
+                The LATEST "effective" Weld FitUp Date across every
+                joint - where a joint's effective date is its own
+                Weld FitUp Date, or (only when THAT is blank) its
+                Welding FRun Date used in its place - reported only
+                when every joint ends up with an effective date this
+                way. line_history_ageing.py -> fitup_age() then
+                measures the Fit-Up Age as this date minus the
+                spool's Planned Start (see that module's docstring
+                for the full cascade, including its PDQC-date and
+                today-based fallbacks for spools that don't clear
+                this bar).
 
             welding_age
                 Average, across every joint that has BOTH a Weld
@@ -244,7 +255,7 @@ class MergeEngine:
         result_columns = [
             COMPOSITE_KEY,
             LINE_HISTORY_STAGE,
-            LH_FITUP_AGE,
+            LH_FITUP_LAST_DATE,
             LH_WELDING_AGE,
             LH_LAST_WELDING_FRUN,
         ]
@@ -308,22 +319,38 @@ class MergeEngine:
             record = {
                 COMPOSITE_KEY: composite_key,
                 LINE_HISTORY_STAGE: stage,
-                LH_FITUP_AGE: None,
+                LH_FITUP_LAST_DATE: None,
                 LH_WELDING_AGE: None,
                 LH_LAST_WELDING_FRUN: None,
             }
 
-            # LH Fit-Up Age: last Weld FitUp Date - first Weld
-            # FitUp Date, only when every joint has one.
-            if fitup_all_present:
-                fitup_dates = [
-                    date for date in fitup_values.apply(parse_date)
-                    if date is not None
-                ]
-                if fitup_dates:
-                    record[LH_FITUP_AGE] = (
-                        max(fitup_dates) - min(fitup_dates)
-                    ).days
+            # LH Fit-Up Last Date (as given by the person, in their
+            # own words): for each joint, use its own Weld FitUp
+            # Date - or, only when that's blank, its Welding FRun
+            # Date instead. Reported only when EVERY joint ends up
+            # with an effective date this way (a joint missing BOTH
+            # dates means coverage is incomplete, and this stays
+            # None - line_history_ageing.py -> fitup_age() then
+            # falls back to PDQC or today, not to this partial
+            # data). This is deliberately a separate, looser check
+            # than fitup_all_present above, which drives the Line
+            # History Stage classification, not this age.
+            effective_fitup_dates = []
+            fitup_coverage_complete = True
+
+            for fitup_value, weldrun_value in zip(
+                fitup_values, weldrun_values
+            ):
+                effective_date = parse_date(fitup_value)
+                if effective_date is None:
+                    effective_date = parse_date(weldrun_value)
+                if effective_date is None:
+                    fitup_coverage_complete = False
+                    break
+                effective_fitup_dates.append(effective_date)
+
+            if fitup_coverage_complete and effective_fitup_dates:
+                record[LH_FITUP_LAST_DATE] = max(effective_fitup_dates)
 
             # LH Welding Age: mean of (Welding FRun - Weld FitUp)
             # over joints with BOTH dates present.
@@ -364,6 +391,89 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def apply_siop_fallback(
+        self,
+        master: pd.DataFrame,
+        siop_planned: Optional[pd.DataFrame],
+    ) -> pd.DataFrame:
+        """
+        Planned Start fallback source (as given by the person, in
+        their own words): the Weekly Production Planning workbook is
+        still the primary source of Planned Start. For any spool
+        whose Planned Start is still blank after that merge (its
+        Composite Key wasn't found there, or was found with a blank
+        Start Date), look the spool up in the SIOP Planned Spools
+        workbook instead, by the same Composite Key, and use ITS
+        "Planned Start Date" column if present. A spool found in
+        neither file simply keeps a blank Planned Start, which
+        business_rules.py -> determine_planned_flag() already
+        reports as Planned = No - no change needed there, since it
+        only checks whether Planned Start ended up with a value,
+        wherever that value came from.
+
+        This can only ever ADD a Planned Start date that was
+        missing, never overwrite one the Weekly file already
+        provided.
+
+        No-op (returns master unchanged) if the SIOP workbook wasn't
+        uploaded this run, or didn't yield a usable Planned Start
+        column - see reader.py -> read_siop_planned(), which already
+        treats a missing/unreadable file as optional, same as the
+        Line History Sheet.
+        """
+
+        if siop_planned is None or siop_planned.empty:
+            return master
+
+        if SIOP_PLANNED_START not in siop_planned.columns:
+            logger.warning(
+                "SIOP Planned Spools workbook has no usable Planned "
+                "Start Date column; skipping the Planned Start "
+                "fallback for this run."
+            )
+            return master
+
+        if PLANNED_START not in master.columns:
+            master = master.copy()
+            master[PLANNED_START] = None
+
+        siop_planned = self.add_composite_key(siop_planned)
+
+        siop_lookup = (
+            siop_planned[[COMPOSITE_KEY, SIOP_PLANNED_START]]
+            .dropna(subset=[SIOP_PLANNED_START])
+            .drop_duplicates(subset=[COMPOSITE_KEY], keep="first")
+        )
+
+        master = master.merge(
+            siop_lookup,
+            on=COMPOSITE_KEY,
+            how="left",
+        )
+
+        needs_fallback = master[PLANNED_START].apply(is_empty)
+        has_siop_value = ~master[SIOP_PLANNED_START].apply(is_empty)
+        fillable = needs_fallback & has_siop_value
+
+        master.loc[fillable, PLANNED_START] = master.loc[
+            fillable, SIOP_PLANNED_START
+        ]
+
+        filled = int(fillable.sum())
+
+        master = master.drop(columns=[SIOP_PLANNED_START])
+
+        if filled:
+            logger.info(
+                f"SIOP Planned Spools fallback: filled Planned "
+                f"Start for {filled} spool(s) not found (or blank) "
+                "in the Weekly Production Planning workbook."
+            )
+
+        return master
+
+    # -----------------------------------------------------
+
     def merge(
         self,
         fabrication: pd.DataFrame,
@@ -372,6 +482,7 @@ class MergeEngine:
         welding_db: pd.DataFrame,
         activity_date_field: str = "Activity Date",
         line_history: Optional[pd.DataFrame] = None,
+        siop_planned: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
         """
         Build the Master Spool Dataset.
@@ -398,6 +509,13 @@ class MergeEngine:
             Cleaned Line History Sheet dataframe (one row per
             joint), or None if it wasn't uploaded this run - see
             summarize_line_history().
+
+        siop_planned
+            Cleaned SIOP Planned Spools dataframe (one row per
+            spool), or None if it wasn't uploaded this run - see
+            apply_siop_fallback(). Used only to fill in Planned
+            Start for spools the Weekly Production Planning
+            workbook doesn't have.
 
         Returns
         -------
@@ -440,6 +558,8 @@ class MergeEngine:
             on=COMPOSITE_KEY,
             how="left",
         )
+
+        master = self.apply_siop_fallback(master, siop_planned)
 
         master = master.merge(
             first_fitup,

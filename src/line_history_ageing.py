@@ -11,12 +11,26 @@ AgeingEngine.determine_stage_age(), the two callers.
 
 Master Specification
 ---------------------
-Fit-Up Age
-    If EVERY joint for a spool has a non-blank Weld FitUp Date in
-    the Line History Sheet (merge.py -> summarize_line_history() ->
-    LH Fit-Up Age): the last Weld FitUp Date minus the first one.
-    Otherwise: fall back to the plain spool-level calculation,
-    First Fit-Up - Planned Start.
+Fit-Up Age (as given by the person, in their own words)
+    Always anchored to the spool's Planned Start date, in priority
+    order:
+      1. If every joint has a non-blank Weld FitUp Date in the Line
+         History Sheet: the LATEST Weld FitUp Date minus Planned
+         Start.
+      2. If some joint's Weld FitUp Date is blank but its Welding
+         FRun Date is present: treat that joint's Welding FRun Date
+         as its Weld FitUp Date for this purpose, then apply rule 1
+         (merge.py -> summarize_line_history() -> LH Fit-Up Last
+         Date is exactly this - the latest such "effective" date,
+         only ever populated once every joint has one, via its own
+         Weld FitUp Date or that substitution).
+      3. If a joint still has neither date (rules 1/2 don't cover
+         every joint), but the spool's own PDQC date is available:
+         PDQC minus Planned Start.
+      4. Otherwise (still in fabrication - no PDQC date yet, whether
+         or not the Line History Sheet has partial joint data, or no
+         Line History Sheet data for this spool at all): TODAY()
+         minus Planned Start.
 
 Welding Age
     The average, across the spool's joints in the Line History
@@ -64,12 +78,12 @@ import pandas as pd
 from constants import (
     FIRST_FITUP,
     FIRST_WELDING,
-    LH_FITUP_AGE,
+    LH_FITUP_LAST_DATE,
     LH_LAST_WELDING_FRUN,
     LH_WELDING_AGE,
     PDQC,
 )
-from utils import parse_date
+from utils import parse_date, today
 
 
 def _lh_value(row: pd.Series, field: str) -> Optional[float]:
@@ -135,16 +149,25 @@ def total_age_anchor_date(
 
 
 def fitup_age(row: pd.Series, planned_start_field: str) -> Optional[int]:
-    """Fit-Up Age - see module docstring."""
+    """
+    Fit-Up Age - see module docstring for the full cascade.
 
-    lh_age = _lh_value(row, LH_FITUP_AGE)
-    if lh_age is not None:
-        return int(round(lh_age))
+    Always anchored to Planned Start; returns None only when Planned
+    Start itself is blank (an unplanned spool), same as every other
+    age in this module.
+    """
 
-    return _day_gap(
-        parse_date(row.get(planned_start_field)),
-        parse_date(row.get(FIRST_FITUP)),
-    )
+    planned_start = parse_date(row.get(planned_start_field))
+
+    lh_fitup_last_date = _lh_value(row, LH_FITUP_LAST_DATE)
+    if lh_fitup_last_date is not None:
+        return _day_gap(planned_start, parse_date(lh_fitup_last_date))
+
+    pdqc_date = parse_date(row.get(PDQC))
+    if pdqc_date is not None:
+        return _day_gap(planned_start, pdqc_date)
+
+    return _day_gap(planned_start, today())
 
 
 def welding_age(row: pd.Series) -> Optional[float]:

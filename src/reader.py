@@ -21,7 +21,13 @@ import pandas as pd
 from config_loader import load_business_rules, load_settings, load_stages
 from column_mapper import standardize_columns
 from logger import logger
-from constants import FABRICATION, LINE_HISTORY, PLANNING
+from constants import (
+    FABRICATION,
+    LINE_HISTORY,
+    PLANNING,
+    SIOP_PLANNED,
+    SIOP_PLANNED_START,
+)
 from utils import convert_excel_serial_dates
 
 
@@ -247,6 +253,72 @@ class ExcelReader:
 
         logger.info(
             f"Loaded {len(dataframe)} Line History Sheet rows."
+        )
+
+        return dataframe
+
+    def read_siop_planned(self) -> Optional[pd.DataFrame]:
+        """
+        Read the SIOP Planned Spools workbook - a secondary,
+        fallback source of Planned Start dates. merge.py ->
+        apply_siop_fallback() only ever uses this to fill in a
+        Planned Start that the Weekly Production Planning workbook
+        left blank; it never overwrites a Planned Start that
+        workbook already provided.
+
+        The filename is not consistent - config/settings.json ->
+        input_files.siop_planned.file_pattern matches loosely
+        (looking only for "SIOP" ... "Planned" ... "Spools" in
+        order, wherever else the name varies).
+
+        Like the Line History Sheet, this file is OPTIONAL and
+        best-effort: a missing file (or the feature being disabled)
+        only logs a warning and returns None - every spool then
+        falls back to the existing Weekly-file-only Planned logic,
+        unchanged.
+        """
+
+        config = self.settings["input_files"].get("siop_planned", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(self.settings["paths"]["upload_folder"])
+
+        files = list(folder.glob(config["file_pattern"]))
+
+        if not files:
+            logger.warning(
+                "SIOP Planned Spools workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). Every "
+                "spool not found in the Weekly Production Planning "
+                "workbook will show Planned = No, unchanged."
+            )
+            return None
+
+        file = files[0]
+
+        logger.info(f"Reading {file.name}")
+
+        dataframe = pd.read_excel(
+            file,
+            sheet_name=config["sheet_name"],
+            header=config.get("header_row", 0),
+            engine="pyxlsb"
+        )
+
+        dataframe = standardize_columns(
+            dataframe,
+            SIOP_PLANNED
+        )
+
+        dataframe = convert_excel_serial_dates(
+            dataframe,
+            [SIOP_PLANNED_START],
+        )
+
+        logger.info(
+            f"Loaded {len(dataframe)} SIOP Planned Spools rows."
         )
 
         return dataframe

@@ -161,6 +161,15 @@ class Pipeline:
 
         line_history_cleaned = self.read_and_clean_line_history()
 
+        # ---- SIOP Planned Spools (optional) -----------------------
+        # Fallback Planned Start source (config/settings.json ->
+        # input_files.siop_planned) for spools the Weekly Production
+        # Planning workbook doesn't have. Same best-effort contract
+        # as the Line History Sheet above: never raises, only fills
+        # in what the Weekly file left blank.
+
+        siop_planned_cleaned = self.read_and_clean_siop_planned()
+
         # ---- Merge -> Business Rules -> Ageing -----------------------
 
         master = self.merge_engine.merge(
@@ -169,6 +178,7 @@ class Pipeline:
             cleaned_datasets["planning_fitup"],
             cleaned_datasets["planning_welding"],
             line_history=line_history_cleaned,
+            siop_planned=siop_planned_cleaned,
         )
 
         with_rules = self.business_rule_engine.apply(master)
@@ -255,6 +265,44 @@ class Pipeline:
             raw,
             "line_history",
             is_transactional=True,
+        )
+
+        return cleaned
+
+    # -----------------------------------------------------
+
+    def read_and_clean_siop_planned(self):
+        """
+        Best-effort read + clean of the SIOP Planned Spools
+        workbook. Returns None (never raises) if the file is
+        missing, disabled, or fails to read/parse for any reason -
+        see reader.py -> read_siop_planned() and merge.py ->
+        apply_siop_fallback(), both of which already treat None as
+        "no fallback Planned Start available this run".
+
+        Unlike the transactional Line History Sheet, this workbook
+        is one row per spool, so it goes through the normal
+        (non-transactional) duplicate-spool cleanup.
+        """
+
+        try:
+            raw = self.reader.read_siop_planned()
+        except Exception as error:
+            logger.warning(
+                f"Could not read SIOP Planned Spools workbook "
+                f"({error}). Every spool not found in the Weekly "
+                "Production Planning workbook will show "
+                "Planned = No, unchanged."
+            )
+            return None
+
+        if raw is None:
+            return None
+
+        cleaned, _ = self.cleaner.clean_dataframe(
+            raw,
+            "siop_planned",
+            is_transactional=False,
         )
 
         return cleaned
