@@ -231,6 +231,35 @@ a { color: inherit; }
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* Brand hairline + corner flag - a direct, deliberately restrained
+   quote of the DEE presentation template's own signature device (a
+   thin red-to-blue gradient rule beside the wordmark, and a small
+   diagonal red/blue flag in the corner). Kept low-opacity so it
+   reads as a brand watermark, not a second bold move competing with
+   the ambient field behind it. */
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ember) 0%, var(--ice) 100%);
+}
+
+.topbar::after {
+  content: "";
+  position: absolute;
+  top: -46px;
+  right: -54px;
+  width: 220px;
+  height: 130px;
+  background:
+    linear-gradient(-32deg, transparent 47%, var(--ember) 49%, var(--ember-dark) 58%, transparent 60%),
+    linear-gradient(-32deg, transparent 60%, var(--ice) 62%, var(--ice-dark) 71%, transparent 73%);
+  opacity: 0.16;
+  pointer-events: none;
 }
 
 .topbar__brand {
@@ -241,13 +270,13 @@ a { color: inherit; }
 
 .topbar__logo {
   flex-shrink: 0;
-  height: 44px;
-  width: 44px;
-  border-radius: 10px;
+  height: 46px;
+  width: 46px;
   object-fit: contain;
-  background: #FFFFFF;
+  padding: 6px;
+  border-radius: 11px;
+  background: linear-gradient(160deg, rgba(168, 46, 48, 0.08), rgba(67, 51, 165, 0.08));
   border: 1px solid var(--glass-border);
-  padding: 4px;
 }
 
 .topbar__divider {
@@ -669,6 +698,16 @@ a { color: inherit; }
   pointer-events: none;
 }
 .chart-card:hover::before { background-position: -40% 0; }
+
+.chart-card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 14%; right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-sheen), transparent);
+  opacity: 0.9;
+  pointer-events: none;
+}
 
 .chart-card:hover {
   transform: translateY(-2px);
