@@ -36,6 +36,13 @@
 "file_pattern": "*Line*History*.xlsb",
 "sheet_name": "Sheet2",
 "header_row": 0
+},
+"siop_planned": {
+"enabled": true,
+"file_pattern": "*SIOP*Planned*Spools*.xlsb",
+"sheet_name": "Sheet1",
+"header_row": 1,
+"comment": "Optional fallback source of Planned Start for spools not found in the Weekly Production Planning workbook - see merge.py -> apply_siop_fallback(). Filename is inconsistent; this pattern just requires SIOP, then Planned, then Spools to appear in that order."
 }
 },
 

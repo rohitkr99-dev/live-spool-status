@@ -62,5 +62,13 @@
 "Joint No": "Joint No",
 "Weld FitUp Date": "Weld FitUp Date",
 "Welding FRun Date": "Welding FRun Date"
+},
+
+"siop_planned": {
+"Project Code": "Project Code",
+"Drawing No.": "Drawing No",
+"Drawing No": "Drawing No",
+"Spool No": "Spool No",
+"Planned Start Date": "SIOP Planned Start"
 }
 }
