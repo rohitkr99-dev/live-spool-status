@@ -92,6 +92,7 @@ Drop your workbooks into `data/upload/`:
 * the DPR workbook (matches `input_files.fabrication.file_pattern` in `config/settings.json`)
 * the Weekly Production Planning workbook (`input_files.planning.file_pattern`)
 * optionally, the Line History Sheet (`input_files.line_history.file_pattern`) - joint-level Fit-Up/Welding data used to refine the Fit-Up/Welding/PDQC status, see `config/business_rules.json -> line_history_override`. If it isn't present, that refinement is simply skipped.
+* optionally, the SIOP Planned Spools workbook (`input_files.siop_planned.file_pattern`, filename may vary as long as it contains "SIOP", "Planned", "Spools" in order) - a fallback source of Planned Start dates for spools not found in the Weekly Production Planning workbook, see `src/merge.py -> apply_siop_fallback()`. If it isn't present, those spools simply keep showing Planned = No, as before.
 
 Then either:
 
