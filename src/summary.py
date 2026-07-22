@@ -758,11 +758,12 @@ class SummaryEngine:
 
     # -----------------------------------------------------
 
-    def generate_s_curve_summary(self, dataframe: pd.DataFrame) -> dict:
+    def _s_curve_for_dataframe(self, dataframe: pd.DataFrame) -> dict:
         """
-        Cumulative Planned vs. Actual progress over time ("S-Curve"),
-        as a percentage of total scope (every spool in the dataset -
-        the same denominator as the "Completed" KPI).
+        Cumulative Planned vs. Actual progress over time ("S-Curve")
+        for one dataframe slice, as a percentage of that slice's own
+        scope (every spool in it - e.g. every spool in ONE project,
+        when called per-project).
 
         Planned progress for a week = spools whose Planned Start
         falls in that fiscal week, accumulated week over week.
@@ -774,20 +775,12 @@ class SummaryEngine:
         week that hasn't happened yet, so cumulative_actual_pct is
         null for every later week (the planned line keeps going, as
         the forward schedule).
-
-        This is a reporting aggregate, not a new fabrication-workflow
-        business rule (see module docstring) - it re-buckets two
-        fields (Planned Start, Packing/Completion Date) the Business
-        Rule and Ageing Engines already produced, the same way
-        fitup_summary/welding_summary re-bucket existing fields by
-        week.
         """
 
         total_scope = len(dataframe)
 
         empty_result = {
             "total_scope": total_scope,
-            "as_of": to_json_safe(today()),
             "points": [],
             "cumulative_planned_pct_to_date": None,
             "cumulative_actual_pct_to_date": None,
@@ -855,13 +848,52 @@ class SummaryEngine:
 
         return {
             "total_scope": total_scope,
-            "as_of": to_json_safe(today()),
             "points": points,
             "cumulative_planned_pct_to_date": planned_pct_to_date,
             "cumulative_actual_pct_to_date": actual_pct_to_date,
             # Actual minus Planned, as of the current week. Negative
             # = behind schedule, positive = ahead of schedule.
             "schedule_variance_pct": schedule_variance_pct,
+        }
+
+    # -----------------------------------------------------
+
+    def generate_s_curve_summary(self, dataframe: pd.DataFrame) -> dict:
+        """
+        S-Curve data for the dashboard's "Project S-Curve" chart -
+        an "overall" (every spool) curve plus one curve per Project
+        Code, so the dashboard can switch between them by filtering
+        already-computed data (Rule 2/3: it never calculates), using
+        the same Project selector as the Stage Ageing Summary charts.
+
+        Each curve's percentages are relative to ITS OWN spool count
+        (e.g. a single project's curve reaches 100% once every spool
+        IN THAT PROJECT is done - not relative to the whole dataset),
+        so a small project's curve still reads meaningfully once
+        selected.
+
+        This is a reporting aggregate, not a new fabrication-workflow
+        business rule (see module docstring) - it re-buckets two
+        fields (Planned Start, Packing/Completion Date) the Business
+        Rule and Ageing Engines already produced, the same way
+        fitup_summary/welding_summary re-bucket existing fields by
+        week.
+        """
+
+        overall = self._s_curve_for_dataframe(dataframe)
+
+        by_project: dict[str, dict] = {}
+
+        if PROJECT_CODE in dataframe.columns:
+            for project_code, project_df in dataframe.groupby(PROJECT_CODE):
+                by_project[str(project_code)] = (
+                    self._s_curve_for_dataframe(project_df)
+                )
+
+        return {
+            "as_of": to_json_safe(today()),
+            "overall": overall,
+            "projects": by_project,
         }
 
     # -----------------------------------------------------

@@ -1,51 +1,123 @@
 /**
  * scurve.js
  * ---------------------------------------------------------
- * Renders the S-Curve: cumulative Planned vs. Actual progress over
- * time, straight from s_curve_summary.json (see src/summary.py ->
- * SummaryEngine.generate_s_curve_summary()). Per the Master
- * Specification's Rule 2/3, this module does no arithmetic beyond
- * formatting - every percentage, count, and week bucket already
- * arrives fully computed.
+ * Renders the "Project S-Curve" chart: cumulative Planned vs. Actual
+ * progress over time, straight from s_curve_summary.json (see
+ * src/summary.py -> SummaryEngine.generate_s_curve_summary()). Per
+ * the Master Specification's Rule 2/3, this module does no
+ * arithmetic beyond formatting - every percentage, count, and week
+ * bucket already arrives fully computed, for "All Projects" AND for
+ * each individual Project Code.
+ *
+ * Lives inside the Stage Ageing Summary section and deliberately
+ * shares THAT section's Project selector (#stage-ageing-project -
+ * see stageAgeing.js) rather than having a filter of its own, so
+ * picking a project there filters this chart too.
  */
 
 const SpoolSCurve = {
 
   instance: null,
+  data: null, // raw s_curve_summary.json: { as_of, overall, projects }
+
+  chartFont: {
+    family: "Inter, sans-serif",
+    size: 11,
+  },
 
   render(store) {
 
-    const summary = store.sCurveSummary;
-    const section = document.getElementById("scurve-section");
-    if (!section) return;
+    this.data = store.sCurveSummary;
 
-    if (!summary || !Array.isArray(summary.points) || summary.points.length === 0) {
-      section.hidden = true;
-      return;
-    }
+    const card = document.getElementById("scurve-card");
+    if (!card) return;
 
-    section.hidden = false;
+    const hasData = this.data
+      && this.data.overall
+      && Array.isArray(this.data.overall.points)
+      && this.data.overall.points.length > 0;
 
-    this.renderStats(summary);
-    this.renderChart(summary);
+    card.hidden = !hasData;
+    if (!hasData) return;
+
+    this.setupControl();
+    this.renderForCurrentSelection();
   },
 
-  renderStats(summary) {
+  /**
+   * Reuses the Stage Ageing Summary section's own Project dropdown
+   * (populated by stageAgeing.js -> populateProjectOptions()) rather
+   * than adding a second one - just adds ONE extra "also re-render
+   * the S-Curve" listener alongside stageAgeing.js's own listener.
+   */
+  setupControl() {
+    const select = document.getElementById("stage-ageing-project");
+    if (!select || select.dataset.scurveWired) return;
+    select.dataset.scurveWired = "true";
+
+    select.addEventListener("change", () => this.renderForCurrentSelection());
+  },
+
+  selectedProject() {
+    const select = document.getElementById("stage-ageing-project");
+    return select ? select.value : "__all__";
+  },
+
+  /**
+   * The already-computed curve for the current dropdown selection -
+   * "All Projects" -> data.overall, otherwise data.projects[code].
+   * Falls back to an empty curve (not "All Projects") if a selected
+   * project has no S-Curve data of its own, so the chart clears
+   * instead of silently showing the wrong project's numbers.
+   */
+  currentCurve() {
+
+    const project = this.selectedProject();
+
+    if (project === "__all__") {
+      return { label: "All Projects", curve: this.data.overall };
+    }
+
+    const curve = (this.data.projects || {})[project];
+
+    return {
+      label: project,
+      curve: curve || { total_scope: 0, points: [], cumulative_planned_pct_to_date: null, cumulative_actual_pct_to_date: null, schedule_variance_pct: null },
+    };
+  },
+
+  renderForCurrentSelection() {
+    if (!this.data) return;
+    const { label, curve } = this.currentCurve();
+    this.renderHint(label);
+    this.renderStats(curve);
+    this.renderChart(curve);
+  },
+
+  renderHint(label) {
+    const hint = document.getElementById("scurve-hint");
+    if (!hint) return;
+
+    const asOf = this.data.as_of
+      ? new Date(this.data.as_of).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "today";
+
+    hint.textContent = label === "All Projects"
+      ? `Cumulative Planned vs. Actual %, all projects — dashed = plan, solid = actual, up to ${asOf}`
+      : `Cumulative Planned vs. Actual % — ${label} — dashed = plan, solid = actual, up to ${asOf}`;
+  },
+
+  renderStats(curve) {
 
     const plannedEl = document.getElementById("scurve-planned-to-date");
     const actualEl = document.getElementById("scurve-actual-to-date");
     const varianceEl = document.getElementById("scurve-variance");
-    const asOfEl = document.getElementById("scurve-as-of");
 
-    if (plannedEl) {
-      plannedEl.textContent = this.formatPct(summary.cumulative_planned_pct_to_date);
-    }
-    if (actualEl) {
-      actualEl.textContent = this.formatPct(summary.cumulative_actual_pct_to_date);
-    }
+    if (plannedEl) plannedEl.textContent = this.formatPct(curve.cumulative_planned_pct_to_date);
+    if (actualEl) actualEl.textContent = this.formatPct(curve.cumulative_actual_pct_to_date);
 
     if (varianceEl) {
-      const value = summary.schedule_variance_pct;
+      const value = curve.schedule_variance_pct;
       if (value === null || value === undefined) {
         varianceEl.textContent = "n/a";
         varianceEl.style.color = "";
@@ -55,12 +127,6 @@ const SpoolSCurve = {
         varianceEl.style.color = value < 0 ? "var(--status-critical)" : "var(--status-complete)";
       }
     }
-
-    if (asOfEl) {
-      asOfEl.textContent = summary.as_of
-        ? `as of ${new Date(summary.as_of).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-        : "";
-    }
   },
 
   formatPct(value) {
@@ -68,7 +134,7 @@ const SpoolSCurve = {
     return `${value.toFixed(1)}%`;
   },
 
-  renderChart(summary) {
+  renderChart(curve) {
 
     if (this.instance) {
       this.instance.destroy();
@@ -78,13 +144,12 @@ const SpoolSCurve = {
     const canvas = document.getElementById("chart-scurve");
     if (!canvas) return;
 
-    const points = summary.points;
+    const points = curve.points || [];
     const labels = points.map((p) => p.week_label);
     const plannedData = points.map((p) => p.cumulative_planned_pct);
     const actualData = points.map((p) => p.cumulative_actual_pct);
 
     const colors = SPOOL_STATUS_CONFIG.sCurve;
-    const chartFont = { family: "Inter, sans-serif", size: 11 };
 
     this.instance = new Chart(canvas.getContext("2d"), {
       type: "line",
@@ -123,11 +188,11 @@ const SpoolSCurve = {
         plugins: {
           legend: {
             position: "top", align: "end",
-            labels: { font: chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" },
+            labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" },
           },
           tooltip: {
-            titleFont: chartFont,
-            bodyFont: chartFont,
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
             callbacks: {
               label(ctx) {
                 const value = ctx.parsed.y;
@@ -146,7 +211,7 @@ const SpoolSCurve = {
             min: 0,
             max: 100,
             grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
-            ticks: { font: chartFont, callback: (v) => `${v}%` },
+            ticks: { font: this.chartFont, callback: (v) => `${v}%` },
           },
         },
       },

@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-07-22T08:20:55.392654",
+  "generated_at": "2026-07-22T09:34:02.486360",
   "overall_passed": true,
   "datasets": {
     "fabrication": {
       "passed": true,
       "errors": [],
       "warnings": [
-        "2932 blank value(s) found in 'PDQC'.",
-        "3318 blank value(s) found in 'RFP'.",
-        "4687 blank value(s) found in 'PDI'.",
-        "4701 blank value(s) found in 'Packing'.",
-        "6378 blank value(s) found in 'Dispatch'."
+        "2698 blank value(s) found in 'PDQC'.",
+        "3055 blank value(s) found in 'RFP'.",
+        "4619 blank value(s) found in 'PDI'.",
+        "4630 blank value(s) found in 'Packing'.",
+        "6366 blank value(s) found in 'Dispatch'."
       ]
     },
     "planning_master": {

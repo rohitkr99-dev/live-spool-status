@@ -571,14 +571,15 @@ def test_s_curve_summary_empty_dataframe(engine):
 
     outputs = engine.generate_s_curve_summary(pd.DataFrame())
 
-    assert outputs["total_scope"] == 0
-    assert outputs["points"] == []
-    assert outputs["cumulative_planned_pct_to_date"] is None
-    assert outputs["cumulative_actual_pct_to_date"] is None
-    assert outputs["schedule_variance_pct"] is None
+    assert outputs["overall"]["total_scope"] == 0
+    assert outputs["overall"]["points"] == []
+    assert outputs["overall"]["cumulative_planned_pct_to_date"] is None
+    assert outputs["overall"]["cumulative_actual_pct_to_date"] is None
+    assert outputs["overall"]["schedule_variance_pct"] is None
+    assert outputs["projects"] == {}
 
 
-def test_s_curve_summary_cumulative_percentages(engine, sample_dataframe):
+def test_s_curve_summary_overall_cumulative_percentages(engine, sample_dataframe):
     """
     Of the 3 sample spools: 2 have a Planned Start (same week), and
     1 has been Packed (Completion Date). All dates are in the past,
@@ -587,23 +588,48 @@ def test_s_curve_summary_cumulative_percentages(engine, sample_dataframe):
 
     enriched = engine.enrich(sample_dataframe)
     outputs = engine.generate_s_curve_summary(enriched)
+    overall = outputs["overall"]
 
-    assert outputs["total_scope"] == 3
-    assert outputs["points"], "expected at least one week of data"
+    assert overall["total_scope"] == 3
+    assert overall["points"], "expected at least one week of data"
 
     # Every point is JSON-safe and monotonically non-decreasing.
-    json.dumps(outputs["points"])
-    planned_series = [p["cumulative_planned_pct"] for p in outputs["points"]]
+    json.dumps(overall["points"])
+    planned_series = [p["cumulative_planned_pct"] for p in overall["points"]]
     assert planned_series == sorted(planned_series)
 
     # 2 of 3 spools have a Planned Start -> 66.7% planned to date.
-    assert outputs["cumulative_planned_pct_to_date"] == pytest.approx(66.7)
+    assert overall["cumulative_planned_pct_to_date"] == pytest.approx(66.7)
 
     # 1 of 3 spools has been Packed -> 33.3% actual to date.
-    assert outputs["cumulative_actual_pct_to_date"] == pytest.approx(33.3)
+    assert overall["cumulative_actual_pct_to_date"] == pytest.approx(33.3)
 
     # Actual trails planned -> negative schedule variance.
-    assert outputs["schedule_variance_pct"] < 0
+    assert overall["schedule_variance_pct"] < 0
+
+
+def test_s_curve_summary_by_project_uses_its_own_scope(engine, sample_dataframe):
+    """
+    Each project's curve is relative to ITS OWN spool count, not the
+    whole dataset - P001 has 2 spools (both Planned, 1 Packed), P002
+    has 1 spool with neither field filled.
+    """
+
+    enriched = engine.enrich(sample_dataframe)
+    outputs = engine.generate_s_curve_summary(enriched)
+    by_project = outputs["projects"]
+
+    assert set(by_project) == {"P001", "P002"}
+
+    p001 = by_project["P001"]
+    assert p001["total_scope"] == 2
+    assert p001["cumulative_planned_pct_to_date"] == pytest.approx(100.0)
+    assert p001["cumulative_actual_pct_to_date"] == pytest.approx(50.0)
+
+    p002 = by_project["P002"]
+    assert p002["total_scope"] == 1
+    assert p002["points"] == []
+    assert p002["cumulative_planned_pct_to_date"] is None
 
 
 def test_s_curve_summary_actual_stops_at_current_week(engine):
@@ -623,8 +649,9 @@ def test_s_curve_summary_actual_stops_at_current_week(engine):
 
     enriched = engine.enrich(dataframe)
     outputs = engine.generate_s_curve_summary(enriched)
+    overall = outputs["overall"]
 
-    future_points = [p for p in outputs["points"] if p["planned_count"] > 0]
+    future_points = [p for p in overall["points"] if p["planned_count"] > 0]
     assert future_points
     assert all(
         p["cumulative_actual_pct"] is None for p in future_points

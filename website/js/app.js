@@ -42,10 +42,10 @@ const SpoolApp = {
   renderAll(store, isReload) {
     SpoolKPI.render(store.dashboardSummary);
     SpoolFabline.render(store.dashboardSummary);
-    SpoolSCurve.render(store);
     SpoolCharts.render(store);
     SpoolStageThroughput.render(store);
     SpoolStageAgeing.render(store);
+    SpoolSCurve.render(store);
 
     if (isReload) {
       SpoolTables.destroyAll();

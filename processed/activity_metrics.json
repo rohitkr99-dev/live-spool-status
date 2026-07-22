@@ -2588,5 +2588,25 @@
     "fitup_inch_dia": 420.75,
     "welding_inch_dia": 556.25,
     "painting_surface_area_out": 7.39
+  },
+  {
+    "date": "2026-07-20",
+    "week_number": 17,
+    "week_label": "Week 17",
+    "week_start": "2026-07-20",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 194.49
+  },
+  {
+    "date": "2026-07-21",
+    "week_number": 17,
+    "week_label": "Week 17",
+    "week_start": "2026-07-20",
+    "month_label": "Jul 2026",
+    "fitup_inch_dia": 0.0,
+    "welding_inch_dia": 0.0,
+    "painting_surface_area_out": 62.76
   }
 ]
