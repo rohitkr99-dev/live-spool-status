@@ -13,8 +13,8 @@
   {
     "Project Code": "TJ/25-26/172",
     "total_spools": 1138,
-    "planned": 4,
-    "unplanned": 1134,
+    "planned": 1138,
+    "unplanned": 0,
     "completed": 1138,
     "average_total_age_days": 77.0,
     "current_stage_breakdown": {
@@ -27,7 +27,7 @@
     "planned": 1004,
     "unplanned": 20,
     "completed": 473,
-    "average_total_age_days": 44.3,
+    "average_total_age_days": 44.8,
     "current_stage_breakdown": {
       "Fit-Up": 6,
       "Welding": 1,
@@ -42,10 +42,10 @@
   {
     "Project Code": "TJ/25-26/183",
     "total_spools": 2082,
-    "planned": 1564,
-    "unplanned": 518,
+    "planned": 1895,
+    "unplanned": 187,
     "completed": 820,
-    "average_total_age_days": 30.9,
+    "average_total_age_days": 31.2,
     "current_stage_breakdown": {
       "Fit-Up": 502,
       "Welding": 3,
@@ -60,8 +60,8 @@
   {
     "Project Code": "TJ/25-26/184",
     "total_spools": 1314,
-    "planned": 19,
-    "unplanned": 1295,
+    "planned": 1312,
+    "unplanned": 2,
     "completed": 1312,
     "average_total_age_days": 53.6,
     "current_stage_breakdown": {
@@ -75,7 +75,7 @@
     "planned": 1529,
     "unplanned": 391,
     "completed": 298,
-    "average_total_age_days": 19.3,
+    "average_total_age_days": 20.0,
     "current_stage_breakdown": {
       "Fit-Up": 346,
       "Welding": 60,
@@ -93,7 +93,7 @@
     "planned": 628,
     "unplanned": 92,
     "completed": 100,
-    "average_total_age_days": 14.4,
+    "average_total_age_days": 15.2,
     "current_stage_breakdown": {
       "Fit-Up": 360,
       "Welding": 8,
@@ -110,7 +110,7 @@
     "planned": 128,
     "unplanned": 516,
     "completed": 0,
-    "average_total_age_days": 0.1,
+    "average_total_age_days": 0.3,
     "current_stage_breakdown": {
       "Fit-Up": 128,
       "Production Order Not Released": 516
