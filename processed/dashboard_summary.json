@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-22T09:35:11.232564",
+  "generated_at": "2026-07-22T10:48:10.444578",
   "kpis": {
     "total_spools": 8881,
     "planned": 7673,
@@ -17,9 +17,9 @@
     "planning_variance_days": -1.0
   },
   "current_stage_distribution": {
-    "Fit-Up": 1337,
-    "Welding": 53,
-    "PDQC": 174,
+    "Fit-Up": 1229,
+    "Welding": 57,
+    "PDQC": 278,
     "Ready for Painting": 353,
     "Under Painting": 1568,
     "Packing": 11,

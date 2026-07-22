@@ -215,9 +215,9 @@
     "completed": 0,
     "average_total_age_days": 9.0,
     "current_stage_breakdown": {
-      "Fit-Up": 150,
-      "Welding": 40,
-      "PDQC": 87,
+      "Fit-Up": 103,
+      "Welding": 27,
+      "PDQC": 147,
       "Ready for Painting": 119,
       "Under Painting": 281
     }
@@ -230,9 +230,9 @@
     "completed": 0,
     "average_total_age_days": 2.7,
     "current_stage_breakdown": {
-      "Fit-Up": 489,
-      "Welding": 10,
-      "PDQC": 13,
+      "Fit-Up": 428,
+      "Welding": 27,
+      "PDQC": 57,
       "Ready for Painting": 4,
       "Under Painting": 8
     }

@@ -171,11 +171,11 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Welding",
-    "spool_count": 924,
-    "average_days": 1.6,
+    "spool_count": 925,
+    "average_days": 1.7,
     "bucket_counts": {
       "0\u20137d": 905,
-      "8\u201314d": 14,
+      "8\u201314d": 15,
       "15\u201330d": 4,
       "31\u201360d": 1,
       "60d+": 0
@@ -249,27 +249,27 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Welding",
-    "spool_count": 1267,
-    "average_days": 1.5,
+    "spool_count": 1269,
+    "average_days": 1.6,
     "bucket_counts": {
-      "0\u20137d": 1238,
-      "8\u201314d": 16,
+      "0\u20137d": 1240,
+      "8\u201314d": 17,
       "15\u201330d": 3,
       "31\u201360d": 0,
-      "60d+": 10
+      "60d+": 9
     }
   },
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "PDQC",
     "spool_count": 1378,
-    "average_days": 4.8,
+    "average_days": 4.7,
     "bucket_counts": {
-      "0\u20137d": 1111,
-      "8\u201314d": 190,
-      "15\u201330d": 67,
+      "0\u20137d": 1114,
+      "8\u201314d": 189,
+      "15\u201330d": 66,
       "31\u201360d": 9,
-      "60d+": 1
+      "60d+": 0
     }
   },
   {
@@ -393,10 +393,10 @@
     "Project Code": "TJ/25-26/188",
     "Stage": "Fit-Up",
     "spool_count": 1529,
-    "average_days": 4.8,
+    "average_days": 4.7,
     "bucket_counts": {
-      "0\u20137d": 1088,
-      "8\u201314d": 335,
+      "0\u20137d": 1134,
+      "8\u201314d": 289,
       "15\u201330d": 89,
       "31\u201360d": 17,
       "60d+": 0
@@ -405,26 +405,26 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Welding",
-    "spool_count": 1175,
-    "average_days": 1.3,
+    "spool_count": 1278,
+    "average_days": 1.4,
     "bucket_counts": {
-      "0\u20137d": 1159,
-      "8\u201314d": 10,
-      "15\u201330d": 5,
-      "31\u201360d": 0,
-      "60d+": 1
+      "0\u20137d": 1260,
+      "8\u201314d": 11,
+      "15\u201330d": 4,
+      "31\u201360d": 1,
+      "60d+": 2
     }
   },
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "PDQC",
     "spool_count": 1083,
-    "average_days": 4.5,
+    "average_days": 4.2,
     "bucket_counts": {
-      "0\u20137d": 909,
-      "8\u201314d": 146,
+      "0\u20137d": 928,
+      "8\u201314d": 129,
       "15\u201330d": 25,
-      "31\u201360d": 3,
+      "31\u201360d": 1,
       "60d+": 0
     }
   },
@@ -471,7 +471,7 @@
     "Project Code": "TJ/25-26/189",
     "Stage": "Fit-Up",
     "spool_count": 628,
-    "average_days": 3.4,
+    "average_days": 3.3,
     "bucket_counts": {
       "0\u20137d": 562,
       "8\u201314d": 40,
@@ -483,10 +483,10 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "Welding",
-    "spool_count": 236,
+    "spool_count": 280,
     "average_days": 1.0,
     "bucket_counts": {
-      "0\u20137d": 233,
+      "0\u20137d": 277,
       "8\u201314d": 0,
       "15\u201330d": 1,
       "31\u201360d": 0,
@@ -497,11 +497,11 @@
     "Project Code": "TJ/25-26/189",
     "Stage": "PDQC",
     "spool_count": 234,
-    "average_days": 4.5,
+    "average_days": 4.4,
     "bucket_counts": {
-      "0\u20137d": 196,
+      "0\u20137d": 198,
       "8\u201314d": 28,
-      "15\u201330d": 10,
+      "15\u201330d": 8,
       "31\u201360d": 0,
       "60d+": 0
     }
@@ -549,9 +549,22 @@
     "Project Code": "TJ/25-26/206",
     "Stage": "Fit-Up",
     "spool_count": 128,
-    "average_days": 1.4,
+    "average_days": 1.3,
     "bucket_counts": {
       "0\u20137d": 128,
+      "8\u201314d": 0,
+      "15\u201330d": 0,
+      "31\u201360d": 0,
+      "60d+": 0
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/206",
+    "Stage": "Welding",
+    "spool_count": 20,
+    "average_days": 0.7,
+    "bucket_counts": {
+      "0\u20137d": 20,
       "8\u201314d": 0,
       "15\u201330d": 0,
       "31\u201360d": 0,

@@ -47,8 +47,8 @@
     "average_total_age_days": 31.2,
     "current_stage_breakdown": {
       "Fit-Up": 502,
-      "Welding": 2,
-      "PDQC": 15,
+      "Welding": 1,
+      "PDQC": 16,
       "Ready for Painting": 152,
       "Under Painting": 406,
       "Dispatch": 63,
@@ -76,9 +76,9 @@
     "completed": 337,
     "average_total_age_days": 19.9,
     "current_stage_breakdown": {
-      "Fit-Up": 341,
-      "Welding": 42,
-      "PDQC": 133,
+      "Fit-Up": 292,
+      "Welding": 30,
+      "PDQC": 194,
       "Ready for Painting": 180,
       "Under Painting": 564,
       "Packing": 2,
@@ -94,9 +94,9 @@
     "completed": 106,
     "average_total_age_days": 15.1,
     "current_stage_breakdown": {
-      "Fit-Up": 360,
-      "Welding": 8,
-      "PDQC": 26,
+      "Fit-Up": 309,
+      "Welding": 22,
+      "PDQC": 63,
       "Ready for Painting": 18,
       "Under Painting": 103,
       "Packing": 7,
@@ -112,7 +112,9 @@
     "completed": 0,
     "average_total_age_days": 0.3,
     "current_stage_breakdown": {
-      "Fit-Up": 128,
+      "Fit-Up": 120,
+      "Welding": 3,
+      "PDQC": 5,
       "Production Order Not Released": 516
     }
   }
