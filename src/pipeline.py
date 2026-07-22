@@ -374,6 +374,7 @@ class Pipeline:
             "weekly_summary": summary_outputs["weekly_summary"],
             "group_summary": summary_outputs["group_summary"],
             "stage_ageing_summary": summary_outputs["stage_ageing_summary"],
+            "s_curve_summary": summary_outputs["s_curve_summary"],
             "exceptions": summary_outputs["exceptions"],
             "activity_metrics": activity_metrics,
         }

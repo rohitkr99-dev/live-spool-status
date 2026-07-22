@@ -110,6 +110,34 @@
       <div class="fabline-bottleneck" id="fabline-bottleneck"></div>
     </section>
 
+    <!-- ============ S-CURVE ============ -->
+    <section class="scurve-section" id="scurve-section" aria-label="Planned vs actual progress" hidden>
+      <div class="fabline-section__head">
+        <div>
+          <span class="section-eyebrow">Planned vs. Actual</span>
+          <h2>Project S-Curve</h2>
+        </div>
+        <p class="fabline-section__note">Cumulative % of all spools, week over week. Dashed line is the plan; solid line is what actually happened, up to <span id="scurve-as-of">today</span>.</p>
+      </div>
+      <div class="scurve-stats">
+        <div class="scurve-stat">
+          <span class="scurve-stat__label">Planned to date</span>
+          <span class="scurve-stat__value" id="scurve-planned-to-date">—</span>
+        </div>
+        <div class="scurve-stat">
+          <span class="scurve-stat__label">Actual to date</span>
+          <span class="scurve-stat__value" id="scurve-actual-to-date">—</span>
+        </div>
+        <div class="scurve-stat" title="Actual minus Planned, as of the current week. Negative = behind schedule, positive = ahead of schedule.">
+          <span class="scurve-stat__label">Schedule Variance</span>
+          <span class="scurve-stat__value" id="scurve-variance">—</span>
+        </div>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__body scurve-chart-body"><canvas id="chart-scurve"></canvas></div>
+      </div>
+    </section>
+
     <!-- ============ CHARTS ============ -->
     <section class="charts-grid" aria-label="Progress charts">
       <div class="charts-grid__head">
@@ -420,6 +448,7 @@
 <script src="js/kpi.js"></script>
 <script src="js/fabline.js"></script>
 <script src="js/charts.js"></script>
+<script src="js/scurve.js"></script>
 <script src="js/stageThroughput.js"></script>
 <script src="js/stageAgeing.js"></script>
 <script src="js/tables.js"></script>

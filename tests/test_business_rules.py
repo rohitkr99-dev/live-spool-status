@@ -56,6 +56,25 @@ def test_planned_flag_false_when_planned_start_blank(engine):
     assert engine.determine_planned_flag(row) is False
 
 
+def test_planned_flag_true_when_packed_but_no_planned_start(engine):
+    """
+    A spool with no Planned Start but a Packing date has clearly
+    already been fabricated - it should count as Planned, not
+    Unplanned, even though it's missing from the planning sheet.
+    """
+
+    row = _row(**{"Packing": "2026-02-01"})
+
+    assert engine.determine_planned_flag(row) is True
+
+
+def test_planned_flag_true_when_dispatched_but_no_planned_start(engine):
+
+    row = _row(**{"Dispatch": "2026-02-05"})
+
+    assert engine.determine_planned_flag(row) is True
+
+
 # -----------------------------------------------------
 # First Activity Date
 # -----------------------------------------------------

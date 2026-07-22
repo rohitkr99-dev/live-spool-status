@@ -1,6 +1,8 @@
 {
 "planned_spool": {
-"age_start_field": "Planned Start"
+"age_start_field": "Planned Start",
+"also_planned_if_any_filled": ["Packing", "Dispatch"],
+"also_planned_if_any_filled_comment": "A spool missing Planned Start is normally Unplanned. But if it has already been Packed and/or Dispatched, it clearly WAS worked and completed - it's just missing from the planning sheet (e.g. added outside the normal planning cycle). Counting it as Unplanned would misrepresent real backlog, so any spool with a value in one of these fields is treated as Planned too, even without a Planned Start date."
 },
 
 "unplanned_spool": {

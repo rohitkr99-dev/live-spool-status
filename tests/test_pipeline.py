@@ -438,6 +438,7 @@ def test_write_dashboard_bundle_publishes_to_website(pipeline, tmp_path):
         "weekly_summary": [],
         "group_summary": [],
         "stage_ageing_summary": [],
+        "s_curve_summary": {},
         "exceptions": [],
     }
 
@@ -465,7 +466,7 @@ def test_write_dashboard_bundle_skips_publishing_when_disabled(pipeline, tmp_pat
     pipeline.write_dashboard_bundle({
         "master_spools": [], "dashboard_summary": {}, "project_summary": [],
         "weekly_summary": [], "group_summary": [], "stage_ageing_summary": [],
-        "exceptions": [],
+        "s_curve_summary": {}, "exceptions": [],
     }, [])
 
     assert not website_data_folder.exists()

@@ -142,6 +142,16 @@ const SPOOL_STATUS_CONFIG = {
     { name: "Dispatch", dateField: "Dispatch" },
   ],
 
+  // S-Curve (Planned vs Actual cumulative progress) line colours.
+  // Blue for Planned mirrors the "Planned" figure in the Planned /
+  // Unplanned KPI card (--status-progress); red-brand Ember for
+  // Actual makes it read as "the line that matters right now",
+  // consistent with --primary elsewhere on the page.
+  sCurve: {
+    plannedColor: "#4333A5",
+    actualColor: "#A82E30",
+  },
+
   // A distinct colour per project, cycled if there are more projects
   // than colours - used by the Stage Ageing dashboard's "all
   // projects" grouped-bar view (js/stageAgeing.js). A qualitative

@@ -124,6 +124,15 @@ class BusinessRuleEngine:
         self.planned_start_field: str = (
             rules_config["planned_spool"]["age_start_field"]
         )
+        # See config/business_rules.json -> planned_spool.also_planned_if_any_filled:
+        # a spool with no Planned Start is still counted as Planned if
+        # it has already been Packed and/or Dispatched - it clearly
+        # was worked, it's just missing from the planning sheet.
+        self.also_planned_if_any_filled: list[str] = (
+            rules_config["planned_spool"].get(
+                "also_planned_if_any_filled", []
+            )
+        )
         self.first_activity_fields: list[str] = (
             rules_config["unplanned_spool"]["first_activity_fields"]
         )
@@ -252,9 +261,24 @@ class BusinessRuleEngine:
         A spool is Planned if it has a value in the configured
         planned-start field (config/business_rules.json ->
         planned_spool.age_start_field).
+
+        A spool that's missing a Planned Start is ALSO counted as
+        Planned if it has already reached one of the configured
+        "also planned if any filled" fields - by default Packing
+        and/or Dispatch (config/business_rules.json -> planned_spool.
+        also_planned_if_any_filled). Such a spool has clearly already
+        been fabricated and shipped; it's simply absent from the
+        planning sheet, and reporting it as "Unplanned" would
+        overstate how much genuinely unplanned backlog exists.
         """
 
-        return not is_empty(row.get(self.planned_start_field))
+        if not is_empty(row.get(self.planned_start_field)):
+            return True
+
+        return any(
+            not is_empty(row.get(field))
+            for field in self.also_planned_if_any_filled
+        )
 
     # -----------------------------------------------------
 

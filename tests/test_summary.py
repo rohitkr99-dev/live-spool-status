@@ -564,6 +564,74 @@ def test_exceptions_empty_when_no_anomalies(engine, sample_dataframe):
 
 
 # -----------------------------------------------------
+# generate_s_curve_summary
+# -----------------------------------------------------
+
+def test_s_curve_summary_empty_dataframe(engine):
+
+    outputs = engine.generate_s_curve_summary(pd.DataFrame())
+
+    assert outputs["total_scope"] == 0
+    assert outputs["points"] == []
+    assert outputs["cumulative_planned_pct_to_date"] is None
+    assert outputs["cumulative_actual_pct_to_date"] is None
+    assert outputs["schedule_variance_pct"] is None
+
+
+def test_s_curve_summary_cumulative_percentages(engine, sample_dataframe):
+    """
+    Of the 3 sample spools: 2 have a Planned Start (same week), and
+    1 has been Packed (Completion Date). All dates are in the past,
+    so every point counts toward "to date".
+    """
+
+    enriched = engine.enrich(sample_dataframe)
+    outputs = engine.generate_s_curve_summary(enriched)
+
+    assert outputs["total_scope"] == 3
+    assert outputs["points"], "expected at least one week of data"
+
+    # Every point is JSON-safe and monotonically non-decreasing.
+    json.dumps(outputs["points"])
+    planned_series = [p["cumulative_planned_pct"] for p in outputs["points"]]
+    assert planned_series == sorted(planned_series)
+
+    # 2 of 3 spools have a Planned Start -> 66.7% planned to date.
+    assert outputs["cumulative_planned_pct_to_date"] == pytest.approx(66.7)
+
+    # 1 of 3 spools has been Packed -> 33.3% actual to date.
+    assert outputs["cumulative_actual_pct_to_date"] == pytest.approx(33.3)
+
+    # Actual trails planned -> negative schedule variance.
+    assert outputs["schedule_variance_pct"] < 0
+
+
+def test_s_curve_summary_actual_stops_at_current_week(engine):
+    """
+    A Planned Start far in the future (beyond the current fiscal
+    week) should still extend the planned line, but must never
+    produce an "actual" value for that future week.
+    """
+
+    dataframe = pd.DataFrame([
+        _row(**{
+            "Composite Key": "P003|D003|S001",
+            "Planned Start": "2099-01-01",
+            "Packing": None,
+        }),
+    ])
+
+    enriched = engine.enrich(dataframe)
+    outputs = engine.generate_s_curve_summary(enriched)
+
+    future_points = [p for p in outputs["points"] if p["planned_count"] > 0]
+    assert future_points
+    assert all(
+        p["cumulative_actual_pct"] is None for p in future_points
+    )
+
+
+# -----------------------------------------------------
 # generate_all
 # -----------------------------------------------------
 
@@ -574,7 +642,8 @@ def test_generate_all_produces_every_output(engine, sample_dataframe):
     for key in [
         "master_spools", "dashboard_summary", "project_summary",
         "weekly_summary", "group_summary", "stage_ageing_summary",
-        "fitup_summary", "welding_summary", "exceptions",
+        "fitup_summary", "welding_summary", "s_curve_summary",
+        "exceptions",
     ]:
         assert key in outputs
         json.dumps(outputs[key])  # every output must be JSON-safe

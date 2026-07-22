@@ -526,6 +526,52 @@ a { color: inherit; }
   line-height: 1.5;
 }
 
+.scurve-section {
+  position: relative;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  padding: 26px 26px 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.scurve-stats {
+  position: relative;
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.scurve-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scurve-stat__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--frost-faint);
+}
+
+.scurve-stat__value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--frost);
+}
+
+.scurve-chart-body {
+  min-height: 320px;
+}
+
 .fabline {
   position: relative;
   display: flex;
@@ -1188,7 +1234,7 @@ a { color: inherit; }
    page assembles itself rather than popping in at once.
    ===================================================== */
 
-.kpi-card, .fabline-section, .chart-card, .stage-throughput-section .chart-card,
+.kpi-card, .fabline-section, .scurve-section, .chart-card, .stage-throughput-section .chart-card,
 .tables-section {
   opacity: 0;
   transform: translateY(14px);
@@ -1196,6 +1242,7 @@ a { color: inherit; }
 
 body.is-ready .kpi-card,
 body.is-ready .fabline-section,
+body.is-ready .scurve-section,
 body.is-ready .chart-card,
 body.is-ready .tables-section {
   animation: riseIn 0.7s var(--ease-out) forwards;
@@ -1208,6 +1255,7 @@ body.is-ready .kpi-strip .kpi-card:nth-child(4) { animation-delay: 0.20s; }
 body.is-ready .kpi-strip .kpi-card:nth-child(5) { animation-delay: 0.26s; }
 body.is-ready .kpi-strip .kpi-card:nth-child(6) { animation-delay: 0.32s; }
 body.is-ready .fabline-section { animation-delay: 0.36s; }
+body.is-ready .scurve-section { animation-delay: 0.39s; }
 body.is-ready .charts-grid .chart-card:nth-child(2) { animation-delay: 0.42s; }
 body.is-ready .charts-grid .chart-card:nth-child(3) { animation-delay: 0.48s; }
 body.is-ready .charts-grid .chart-card:nth-child(4) { animation-delay: 0.54s; }
@@ -1235,6 +1283,7 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
   .fabline { flex-wrap: wrap; height: auto; }
   .fabline__stage { min-width: 100px; flex: 1 1 30%; }
   .fabline-section__note { text-align: left; max-width: none; }
+  .scurve-stats { gap: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

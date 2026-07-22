@@ -102,6 +102,7 @@ const SpoolData = {
     weeklySummary: [],
     groupSummary: [],
     stageAgeingSummary: [],
+    sCurveSummary: null,
     exceptions: [],
     activityMetrics: [],
   },
@@ -251,6 +252,7 @@ const SpoolData = {
     this.store.weeklySummary = bundle.weekly_summary || [];
     this.store.groupSummary = bundle.group_summary || [];
     this.store.stageAgeingSummary = bundle.stage_ageing_summary || [];
+    this.store.sCurveSummary = bundle.s_curve_summary || null;
     this.store.exceptions = bundle.exceptions || [];
     this.store.activityMetrics = bundle.activity_metrics || [];
 

@@ -104,6 +104,7 @@ from constants import (
 from logger import logger
 from utils import (
     dataframe_to_json_records,
+    fiscal_week_info,
     is_empty,
     parse_date,
     to_json_safe,
@@ -729,6 +730,141 @@ class SummaryEngine:
         return self._activity_progress_summary(dataframe, first_welding_field)
 
     # -----------------------------------------------------
+    # s_curve_summary.json
+    # -----------------------------------------------------
+
+    def _weekly_date_counts(self, date_series: pd.Series) -> dict:
+        """
+        Parse every value in a date column and count how many fall
+        into each fiscal week (utils.fiscal_week_info - the same
+        Week-1-on-30-March calendar used everywhere else in this
+        codebase, e.g. activity_metrics.py). Returns
+        {week_start_date: count}, blank/unparseable values skipped.
+        """
+
+        counts: dict = {}
+
+        for value in date_series:
+
+            parsed = parse_date(value)
+
+            if parsed is None:
+                continue
+
+            week_start = fiscal_week_info(parsed)["week_start"]
+            counts[week_start] = counts.get(week_start, 0) + 1
+
+        return counts
+
+    # -----------------------------------------------------
+
+    def generate_s_curve_summary(self, dataframe: pd.DataFrame) -> dict:
+        """
+        Cumulative Planned vs. Actual progress over time ("S-Curve"),
+        as a percentage of total scope (every spool in the dataset -
+        the same denominator as the "Completed" KPI).
+
+        Planned progress for a week = spools whose Planned Start
+        falls in that fiscal week, accumulated week over week.
+
+        Actual progress for a week = spools actually Completed
+        (Packing date - see COMPLETION_DATE, added by enrich()) in
+        that same week, accumulated week over week. The actual line
+        stops at the current fiscal week - there's no "actual" for a
+        week that hasn't happened yet, so cumulative_actual_pct is
+        null for every later week (the planned line keeps going, as
+        the forward schedule).
+
+        This is a reporting aggregate, not a new fabrication-workflow
+        business rule (see module docstring) - it re-buckets two
+        fields (Planned Start, Packing/Completion Date) the Business
+        Rule and Ageing Engines already produced, the same way
+        fitup_summary/welding_summary re-bucket existing fields by
+        week.
+        """
+
+        total_scope = len(dataframe)
+
+        empty_result = {
+            "total_scope": total_scope,
+            "as_of": to_json_safe(today()),
+            "points": [],
+            "cumulative_planned_pct_to_date": None,
+            "cumulative_actual_pct_to_date": None,
+            "schedule_variance_pct": None,
+        }
+
+        if total_scope == 0:
+            return empty_result
+
+        planned_counts = self._weekly_date_counts(
+            dataframe[PLANNED_START]
+        )
+        actual_counts = self._weekly_date_counts(
+            dataframe[COMPLETION_DATE]
+        )
+
+        all_weeks = sorted(set(planned_counts) | set(actual_counts))
+
+        if not all_weeks:
+            return empty_result
+
+        current_week_start = fiscal_week_info(today())["week_start"]
+
+        points = []
+        cumulative_planned = 0
+        cumulative_actual = 0
+        planned_pct_to_date = None
+        actual_pct_to_date = None
+
+        for week_start in all_weeks:
+
+            cumulative_planned += planned_counts.get(week_start, 0)
+            planned_pct = round(
+                (cumulative_planned / total_scope) * 100, 1
+            )
+
+            actual_pct = None
+            if week_start <= current_week_start:
+                cumulative_actual += actual_counts.get(week_start, 0)
+                actual_pct = round(
+                    (cumulative_actual / total_scope) * 100, 1
+                )
+                actual_pct_to_date = actual_pct
+                planned_pct_to_date = planned_pct
+
+            points.append({
+                "fiscal_week_label": fiscal_week_info(week_start)["week_label"],
+                "week_start": to_json_safe(week_start),
+                "week_label": week_start.strftime("%d %b %y"),
+                "planned_count": planned_counts.get(week_start, 0),
+                "actual_count": (
+                    actual_counts.get(week_start, 0)
+                    if week_start <= current_week_start else 0
+                ),
+                "cumulative_planned_pct": planned_pct,
+                "cumulative_actual_pct": actual_pct,
+            })
+
+        schedule_variance_pct = (
+            round(actual_pct_to_date - planned_pct_to_date, 1)
+            if actual_pct_to_date is not None
+            and planned_pct_to_date is not None
+            else None
+        )
+
+        return {
+            "total_scope": total_scope,
+            "as_of": to_json_safe(today()),
+            "points": points,
+            "cumulative_planned_pct_to_date": planned_pct_to_date,
+            "cumulative_actual_pct_to_date": actual_pct_to_date,
+            # Actual minus Planned, as of the current week. Negative
+            # = behind schedule, positive = ahead of schedule.
+            "schedule_variance_pct": schedule_variance_pct,
+        }
+
+    # -----------------------------------------------------
     # exceptions.json
     # -----------------------------------------------------
 
@@ -813,6 +949,7 @@ class SummaryEngine:
             ),
             "fitup_summary": self.generate_fitup_summary(enriched),
             "welding_summary": self.generate_welding_summary(enriched),
+            "s_curve_summary": self.generate_s_curve_summary(enriched),
             "exceptions": self.generate_exceptions(enriched),
         }
 

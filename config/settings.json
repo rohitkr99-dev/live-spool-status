@@ -55,6 +55,7 @@
 "stage_ageing_summary": "stage_ageing_summary.json",
 "fitup_summary": "fitup_summary.json",
 "welding_summary": "welding_summary.json",
+"s_curve_summary": "s_curve_summary.json",
 "activity_metrics": "activity_metrics.json",
 "exceptions": "exceptions.json",
 "validation_report": "validation_report.json",
