@@ -63,16 +63,22 @@ const SpoolTables = {
     );
   },
 
-  renderNumberDisplay(value) {
+  renderNumberDisplay(value, decimals = 2) {
     if (value === null || value === undefined || value === "") {
       return '<span class="bool-no">—</span>';
     }
-    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals }).format(value);
   },
 
-  renderNumber() {
+  /**
+   * @param {number} [decimals=2] - decimal places to show. Total Wt.
+   * and Inch Dia use the default 2; Surface Area uses 3 (see its
+   * column definition below) since its values are small enough that
+   * 2 decimals loses meaningful precision.
+   */
+  renderNumber(decimals = 2) {
     return this.typeAware(
-      (d) => this.renderNumberDisplay(d),
+      (d) => this.renderNumberDisplay(d, decimals),
       (d) => (d === null || d === undefined ? "" : d),
     );
   },
@@ -145,7 +151,7 @@ const SpoolTables = {
       deferRender: true,
       pageLength: 25,
       lengthMenu: [10, 25, 50, 100, 250],
-      order: [[11, "desc"]], // Total Age desc by default
+      order: [[10, "desc"]], // Total Age desc by default
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("All Spools"),
       scrollX: true,
@@ -156,7 +162,6 @@ const SpoolTables = {
         { data: "Drawing No" },
         { data: "Spool No" },
         { data: "Material", render: this.renderText() },
-        { data: "Total Wt.", className: "mono-cell", render: this.renderNumber() },
         { data: "Group", render: this.renderText() },
         { data: "Week", render: this.renderText() },
         { data: "Current Stage", render: this.renderStage() },
@@ -170,7 +175,8 @@ const SpoolTables = {
         { data: "Actual Start Date", className: "mono-cell", render: this.renderDate() },
         { data: "Completion Date", className: "mono-cell", render: this.renderDate() },
         { data: "Inch Dia", className: "mono-cell", render: this.renderNumber() },
-        { data: "Surface Area Out", className: "mono-cell", render: this.renderNumber() },
+        { data: "Total Wt.", className: "mono-cell", render: this.renderNumber() },
+        { data: "Surface Area Out", className: "mono-cell", render: this.renderNumber(3) },
         { data: "Line History Stage", render: this.renderText() },
       ],
       language: {
@@ -205,7 +211,8 @@ const SpoolTables = {
 
     const totals = SPOOL_STATUS_CONFIG.summableColumns.map(({ field, label }) => {
       const sum = rows.reduce((acc, row) => acc + (Number(row[field]) || 0), 0);
-      const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(sum);
+      const decimals = field === "Surface Area Out" ? 3 : 2;
+      const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals }).format(sum);
       return `${label}: <strong>${formatted}</strong>`;
     });
 
@@ -308,10 +315,10 @@ const SpoolTables = {
     // matching either.
     const columnIndex = {
       "filter-project": 1,
-      "filter-week": 7,
-      "filter-group": 6,
+      "filter-week": 6,
+      "filter-group": 5,
       "filter-material": 4,
-      "filter-stage": 8,
+      "filter-stage": 7,
     };
 
     for (const [selectId, colIndex] of Object.entries(columnIndex)) {
@@ -327,13 +334,13 @@ const SpoolTables = {
     document.getElementById("filter-planning").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Planned" ? "^Yes$" : "^No$");
-      this.dt.all.column(12).search(search, true, false).draw();
+      this.dt.all.column(11).search(search, true, false).draw();
     });
 
     document.getElementById("filter-status").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Completed" ? "^Yes$" : "^No$");
-      this.dt.all.column(13).search(search, true, false).draw();
+      this.dt.all.column(12).search(search, true, false).draw();
     });
 
     // Numerical range filters for Stage Age / Total Age (both in
@@ -364,11 +371,11 @@ const SpoolTables = {
       document.getElementById("filter-stage-age-max").value = "";
       document.getElementById("filter-total-age-min").value = "";
       document.getElementById("filter-total-age-max").value = "";
-      document.getElementById("sort-field").value = "11";
+      document.getElementById("sort-field").value = "10";
       document.getElementById("sort-direction").value = "desc";
       this.dt.all.columns().search("").draw();
       this.dt.all.search("").draw();
-      this.dt.all.order([11, "desc"]).draw();
+      this.dt.all.order([10, "desc"]).draw();
     });
   },
 
@@ -381,7 +388,7 @@ const SpoolTables = {
    */
   setupNumericRangeFilters() {
 
-    const AGE_COLUMNS = { stage: 10, total: 11 };
+    const AGE_COLUMNS = { stage: 9, total: 10 };
 
     $.fn.dataTable.ext.search.push((settings, searchData) => {
 

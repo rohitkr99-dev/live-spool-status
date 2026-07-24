@@ -330,17 +330,12 @@ class SummaryEngine:
         if "Material" in dataframe.columns:
             columns.insert(11, "Material")
 
-        # Total Wt. surfaced right alongside Material so it's visible
-        # near the front of the table instead of buried at the end
-        # with the other optional fields below.
-        if "Total Wt." in dataframe.columns:
-            columns.insert(columns.index(TOTAL_JOINTS) + 1, "Total Wt.")
-
         # Newly-tracked per-spool fields: only added if the source
         # workbook actually provided them, so this stays safe to run
-        # against older data without these columns.
+        # against older data without these columns. Total Wt. sits
+        # between Inch Dia and Surface Area Out.
         for optional_field in (
-            "Prod Order Release", "Inch Dia", "Surface Area Out",
+            "Prod Order Release", "Inch Dia", "Total Wt.", "Surface Area Out",
             "Line History Stage",
         ):
             if optional_field in dataframe.columns:
