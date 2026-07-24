@@ -28,6 +28,8 @@
 
 "completed": {
 "completion_field": "Packing",
+"also_completed_if_any_filled": ["Dispatch"],
+"also_completed_if_any_filled_comment": "A spool is normally Completed once Packing has a date. But some spools are already Packed/Dispatched in reality and just missing a Packing entry on the DPR (e.g. entered straight to Dispatch) - especially spools that were never in the planning sheet to begin with. Counting only Packing here would understate the real Completed total, so any spool with a value in one of these fields is treated as Completed too, even without a Packing date.",
 "current_stage_label": "Completed",
 "stage_age_when_completed": 0
 },

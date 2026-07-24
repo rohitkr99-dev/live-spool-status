@@ -1020,6 +1020,30 @@ a { color: inherit; }
   font-size: 10px;
 }
 
+.filter-field__range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-field__range input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  padding: 7px 8px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--frost);
+  width: 60px;
+}
+
+.filter-field__range input[type="number"]:focus { border-color: var(--ember); }
+
+.filter-field__range-sep {
+  color: var(--frost-faint);
+  font-size: 12px;
+}
+
 .selection-summary {
   display: flex;
   align-items: center;
@@ -1094,6 +1118,11 @@ a { color: inherit; }
 .spool-table tbody tr:hover td { color: var(--frost); }
 
 .mono-cell { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.project-name-cell {
+  font-weight: 700;
+  color: var(--frost);
+}
 
 .age-chip {
   display: inline-flex;

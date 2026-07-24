@@ -25,6 +25,62 @@ const SpoolCharts = {
     size: 11,
   },
 
+  /**
+   * Chart.js renders axis ticks straight onto the canvas, so getting
+   * a bold Project Name + smaller "(Project Code)" onto one tick (two
+   * different font weights/sizes on one label) isn't something the
+   * built-in `ticks` options can do - it draws whatever text you give
+   * it in a single font. This plugin instead hides the default tick
+   * text for a chart's y-axis (see `y.ticks.display: false` +
+   * `y.afterFit` in renderProjectChart()) and draws the two-part
+   * label itself, once per tick, at the same position Chart.js would
+   * have placed the default one.
+   *
+   * Enabled per-chart via `options.plugins.twoPartYLabels = { labels: [...] }`
+   * where `labels[i] = { name, code }` lines up with data index i.
+   */
+  twoPartYLabelsPlugin: {
+    id: "twoPartYLabels",
+    afterDraw(chart) {
+      const opts = chart.options.plugins && chart.options.plugins.twoPartYLabels;
+      if (!opts || !opts.labels || !opts.labels.length) return;
+
+      const { ctx, scales } = chart;
+      const y = scales.y;
+      if (!y) return;
+
+      const cfg = SPOOL_STATUS_CONFIG;
+      const xPos = y.right - 8;
+
+      ctx.save();
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      opts.labels.forEach((label, index) => {
+        if (!label) return;
+        const yPos = y.getPixelForTick(index);
+        if (yPos === undefined) return;
+
+        if (label.code && label.name) {
+          ctx.font = "700 11px Manrope, sans-serif";
+          ctx.fillStyle = cfg.chartTextColorStrong;
+          ctx.fillText(label.name, xPos, yPos - 6);
+
+          ctx.font = "500 9.5px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = cfg.chartTextColor;
+          ctx.fillText(`(${label.code})`, xPos, yPos + 7);
+        } else {
+          // No name on record - just show the code, single line.
+          ctx.font = "600 10.5px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = cfg.chartTextColorStrong;
+          ctx.fillText(label.code || label.name || "", xPos, yPos);
+        }
+      });
+
+      ctx.restore();
+    },
+  },
+
   render(store) {
     this.masterSpools = store.masterSpools || [];
 
@@ -135,6 +191,10 @@ const SpoolCharts = {
 
     const records = this.buildStageBreakdown("Project Code");
     const labels = records.map((r) => r.key);
+    const twoPartLabels = records.map((r) => ({
+      code: r.key,
+      name: r.key === "Unassigned" ? null : SpoolData.projectNameByCode()[r.key],
+    }));
     const datasets = this.stageDatasets(records);
 
     const metricConfig = this.overviewMetricConfig();
@@ -146,17 +206,32 @@ const SpoolCharts = {
     this.instances.project = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets },
+      plugins: [this.twoPartYLabelsPlugin],
       options: {
         indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
-          tooltip: { titleFont: this.chartFont, bodyFont: this.chartFont },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: { title: (items) => SpoolData.projectLabel(items[0].label) },
+          },
+          twoPartYLabels: { labels: twoPartLabels },
         },
         scales: {
           x: { stacked: true, grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont } },
-          y: { stacked: true, grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 11 } } },
+          y: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { display: false },
+            // Reserves fixed room for the custom two-line labels
+            // drawn by twoPartYLabelsPlugin above, since hiding the
+            // built-in ticks would otherwise collapse this axis to
+            // ~0 width.
+            afterFit: (scale) => { scale.width = 176; },
+          },
         },
       },
     });

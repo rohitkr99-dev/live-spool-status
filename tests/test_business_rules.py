@@ -255,6 +255,28 @@ def test_packing_done_dispatch_pending_is_completed_but_shows_dispatch(engine):
     assert result.status_message == "Waiting for Dispatch"
 
 
+def test_dispatch_filled_without_packing_is_still_completed(engine):
+    """
+    config/business_rules.json -> completed.also_completed_if_any_filled
+    includes "Dispatch": a spool with a Dispatch date but a blank
+    Packing date (a DPR data-entry gap) is still counted Completed,
+    not just spools where Packing itself is filled.
+    """
+
+    row = _row(**{
+        "First Fit-Up": "2026-02-01",
+        "First Welding": "2026-02-02",
+        "PDQC": "2026-02-10",
+        "RFP": "2026-02-15",
+        "PDI": "2026-02-20",
+        "Dispatch": "2026-02-28",
+    })
+
+    result = engine.evaluate_row(row)
+
+    assert result.completed is True
+
+
 def test_all_stages_complete_marks_completed(engine):
 
     row = _row(**{

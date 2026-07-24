@@ -78,6 +78,7 @@ import pandas as pd
 import line_history_ageing
 from config_loader import load_business_rules, load_settings, load_stages
 from constants import (
+    ACTUAL_START_DATE,
     COMPLETED_FLAG,
     COMPLETION_DATE,
     COMPOSITE_KEY,
@@ -93,6 +94,7 @@ from constants import (
     PLANNED_START,
     PLANNING_VARIANCE,
     PROJECT_CODE,
+    PROJECT_NAME,
     REMARKS,
     SPOOL_NO,
     STAGE_AGE,
@@ -314,8 +316,9 @@ class SummaryEngine:
         """
 
         columns = (
-            [COMPOSITE_KEY, PROJECT_CODE, DRAWING_NO, SPOOL_NO,
-             WEEK, GROUP, PLANNED_START, COMPLETION_DATE, TOTAL_JOINTS]
+            [COMPOSITE_KEY, PROJECT_CODE, PROJECT_NAME, DRAWING_NO, SPOOL_NO,
+             WEEK, GROUP, PLANNED_START, ACTUAL_START_DATE, COMPLETION_DATE,
+             TOTAL_JOINTS]
             + self.stage_date_fields
             + [FIRST_ACTIVITY_DATE, LAST_ACTIVITY_DATE,
                CURRENT_STAGE, NEXT_STAGE, STAGE_AGE, TOTAL_AGE,
@@ -325,14 +328,20 @@ class SummaryEngine:
 
         # Material may already be present under its canonical name.
         if "Material" in dataframe.columns:
-            columns.insert(9, "Material")
+            columns.insert(11, "Material")
+
+        # Total Wt. surfaced right alongside Material so it's visible
+        # near the front of the table instead of buried at the end
+        # with the other optional fields below.
+        if "Total Wt." in dataframe.columns:
+            columns.insert(columns.index(TOTAL_JOINTS) + 1, "Total Wt.")
 
         # Newly-tracked per-spool fields: only added if the source
         # workbook actually provided them, so this stays safe to run
         # against older data without these columns.
         for optional_field in (
             "Prod Order Release", "Inch Dia", "Surface Area Out",
-            "Total Wt.", "Line History Stage",
+            "Line History Stage",
         ):
             if optional_field in dataframe.columns:
                 columns.append(optional_field)
@@ -371,6 +380,7 @@ class SummaryEngine:
             oldest_spool = {
                 "composite_key": to_json_safe(oldest_row.get(COMPOSITE_KEY)),
                 "project_code": to_json_safe(oldest_row.get(PROJECT_CODE)),
+                "project_name": to_json_safe(oldest_row.get(PROJECT_NAME)),
                 "drawing_no": to_json_safe(oldest_row.get(DRAWING_NO)),
                 "spool_no": to_json_safe(oldest_row.get(SPOOL_NO)),
                 "total_age": to_json_safe(oldest_row.get(TOTAL_AGE)),
@@ -475,6 +485,26 @@ class SummaryEngine:
     def generate_project_summary(self, dataframe: pd.DataFrame) -> list[dict]:
 
         records = self._group_summary(dataframe, PROJECT_CODE)
+
+        # Project Name is 1:1 with Project Code in the source data;
+        # attach it here rather than folding it into the shared
+        # _group_summary() helper, since Week/Group rollups have no
+        # equivalent "name" field.
+        project_names = {}
+        if PROJECT_NAME in dataframe.columns:
+            name_lookup = (
+                dataframe[[PROJECT_CODE, PROJECT_NAME]]
+                .dropna(subset=[PROJECT_CODE])
+                .drop_duplicates(subset=[PROJECT_CODE])
+            )
+            project_names = dict(
+                zip(name_lookup[PROJECT_CODE], name_lookup[PROJECT_NAME])
+            )
+
+        for record in records:
+            record[PROJECT_NAME] = to_json_safe(
+                project_names.get(record[PROJECT_CODE])
+            )
 
         return sorted(records, key=lambda record: record[PROJECT_CODE])
 

@@ -88,7 +88,7 @@
         <span class="kpi-card__value" id="kpi-oldest-age">—</span>
         <span class="kpi-card__sub" id="kpi-oldest-key">—</span>
       </div>
-      <div class="kpi-card" data-kpi="variance" title="Average, across every spool with a Start Date, of (Reference Date − Start Date) where Reference Date is First Fit-Up/First Welding if available, else PDQC date, else today. Negative = ahead of plan on average; positive = behind plan on average.">
+      <div class="kpi-card" data-kpi="variance" title="Average, across every spool with a SIOP Planned Start Date, of (Reference Date − SIOP Planned Start Date) where Reference Date is First Fit-Up/First Welding if available, else PDQC date, else today. Negative = ahead of plan on average; positive = behind plan on average.">
         <span class="kpi-card__label">Planning Variance</span>
         <span class="kpi-card__value" id="kpi-variance">—</span>
         <span class="kpi-card__sub">avg. start vs. plan (− = ahead, + = behind)</span>
@@ -320,20 +320,38 @@
           </select>
         </div>
         <div class="filter-field">
+          <label for="filter-stage-age-min">Stage Age <span class="filter-field__hint">(days)</span></label>
+          <div class="filter-field__range">
+            <input type="number" id="filter-stage-age-min" placeholder="Min" min="0" inputmode="numeric">
+            <span class="filter-field__range-sep" aria-hidden="true">–</span>
+            <input type="number" id="filter-stage-age-max" placeholder="Max" min="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="filter-field">
+          <label for="filter-total-age-min">Total Age <span class="filter-field__hint">(days)</span></label>
+          <div class="filter-field__range">
+            <input type="number" id="filter-total-age-min" placeholder="Min" min="0" inputmode="numeric">
+            <span class="filter-field__range-sep" aria-hidden="true">–</span>
+            <input type="number" id="filter-total-age-max" placeholder="Max" min="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="filter-field">
           <label for="sort-field">Sort by</label>
           <select id="sort-field">
-            <option value="9">Total Age</option>
-            <option value="0">Project Code</option>
-            <option value="1">Drawing No</option>
-            <option value="2">Spool No</option>
-            <option value="6">Current Stage</option>
-            <option value="8">Stage Age</option>
-            <option value="13">Start Date</option>
-            <option value="14">Completion Date</option>
-            <option value="15">Inch Dia</option>
-            <option value="16">Total Wt.</option>
-            <option value="17">Surface Area</option>
-            <option value="18">Line History Stage</option>
+            <option value="11">Total Age</option>
+            <option value="0">Project Name</option>
+            <option value="1">Project Code</option>
+            <option value="2">Drawing No</option>
+            <option value="3">Spool No</option>
+            <option value="8">Current Stage</option>
+            <option value="10">Stage Age</option>
+            <option value="15">SIOP Planned Start Date</option>
+            <option value="16">Actual Start Date</option>
+            <option value="17">Completion Date</option>
+            <option value="18">Inch Dia</option>
+            <option value="5">Total Wt.</option>
+            <option value="19">Surface Area</option>
+            <option value="20">Line History Stage</option>
           </select>
         </div>
         <div class="filter-field">
@@ -355,23 +373,25 @@
         <table id="table-all" class="spool-table" style="width:100%">
           <thead>
             <tr>
+              <th>Project Name</th>
               <th>Project Code</th>
               <th>Drawing No</th>
               <th>Spool No</th>
               <th>Material</th>
+              <th>Total Wt.</th>
               <th>Group</th>
               <th>Week</th>
               <th>Current Stage</th>
               <th>Status Message</th>
-              <th>Stage Age</th>
-              <th>Total Age</th>
+              <th>Stage Age (in Days)</th>
+              <th>Total Age (in Days)</th>
               <th>Planned</th>
               <th>Completed</th>
               <th>Remarks</th>
-              <th>Start Date</th>
+              <th>SIOP Planned Start Date</th>
+              <th title="The date fabrication ageing is actually counted from for this spool - the earliest of Planned Start/First Fit-Up/First Welding, falling back to PDQC/Prod Order Release if none of those are available yet.">Actual Start Date</th>
               <th>Completion Date</th>
               <th>Inch Dia</th>
-              <th>Total Wt.</th>
               <th>Surface Area</th>
               <th title="Joint-level Fit-Up/Welding/PDQC status from the uploaded Line History Sheet, if any. Blank means this spool wasn't in that sheet (or had no joint rows), so its Current Stage came from the regular date fields only.">Line History Stage</th>
             </tr>
@@ -384,12 +404,13 @@
         <table id="table-oldest" class="spool-table" style="width:100%">
           <thead>
             <tr>
+              <th>Project Name</th>
               <th>Project Code</th>
               <th>Drawing No</th>
               <th>Spool No</th>
               <th>Current Stage</th>
               <th>Status Message</th>
-              <th>Total Age</th>
+              <th>Total Age (in Days)</th>
               <th>Planned</th>
             </tr>
           </thead>

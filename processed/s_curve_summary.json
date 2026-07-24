@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-07-22",
+  "as_of": "2026-07-24",
   "overall": {
     "total_scope": 8881,
     "points": [
@@ -368,9 +368,9 @@
         "week_start": "2026-07-13",
         "week_label": "13 Jul 26",
         "planned_count": 677,
-        "actual_count": 122,
+        "actual_count": 124,
         "cumulative_planned_pct": 42.7,
-        "cumulative_actual_pct": 47.0
+        "cumulative_actual_pct": 47.1
       },
       {
         "fiscal_week_label": "Week 17",
@@ -388,6 +388,15 @@
         "planned_count": 597,
         "actual_count": 0,
         "cumulative_planned_pct": 55.3,
+        "cumulative_actual_pct": null
+      },
+      {
+        "fiscal_week_label": "Week 19",
+        "week_start": "2026-08-03",
+        "week_label": "03 Aug 26",
+        "planned_count": 255,
+        "actual_count": 0,
+        "cumulative_planned_pct": 58.2,
         "cumulative_actual_pct": null
       }
     ],
@@ -935,6 +944,15 @@
           "actual_count": 0,
           "cumulative_planned_pct": 75.1,
           "cumulative_actual_pct": null
+        },
+        {
+          "fiscal_week_label": "Week 19",
+          "week_start": "2026-08-03",
+          "week_label": "03 Aug 26",
+          "planned_count": 136,
+          "actual_count": 0,
+          "cumulative_planned_pct": 81.7,
+          "cumulative_actual_pct": null
         }
       ],
       "cumulative_planned_pct_to_date": 52.2,
@@ -1177,11 +1195,20 @@
           "actual_count": 13,
           "cumulative_planned_pct": 1.4,
           "cumulative_actual_pct": 99.8
+        },
+        {
+          "fiscal_week_label": "Week 16",
+          "week_start": "2026-07-13",
+          "week_label": "13 Jul 26",
+          "planned_count": 0,
+          "actual_count": 2,
+          "cumulative_planned_pct": 1.4,
+          "cumulative_actual_pct": 100.0
         }
       ],
       "cumulative_planned_pct_to_date": 1.4,
-      "cumulative_actual_pct_to_date": 99.8,
-      "schedule_variance_pct": 98.4
+      "cumulative_actual_pct_to_date": 100.0,
+      "schedule_variance_pct": 98.6
     },
     "TJ/25-26/188": {
       "total_scope": 1920,
@@ -1310,6 +1337,15 @@
           "planned_count": 83,
           "actual_count": 0,
           "cumulative_planned_pct": 79.6,
+          "cumulative_actual_pct": null
+        },
+        {
+          "fiscal_week_label": "Week 19",
+          "week_start": "2026-08-03",
+          "week_label": "03 Aug 26",
+          "planned_count": 119,
+          "actual_count": 0,
+          "cumulative_planned_pct": 85.8,
           "cumulative_actual_pct": null
         }
       ],

@@ -13,6 +13,7 @@ hardcoding strings.
 # ==================================================
 
 PROJECT_CODE = "Project Code"
+PROJECT_NAME = "Project Name"
 DRAWING_NO = "Drawing No"
 SPOOL_NO = "Spool No"
 COMPOSITE_KEY = "Composite Key"
@@ -21,6 +22,7 @@ MATERIAL = "Material"
 TOTAL_JOINTS = "Total Joints"
 
 PLANNED_START = "Planned Start"
+ACTUAL_START_DATE = "Actual Start Date"
 FIRST_FITUP = "First Fit-Up"
 FIRST_WELDING = "First Welding"
 FIRST_ACTIVITY_DATE = "First Activity Date"

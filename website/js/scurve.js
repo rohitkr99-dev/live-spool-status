@@ -81,7 +81,7 @@ const SpoolSCurve = {
     const curve = (this.data.projects || {})[project];
 
     return {
-      label: project,
+      label: SpoolData.projectLabel(project),
       curve: curve || { total_scope: 0, points: [], cumulative_planned_pct_to_date: null, cumulative_actual_pct_to_date: null, schedule_variance_pct: null },
     };
   },

@@ -159,12 +159,12 @@
     "Project Code": "TJ/25-26/182",
     "Stage": "Fit-Up",
     "spool_count": 1004,
-    "average_days": 4.3,
+    "average_days": 4.4,
     "bucket_counts": {
       "0\u20137d": 790,
       "8\u201314d": 146,
-      "15\u201330d": 59,
-      "31\u201360d": 9,
+      "15\u201330d": 53,
+      "31\u201360d": 15,
       "60d+": 0
     }
   },
@@ -237,12 +237,12 @@
     "Project Code": "TJ/25-26/183",
     "Stage": "Fit-Up",
     "spool_count": 1564,
-    "average_days": 4.8,
+    "average_days": 4.9,
     "bucket_counts": {
       "0\u20137d": 1249,
       "8\u201314d": 152,
-      "15\u201330d": 128,
-      "31\u201360d": 31,
+      "15\u201330d": 111,
+      "31\u201360d": 48,
       "60d+": 4
     }
   },
@@ -379,10 +379,10 @@
   {
     "Project Code": "TJ/25-26/184",
     "Stage": "Packing",
-    "spool_count": 1312,
+    "spool_count": 1314,
     "average_days": 2.1,
     "bucket_counts": {
-      "0\u20137d": 1288,
+      "0\u20137d": 1290,
       "8\u201314d": 22,
       "15\u201330d": 2,
       "31\u201360d": 0,
@@ -392,13 +392,13 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Fit-Up",
-    "spool_count": 1529,
-    "average_days": 4.7,
+    "spool_count": 1569,
+    "average_days": 4.9,
     "bucket_counts": {
-      "0\u20137d": 1134,
+      "0\u20137d": 1174,
       "8\u201314d": 289,
-      "15\u201330d": 89,
-      "31\u201360d": 17,
+      "15\u201330d": 84,
+      "31\u201360d": 22,
       "60d+": 0
     }
   },
@@ -471,12 +471,12 @@
     "Project Code": "TJ/25-26/189",
     "Stage": "Fit-Up",
     "spool_count": 628,
-    "average_days": 3.3,
+    "average_days": 4.3,
     "bucket_counts": {
       "0\u20137d": 562,
       "8\u201314d": 40,
-      "15\u201330d": 25,
-      "31\u201360d": 1,
+      "15\u201330d": 24,
+      "31\u201360d": 2,
       "60d+": 0
     }
   },
@@ -549,7 +549,7 @@
     "Project Code": "TJ/25-26/206",
     "Stage": "Fit-Up",
     "spool_count": 128,
-    "average_days": 1.3,
+    "average_days": 2.6,
     "bucket_counts": {
       "0\u20137d": 128,
       "8\u201314d": 0,

@@ -113,7 +113,7 @@ const SpoolStageAgeing = {
     this.distinctProjects().forEach((project) => {
       const option = document.createElement("option");
       option.value = project;
-      option.textContent = project;
+      option.textContent = SpoolData.projectLabel(project);
       select.appendChild(option);
     });
 
@@ -163,7 +163,7 @@ const SpoolStageAgeing = {
     if (allProjects) {
       const projects = this.distinctProjects();
       datasets = projects.map((project, index) => ({
-        label: project,
+        label: SpoolData.projectLabel(project),
         data: stages.map((stage) => {
           const record = this.findRecord(project, stage);
           return record ? record.average_days : null;
@@ -175,7 +175,7 @@ const SpoolStageAgeing = {
       }));
     } else {
       datasets = [{
-        label: this.selectedProject,
+        label: SpoolData.projectLabel(this.selectedProject),
         data: stages.map((stage) => {
           const record = this.findRecord(this.selectedProject, stage);
           return record ? record.average_days : null;
@@ -191,7 +191,7 @@ const SpoolStageAgeing = {
     if (hint) {
       hint.textContent = allProjects
         ? "Average days spent at each stage, all projects"
-        : `Average days spent at each stage — ${this.selectedProject}`;
+        : `Average days spent at each stage — ${SpoolData.projectLabel(this.selectedProject)}`;
     }
 
     this.destroy("avg");
@@ -259,7 +259,7 @@ const SpoolStageAgeing = {
     if (hint) {
       hint.textContent = allProjects
         ? "Spools per age bracket, at each stage, all projects"
-        : `Spools per age bracket, at each stage — ${this.selectedProject}`;
+        : `Spools per age bracket, at each stage — ${SpoolData.projectLabel(this.selectedProject)}`;
     }
 
     this.destroy("dist");
@@ -311,7 +311,7 @@ const SpoolStageAgeing = {
     if (hint) {
       hint.textContent = allProjects
         ? "Box size = average age, all projects — hover a box for spool count"
-        : `Box size = average age — ${this.selectedProject} — hover a box for spool count`;
+        : `Box size = average age — ${SpoolData.projectLabel(this.selectedProject)} — hover a box for spool count`;
     }
 
     this.destroy("treemap");
@@ -323,7 +323,7 @@ const SpoolStageAgeing = {
       type: "treemap",
       data: {
         datasets: [{
-          label: allProjects ? "All Projects" : this.selectedProject,
+          label: allProjects ? "All Projects" : SpoolData.projectLabel(this.selectedProject),
           tree: items,
           key: "value",
           spacing: 1.5,

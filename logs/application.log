@@ -11814,3 +11814,1143 @@
 2026-07-22 09:35:15 | INFO | Wrote processed\dashboard_data.json
 2026-07-22 09:35:15 | INFO | Published website\data\dashboard_data.json
 2026-07-22 09:35:15 | INFO | Pipeline run completed.
+2026-07-24 02:58:58 | INFO | Loaded configuration: column_mapping.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: settings.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: settings.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: business_rules.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: schema.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Validator initialised.
+2026-07-24 02:58:58 | INFO | Loaded configuration: schema.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Cleaner initialised.
+2026-07-24 02:58:58 | INFO | Loaded configuration: business_rules.json
+2026-07-24 02:58:58 | INFO | Merge Engine initialised.
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: business_rules.json
+2026-07-24 02:58:58 | INFO | Business Rule Engine initialised.
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: business_rules.json
+2026-07-24 02:58:58 | INFO | Ageing Engine initialised.
+2026-07-24 02:58:58 | INFO | Activity Metrics Engine initialised.
+2026-07-24 02:58:58 | INFO | Loaded configuration: stages.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: settings.json
+2026-07-24 02:58:58 | INFO | Loaded configuration: business_rules.json
+2026-07-24 02:58:58 | INFO | Summary Engine initialised.
+2026-07-24 02:58:58 | INFO | Pipeline initialised.
+2026-07-24 02:58:58 | INFO | Pipeline run started.
+2026-07-24 02:58:58 | INFO | Reading 1. DPR_Fabrication Jobs_July'26.xlsb
+2026-07-24 02:59:01 | INFO | Loaded 8881 fabrication rows.
+2026-07-24 02:59:01 | INFO | Reading Weekly Production Planning Sheet_July'26.xlsb
+2026-07-24 02:59:02 | INFO | Master Planning Sheet : 4318 rows
+2026-07-24 02:59:07 | INFO | Fit-Up DB : 30097 rows
+2026-07-24 02:59:11 | INFO | Welding DB : 29849 rows
+2026-07-24 02:59:11 | INFO | Starting validation for 'fabrication'.
+2026-07-24 02:59:11 | INFO | Validation completed.
+2026-07-24 02:59:11 | INFO | Starting validation for 'planning_master'.
+2026-07-24 02:59:11 | INFO | Validation completed.
+2026-07-24 02:59:11 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 02:59:11 | INFO | Validation completed.
+2026-07-24 02:59:11 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 02:59:11 | INFO | Validation completed.
+2026-07-24 02:59:11 | INFO | Wrote processed/validation_report.json
+2026-07-24 02:59:11 | INFO | Starting dataframe cleaning.
+2026-07-24 02:59:11 | INFO | Cleaning completed. Rows: 8881 -> 8881
+2026-07-24 02:59:11 | INFO | Starting dataframe cleaning.
+2026-07-24 02:59:11 | INFO | Cleaning completed. Rows: 4318 -> 4318
+2026-07-24 02:59:11 | INFO | Starting dataframe cleaning.
+2026-07-24 02:59:12 | INFO | Cleaning completed. Rows: 30097 -> 30097
+2026-07-24 02:59:12 | INFO | Starting dataframe cleaning.
+2026-07-24 02:59:12 | INFO | Cleaning completed. Rows: 29849 -> 29849
+2026-07-24 02:59:12 | INFO | Reading Line History Sheet All Project 20-07-2026.xlsb
+2026-07-24 02:59:25 | INFO | Loaded 52469 Line History Sheet rows.
+2026-07-24 02:59:25 | INFO | Starting dataframe cleaning.
+2026-07-24 02:59:26 | INFO | Cleaning completed. Rows: 52469 -> 52469
+2026-07-24 02:59:26 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 02:59:26 | INFO | Merge Engine started.
+2026-07-24 02:59:33 | INFO | Line History Sheet: 8373 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 02:59:33 | INFO | Merge Engine completed. 8881 spool(s) in Master Spool Dataset.
+2026-07-24 02:59:33 | INFO | Applying business rules to master dataset.
+2026-07-24 02:59:34 | INFO | Business rules applied to 8881 row(s).
+2026-07-24 02:59:34 | INFO | Ageing Engine started.
+2026-07-24 02:59:34 | INFO | Ageing Engine completed for 8881 row(s).
+2026-07-24 02:59:34 | INFO | Summary Engine started.
+2026-07-24 02:59:36 | INFO | Summary Engine completed.
+2026-07-24 02:59:36 | INFO | Summary Engine started.
+2026-07-24 02:59:38 | INFO | Summary Engine completed.
+2026-07-24 02:59:38 | INFO | Wrote processed/master_spools.json
+2026-07-24 02:59:38 | INFO | Wrote processed/dashboard_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/project_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/weekly_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/group_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/stage_ageing_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/fitup_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/welding_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/s_curve_summary.json
+2026-07-24 02:59:38 | INFO | Wrote processed/exceptions.json
+2026-07-24 02:59:38 | INFO | Activity Metrics Engine started.
+2026-07-24 02:59:38 | INFO | Activity Metrics Engine completed. 259 day(s) with activity data.
+2026-07-24 02:59:38 | INFO | Wrote processed/activity_metrics.json
+2026-07-24 02:59:38 | INFO | Wrote processed/dashboard_data.json
+2026-07-24 02:59:38 | INFO | Published website/data/dashboard_data.json
+2026-07-24 02:59:38 | INFO | Pipeline run completed.
+2026-07-24 03:20:13 | INFO | Loaded configuration: column_mapping.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Validator initialised.
+2026-07-24 03:20:13 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Cleaner initialised.
+2026-07-24 03:20:13 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:13 | INFO | Merge Engine initialised.
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:13 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:13 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:13 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:20:13 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:13 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:13 | INFO | Summary Engine initialised.
+2026-07-24 03:20:13 | INFO | Pipeline initialised.
+2026-07-24 03:20:13 | INFO | Pipeline run started.
+2026-07-24 03:20:13 | INFO | Reading 1. DPR_Fabrication Jobs_July'26.xlsb
+2026-07-24 03:20:16 | INFO | Loaded 8881 fabrication rows.
+2026-07-24 03:20:16 | INFO | Reading Weekly Production Planning Sheet_July'26.xlsb
+2026-07-24 03:20:17 | INFO | Master Planning Sheet : 4318 rows
+2026-07-24 03:20:22 | INFO | Fit-Up DB : 30097 rows
+2026-07-24 03:20:26 | INFO | Welding DB : 29849 rows
+2026-07-24 03:20:26 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:20:26 | INFO | Validation completed.
+2026-07-24 03:20:26 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:20:26 | INFO | Validation completed.
+2026-07-24 03:20:26 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:20:26 | INFO | Validation completed.
+2026-07-24 03:20:26 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:20:26 | INFO | Validation completed.
+2026-07-24 03:20:26 | INFO | Wrote processed/validation_report.json
+2026-07-24 03:20:26 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:26 | INFO | Cleaning completed. Rows: 8881 -> 8881
+2026-07-24 03:20:26 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:26 | INFO | Cleaning completed. Rows: 4318 -> 4318
+2026-07-24 03:20:26 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:26 | INFO | Cleaning completed. Rows: 30097 -> 30097
+2026-07-24 03:20:26 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:26 | INFO | Cleaning completed. Rows: 29849 -> 29849
+2026-07-24 03:20:26 | INFO | Reading Line History Sheet All Project 20-07-2026.xlsb
+2026-07-24 03:20:38 | INFO | Loaded 52469 Line History Sheet rows.
+2026-07-24 03:20:38 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:38 | INFO | Cleaning completed. Rows: 52469 -> 52469
+2026-07-24 03:20:38 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:20:38 | INFO | Merge Engine started.
+2026-07-24 03:20:44 | INFO | Line History Sheet: 8373 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:20:44 | INFO | Merge Engine completed. 8881 spool(s) in Master Spool Dataset.
+2026-07-24 03:20:44 | INFO | Applying business rules to master dataset.
+2026-07-24 03:20:45 | INFO | Business rules applied to 8881 row(s).
+2026-07-24 03:20:45 | INFO | Ageing Engine started.
+2026-07-24 03:20:45 | INFO | Ageing Engine completed for 8881 row(s).
+2026-07-24 03:20:45 | INFO | Summary Engine started.
+2026-07-24 03:20:46 | INFO | Summary Engine completed.
+2026-07-24 03:20:46 | INFO | Summary Engine started.
+2026-07-24 03:20:48 | INFO | Summary Engine completed.
+2026-07-24 03:20:48 | INFO | Wrote processed/master_spools.json
+2026-07-24 03:20:48 | INFO | Wrote processed/dashboard_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/project_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/weekly_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/group_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/stage_ageing_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/fitup_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/welding_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/s_curve_summary.json
+2026-07-24 03:20:48 | INFO | Wrote processed/exceptions.json
+2026-07-24 03:20:48 | INFO | Activity Metrics Engine started.
+2026-07-24 03:20:48 | INFO | Activity Metrics Engine completed. 259 day(s) with activity data.
+2026-07-24 03:20:48 | INFO | Wrote processed/activity_metrics.json
+2026-07-24 03:20:48 | INFO | Wrote processed/dashboard_data.json
+2026-07-24 03:20:49 | INFO | Published website/data/dashboard_data.json
+2026-07-24 03:20:49 | INFO | Pipeline run completed.
+2026-07-24 03:20:57 | INFO | Loaded configuration: column_mapping.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Ageing Engine started.
+2026-07-24 03:20:57 | INFO | Ageing Engine completed for 2 row(s).
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Applying business rules to master dataset.
+2026-07-24 03:20:57 | INFO | Business rules applied to 2 row(s).
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Removed 1 blank row(s).
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | WARNING | 1 invalid date(s) converted to NaT.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Removed 1 blank row(s).
+2026-07-24 03:20:57 | WARNING | 1 invalid date(s) converted to NaT.
+2026-07-24 03:20:57 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 3 -> 1
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 3 -> 3
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Merge Engine started.
+2026-07-24 03:20:57 | INFO | Merge Engine completed. 2 spool(s) in Master Spool Dataset.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Merge Engine started.
+2026-07-24 03:20:57 | WARNING | 'Activity Date' column not found; cannot compute First Fit-Up.
+2026-07-24 03:20:57 | WARNING | 'Activity Date' column not found; cannot compute First Welding.
+2026-07-24 03:20:57 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Merge Engine started.
+2026-07-24 03:20:57 | WARNING | 'Activity Date' column not found; cannot compute First Fit-Up.
+2026-07-24 03:20:57 | WARNING | 'Activity Date' column not found; cannot compute First Welding.
+2026-07-24 03:20:57 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:20:57 | INFO | Merge Engine completed. 2 spool(s) in Master Spool Dataset.
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Validator initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Summary Engine initialised.
+2026-07-24 03:20:57 | INFO | Pipeline initialised.
+2026-07-24 03:20:57 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_write_validation_report_c0/validation_report.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Validator initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Summary Engine initialised.
+2026-07-24 03:20:57 | INFO | Pipeline initialised.
+2026-07-24 03:20:57 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_write_validation_report_r0/validation_report.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Validator initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: schema.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Cleaner initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Merge Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Business Rule Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Ageing Engine initialised.
+2026-07-24 03:20:57 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:20:57 | INFO | Loaded configuration: stages.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: settings.json
+2026-07-24 03:20:57 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:20:57 | INFO | Summary Engine initialised.
+2026-07-24 03:20:57 | INFO | Pipeline initialised.
+2026-07-24 03:20:57 | INFO | Pipeline run started.
+2026-07-24 03:20:57 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:20:57 | INFO | Validation completed.
+2026-07-24 03:20:57 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/validation_report.json
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:20:57 | INFO | Starting dataframe cleaning.
+2026-07-24 03:20:57 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:20:57 | INFO | Reading Line History Sheet All Project 20-07-2026.xlsb
+2026-07-24 03:21:10 | INFO | Loaded 52469 Line History Sheet rows.
+2026-07-24 03:21:10 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:11 | INFO | Cleaning completed. Rows: 52469 -> 52469
+2026-07-24 03:21:11 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:21:11 | INFO | Merge Engine started.
+2026-07-24 03:21:16 | INFO | Line History Sheet: 8373 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:21:16 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:21:16 | INFO | Applying business rules to master dataset.
+2026-07-24 03:21:16 | INFO | Business rules applied to 1 row(s).
+2026-07-24 03:21:16 | INFO | Ageing Engine started.
+2026-07-24 03:21:16 | INFO | Ageing Engine completed for 1 row(s).
+2026-07-24 03:21:16 | INFO | Summary Engine started.
+2026-07-24 03:21:16 | INFO | Summary Engine completed.
+2026-07-24 03:21:16 | INFO | Summary Engine started.
+2026-07-24 03:21:16 | INFO | Summary Engine completed.
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/master_spools.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/dashboard_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/project_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/weekly_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/group_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/stage_ageing_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/fitup_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/welding_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/s_curve_summary.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/exceptions.json
+2026-07-24 03:21:16 | INFO | Activity Metrics Engine started.
+2026-07-24 03:21:16 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:16 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:16 | WARNING | 'Surface Area Out' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:16 | INFO | Activity Metrics Engine completed. 0 day(s) with activity data.
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/activity_metrics.json
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_end_to_end_with_valid0/dashboard_data.json
+2026-07-24 03:21:16 | INFO | Pipeline run completed.
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Validator initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Cleaner initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Merge Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:16 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Summary Engine initialised.
+2026-07-24 03:21:16 | INFO | Pipeline initialised.
+2026-07-24 03:21:16 | INFO | Pipeline run started.
+2026-07-24 03:21:16 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_run_stops_on_validation_f0/validation_report.json
+2026-07-24 03:21:16 | ERROR | [fabrication] Missing required column: Material
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Validator initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Cleaner initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Merge Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:16 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:16 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:16 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:16 | INFO | Summary Engine initialised.
+2026-07-24 03:21:16 | INFO | Pipeline initialised.
+2026-07-24 03:21:16 | INFO | Pipeline run started.
+2026-07-24 03:21:16 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:21:16 | INFO | Validation completed.
+2026-07-24 03:21:16 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/validation_report.json
+2026-07-24 03:21:16 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:16 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:16 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:16 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:16 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:16 | INFO | Cleaning completed. Rows: 3 -> 3
+2026-07-24 03:21:16 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:16 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:16 | INFO | Reading Line History Sheet All Project 20-07-2026.xlsb
+2026-07-24 03:21:27 | INFO | Loaded 52469 Line History Sheet rows.
+2026-07-24 03:21:27 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:28 | INFO | Cleaning completed. Rows: 52469 -> 52469
+2026-07-24 03:21:28 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:21:28 | INFO | Merge Engine started.
+2026-07-24 03:21:33 | INFO | Line History Sheet: 8373 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:21:33 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:21:33 | INFO | Applying business rules to master dataset.
+2026-07-24 03:21:33 | INFO | Business rules applied to 1 row(s).
+2026-07-24 03:21:33 | INFO | Ageing Engine started.
+2026-07-24 03:21:33 | INFO | Ageing Engine completed for 1 row(s).
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/master_spools.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/dashboard_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/project_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/weekly_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/group_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/stage_ageing_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/fitup_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/welding_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/s_curve_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/exceptions.json
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine started.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Surface Area Out' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine completed. 0 day(s) with activity data.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/activity_metrics.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_transactional_duplicates_0/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Pipeline run completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Cleaner initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Merge Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Pipeline initialised.
+2026-07-24 03:21:33 | INFO | Pipeline run started.
+2026-07-24 03:21:33 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/validation_report.json
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 2 -> 2
+2026-07-24 03:21:33 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:21:33 | INFO | Merge Engine started.
+2026-07-24 03:21:33 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:21:33 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:21:33 | INFO | Applying business rules to master dataset.
+2026-07-24 03:21:33 | INFO | Business rules applied to 1 row(s).
+2026-07-24 03:21:33 | INFO | Ageing Engine started.
+2026-07-24 03:21:33 | INFO | Ageing Engine completed for 1 row(s).
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/master_spools.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/dashboard_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/project_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/weekly_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/group_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/stage_ageing_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/fitup_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/welding_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/s_curve_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/exceptions.json
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine started.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Surface Area Out' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine completed. 0 day(s) with activity data.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/activity_metrics.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_cannot0/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Pipeline run completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Cleaner initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Merge Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Pipeline initialised.
+2026-07-24 03:21:33 | INFO | Pipeline run started.
+2026-07-24 03:21:33 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/validation_report.json
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 2 -> 2
+2026-07-24 03:21:33 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:21:33 | INFO | Merge Engine started.
+2026-07-24 03:21:33 | INFO | Line History Sheet: 1 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 03:21:33 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:21:33 | INFO | Applying business rules to master dataset.
+2026-07-24 03:21:33 | INFO | Business rules applied to 1 row(s).
+2026-07-24 03:21:33 | INFO | Ageing Engine started.
+2026-07-24 03:21:33 | INFO | Ageing Engine completed for 1 row(s).
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/master_spools.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/dashboard_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/project_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/weekly_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/group_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/stage_ageing_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/fitup_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/welding_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/s_curve_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/exceptions.json
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine started.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Surface Area Out' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine completed. 0 day(s) with activity data.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/activity_metrics.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_line_history_sheet_advanc0/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Pipeline run completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Cleaner initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Merge Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Pipeline initialised.
+2026-07-24 03:21:33 | INFO | Pipeline run started.
+2026-07-24 03:21:33 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_master'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/validation_report.json
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | INFO | Starting dataframe cleaning.
+2026-07-24 03:21:33 | INFO | Cleaning completed. Rows: 1 -> 1
+2026-07-24 03:21:33 | WARNING | SIOP Planned Spools workbook not found (looked for '*SIOP*Planned*Spools*.xlsb' in data/upload). Every spool not found in the Weekly Production Planning workbook will show Planned = No, unchanged.
+2026-07-24 03:21:33 | INFO | Merge Engine started.
+2026-07-24 03:21:33 | INFO | Merge Engine completed. 1 spool(s) in Master Spool Dataset.
+2026-07-24 03:21:33 | INFO | Applying business rules to master dataset.
+2026-07-24 03:21:33 | INFO | Business rules applied to 1 row(s).
+2026-07-24 03:21:33 | INFO | Ageing Engine started.
+2026-07-24 03:21:33 | INFO | Ageing Engine completed for 1 row(s).
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/master_spools.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/dashboard_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/project_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/weekly_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/group_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/stage_ageing_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/fitup_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/welding_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/s_curve_summary.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/exceptions.json
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine started.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Inch Dia' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | WARNING | 'Surface Area Out' column not found; activity rollup will report zero for this metric. Check config/column_mapping.json.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine completed. 0 day(s) with activity data.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/activity_metrics.json
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_missing_line_history_shee0/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Pipeline run completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Cleaner initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Merge Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Pipeline initialised.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_write_dashboard_bundle_pu0/processed/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Published /tmp/pytest-of-root/pytest-2/test_write_dashboard_bundle_pu0/website_data/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Cleaner initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Merge Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Business Rule Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Ageing Engine initialised.
+2026-07-24 03:21:33 | INFO | Activity Metrics Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Pipeline initialised.
+2026-07-24 03:21:33 | INFO | Wrote /tmp/pytest-of-root/pytest-2/test_write_dashboard_bundle_sk0/processed/dashboard_data.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: settings.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: business_rules.json
+2026-07-24 03:21:33 | INFO | Summary Engine initialised.
+2026-07-24 03:21:33 | INFO | Summary Engine started.
+2026-07-24 03:21:33 | INFO | Summary Engine completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Starting validation for 'unknown'.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Starting validation for 'fabrication'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 03:21:33 | INFO | Validation completed.
+2026-07-24 03:21:33 | INFO | Loaded configuration: schema.json
+2026-07-24 03:21:33 | INFO | Loaded configuration: stages.json
+2026-07-24 03:21:33 | INFO | Validator initialised.
+2026-07-24 03:21:33 | INFO | Starting validation for 'planning_master'.
+2026-07-24 10:42:32 | INFO | Loaded configuration: column_mapping.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: settings.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: settings.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: business_rules.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: schema.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Validator initialised.
+2026-07-24 10:42:32 | INFO | Loaded configuration: schema.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Cleaner initialised.
+2026-07-24 10:42:32 | INFO | Loaded configuration: business_rules.json
+2026-07-24 10:42:32 | INFO | Merge Engine initialised.
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: business_rules.json
+2026-07-24 10:42:32 | INFO | Business Rule Engine initialised.
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: business_rules.json
+2026-07-24 10:42:32 | INFO | Ageing Engine initialised.
+2026-07-24 10:42:32 | INFO | Activity Metrics Engine initialised.
+2026-07-24 10:42:32 | INFO | Loaded configuration: stages.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: settings.json
+2026-07-24 10:42:32 | INFO | Loaded configuration: business_rules.json
+2026-07-24 10:42:32 | INFO | Summary Engine initialised.
+2026-07-24 10:42:32 | INFO | Pipeline initialised.
+2026-07-24 10:42:32 | INFO | Pipeline run started.
+2026-07-24 10:42:32 | INFO | Reading 1. DPR_Fabrication Jobs_July'26.xlsb
+2026-07-24 10:42:42 | INFO | Loaded 8881 fabrication rows.
+2026-07-24 10:42:42 | INFO | Reading Weekly Production Planning Sheet_July'26.xlsb
+2026-07-24 10:42:48 | INFO | Master Planning Sheet : 4318 rows
+2026-07-24 10:43:08 | INFO | Fit-Up DB : 30097 rows
+2026-07-24 10:43:19 | INFO | Welding DB : 29849 rows
+2026-07-24 10:43:19 | INFO | Starting validation for 'fabrication'.
+2026-07-24 10:43:19 | INFO | Validation completed.
+2026-07-24 10:43:19 | INFO | Starting validation for 'planning_master'.
+2026-07-24 10:43:19 | INFO | Validation completed.
+2026-07-24 10:43:19 | INFO | Starting validation for 'planning_fitup'.
+2026-07-24 10:43:19 | INFO | Validation completed.
+2026-07-24 10:43:19 | INFO | Starting validation for 'planning_welding'.
+2026-07-24 10:43:19 | INFO | Validation completed.
+2026-07-24 10:43:19 | INFO | Wrote processed\validation_report.json
+2026-07-24 10:43:19 | INFO | Starting dataframe cleaning.
+2026-07-24 10:43:19 | INFO | Cleaning completed. Rows: 8881 -> 8881
+2026-07-24 10:43:19 | INFO | Starting dataframe cleaning.
+2026-07-24 10:43:19 | INFO | Cleaning completed. Rows: 4318 -> 4318
+2026-07-24 10:43:19 | INFO | Starting dataframe cleaning.
+2026-07-24 10:43:19 | INFO | Cleaning completed. Rows: 30097 -> 30097
+2026-07-24 10:43:19 | INFO | Starting dataframe cleaning.
+2026-07-24 10:43:20 | INFO | Cleaning completed. Rows: 29849 -> 29849
+2026-07-24 10:43:20 | INFO | Reading Line History Sheet 22-07-2026.xlsb
+2026-07-24 10:44:10 | INFO | Loaded 52546 Line History Sheet rows.
+2026-07-24 10:44:10 | INFO | Starting dataframe cleaning.
+2026-07-24 10:44:14 | INFO | Cleaning completed. Rows: 52546 -> 52546
+2026-07-24 10:44:14 | INFO | Reading July SIOP Planned Spools.xlsb
+2026-07-24 10:44:16 | INFO | Loaded 4728 SIOP Planned Spools rows.
+2026-07-24 10:44:16 | INFO | Starting dataframe cleaning.
+2026-07-24 10:44:16 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-24 10:44:16 | INFO | Cleaning completed. Rows: 4728 -> 4727
+2026-07-24 10:44:16 | INFO | Merge Engine started.
+2026-07-24 10:44:40 | INFO | Line History Sheet: 8387 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-24 10:44:41 | INFO | SIOP Planned Spools fallback: filled Planned Start for 852 spool(s) not found (or blank) in the Weekly Production Planning workbook.
+2026-07-24 10:44:41 | INFO | Merge Engine completed. 8881 spool(s) in Master Spool Dataset.
+2026-07-24 10:44:41 | INFO | Applying business rules to master dataset.
+2026-07-24 10:44:43 | INFO | Business rules applied to 8881 row(s).
+2026-07-24 10:44:43 | INFO | Ageing Engine started.
+2026-07-24 10:44:45 | INFO | Ageing Engine completed for 8881 row(s).
+2026-07-24 10:44:45 | INFO | Summary Engine started.
+2026-07-24 10:44:49 | INFO | Summary Engine completed.
+2026-07-24 10:44:49 | INFO | Summary Engine started.
+2026-07-24 10:44:54 | INFO | Summary Engine completed.
+2026-07-24 10:44:55 | INFO | Wrote processed\master_spools.json
+2026-07-24 10:44:55 | INFO | Wrote processed\dashboard_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\project_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\weekly_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\group_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\stage_ageing_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\fitup_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\welding_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\s_curve_summary.json
+2026-07-24 10:44:55 | INFO | Wrote processed\exceptions.json
+2026-07-24 10:44:55 | INFO | Activity Metrics Engine started.
+2026-07-24 10:44:55 | INFO | Activity Metrics Engine completed. 261 day(s) with activity data.
+2026-07-24 10:44:55 | INFO | Wrote processed\activity_metrics.json
+2026-07-24 10:44:56 | INFO | Wrote processed\dashboard_data.json
+2026-07-24 10:44:56 | INFO | Published website\data\dashboard_data.json
+2026-07-24 10:44:56 | INFO | Pipeline run completed.

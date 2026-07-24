@@ -117,6 +117,13 @@ class BusinessRuleEngine:
         # to Packing; Dispatch is tracked separately as a post-
         # completion logistics milestone.
         self.completion_field: str = completed_config["completion_field"]
+        # See config/business_rules.json -> completed.also_completed_if_any_filled:
+        # a spool with no Packing date is still counted as Completed if
+        # it has already been Dispatched - it clearly was packed and
+        # shipped, it's just missing that one field on the DPR.
+        self.also_completed_if_any_filled: list[str] = (
+            completed_config.get("also_completed_if_any_filled", [])
+        )
         self.current_stage_label: str = (
             completed_config["current_stage_label"]
         )
@@ -417,9 +424,23 @@ class BusinessRuleEngine:
         (config/business_rules.json -> completed.completion_field,
         currently "Packing") has a value - regardless of whether
         stages tracked after it (e.g. Dispatch) are done yet.
+
+        A spool is ALSO counted as Completed if any of the configured
+        also_completed_if_any_filled fields (currently "Dispatch")
+        has a value, even when Packing itself is blank - it clearly
+        was packed and shipped, it's just missing that one DPR field
+        (see config/business_rules.json -> completed.also_completed_if_any_filled_comment).
+        This mirrors the equivalent also_planned_if_any_filled rule
+        for the Planned flag.
         """
 
-        return not is_empty(row.get(self.completion_field))
+        if not is_empty(row.get(self.completion_field)):
+            return True
+
+        return any(
+            not is_empty(row.get(field))
+            for field in self.also_completed_if_any_filled
+        )
 
     # -----------------------------------------------------
 

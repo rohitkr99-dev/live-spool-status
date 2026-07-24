@@ -71,6 +71,7 @@ import pandas as pd
 import line_history_ageing
 from config_loader import load_business_rules, load_stages
 from constants import (
+    ACTUAL_START_DATE,
     COMPLETED_FLAG,
     CURRENT_STAGE,
     LH_WELDING_AGE,
@@ -159,6 +160,20 @@ class AgeingEngine:
         dataframe = dataframe.copy()
 
         if self.calculate_total_age_enabled:
+            # Store the anchor date itself (not just the resulting
+            # age) as its own field - this is the actual date
+            # fabrication ageing is counted from for each spool
+            # (earliest of Planned Start/First Fit-Up/First Welding,
+            # falling back to PDQC/Prod Order Release - see
+            # determine_total_age_anchor_date()), as distinct from
+            # the Planned Start date itself, which just reflects the
+            # planning sheet regardless of whether work actually
+            # started there.
+            dataframe[ACTUAL_START_DATE] = dataframe.apply(
+                self.determine_total_age_anchor_date,
+                axis=1,
+            )
+
             dataframe[TOTAL_AGE] = dataframe.apply(
                 self.determine_total_age,
                 axis=1,

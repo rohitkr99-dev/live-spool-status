@@ -29,8 +29,11 @@ const SpoolKPI = {
 
     if (kpis.oldest_spool) {
       this.setNumber("kpi-oldest-age", kpis.oldest_spool.total_age, (v) => `${this.formatNumber(v)}d`);
+      const projectLabel = kpis.oldest_spool.project_name
+        ? `${kpis.oldest_spool.project_name} (${kpis.oldest_spool.project_code})`
+        : kpis.oldest_spool.project_code;
       document.getElementById("kpi-oldest-key").textContent =
-        `${kpis.oldest_spool.project_code} · ${kpis.oldest_spool.spool_no}`;
+        `${projectLabel} · ${kpis.oldest_spool.spool_no}`;
     } else {
       document.getElementById("kpi-oldest-age").textContent = "—";
       document.getElementById("kpi-oldest-key").textContent = "no data";

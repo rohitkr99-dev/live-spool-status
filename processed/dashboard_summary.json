@@ -1,14 +1,15 @@
 {
-  "generated_at": "2026-07-22T10:48:10.444578",
+  "generated_at": "2026-07-24T10:44:50.061419",
   "kpis": {
     "total_spools": 8881,
-    "planned": 7673,
-    "unplanned": 1208,
-    "completed": 4251,
-    "average_total_age_days": 41.1,
+    "planned": 7930,
+    "unplanned": 951,
+    "completed": 4253,
+    "average_total_age_days": 41.8,
     "oldest_spool": {
       "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
       "project_code": "TJ/25-26/172",
+      "project_name": "VOGT FP",
       "drawing_no": "1-V17556-PIND-0314",
       "spool_no": "V17556-PIND-0314-01",
       "total_age": 220,
@@ -22,8 +23,8 @@
     "PDQC": 278,
     "Ready for Painting": 353,
     "Under Painting": 1568,
-    "Packing": 11,
-    "Dispatch": 1736,
+    "Packing": 9,
+    "Dispatch": 1738,
     "Completed": 2515,
     "Production Order Not Released": 1134
   }

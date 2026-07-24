@@ -21,7 +21,7 @@ const SpoolTables = {
 
   renderAgeChip(days) {
     const value = days === null || days === undefined ? 0 : days;
-    return `<span class="age-chip ${this.ageThresholdClass(value)}">${value}d</span>`;
+    return `<span class="age-chip ${this.ageThresholdClass(value)}">${value}</span>`;
   },
 
   renderStagePill(stage) {
@@ -112,6 +112,18 @@ const SpoolTables = {
     );
   },
 
+  /**
+   * Project Name cell for the spool tables: shown bold, with a
+   * smaller, muted look and feel matching how it appears on the
+   * charts (see charts.js -> drawTwoPartYLabels).
+   */
+  renderProjectName() {
+    return this.typeAware(
+      (d) => (d === null || d === undefined || d === "" ? '<span class="bool-no">—</span>' : `<span class="project-name-cell">${d}</span>`),
+      (d) => (d === null || d === undefined ? "" : d),
+    );
+  },
+
   exportButtons(title) {
     return [
       {
@@ -133,16 +145,18 @@ const SpoolTables = {
       deferRender: true,
       pageLength: 25,
       lengthMenu: [10, 25, 50, 100, 250],
-      order: [[9, "desc"]], // Total Age desc by default
+      order: [[11, "desc"]], // Total Age desc by default
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("All Spools"),
       scrollX: true,
       scrollCollapse: true,
       columns: [
+        { data: "Project Name", render: this.renderProjectName() },
         { data: "Project Code" },
         { data: "Drawing No" },
         { data: "Spool No" },
         { data: "Material", render: this.renderText() },
+        { data: "Total Wt.", className: "mono-cell", render: this.renderNumber() },
         { data: "Group", render: this.renderText() },
         { data: "Week", render: this.renderText() },
         { data: "Current Stage", render: this.renderStage() },
@@ -153,9 +167,9 @@ const SpoolTables = {
         { data: "Completed", render: this.renderBoolCell() },
         { data: "Remarks", render: this.renderText() },
         { data: "Planned Start", className: "mono-cell", render: this.renderDate() },
+        { data: "Actual Start Date", className: "mono-cell", render: this.renderDate() },
         { data: "Completion Date", className: "mono-cell", render: this.renderDate() },
         { data: "Inch Dia", className: "mono-cell", render: this.renderNumber() },
-        { data: "Total Wt.", className: "mono-cell", render: this.renderNumber() },
         { data: "Surface Area Out", className: "mono-cell", render: this.renderNumber() },
         { data: "Line History Stage", render: this.renderText() },
       ],
@@ -206,10 +220,11 @@ const SpoolTables = {
       data: oldest,
       pageLength: 25,
       lengthMenu: [10, 25, 50],
-      order: [[5, "desc"]],
+      order: [[6, "desc"]],
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("Oldest Spools"),
       columns: [
+        { data: "Project Name", render: this.renderProjectName() },
         { data: "Project Code" },
         { data: "Drawing No" },
         { data: "Spool No" },
@@ -261,9 +276,25 @@ const SpoolTables = {
     }
   },
 
+  /**
+   * Same as populateFilterDropdown, but for Project Code values:
+   * the option's value stays the Project Code (so filtering against
+   * the Project Code column keeps working unchanged), while the
+   * visible text is "Project Name (Project Code)".
+   */
+  populateProjectFilterDropdown(selectId, projectCodes) {
+    const select = document.getElementById(selectId);
+    for (const code of projectCodes) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = SpoolData.projectLabel(code);
+      select.appendChild(option);
+    }
+  },
+
   setupFilters() {
 
-    this.populateFilterDropdown("filter-project", SpoolData.distinctValues("Project Code"));
+    this.populateProjectFilterDropdown("filter-project", SpoolData.distinctValues("Project Code"));
     this.populateFilterDropdown("filter-week", this.sortedWeeks(SpoolData.distinctValues("Week")));
     this.populateFilterDropdown("filter-group", SpoolData.distinctValues("Group"));
     this.populateFilterDropdown("filter-material", SpoolData.distinctValues("Material"));
@@ -276,11 +307,11 @@ const SpoolTables = {
     // that column - e.g. selecting "Week 3" and "Week 4" shows rows
     // matching either.
     const columnIndex = {
-      "filter-project": 0,
-      "filter-week": 5,
-      "filter-group": 4,
-      "filter-material": 3,
-      "filter-stage": 6,
+      "filter-project": 1,
+      "filter-week": 7,
+      "filter-group": 6,
+      "filter-material": 4,
+      "filter-stage": 8,
     };
 
     for (const [selectId, colIndex] of Object.entries(columnIndex)) {
@@ -296,14 +327,21 @@ const SpoolTables = {
     document.getElementById("filter-planning").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Planned" ? "^Yes$" : "^No$");
-      this.dt.all.column(10).search(search, true, false).draw();
+      this.dt.all.column(12).search(search, true, false).draw();
     });
 
     document.getElementById("filter-status").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Completed" ? "^Yes$" : "^No$");
-      this.dt.all.column(11).search(search, true, false).draw();
+      this.dt.all.column(13).search(search, true, false).draw();
     });
+
+    // Numerical range filters for Stage Age / Total Age (both in
+    // Days) - Excel-style "between min and max" filtering. Wired
+    // once in setupNumericRangeFilters() via a shared
+    // $.fn.dataTable.ext.search function so it applies on every
+    // redraw alongside the dropdown/search filters above.
+    this.setupNumericRangeFilters();
 
     // Custom sort: pick any column + direction instead of only
     // being able to click a header (handy on touch devices, and
@@ -322,12 +360,53 @@ const SpoolTables = {
       });
       document.getElementById("filter-planning").value = "";
       document.getElementById("filter-status").value = "";
-      document.getElementById("sort-field").value = "9";
+      document.getElementById("filter-stage-age-min").value = "";
+      document.getElementById("filter-stage-age-max").value = "";
+      document.getElementById("filter-total-age-min").value = "";
+      document.getElementById("filter-total-age-max").value = "";
+      document.getElementById("sort-field").value = "11";
       document.getElementById("sort-direction").value = "desc";
       this.dt.all.columns().search("").draw();
       this.dt.all.search("").draw();
-      this.dt.all.order([9, "desc"]).draw();
+      this.dt.all.order([11, "desc"]).draw();
     });
+  },
+
+  /**
+   * Excel-style numeric "between min and max" filtering for Stage
+   * Age (column 10) and Total Age (column 11), both already plain
+   * day counts (see renderAgeChip). Registered once as a shared
+   * DataTables search plugin so it combines with every other filter
+   * (dropdowns, global search) rather than replacing them.
+   */
+  setupNumericRangeFilters() {
+
+    const AGE_COLUMNS = { stage: 10, total: 11 };
+
+    $.fn.dataTable.ext.search.push((settings, searchData) => {
+
+      if (settings.nTable.id !== "table-all") return true;
+
+      const stageMin = document.getElementById("filter-stage-age-min").value;
+      const stageMax = document.getElementById("filter-stage-age-max").value;
+      const totalMin = document.getElementById("filter-total-age-min").value;
+      const totalMax = document.getElementById("filter-total-age-max").value;
+
+      const stageAge = parseFloat(searchData[AGE_COLUMNS.stage]);
+      const totalAge = parseFloat(searchData[AGE_COLUMNS.total]);
+
+      if (stageMin !== "" && !(stageAge >= parseFloat(stageMin))) return false;
+      if (stageMax !== "" && !(stageAge <= parseFloat(stageMax))) return false;
+      if (totalMin !== "" && !(totalAge >= parseFloat(totalMin))) return false;
+      if (totalMax !== "" && !(totalAge <= parseFloat(totalMax))) return false;
+
+      return true;
+    });
+
+    ["filter-stage-age-min", "filter-stage-age-max", "filter-total-age-min", "filter-total-age-max"]
+      .forEach((id) => {
+        document.getElementById(id).addEventListener("input", () => this.dt.all.draw());
+      });
   },
 
   sortedWeeks(weeks) {

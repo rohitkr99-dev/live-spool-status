@@ -1,6 +1,7 @@
 {
 "fabrication": {
 "Project Code": "Project Code",
+"Project Name": "Project Name",
 "Drawing No.": "Drawing No",
 "Drawing No": "Drawing No",
 "Spool No": "Spool No",
@@ -34,6 +35,7 @@
 
 "planning": {
 "Project Code": "Project Code",
+"Project Name": "Project Name",
 "Drawing No": "Drawing No",
 "Drawing No.": "Drawing No",
 "Spool No": "Spool No",

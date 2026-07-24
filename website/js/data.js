@@ -256,6 +256,8 @@ const SpoolData = {
     this.store.exceptions = bundle.exceptions || [];
     this.store.activityMetrics = bundle.activity_metrics || [];
 
+    this._projectNameByCode = null;
+
     this.hasData = true;
 
     return this.store;
@@ -283,5 +285,40 @@ const SpoolData = {
       }
     }
     return [...values].sort((a, b) => String(a).localeCompare(String(b)));
+  },
+
+  /**
+   * Project Code -> Project Name lookup, built once from
+   * master_spools (falls back to project_summary if a code somehow
+   * isn't in master_spools). Used anywhere Project Code alone would
+   * otherwise be shown, so the dashboard can display the friendlier
+   * Project Name instead/alongside it.
+   */
+  projectNameByCode() {
+    if (this._projectNameByCode) return this._projectNameByCode;
+
+    const lookup = {};
+    for (const row of this.store.masterSpools) {
+      const code = row["Project Code"];
+      const name = row["Project Name"];
+      if (code && name && !lookup[code]) lookup[code] = name;
+    }
+    for (const row of this.store.projectSummary) {
+      const code = row["Project Code"];
+      const name = row["Project Name"];
+      if (code && name && !lookup[code]) lookup[code] = name;
+    }
+
+    this._projectNameByCode = lookup;
+    return lookup;
+  },
+
+  /**
+   * "Project Name (Project Code)" for a given code, falling back to
+   * just the code if no name is on record.
+   */
+  projectLabel(projectCode) {
+    const name = this.projectNameByCode()[projectCode];
+    return name ? `${name} (${projectCode})` : projectCode;
   },
 };
