@@ -1,10 +1,5 @@
 # Live Spool Status & Ageing System
 
-Websites found at:
-
-https://rohitkr99-dev.github.io/live-spool-status/index.html
-https://spool-tracker-9a489e.gitlab.io/index.html
-
 A professional Production Intelligence System for monitoring fabrication spool progress, production ageing, planning status, and project KPIs.
 
 ---
