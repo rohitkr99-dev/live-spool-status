@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-07-24T16:05:40.836829",
+  "generated_at": "2026-07-26T19:13:27.643964",
   "kpis": {
     "total_spools": 8881,
     "planned": 7930,
     "unplanned": 951,
     "completed": 4253,
-    "average_total_age_days": 41.8,
+    "average_total_age_days": 42.5,
     "oldest_spool": {
       "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
       "project_code": "TJ/25-26/172",
@@ -15,7 +15,7 @@
       "total_age": 220,
       "current_stage": "Dispatch"
     },
-    "planning_variance_days": -1.0
+    "planning_variance_days": -0.4
   },
   "current_stage_distribution": {
     "Fit-Up": 1229,

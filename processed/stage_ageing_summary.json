@@ -393,13 +393,13 @@
     "Project Code": "TJ/25-26/188",
     "Stage": "Fit-Up",
     "spool_count": 1569,
-    "average_days": 4.9,
+    "average_days": 5.1,
     "bucket_counts": {
       "0\u20137d": 1174,
       "8\u201314d": 289,
       "15\u201330d": 84,
-      "31\u201360d": 22,
-      "60d+": 0
+      "31\u201360d": 21,
+      "60d+": 1
     }
   },
   {
@@ -471,7 +471,7 @@
     "Project Code": "TJ/25-26/189",
     "Stage": "Fit-Up",
     "spool_count": 628,
-    "average_days": 4.3,
+    "average_days": 5.4,
     "bucket_counts": {
       "0\u20137d": 562,
       "8\u201314d": 40,
@@ -549,7 +549,7 @@
     "Project Code": "TJ/25-26/206",
     "Stage": "Fit-Up",
     "spool_count": 128,
-    "average_days": 2.6,
+    "average_days": 3.9,
     "bucket_counts": {
       "0\u20137d": 128,
       "8\u201314d": 0,
