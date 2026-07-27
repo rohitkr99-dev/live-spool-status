@@ -1,0 +1,35 @@
+{
+  "application": {
+    "name": "Packing & Dispatch Dashboard",
+    "version": "1.0.0"
+  },
+
+  "paths": {
+    "upload_folder": "data/upload/packing",
+    "processed_folder": "processed",
+    "website_data_folder": "website/data"
+  },
+
+  "input_files": {
+    "comment": "Every .xlsx workbook dropped into paths.upload_folder is read - one workbook per project (or per project + bore split, e.g. '...182 Small Bore.xlsx' / '...182 Large Bore.xlsx', which are combined back into one project by Project Code). Each workbook must contain a sheet whose name includes 'Spool' (row-level spool list) and, optionally, a sheet named 'Summary' (row-level packing list per Box No.).",
+    "file_pattern": "*.xlsx",
+    "spool_sheet_name_contains": "spool",
+    "summary_sheet_name": "summary",
+    "header_marker_column": "Project Code",
+    "header_search_rows": 5
+  },
+
+  "output_files": {
+    "bundle": "packing_dispatch_data.json"
+  },
+
+  "publishing": {
+    "publish_to_website": true,
+    "comment": "When true, every run also copies packing_dispatch_data.json into paths.website_data_folder - the file website/packing-dispatch.html auto-loads for every visitor of the hosted site, same pattern as config/settings.json for the Production pipeline."
+  },
+
+  "status_normalization": {
+    "comment": "Raw 'Packing Status' / Summary 'Status' text varies by project (PACKED, COMPLETE PACKED, COMPLETE PACK, DISPATCHED, or blank). See src/packing/normalize.py -> normalize_status() for the exact matching rules. Blank/missing is treated as 'Pending / Under Packing' - i.e. the spool has not been packed into a box yet.",
+    "categories": ["Pending / Under Packing", "Packed", "Dispatched"]
+  }
+}
