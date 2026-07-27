@@ -1,0 +1,32 @@
+/**
+ * packing.css
+ * ---------------------------------------------------------
+ * A handful of layout rules specific to packing-dispatch.html that
+ * aren't covered by the shared css/styles.css (which only scopes
+ * .chart-card--full to .stage-ageing-grid, since that's the only
+ * place the Projects dashboard uses it). Kept in its own tiny file
+ * rather than edited into styles.css, so nothing here can affect the
+ * Projects dashboard.
+ */
+
+.charts-grid .chart-card--full,
+.activity-charts-grid .chart-card--full {
+  grid-column: 1 / -1;
+}
+
+.charts-grid .chart-card--full .chart-card__body,
+.activity-charts-grid .chart-card--full .chart-card__body {
+  min-height: 360px;
+}
+
+/* Sections with only 2 chart-cards (this dashboard has no third
+   card to fill the second row the way the Projects dashboard's
+   Overview section does) - keep the wide card to one row so it
+   doesn't leave an empty cell beside it. */
+.charts-grid--single-row {
+  grid-template-rows: auto;
+}
+.charts-grid--single-row .chart-card--wide {
+  grid-row: auto;
+}
+
