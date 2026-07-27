@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-07-26T19:13:27.643964",
+  "generated_at": "2026-07-27T11:37:47.843994",
   "kpis": {
     "total_spools": 8881,
-    "planned": 7930,
-    "unplanned": 951,
-    "completed": 4253,
-    "average_total_age_days": 42.5,
+    "planned": 7931,
+    "unplanned": 950,
+    "completed": 4343,
+    "average_total_age_days": 41.6,
     "oldest_spool": {
       "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
       "project_code": "TJ/25-26/172",
@@ -15,17 +15,17 @@
       "total_age": 220,
       "current_stage": "Dispatch"
     },
-    "planning_variance_days": -0.4
+    "planning_variance_days": -0.6
   },
   "current_stage_distribution": {
-    "Fit-Up": 1229,
-    "Welding": 57,
-    "PDQC": 278,
-    "Ready for Painting": 353,
-    "Under Painting": 1568,
-    "Packing": 9,
-    "Dispatch": 1738,
-    "Completed": 2515,
-    "Production Order Not Released": 1134
+    "Fit-Up": 1147,
+    "Welding": 60,
+    "PDQC": 316,
+    "Ready for Painting": 361,
+    "Under Painting": 1640,
+    "Packing": 96,
+    "Dispatch": 1826,
+    "Completed": 2517,
+    "Production Order Not Released": 918
   }
 }

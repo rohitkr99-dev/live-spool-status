@@ -78,51 +78,65 @@
   },
   {
     "Week": "Week 12",
-    "total_spools": 149,
-    "done": 142,
+    "total_spools": 148,
+    "done": 141,
     "pending": 7,
     "completion_pct": 95.3
   },
   {
     "Week": "Week 13",
-    "total_spools": 405,
+    "total_spools": 387,
     "done": 381,
-    "pending": 24,
-    "completion_pct": 94.1
+    "pending": 6,
+    "completion_pct": 98.4
   },
   {
     "Week": "Week 14",
-    "total_spools": 316,
+    "total_spools": 315,
     "done": 313,
-    "pending": 3,
-    "completion_pct": 99.1
+    "pending": 2,
+    "completion_pct": 99.4
   },
   {
     "Week": "Week 15",
-    "total_spools": 433,
-    "done": 421,
-    "pending": 12,
-    "completion_pct": 97.2
+    "total_spools": 430,
+    "done": 422,
+    "pending": 8,
+    "completion_pct": 98.1
   },
   {
     "Week": "Week 16",
-    "total_spools": 677,
-    "done": 464,
-    "pending": 213,
-    "completion_pct": 68.5
+    "total_spools": 675,
+    "done": 572,
+    "pending": 103,
+    "completion_pct": 84.7
   },
   {
     "Week": "Week 17",
-    "total_spools": 524,
-    "done": 25,
-    "pending": 499,
-    "completion_pct": 4.8
+    "total_spools": 549,
+    "done": 332,
+    "pending": 217,
+    "completion_pct": 60.5
+  },
+  {
+    "Week": "Week 18",
+    "total_spools": 597,
+    "done": 0,
+    "pending": 597,
+    "completion_pct": 0.0
+  },
+  {
+    "Week": "Week 19",
+    "total_spools": 255,
+    "done": 0,
+    "pending": 255,
+    "completion_pct": 0.0
   },
   {
     "Week": "Unassigned",
-    "total_spools": 4563,
-    "done": 2630,
-    "pending": 1933,
-    "completion_pct": 57.6
+    "total_spools": 3711,
+    "done": 2631,
+    "pending": 1080,
+    "completion_pct": 70.9
   }
 ]

@@ -28,14 +28,14 @@
     "total_spools": 1024,
     "planned": 1004,
     "unplanned": 20,
-    "completed": 499,
-    "average_total_age_days": 46.7,
+    "completed": 569,
+    "average_total_age_days": 46.9,
     "current_stage_breakdown": {
       "Fit-Up": 6,
-      "Welding": 1,
-      "Ready for Painting": 3,
-      "Under Painting": 495,
-      "Dispatch": 92,
+      "Ready for Painting": 2,
+      "Under Painting": 336,
+      "Packing": 91,
+      "Dispatch": 162,
       "Completed": 407,
       "Production Order Not Released": 20
     },
@@ -44,19 +44,20 @@
   {
     "Project Code": "TJ/25-26/183",
     "total_spools": 2082,
-    "planned": 2031,
-    "unplanned": 51,
-    "completed": 820,
-    "average_total_age_days": 32.3,
+    "planned": 2032,
+    "unplanned": 50,
+    "completed": 828,
+    "average_total_age_days": 32.4,
     "current_stage_breakdown": {
-      "Fit-Up": 502,
+      "Fit-Up": 633,
       "Welding": 1,
-      "PDQC": 16,
-      "Ready for Painting": 152,
-      "Under Painting": 406,
-      "Dispatch": 63,
+      "PDQC": 12,
+      "Ready for Painting": 104,
+      "Under Painting": 453,
+      "Packing": 2,
+      "Dispatch": 71,
       "Completed": 757,
-      "Production Order Not Released": 185
+      "Production Order Not Released": 49
     },
     "Project Name": "NE Franklin Farms"
   },
@@ -68,8 +69,7 @@
     "completed": 1314,
     "average_total_age_days": 53.6,
     "current_stage_breakdown": {
-      "Dispatch": 2,
-      "Completed": 1312
+      "Completed": 1314
     },
     "Project Name": "VOGT CB"
   },
@@ -79,16 +79,16 @@
     "planned": 1648,
     "unplanned": 272,
     "completed": 337,
-    "average_total_age_days": 21.9,
+    "average_total_age_days": 22.4,
     "current_stage_breakdown": {
-      "Fit-Up": 292,
-      "Welding": 30,
-      "PDQC": 194,
-      "Ready for Painting": 180,
-      "Under Painting": 564,
+      "Fit-Up": 316,
+      "Welding": 23,
+      "PDQC": 128,
+      "Ready for Painting": 125,
+      "Under Painting": 747,
       "Packing": 2,
       "Dispatch": 337,
-      "Production Order Not Released": 321
+      "Production Order Not Released": 242
     },
     "Project Name": "VOGT Bison"
   },
@@ -97,17 +97,17 @@
     "total_spools": 720,
     "planned": 628,
     "unplanned": 92,
-    "completed": 106,
-    "average_total_age_days": 18.0,
+    "completed": 118,
+    "average_total_age_days": 18.7,
     "current_stage_breakdown": {
-      "Fit-Up": 309,
-      "Welding": 22,
-      "PDQC": 63,
-      "Ready for Painting": 18,
-      "Under Painting": 103,
-      "Packing": 7,
-      "Dispatch": 106,
-      "Production Order Not Released": 92
+      "Fit-Up": 108,
+      "Welding": 31,
+      "PDQC": 144,
+      "Ready for Painting": 123,
+      "Under Painting": 104,
+      "Packing": 1,
+      "Dispatch": 118,
+      "Production Order Not Released": 91
     },
     "Project Name": "NE Gregory"
   },
@@ -117,11 +117,12 @@
     "planned": 128,
     "unplanned": 516,
     "completed": 0,
-    "average_total_age_days": 0.9,
+    "average_total_age_days": 1.0,
     "current_stage_breakdown": {
-      "Fit-Up": 120,
-      "Welding": 3,
-      "PDQC": 5,
+      "Fit-Up": 84,
+      "Welding": 5,
+      "PDQC": 32,
+      "Ready for Painting": 7,
       "Production Order Not Released": 516
     },
     "Project Name": "VOGT Tallgrass 1"

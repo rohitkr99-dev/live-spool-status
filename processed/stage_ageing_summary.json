@@ -159,12 +159,12 @@
     "Project Code": "TJ/25-26/182",
     "Stage": "Fit-Up",
     "spool_count": 1004,
-    "average_days": 4.4,
+    "average_days": 4.3,
     "bucket_counts": {
-      "0\u20137d": 790,
+      "0\u20137d": 794,
       "8\u201314d": 146,
       "15\u201330d": 53,
-      "31\u201360d": 15,
+      "31\u201360d": 11,
       "60d+": 0
     }
   },
@@ -184,10 +184,10 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "PDQC",
-    "spool_count": 997,
+    "spool_count": 998,
     "average_days": 5.3,
     "bucket_counts": {
-      "0\u20137d": 690,
+      "0\u20137d": 691,
       "8\u201314d": 272,
       "15\u201330d": 34,
       "31\u201360d": 1,
@@ -197,11 +197,11 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Ready for Painting",
-    "spool_count": 994,
+    "spool_count": 996,
     "average_days": 6.0,
     "bucket_counts": {
-      "0\u20137d": 827,
-      "8\u201314d": 118,
+      "0\u20137d": 828,
+      "8\u201314d": 119,
       "15\u201330d": 45,
       "31\u201360d": 3,
       "60d+": 1
@@ -210,23 +210,23 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Under Painting",
-    "spool_count": 499,
-    "average_days": 30.7,
+    "spool_count": 660,
+    "average_days": 30.1,
     "bucket_counts": {
       "0\u20137d": 0,
-      "8\u201314d": 44,
-      "15\u201330d": 248,
-      "31\u201360d": 201,
+      "8\u201314d": 46,
+      "15\u201330d": 335,
+      "31\u201360d": 273,
       "60d+": 6
     }
   },
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Packing",
-    "spool_count": 499,
-    "average_days": 4.7,
+    "spool_count": 569,
+    "average_days": 4.1,
     "bucket_counts": {
-      "0\u20137d": 412,
+      "0\u20137d": 482,
       "8\u201314d": 79,
       "15\u201330d": 8,
       "31\u201360d": 0,
@@ -236,13 +236,13 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Fit-Up",
-    "spool_count": 1564,
-    "average_days": 4.9,
+    "spool_count": 1700,
+    "average_days": 4.3,
     "bucket_counts": {
-      "0\u20137d": 1249,
+      "0\u20137d": 1401,
       "8\u201314d": 152,
-      "15\u201330d": 111,
-      "31\u201360d": 48,
+      "15\u201330d": 109,
+      "31\u201360d": 34,
       "60d+": 4
     }
   },
@@ -262,12 +262,12 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "PDQC",
-    "spool_count": 1378,
+    "spool_count": 1387,
     "average_days": 4.7,
     "bucket_counts": {
-      "0\u20137d": 1114,
-      "8\u201314d": 189,
-      "15\u201330d": 66,
+      "0\u20137d": 1121,
+      "8\u201314d": 187,
+      "15\u201330d": 70,
       "31\u201360d": 9,
       "60d+": 0
     }
@@ -275,12 +275,12 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Ready for Painting",
-    "spool_count": 1226,
-    "average_days": 7.4,
+    "spool_count": 1283,
+    "average_days": 7.7,
     "bucket_counts": {
       "0\u20137d": 787,
-      "8\u201314d": 352,
-      "15\u201330d": 82,
+      "8\u201314d": 377,
+      "15\u201330d": 114,
       "31\u201360d": 4,
       "60d+": 1
     }
@@ -288,23 +288,23 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Under Painting",
-    "spool_count": 820,
-    "average_days": 40.0,
+    "spool_count": 830,
+    "average_days": 40.1,
     "bucket_counts": {
       "0\u20137d": 5,
       "8\u201314d": 49,
-      "15\u201330d": 195,
-      "31\u201360d": 506,
-      "60d+": 65
+      "15\u201330d": 198,
+      "31\u201360d": 512,
+      "60d+": 66
     }
   },
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Packing",
-    "spool_count": 820,
+    "spool_count": 828,
     "average_days": 3.2,
     "bucket_counts": {
-      "0\u20137d": 743,
+      "0\u20137d": 751,
       "8\u201314d": 75,
       "15\u201330d": 2,
       "31\u201360d": 0,
@@ -392,12 +392,12 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Fit-Up",
-    "spool_count": 1569,
-    "average_days": 5.1,
+    "spool_count": 1648,
+    "average_days": 4.9,
     "bucket_counts": {
-      "0\u20137d": 1174,
+      "0\u20137d": 1254,
       "8\u201314d": 289,
-      "15\u201330d": 84,
+      "15\u201330d": 83,
       "31\u201360d": 21,
       "60d+": 1
     }
@@ -405,11 +405,11 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Welding",
-    "spool_count": 1278,
+    "spool_count": 1324,
     "average_days": 1.4,
     "bucket_counts": {
-      "0\u20137d": 1260,
-      "8\u201314d": 11,
+      "0\u20137d": 1305,
+      "8\u201314d": 12,
       "15\u201330d": 4,
       "31\u201360d": 1,
       "60d+": 2
@@ -418,12 +418,12 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "PDQC",
-    "spool_count": 1083,
-    "average_days": 4.2,
+    "spool_count": 1211,
+    "average_days": 4.1,
     "bucket_counts": {
-      "0\u20137d": 928,
-      "8\u201314d": 129,
-      "15\u201330d": 25,
+      "0\u20137d": 1050,
+      "8\u201314d": 133,
+      "15\u201330d": 27,
       "31\u201360d": 1,
       "60d+": 0
     }
@@ -431,11 +431,11 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Ready for Painting",
-    "spool_count": 903,
-    "average_days": 6.0,
+    "spool_count": 1086,
+    "average_days": 5.5,
     "bucket_counts": {
-      "0\u20137d": 727,
-      "8\u201314d": 92,
+      "0\u20137d": 904,
+      "8\u201314d": 98,
       "15\u201330d": 54,
       "31\u201360d": 30,
       "60d+": 0
@@ -471,7 +471,7 @@
     "Project Code": "TJ/25-26/189",
     "Stage": "Fit-Up",
     "spool_count": 628,
-    "average_days": 5.4,
+    "average_days": 4.9,
     "bucket_counts": {
       "0\u20137d": 562,
       "8\u201314d": 40,
@@ -483,10 +483,10 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "Welding",
-    "spool_count": 280,
-    "average_days": 1.0,
+    "spool_count": 461,
+    "average_days": 0.7,
     "bucket_counts": {
-      "0\u20137d": 277,
+      "0\u20137d": 458,
       "8\u201314d": 0,
       "15\u201330d": 1,
       "31\u201360d": 0,
@@ -496,11 +496,11 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "PDQC",
-    "spool_count": 234,
-    "average_days": 4.4,
+    "spool_count": 346,
+    "average_days": 3.6,
     "bucket_counts": {
-      "0\u20137d": 198,
-      "8\u201314d": 28,
+      "0\u20137d": 309,
+      "8\u201314d": 29,
       "15\u201330d": 8,
       "31\u201360d": 0,
       "60d+": 0
@@ -509,11 +509,11 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "Ready for Painting",
-    "spool_count": 216,
-    "average_days": 7.3,
+    "spool_count": 223,
+    "average_days": 7.2,
     "bucket_counts": {
-      "0\u20137d": 159,
-      "8\u201314d": 39,
+      "0\u20137d": 165,
+      "8\u201314d": 40,
       "15\u201330d": 17,
       "31\u201360d": 1,
       "60d+": 0
@@ -522,12 +522,12 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "Under Painting",
-    "spool_count": 113,
-    "average_days": 36.6,
+    "spool_count": 119,
+    "average_days": 35.7,
     "bucket_counts": {
       "0\u20137d": 0,
       "8\u201314d": 5,
-      "15\u201330d": 28,
+      "15\u201330d": 34,
       "31\u201360d": 80,
       "60d+": 0
     }
@@ -535,10 +535,10 @@
   {
     "Project Code": "TJ/25-26/189",
     "Stage": "Packing",
-    "spool_count": 106,
-    "average_days": 1.5,
+    "spool_count": 118,
+    "average_days": 1.4,
     "bucket_counts": {
-      "0\u20137d": 106,
+      "0\u20137d": 118,
       "8\u201314d": 0,
       "15\u201330d": 0,
       "31\u201360d": 0,
@@ -561,10 +561,23 @@
   {
     "Project Code": "TJ/25-26/206",
     "Stage": "Welding",
-    "spool_count": 20,
-    "average_days": 0.7,
+    "spool_count": 39,
+    "average_days": 0.8,
     "bucket_counts": {
-      "0\u20137d": 20,
+      "0\u20137d": 39,
+      "8\u201314d": 0,
+      "15\u201330d": 0,
+      "31\u201360d": 0,
+      "60d+": 0
+    }
+  },
+  {
+    "Project Code": "TJ/25-26/206",
+    "Stage": "PDQC",
+    "spool_count": 7,
+    "average_days": 1.3,
+    "bucket_counts": {
+      "0\u20137d": 7,
       "8\u201314d": 0,
       "15\u201330d": 0,
       "31\u201360d": 0,
