@@ -1,0 +1,10 @@
+2026-07-29 08:05:12 | INFO | Reading workbooks from data\upload\packing ...
+2026-07-29 08:05:13 | INFO | TJ-25-26-182 ( Large Bore ).xlsx: read 407 spool row(s), 20 box row(s).
+2026-07-29 08:05:13 | INFO | TJ-25-26-182 ( Small Bore ).xlsx: read 617 spool row(s), 1 box row(s).
+2026-07-29 08:05:13 | INFO | TJ-25-26-183.xlsx: read 842 spool row(s), 44 box row(s).
+2026-07-29 08:05:14 | INFO | TJ-25-26-184.xlsx: read 1314 spool row(s), 25 box row(s).
+2026-07-29 08:05:14 | INFO | TJ-25-26-188.xlsx: read 1876 spool row(s), 9 box row(s).
+2026-07-29 08:05:14 | INFO | TJ-25-26-189.xlsx: read 720 spool row(s), 4 box row(s).
+2026-07-29 08:05:14 | INFO | TJ-25-26-206.xlsx: read 644 spool row(s), 0 box row(s).
+2026-07-29 08:05:15 | INFO | Wrote processed\packing_dispatch_data.json
+2026-07-29 08:05:15 | INFO | Published website\data\packing_dispatch_data.json

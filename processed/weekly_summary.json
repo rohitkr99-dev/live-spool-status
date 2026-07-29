@@ -92,7 +92,7 @@
     "planned": 94,
     "unplanned": 0,
     "completed": 86,
-    "average_total_age_days": 48.8,
+    "average_total_age_days": 48.9,
     "current_stage_breakdown": {
       "Under Painting": 7,
       "Packing": 1,
@@ -106,7 +106,7 @@
     "planned": 95,
     "unplanned": 0,
     "completed": 55,
-    "average_total_age_days": 52.3,
+    "average_total_age_days": 53.2,
     "current_stage_breakdown": {
       "PDQC": 1,
       "Ready for Painting": 3,
@@ -120,7 +120,7 @@
     "planned": 233,
     "unplanned": 0,
     "completed": 113,
-    "average_total_age_days": 49.2,
+    "average_total_age_days": 50.2,
     "current_stage_breakdown": {
       "PDQC": 1,
       "Ready for Painting": 4,
@@ -136,7 +136,7 @@
     "planned": 268,
     "unplanned": 0,
     "completed": 71,
-    "average_total_age_days": 46.7,
+    "average_total_age_days": 48.2,
     "current_stage_breakdown": {
       "PDQC": 2,
       "Ready for Painting": 6,
@@ -151,7 +151,7 @@
     "planned": 148,
     "unplanned": 0,
     "completed": 41,
-    "average_total_age_days": 41.2,
+    "average_total_age_days": 42.6,
     "current_stage_breakdown": {
       "PDQC": 7,
       "Ready for Painting": 8,
@@ -167,7 +167,7 @@
     "planned": 387,
     "unplanned": 0,
     "completed": 94,
-    "average_total_age_days": 38.2,
+    "average_total_age_days": 39.7,
     "current_stage_breakdown": {
       "Fit-Up": 4,
       "PDQC": 7,
@@ -183,7 +183,7 @@
     "planned": 315,
     "unplanned": 0,
     "completed": 0,
-    "average_total_age_days": 28.2,
+    "average_total_age_days": 30.2,
     "current_stage_breakdown": {
       "PDQC": 7,
       "Ready for Painting": 35,
@@ -196,7 +196,7 @@
     "planned": 430,
     "unplanned": 0,
     "completed": 2,
-    "average_total_age_days": 27.3,
+    "average_total_age_days": 29.3,
     "current_stage_breakdown": {
       "Fit-Up": 3,
       "Welding": 1,
@@ -213,7 +213,7 @@
     "planned": 675,
     "unplanned": 0,
     "completed": 0,
-    "average_total_age_days": 14.0,
+    "average_total_age_days": 16.0,
     "current_stage_breakdown": {
       "Fit-Up": 81,
       "Welding": 19,
@@ -228,7 +228,7 @@
     "planned": 549,
     "unplanned": 0,
     "completed": 0,
-    "average_total_age_days": 7.8,
+    "average_total_age_days": 9.8,
     "current_stage_breakdown": {
       "Fit-Up": 177,
       "Welding": 40,
@@ -243,7 +243,7 @@
     "planned": 597,
     "unplanned": 0,
     "completed": 0,
-    "average_total_age_days": 0.0,
+    "average_total_age_days": 2.0,
     "current_stage_breakdown": {
       "Fit-Up": 597
     }

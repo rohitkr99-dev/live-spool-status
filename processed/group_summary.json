@@ -5,7 +5,7 @@
     "planned": 61,
     "unplanned": 0,
     "completed": 16,
-    "average_total_age_days": 44.9,
+    "average_total_age_days": 46.3,
     "current_stage_breakdown": {
       "Under Painting": 39,
       "Packing": 6,
@@ -18,7 +18,7 @@
     "planned": 78,
     "unplanned": 0,
     "completed": 16,
-    "average_total_age_days": 43.7,
+    "average_total_age_days": 45.3,
     "current_stage_breakdown": {
       "PDQC": 2,
       "Under Painting": 57,
@@ -32,7 +32,7 @@
     "planned": 48,
     "unplanned": 0,
     "completed": 18,
-    "average_total_age_days": 42.9,
+    "average_total_age_days": 44.1,
     "current_stage_breakdown": {
       "PDQC": 4,
       "Ready for Painting": 2,
@@ -46,7 +46,7 @@
     "planned": 24,
     "unplanned": 0,
     "completed": 8,
-    "average_total_age_days": 52.8,
+    "average_total_age_days": 54.2,
     "current_stage_breakdown": {
       "Under Painting": 15,
       "Packing": 1,
@@ -82,7 +82,7 @@
     "planned": 207,
     "unplanned": 0,
     "completed": 105,
-    "average_total_age_days": 30.9,
+    "average_total_age_days": 31.8,
     "current_stage_breakdown": {
       "Fit-Up": 82,
       "Ready for Painting": 5,
@@ -97,7 +97,7 @@
     "planned": 312,
     "unplanned": 0,
     "completed": 84,
-    "average_total_age_days": 31.0,
+    "average_total_age_days": 32.4,
     "current_stage_breakdown": {
       "Fit-Up": 67,
       "Welding": 7,
@@ -115,7 +115,7 @@
     "planned": 283,
     "unplanned": 0,
     "completed": 83,
-    "average_total_age_days": 27.3,
+    "average_total_age_days": 28.5,
     "current_stage_breakdown": {
       "Fit-Up": 73,
       "Welding": 6,
@@ -133,7 +133,7 @@
     "planned": 332,
     "unplanned": 0,
     "completed": 89,
-    "average_total_age_days": 26.6,
+    "average_total_age_days": 28.0,
     "current_stage_breakdown": {
       "Fit-Up": 73,
       "Welding": 1,
@@ -162,7 +162,7 @@
     "planned": 413,
     "unplanned": 0,
     "completed": 93,
-    "average_total_age_days": 25.4,
+    "average_total_age_days": 26.7,
     "current_stage_breakdown": {
       "Fit-Up": 76,
       "Welding": 4,
@@ -180,7 +180,7 @@
     "planned": 211,
     "unplanned": 0,
     "completed": 74,
-    "average_total_age_days": 28.8,
+    "average_total_age_days": 30.1,
     "current_stage_breakdown": {
       "Fit-Up": 56,
       "Welding": 8,
@@ -197,7 +197,7 @@
     "planned": 312,
     "unplanned": 0,
     "completed": 76,
-    "average_total_age_days": 25.4,
+    "average_total_age_days": 26.8,
     "current_stage_breakdown": {
       "Fit-Up": 99,
       "Welding": 4,
@@ -215,7 +215,7 @@
     "planned": 214,
     "unplanned": 0,
     "completed": 37,
-    "average_total_age_days": 30.1,
+    "average_total_age_days": 31.6,
     "current_stage_breakdown": {
       "Fit-Up": 46,
       "Welding": 2,
@@ -243,7 +243,7 @@
     "planned": 463,
     "unplanned": 0,
     "completed": 133,
-    "average_total_age_days": 32.8,
+    "average_total_age_days": 34.0,
     "current_stage_breakdown": {
       "Fit-Up": 66,
       "Welding": 2,
@@ -261,7 +261,7 @@
     "planned": 348,
     "unplanned": 0,
     "completed": 103,
-    "average_total_age_days": 29.9,
+    "average_total_age_days": 31.2,
     "current_stage_breakdown": {
       "Fit-Up": 44,
       "Welding": 1,
@@ -279,7 +279,7 @@
     "planned": 87,
     "unplanned": 0,
     "completed": 2,
-    "average_total_age_days": 14.3,
+    "average_total_age_days": 16.3,
     "current_stage_breakdown": {
       "Fit-Up": 22,
       "Welding": 5,
@@ -294,7 +294,7 @@
     "planned": 6,
     "unplanned": 0,
     "completed": 0,
-    "average_total_age_days": 62.0,
+    "average_total_age_days": 64.0,
     "current_stage_breakdown": {
       "Ready for Painting": 1,
       "Under Painting": 5
@@ -306,7 +306,7 @@
     "planned": 166,
     "unplanned": 0,
     "completed": 4,
-    "average_total_age_days": 19.2,
+    "average_total_age_days": 21.1,
     "current_stage_breakdown": {
       "Fit-Up": 45,
       "Welding": 2,
@@ -323,7 +323,7 @@
     "planned": 176,
     "unplanned": 0,
     "completed": 45,
-    "average_total_age_days": 20.9,
+    "average_total_age_days": 22.3,
     "current_stage_breakdown": {
       "Fit-Up": 60,
       "Welding": 3,
@@ -340,7 +340,7 @@
     "planned": 168,
     "unplanned": 0,
     "completed": 44,
-    "average_total_age_days": 26.2,
+    "average_total_age_days": 27.6,
     "current_stage_breakdown": {
       "Fit-Up": 70,
       "Welding": 4,
@@ -358,7 +358,7 @@
     "planned": 366,
     "unplanned": 0,
     "completed": 67,
-    "average_total_age_days": 28.9,
+    "average_total_age_days": 30.5,
     "current_stage_breakdown": {
       "Fit-Up": 65,
       "PDQC": 16,
@@ -397,7 +397,7 @@
     "planned": 292,
     "unplanned": 0,
     "completed": 97,
-    "average_total_age_days": 26.0,
+    "average_total_age_days": 27.2,
     "current_stage_breakdown": {
       "Fit-Up": 83,
       "Welding": 3,
@@ -414,7 +414,7 @@
     "planned": 297,
     "unplanned": 0,
     "completed": 88,
-    "average_total_age_days": 20.2,
+    "average_total_age_days": 21.6,
     "current_stage_breakdown": {
       "Fit-Up": 84,
       "Welding": 8,

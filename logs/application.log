@@ -15879,88 +15879,88 @@
 2026-07-26 19:13:34 | INFO | Wrote processed\dashboard_data.json
 2026-07-26 19:13:34 | INFO | Published website\data\dashboard_data.json
 2026-07-26 19:13:34 | INFO | Pipeline run completed.
-2026-07-27 11:36:02 | INFO | Loaded configuration: column_mapping.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: settings.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: settings.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: business_rules.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: schema.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Validator initialised.
-2026-07-27 11:36:02 | INFO | Loaded configuration: schema.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Cleaner initialised.
-2026-07-27 11:36:02 | INFO | Loaded configuration: business_rules.json
-2026-07-27 11:36:02 | INFO | Merge Engine initialised.
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: business_rules.json
-2026-07-27 11:36:02 | INFO | Business Rule Engine initialised.
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: business_rules.json
-2026-07-27 11:36:02 | INFO | Ageing Engine initialised.
-2026-07-27 11:36:02 | INFO | Activity Metrics Engine initialised.
-2026-07-27 11:36:02 | INFO | Loaded configuration: stages.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: settings.json
-2026-07-27 11:36:02 | INFO | Loaded configuration: business_rules.json
-2026-07-27 11:36:02 | INFO | Summary Engine initialised.
-2026-07-27 11:36:02 | INFO | Pipeline initialised.
-2026-07-27 11:36:02 | INFO | Pipeline run started.
-2026-07-27 11:36:02 | INFO | Reading 1. DPR_Fabrication Jobs_July'26.xlsb
-2026-07-27 11:36:08 | INFO | Loaded 8881 fabrication rows.
-2026-07-27 11:36:08 | INFO | Reading Weekly Production Planning Sheet_July'26.xlsb
-2026-07-27 11:36:13 | INFO | Master Planning Sheet : 5170 rows
-2026-07-27 11:36:26 | INFO | Fit-Up DB : 32409 rows
-2026-07-27 11:36:38 | INFO | Welding DB : 31643 rows
-2026-07-27 11:36:38 | INFO | Starting validation for 'fabrication'.
-2026-07-27 11:36:38 | INFO | Validation completed.
-2026-07-27 11:36:38 | INFO | Starting validation for 'planning_master'.
-2026-07-27 11:36:38 | INFO | Validation completed.
-2026-07-27 11:36:38 | INFO | Starting validation for 'planning_fitup'.
-2026-07-27 11:36:38 | INFO | Validation completed.
-2026-07-27 11:36:38 | INFO | Starting validation for 'planning_welding'.
-2026-07-27 11:36:38 | INFO | Validation completed.
-2026-07-27 11:36:38 | INFO | Wrote processed\validation_report.json
-2026-07-27 11:36:38 | INFO | Starting dataframe cleaning.
-2026-07-27 11:36:39 | INFO | Cleaning completed. Rows: 8881 -> 8881
-2026-07-27 11:36:39 | INFO | Starting dataframe cleaning.
-2026-07-27 11:36:39 | INFO | Cleaning completed. Rows: 5170 -> 5170
-2026-07-27 11:36:39 | INFO | Starting dataframe cleaning.
-2026-07-27 11:36:40 | INFO | Cleaning completed. Rows: 32409 -> 32409
-2026-07-27 11:36:40 | INFO | Starting dataframe cleaning.
-2026-07-27 11:36:40 | INFO | Cleaning completed. Rows: 31643 -> 31643
-2026-07-27 11:36:40 | INFO | Reading Line History Sheet 27-07-2026.xlsb
-2026-07-27 11:37:15 | INFO | Loaded 52517 Line History Sheet rows.
-2026-07-27 11:37:15 | INFO | Starting dataframe cleaning.
-2026-07-27 11:37:17 | INFO | Cleaning completed. Rows: 52517 -> 52517
-2026-07-27 11:37:17 | INFO | Reading August SIOP Planned Spools.xlsb
-2026-07-27 11:37:18 | INFO | Loaded 4728 SIOP Planned Spools rows.
-2026-07-27 11:37:18 | INFO | Starting dataframe cleaning.
-2026-07-27 11:37:18 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
-2026-07-27 11:37:18 | INFO | Cleaning completed. Rows: 4728 -> 4727
-2026-07-27 11:37:18 | INFO | Merge Engine started.
-2026-07-27 11:37:37 | INFO | Line History Sheet: 8380 spool(s) with joint-level Fit-Up/Welding/PDQC data.
-2026-07-27 11:37:38 | INFO | Merge Engine completed. 8881 spool(s) in Master Spool Dataset.
-2026-07-27 11:37:38 | INFO | Applying business rules to master dataset.
-2026-07-27 11:37:39 | INFO | Business rules applied to 8881 row(s).
-2026-07-27 11:37:39 | INFO | Ageing Engine started.
-2026-07-27 11:37:40 | INFO | Ageing Engine completed for 8881 row(s).
-2026-07-27 11:37:40 | INFO | Summary Engine started.
-2026-07-27 11:37:45 | INFO | Summary Engine completed.
-2026-07-27 11:37:45 | INFO | Summary Engine started.
-2026-07-27 11:37:51 | INFO | Summary Engine completed.
-2026-07-27 11:37:51 | INFO | Wrote processed\master_spools.json
-2026-07-27 11:37:51 | INFO | Wrote processed\dashboard_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\project_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\weekly_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\group_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\stage_ageing_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\fitup_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\welding_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\s_curve_summary.json
-2026-07-27 11:37:51 | INFO | Wrote processed\exceptions.json
-2026-07-27 11:37:51 | INFO | Activity Metrics Engine started.
-2026-07-27 11:37:52 | INFO | Activity Metrics Engine completed. 265 day(s) with activity data.
-2026-07-27 11:37:52 | INFO | Wrote processed\activity_metrics.json
-2026-07-27 11:37:52 | INFO | Wrote processed\dashboard_data.json
-2026-07-27 11:37:52 | INFO | Published website\data\dashboard_data.json
-2026-07-27 11:37:52 | INFO | Pipeline run completed.
+2026-07-29 08:04:18 | INFO | Loaded configuration: column_mapping.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: settings.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: settings.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: business_rules.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: schema.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Validator initialised.
+2026-07-29 08:04:22 | INFO | Loaded configuration: schema.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Cleaner initialised.
+2026-07-29 08:04:22 | INFO | Loaded configuration: business_rules.json
+2026-07-29 08:04:22 | INFO | Merge Engine initialised.
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: business_rules.json
+2026-07-29 08:04:22 | INFO | Business Rule Engine initialised.
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: business_rules.json
+2026-07-29 08:04:22 | INFO | Ageing Engine initialised.
+2026-07-29 08:04:22 | INFO | Activity Metrics Engine initialised.
+2026-07-29 08:04:22 | INFO | Loaded configuration: stages.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: settings.json
+2026-07-29 08:04:22 | INFO | Loaded configuration: business_rules.json
+2026-07-29 08:04:22 | INFO | Summary Engine initialised.
+2026-07-29 08:04:22 | INFO | Pipeline initialised.
+2026-07-29 08:04:22 | INFO | Pipeline run started.
+2026-07-29 08:04:22 | INFO | Reading 1. DPR_Fabrication Jobs_July'26.xlsb
+2026-07-29 08:04:25 | INFO | Loaded 8881 fabrication rows.
+2026-07-29 08:04:25 | INFO | Reading Weekly Production Planning Sheet_July'26.xlsb
+2026-07-29 08:04:27 | INFO | Master Planning Sheet : 5170 rows
+2026-07-29 08:04:33 | INFO | Fit-Up DB : 32409 rows
+2026-07-29 08:04:39 | INFO | Welding DB : 31643 rows
+2026-07-29 08:04:39 | INFO | Starting validation for 'fabrication'.
+2026-07-29 08:04:39 | INFO | Validation completed.
+2026-07-29 08:04:39 | INFO | Starting validation for 'planning_master'.
+2026-07-29 08:04:39 | INFO | Validation completed.
+2026-07-29 08:04:39 | INFO | Starting validation for 'planning_fitup'.
+2026-07-29 08:04:39 | INFO | Validation completed.
+2026-07-29 08:04:39 | INFO | Starting validation for 'planning_welding'.
+2026-07-29 08:04:39 | INFO | Validation completed.
+2026-07-29 08:04:39 | INFO | Wrote processed\validation_report.json
+2026-07-29 08:04:39 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:39 | INFO | Cleaning completed. Rows: 8881 -> 8881
+2026-07-29 08:04:39 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:40 | INFO | Cleaning completed. Rows: 5170 -> 5170
+2026-07-29 08:04:40 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:40 | INFO | Cleaning completed. Rows: 32409 -> 32409
+2026-07-29 08:04:40 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:40 | INFO | Cleaning completed. Rows: 31643 -> 31643
+2026-07-29 08:04:40 | INFO | Reading Line History Sheet 27-07-2026.xlsb
+2026-07-29 08:04:57 | INFO | Loaded 52517 Line History Sheet rows.
+2026-07-29 08:04:57 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:58 | INFO | Cleaning completed. Rows: 52517 -> 52517
+2026-07-29 08:04:58 | INFO | Reading August SIOP Planned Spools.xlsb
+2026-07-29 08:04:59 | INFO | Loaded 4728 SIOP Planned Spools rows.
+2026-07-29 08:04:59 | INFO | Starting dataframe cleaning.
+2026-07-29 08:04:59 | INFO | Removed 1 duplicate record(s) - kept the most complete row per spool.
+2026-07-29 08:04:59 | INFO | Cleaning completed. Rows: 4728 -> 4727
+2026-07-29 08:04:59 | INFO | Merge Engine started.
+2026-07-29 08:05:07 | INFO | Line History Sheet: 8380 spool(s) with joint-level Fit-Up/Welding/PDQC data.
+2026-07-29 08:05:07 | INFO | Merge Engine completed. 8881 spool(s) in Master Spool Dataset.
+2026-07-29 08:05:07 | INFO | Applying business rules to master dataset.
+2026-07-29 08:05:07 | INFO | Business rules applied to 8881 row(s).
+2026-07-29 08:05:07 | INFO | Ageing Engine started.
+2026-07-29 08:05:08 | INFO | Ageing Engine completed for 8881 row(s).
+2026-07-29 08:05:08 | INFO | Summary Engine started.
+2026-07-29 08:05:10 | INFO | Summary Engine completed.
+2026-07-29 08:05:10 | INFO | Summary Engine started.
+2026-07-29 08:05:12 | INFO | Summary Engine completed.
+2026-07-29 08:05:12 | INFO | Wrote processed\master_spools.json
+2026-07-29 08:05:12 | INFO | Wrote processed\dashboard_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\project_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\weekly_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\group_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\stage_ageing_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\fitup_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\welding_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\s_curve_summary.json
+2026-07-29 08:05:12 | INFO | Wrote processed\exceptions.json
+2026-07-29 08:05:12 | INFO | Activity Metrics Engine started.
+2026-07-29 08:05:12 | INFO | Activity Metrics Engine completed. 265 day(s) with activity data.
+2026-07-29 08:05:12 | INFO | Wrote processed\activity_metrics.json
+2026-07-29 08:05:12 | INFO | Wrote processed\dashboard_data.json
+2026-07-29 08:05:12 | INFO | Published website\data\dashboard_data.json
+2026-07-29 08:05:12 | INFO | Pipeline run completed.

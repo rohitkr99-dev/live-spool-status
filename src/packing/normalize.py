@@ -100,15 +100,15 @@ def normalize_status(raw: Any) -> str:
     """
     Collapse every raw status spelling seen in the source files onto
     one of three canonical buckets:
-      - "Pending / Under Packing"  (blank - not yet packed into a box)
-      - "Packed"                   (PACKED / COMPLETE PACKED / COMPLETE PACK)
-      - "Dispatched"               (DISPATCHED)
+      - "Balance in Project"  (blank - not yet packed into a box)
+      - "Packed"              (PACKED / COMPLETE PACKED / COMPLETE PACK)
+      - "Dispatched"          (DISPATCHED)
     """
     if raw is None:
-        return "Pending / Under Packing"
+        return "Balance in Project"
     text = str(raw).strip()
     if text == "" or text.upper() == "N/A":
-        return "Pending / Under Packing"
+        return "Balance in Project"
     upper = text.upper()
     if "DISPATCH" in upper:
         return "Dispatched"

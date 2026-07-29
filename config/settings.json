@@ -6,7 +6,7 @@
 },
 
 "paths": {
-"upload_folder": "data/upload",
+"upload_folder": "data/upload/projects",
 "archive_folder": "data/archive",
 "processed_folder": "processed",
 "logs_folder": "logs",

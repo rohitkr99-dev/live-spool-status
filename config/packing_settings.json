@@ -29,7 +29,7 @@
   },
 
   "status_normalization": {
-    "comment": "Raw 'Packing Status' / Summary 'Status' text varies by project (PACKED, COMPLETE PACKED, COMPLETE PACK, DISPATCHED, or blank). See src/packing/normalize.py -> normalize_status() for the exact matching rules. Blank/missing is treated as 'Pending / Under Packing' - i.e. the spool has not been packed into a box yet.",
-    "categories": ["Pending / Under Packing", "Packed", "Dispatched"]
+    "comment": "Raw 'Packing Status' / Summary 'Status' text varies by project (PACKED, COMPLETE PACKED, COMPLETE PACK, DISPATCHED, or blank). See src/packing/normalize.py -> normalize_status() for the exact matching rules. Blank/missing is treated as 'Balance in Project' - i.e. the spool has not been packed into a box yet.",
+    "categories": ["Balance in Project", "Packed", "Dispatched"]
   }
 }

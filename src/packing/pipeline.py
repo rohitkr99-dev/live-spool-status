@@ -29,6 +29,8 @@ from typing import Any
 from packing.logger import logger
 from packing.reader import read_all_workbooks
 from packing.summary import (
+    _int,
+    _mt,
     build_dispatch_trend,
     build_kpi_summary,
     build_packing_trend,
@@ -50,6 +52,32 @@ def load_config() -> dict[str, Any]:
         raise PackingPipelineError(f"Missing config file: {CONFIG_PATH}")
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _finalize_spool_rows(spools: list[dict]) -> list[dict]:
+    """
+    Convert each spool row's weight to MT (2dp) and its qty to a whole
+    number for display, right before it's embedded in the bundle - all
+    aggregation (build_kpi_summary etc.) already ran against the
+    unrounded kg values, so this has no effect on any total.
+    """
+    out = []
+    for s in spools:
+        row = dict(s)
+        row["total_wt_mt"] = _mt(row.pop("total_wt"))
+        row["total_qty"] = _int(row["total_qty"])
+        out.append(row)
+    return out
+
+
+def _finalize_box_rows(boxes: list[dict]) -> list[dict]:
+    out = []
+    for b in boxes:
+        row = dict(b)
+        row["net_wt_mt"] = _mt(row.pop("net_wt"))
+        row["qty"] = _int(row["qty"])
+        out.append(row)
+    return out
 
 
 def run(config: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -100,8 +128,11 @@ def run(config: dict[str, Any] | None = None) -> dict[str, Any]:
         "packing_trend": build_packing_trend(spools),
         "dispatch_trend": build_dispatch_trend(spools),
         "shipments": build_shipments(boxes, project_names),
-        "spools": spools,
-        "boxes": boxes,
+        # Every aggregate above ran against unrounded kg values - only
+        # now, for the embedded row-level tables, do individual rows
+        # get converted to MT (2dp) for display. See _finalize_*_rows().
+        "spools": _finalize_spool_rows(spools),
+        "boxes": _finalize_box_rows(boxes),
     }
 
     processed_folder.mkdir(parents=True, exist_ok=True)
