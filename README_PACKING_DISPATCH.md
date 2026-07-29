@@ -5,10 +5,23 @@ This repo already has the Packing & Dispatch dashboard built in (see
 This file just documents how it works and how to update its data later —
 nothing here needs to be "applied," it's already part of the repo.
 
-It's a self-contained, independent pipeline — it does not share code or
-state with the Production pipeline (`main.py` / `src/pipeline.py`), and
-nothing in `config/settings.json`, `schema.json`, or `business_rules.json`
-was touched.
+`python3 main.py` now refreshes **both** dashboards in one run — the
+Production / Spool Ageing dashboard (from whatever's directly in
+`data/upload/`) and the Packing & Dispatch dashboard (from whatever's in
+`data/upload/packing/`). They're still two independent pipelines under the
+hood (see `src/pipeline.py` vs `src/packing/pipeline.py`) — nothing in
+`config/settings.json`, `schema.json`, or `business_rules.json` was
+touched, and a problem with one (e.g. a missing DPR file, or no Packing &
+Dispatch workbooks yet) doesn't stop the other from running or from
+updating its own dashboard.
+
+`python3 main.py --watch` also watches both — since
+`data/upload/packing/` is a subfolder of `data/upload/`, the same watcher
+picks up changes in either place and reprocesses automatically.
+
+If you only ever want to refresh Packing & Dispatch (skip Production
+entirely), `python3 packing_main.py` still works on its own too — it's
+the exact same code `main.py` calls, just scoped to one pipeline.
 
 ## Updating the data
 
@@ -20,19 +33,25 @@ Whenever you have a fresh, complete set of packing/dispatch workbooks:
    incremental merge).
 2. Run:
    ```
-   python3 packing_main.py
+   python3 main.py
    ```
-3. Commit and push the two updated JSON files:
+   (this also refreshes the Production dashboard, if its own source files
+   are present in `data/upload/`; use `python3 packing_main.py` instead if
+   you want to touch only Packing & Dispatch)
+3. Commit and push the updated JSON file(s). For a `main.py` run, that's
+   typically:
    ```
-   git add website/data/packing_dispatch_data.json processed/packing_dispatch_data.json
-   git commit -m "Update packing & dispatch data"
+   git add website/data/packing_dispatch_data.json processed/packing_dispatch_data.json website/data/dashboard_data.json processed/dashboard_data.json
+   git commit -m "Update dashboards"
    git push
    ```
+   (drop the `dashboard_data.json` paths if Production didn't actually
+   change this time)
 
-Everyone visiting the hosted dashboard sees the new data immediately —
+Everyone visiting the hosted dashboards sees the new data immediately —
 no upload needed on their end. There's also an "Upload Data" button on
-the page itself, for previewing a `packing_dispatch_data.json` locally
-without publishing it (same pattern as the Projects dashboard).
+each dashboard page, for previewing a JSON bundle locally without
+publishing it.
 
 ## What the pipeline does with your data
 

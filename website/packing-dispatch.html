@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="vendor/css/buttons.dataTables.min.css">
 
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/packing.css">
+<link rel="stylesheet" href="css/packing.css?v=20260729">
 </head>
 <body>
 
@@ -52,6 +52,10 @@
       <button class="btn btn--ghost" id="clear-data-btn" type="button" title="Forget the dashboard data saved in this browser" hidden>
         Clear Saved Data
       </button>
+      <button class="btn btn--ghost" id="export-pdf-btn" type="button" title="Download the KPIs, charts, and project summary as a PDF">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M6 2.5h5.5L15 6v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M11.5 2.5V6H15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        Download PDF
+      </button>
       <button class="btn btn--primary" id="upload-btn" type="button" title="Upload the packing_dispatch_data.json file written by python3 packing_main.py">
         <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 13V4M6 8l4-4 4 4M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Upload Data
@@ -77,7 +81,7 @@
         <span class="kpi-card__value" id="kpi-total-weight">—</span>
       </div>
       <div class="kpi-card" data-kpi="pending">
-        <span class="kpi-card__label">Pending / Under Packing</span>
+        <span class="kpi-card__label">Balance in Project</span>
         <span class="kpi-card__value" id="kpi-pending" style="color:#8A8FA6">—</span>
         <span class="kpi-card__sub">spools</span>
       </div>
@@ -149,7 +153,7 @@
           <div class="activity-filter" id="packing-metric-filter" role="group" aria-label="Metric to plot">
             <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="qty">Qty (pcs)</button>
-            <button type="button" class="activity-filter__btn" data-metric="weight_kg">Weight (kg)</button>
+            <button type="button" class="activity-filter__btn" data-metric="weight_mt">Weight (MT)</button>
           </div>
           <div class="activity-filter" id="packing-period-filter" role="group" aria-label="Group by period">
             <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
@@ -172,7 +176,7 @@
           <div class="activity-filter" id="dispatch-metric-filter" role="group" aria-label="Metric to plot">
             <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="qty">Qty (pcs)</button>
-            <button type="button" class="activity-filter__btn" data-metric="weight_kg">Weight (kg)</button>
+            <button type="button" class="activity-filter__btn" data-metric="weight_mt">Weight (MT)</button>
           </div>
           <div class="activity-filter" id="dispatch-period-filter" role="group" aria-label="Group by period">
             <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
@@ -197,21 +201,29 @@
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__head">
-          <h3>Heaviest Shipments</h3>
-          <span class="chart-card__hint">Top 15 dispatched containers by weight</span>
+          <h3>Shipment Weight Over Time</h3>
+          <span class="chart-card__hint" id="chart-shipment-bubble-hint">Bubble size = box count, colour = project</span>
         </div>
-        <div class="chart-card__body"><canvas id="chart-shipment-weight"></canvas></div>
+        <div class="chart-card__body" style="min-height:420px;"><canvas id="chart-shipment-bubble"></canvas></div>
       </div>
     </section>
 
     <!-- ============ TABLES ============ -->
     <section class="tables-section" aria-label="Packing & dispatch data tables">
 
-      <div class="tabs" role="tablist">
-        <button class="tab is-active" role="tab" aria-selected="true" data-tab="project">Project Summary</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="shipments">Shipments</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="boxes">Boxes</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="spools">All Spools</button>
+      <div class="tables-toolbar">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" role="tab" aria-selected="true" data-tab="project">Project Summary</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="shipments">Shipments</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="boxes">Boxes</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="spools">All Spools</button>
+        </div>
+        <div class="filter-field tables-toolbar__filter">
+          <label for="table-project-filter">Project</label>
+          <select id="table-project-filter">
+            <option value="__all__">All Projects</option>
+          </select>
+        </div>
       </div>
 
       <div class="table-pane is-active" id="pane-project">
@@ -228,8 +240,8 @@
               <th>Total Boxes</th>
               <th>Boxes Dispatched</th>
               <th>Shipments</th>
-              <th>Total Weight (kg)</th>
-              <th>Weight Dispatched (kg)</th>
+              <th>Total Weight (MT)</th>
+              <th>Weight Dispatched (MT)</th>
               <th>Last Dispatch Date</th>
             </tr>
           </thead>
@@ -247,7 +259,7 @@
               <th>Dispatch Date</th>
               <th>Box Count</th>
               <th>Qty (pcs)</th>
-              <th>Weight (kg)</th>
+              <th>Weight (MT)</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -263,7 +275,7 @@
               <th>Box No.</th>
               <th>Status</th>
               <th>Qty</th>
-              <th>Net Wt. (kg)</th>
+              <th>Net Wt. (MT)</th>
               <th>Item</th>
               <th>Container No.</th>
               <th>Seal No.</th>
@@ -284,7 +296,7 @@
               <th>Box No.</th>
               <th>Packing Status</th>
               <th>Qty</th>
-              <th>Total Wt. (kg)</th>
+              <th>Total Wt. (MT)</th>
               <th>PDI Date</th>
               <th>Packing Date</th>
               <th>Dispatched Date</th>
@@ -309,14 +321,22 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- The ?v=... on every packing-*.js/css tag below is a cache-buster:
+     browsers (and GitHub Pages' CDN) can keep serving an old cached
+     copy of a .js file for a while after it's updated on the server,
+     which silently breaks things - old JS running against new HTML/
+     data. Bump this date string (search/replace "20260729" for the
+     new date) any time these files change, so every visitor is
+     guaranteed to fetch the fresh copy instead of a cached one. -->
 <script src="vendor/jquery.min.js"></script>
 <script src="vendor/dataTables.min.js"></script>
 <script src="vendor/dataTables.buttons.min.js"></script>
 <script src="vendor/jszip.min.js"></script>
 <script src="vendor/buttons.html5.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
 
-<script src="js/packing-config.js"></script>
+<script src="js/packing-config.js?v=20260729"></script>
 <script>
   // Reuses the shared Chart.js visual theme (fonts, tooltips,
   // gradient bars) from js/chartTheme.js, which reads
@@ -330,11 +350,12 @@
   };
 </script>
 <script src="js/chartTheme.js"></script>
-<script src="js/packing-data.js"></script>
-<script src="js/packing-kpi.js"></script>
-<script src="js/packing-charts.js"></script>
-<script src="js/packing-tables.js"></script>
-<script src="js/packing-app.js"></script>
+<script src="js/packing-data.js?v=20260729"></script>
+<script src="js/packing-kpi.js?v=20260729"></script>
+<script src="js/packing-charts.js?v=20260729"></script>
+<script src="js/packing-tables.js?v=20260729"></script>
+<script src="js/packing-app.js?v=20260729"></script>
+<script src="js/packing-pdfExport.js?v=20260729"></script>
 
 </body>
 </html>

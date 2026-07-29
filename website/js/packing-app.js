@@ -12,6 +12,7 @@ const PackingApp = {
 
   async init() {
     this.setupTabs();
+    this.setupProjectFilter();
     this.setupUploadControl();
     this.setupClearControl();
     await this.loadInitialData();
@@ -119,6 +120,14 @@ const PackingApp = {
       uploadBtn.classList.remove("is-loading");
       this.isLoading = false;
     }
+  },
+
+  setupProjectFilter() {
+    const select = document.getElementById("table-project-filter");
+    if (!select) return;
+    select.addEventListener("change", () => {
+      PackingTables.applyProjectFilter(select.value);
+    });
   },
 
   setupTabs() {

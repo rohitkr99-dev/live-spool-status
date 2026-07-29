@@ -23,9 +23,9 @@ const PACKING_CONFIG = {
   // normalize_status() exactly. Grey->blue->green reads as a simple
   // progress ramp (not started -> in progress -> done), distinct
   // from the 9-stage palette on the Projects dashboard.
-  statusOrder: ["Pending / Under Packing", "Packed", "Dispatched"],
+  statusOrder: ["Balance in Project", "Packed", "Dispatched"],
   statusColor: {
-    "Pending / Under Packing": "#8A8FA6",
+    "Balance in Project": "#8A8FA6",
     "Packed": "#4333A5",
     "Dispatched": "#1F8A55",
   },
