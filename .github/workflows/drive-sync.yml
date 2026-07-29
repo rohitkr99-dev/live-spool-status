@@ -39,11 +39,11 @@ jobs:
         run: python3 scripts/sync_drive.py
 
       - name: Run the pipeline
-        if: steps.sync.outputs.changed == 'true'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: python3 main.py
 
       - name: Commit and push updated dashboard data
-        if: steps.sync.outputs.changed == 'true'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "drive-sync-bot"
           git config user.email "actions@users.noreply.github.com"
