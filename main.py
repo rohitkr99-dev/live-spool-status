@@ -41,7 +41,15 @@ data/upload/production/README.txt and src/departments.py.
 Packing & Dispatch requires at least one .xlsx workbook in
 data/upload/packing/ (see config/packing_settings.json). If that
 folder is empty or missing, Packing & Dispatch is skipped for this
-run - every other department still processes normally.
+run - every other department still processes normally. The Packing &
+Dispatch workbooks are read TWICE per run: once here (best-effort,
+before the Projects pipeline runs) purely to backfill PDI / Packing /
+Dispatch on the Projects master dataset - see
+read_packing_spools_for_merge() and config/business_rules.json ->
+packing_dispatch_merge - and once inside run_packing() below, which
+builds the Packing & Dispatch department's own dashboard bundle. The
+two are independent; a problem with the first (e.g. the folder is
+empty) never stops the second, and vice versa.
 
 Adding a new department
 ------------------------
@@ -69,13 +77,57 @@ from pipeline import Pipeline, PipelineError  # noqa: E402
 from packing.pipeline import PackingPipelineError, run as run_packing_pipeline  # noqa: E402
 
 
+def read_packing_spools_for_merge() -> list[dict]:
+    """
+    Best-effort read of the Packing & Dispatch workbook(s), purely to
+    backfill PDI / Packing / Dispatch on the Projects (DPR) master
+    dataset - see src/merge.py -> MergeEngine.apply_packing_dates()
+    and config/business_rules.json -> packing_dispatch_merge.
+
+    Returns an empty list (never raises) if the packing config or
+    upload folder is missing, or if nothing could be read - that's a
+    normal state (e.g. no Packing & Dispatch workbook uploaded yet),
+    not an error. The 3 fields are then simply left as the DPR/Weekly
+    data has them, exactly as before this feature existed.
+    """
+
+    try:
+        from packing.pipeline import load_config as load_packing_config
+        from packing.reader import read_all_workbooks
+
+        config = load_packing_config()
+        upload_folder = Path(config["paths"]["upload_folder"])
+        file_pattern = config["input_files"]["file_pattern"]
+
+        if not upload_folder.exists():
+            return []
+
+        workbook_results = read_all_workbooks(upload_folder, file_pattern)
+
+        spools: list[dict] = []
+        for result in workbook_results:
+            spools.extend(result["spools"])
+
+        return spools
+
+    except Exception as error:
+        print(
+            "PDI/Packing/Dispatch backfill: could not read the "
+            f"Packing & Dispatch workbook(s) ({error}). Projects will "
+            "process normally without it this run."
+        )
+        return []
+
+
 def run_production() -> int:
     """Runs the Production / Spool Ageing pipeline. Returns a process exit code."""
 
     pipeline = Pipeline()
 
+    packing_spools = read_packing_spools_for_merge()
+
     try:
-        result = pipeline.run()
+        result = pipeline.run(packing_spools=packing_spools)
     except PipelineError as error:
         print(f"Production pipeline stopped: {error}")
         return 1
