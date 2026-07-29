@@ -210,12 +210,12 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Under Painting",
-    "spool_count": 707,
-    "average_days": 29.7,
+    "spool_count": 715,
+    "average_days": 29.6,
     "bucket_counts": {
       "0\u20137d": 3,
       "8\u201314d": 46,
-      "15\u201330d": 372,
+      "15\u201330d": 380,
       "31\u201360d": 280,
       "60d+": 6
     }
@@ -223,10 +223,10 @@
   {
     "Project Code": "TJ/25-26/182",
     "Stage": "Packing",
-    "spool_count": 688,
-    "average_days": 3.8,
+    "spool_count": 696,
+    "average_days": 3.7,
     "bucket_counts": {
-      "0\u20137d": 601,
+      "0\u20137d": 609,
       "8\u201314d": 79,
       "15\u201330d": 8,
       "31\u201360d": 0,
@@ -288,11 +288,11 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Under Painting",
-    "spool_count": 830,
-    "average_days": 40.1,
+    "spool_count": 834,
+    "average_days": 40.0,
     "bucket_counts": {
       "0\u20137d": 5,
-      "8\u201314d": 49,
+      "8\u201314d": 53,
       "15\u201330d": 198,
       "31\u201360d": 512,
       "60d+": 66
@@ -301,10 +301,10 @@
   {
     "Project Code": "TJ/25-26/183",
     "Stage": "Packing",
-    "spool_count": 828,
+    "spool_count": 832,
     "average_days": 3.2,
     "bucket_counts": {
-      "0\u20137d": 751,
+      "0\u20137d": 755,
       "8\u201314d": 75,
       "15\u201330d": 2,
       "31\u201360d": 0,
@@ -457,10 +457,10 @@
   {
     "Project Code": "TJ/25-26/188",
     "Stage": "Packing",
-    "spool_count": 351,
+    "spool_count": 376,
     "average_days": 1.6,
     "bucket_counts": {
-      "0\u20137d": 340,
+      "0\u20137d": 365,
       "8\u201314d": 11,
       "15\u201330d": 0,
       "31\u201360d": 0,

@@ -386,9 +386,9 @@
         "week_start": "2026-07-27",
         "week_label": "27 Jul 26",
         "planned_count": 597,
-        "actual_count": 133,
+        "actual_count": 170,
         "cumulative_planned_pct": 55.3,
-        "cumulative_actual_pct": 50.4
+        "cumulative_actual_pct": 50.8
       },
       {
         "fiscal_week_label": "Week 19",
@@ -401,8 +401,8 @@
       }
     ],
     "cumulative_planned_pct_to_date": 55.3,
-    "cumulative_actual_pct_to_date": 50.4,
-    "schedule_variance_pct": -4.9
+    "cumulative_actual_pct_to_date": 50.8,
+    "schedule_variance_pct": -4.5
   },
   "projects": {
     "TJ/22-23/097": {
@@ -780,14 +780,14 @@
           "week_start": "2026-07-27",
           "week_label": "27 Jul 26",
           "planned_count": 0,
-          "actual_count": 119,
+          "actual_count": 127,
           "cumulative_planned_pct": 98.0,
-          "cumulative_actual_pct": 67.2
+          "cumulative_actual_pct": 68.0
         }
       ],
       "cumulative_planned_pct_to_date": 98.0,
-      "cumulative_actual_pct_to_date": 67.2,
-      "schedule_variance_pct": -30.8
+      "cumulative_actual_pct_to_date": 68.0,
+      "schedule_variance_pct": -30.0
     },
     "TJ/25-26/183": {
       "total_scope": 2082,
@@ -950,9 +950,9 @@
           "week_start": "2026-07-27",
           "week_label": "27 Jul 26",
           "planned_count": 478,
-          "actual_count": 0,
+          "actual_count": 4,
           "cumulative_planned_pct": 75.1,
-          "cumulative_actual_pct": 39.8
+          "cumulative_actual_pct": 40.0
         },
         {
           "fiscal_week_label": "Week 19",
@@ -965,8 +965,8 @@
         }
       ],
       "cumulative_planned_pct_to_date": 75.1,
-      "cumulative_actual_pct_to_date": 39.8,
-      "schedule_variance_pct": -35.3
+      "cumulative_actual_pct_to_date": 40.0,
+      "schedule_variance_pct": -35.1
     },
     "TJ/25-26/184": {
       "total_scope": 1314,
@@ -1344,9 +1344,9 @@
           "week_start": "2026-07-27",
           "week_label": "27 Jul 26",
           "planned_count": 83,
-          "actual_count": 14,
+          "actual_count": 39,
           "cumulative_planned_pct": 79.6,
-          "cumulative_actual_pct": 18.3
+          "cumulative_actual_pct": 19.6
         },
         {
           "fiscal_week_label": "Week 19",
@@ -1359,8 +1359,8 @@
         }
       ],
       "cumulative_planned_pct_to_date": 79.6,
-      "cumulative_actual_pct_to_date": 18.3,
-      "schedule_variance_pct": -61.3
+      "cumulative_actual_pct_to_date": 19.6,
+      "schedule_variance_pct": -60.0
     },
     "TJ/25-26/189": {
       "total_scope": 720,

@@ -28,14 +28,14 @@
     "total_spools": 1024,
     "planned": 1004,
     "unplanned": 20,
-    "completed": 688,
+    "completed": 696,
     "average_total_age_days": 47.5,
     "current_stage_breakdown": {
       "Fit-Up": 6,
       "Ready for Painting": 2,
-      "Under Painting": 289,
+      "Under Painting": 281,
       "Packing": 19,
-      "Dispatch": 281,
+      "Dispatch": 289,
       "Completed": 407,
       "Production Order Not Released": 20
     },
@@ -46,16 +46,16 @@
     "total_spools": 2082,
     "planned": 2032,
     "unplanned": 50,
-    "completed": 828,
+    "completed": 832,
     "average_total_age_days": 33.4,
     "current_stage_breakdown": {
       "Fit-Up": 633,
       "Welding": 1,
       "PDQC": 12,
       "Ready for Painting": 104,
-      "Under Painting": 453,
+      "Under Painting": 449,
       "Packing": 2,
-      "Dispatch": 71,
+      "Dispatch": 75,
       "Completed": 757,
       "Production Order Not Released": 49
     },
@@ -78,7 +78,7 @@
     "total_spools": 1920,
     "planned": 1648,
     "unplanned": 272,
-    "completed": 351,
+    "completed": 376,
     "average_total_age_days": 23.7,
     "current_stage_breakdown": {
       "Fit-Up": 316,
@@ -86,8 +86,8 @@
       "PDQC": 128,
       "Ready for Painting": 124,
       "Under Painting": 690,
-      "Packing": 46,
-      "Dispatch": 351,
+      "Packing": 21,
+      "Dispatch": 376,
       "Production Order Not Released": 242
     },
     "Project Name": "VOGT Bison"
