@@ -386,9 +386,9 @@
         "week_start": "2026-07-27",
         "week_label": "27 Jul 26",
         "planned_count": 597,
-        "actual_count": 0,
+        "actual_count": 133,
         "cumulative_planned_pct": 55.3,
-        "cumulative_actual_pct": 48.9
+        "cumulative_actual_pct": 50.4
       },
       {
         "fiscal_week_label": "Week 19",
@@ -401,8 +401,8 @@
       }
     ],
     "cumulative_planned_pct_to_date": 55.3,
-    "cumulative_actual_pct_to_date": 48.9,
-    "schedule_variance_pct": -6.4
+    "cumulative_actual_pct_to_date": 50.4,
+    "schedule_variance_pct": -4.9
   },
   "projects": {
     "TJ/22-23/097": {
@@ -774,11 +774,20 @@
           "actual_count": 96,
           "cumulative_planned_pct": 98.0,
           "cumulative_actual_pct": 55.6
+        },
+        {
+          "fiscal_week_label": "Week 18",
+          "week_start": "2026-07-27",
+          "week_label": "27 Jul 26",
+          "planned_count": 0,
+          "actual_count": 119,
+          "cumulative_planned_pct": 98.0,
+          "cumulative_actual_pct": 67.2
         }
       ],
       "cumulative_planned_pct_to_date": 98.0,
-      "cumulative_actual_pct_to_date": 55.6,
-      "schedule_variance_pct": -42.4
+      "cumulative_actual_pct_to_date": 67.2,
+      "schedule_variance_pct": -30.8
     },
     "TJ/25-26/183": {
       "total_scope": 2082,
@@ -1335,9 +1344,9 @@
           "week_start": "2026-07-27",
           "week_label": "27 Jul 26",
           "planned_count": 83,
-          "actual_count": 0,
+          "actual_count": 14,
           "cumulative_planned_pct": 79.6,
-          "cumulative_actual_pct": 17.6
+          "cumulative_actual_pct": 18.3
         },
         {
           "fiscal_week_label": "Week 19",
@@ -1350,8 +1359,8 @@
         }
       ],
       "cumulative_planned_pct_to_date": 79.6,
-      "cumulative_actual_pct_to_date": 17.6,
-      "schedule_variance_pct": -62.0
+      "cumulative_actual_pct_to_date": 18.3,
+      "schedule_variance_pct": -61.3
     },
     "TJ/25-26/189": {
       "total_scope": 720,
