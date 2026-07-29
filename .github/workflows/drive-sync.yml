@@ -1,0 +1,56 @@
+name: Sync from Google Drive
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub may delay scheduled runs by a few extra
+    # minutes at busy times - use "Run workflow" below to test on demand.
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drive-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install google-api-python-client google-auth
+
+      - name: Sync workbooks from Google Drive
+        id: sync
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: python3 scripts/sync_drive.py
+
+      - name: Run the pipeline
+        if: steps.sync.outputs.changed == 'true'
+        run: python3 main.py
+
+      - name: Commit and push updated dashboard data
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          git config user.name "drive-sync-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/upload processed website/data
+          if git diff --cached --quiet; then
+            echo "Pipeline ran but produced no tracked changes - nothing to commit."
+          else
+            git commit -m "Auto-update: sync from Google Drive"
+            git push
+          fi
