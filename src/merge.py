@@ -14,6 +14,9 @@ Responsibilities
    (Planned Start, Week, Group) and the aggregated First Fit-Up /
    First Welding dates into a single Master Spool Dataset -
    one row per spool.
+4. Backfill PDI / Packing / Dispatch on that Master Spool Dataset
+   from the separate Packing & Dispatch workbooks - see
+   apply_packing_dates().
 
 This module does not read Excel, validate, clean, apply business
 rules, or calculate ageing. It only combines already-cleaned,
@@ -100,6 +103,23 @@ class MergeEngine:
         )
         self.line_history_stage_order: list[str] = line_history_config.get(
             "override_stage_order", ["Fit-Up", "Welding", "PDQC"]
+        )
+
+        # Packing & Dispatch backfill (config/business_rules.json ->
+        # packing_dispatch_merge) - see apply_packing_dates().
+        packing_merge_config = rules.get("packing_dispatch_merge", {})
+        self.packing_merge_enabled: bool = packing_merge_config.get(
+            "enabled", False
+        )
+        self.packing_field_mapping: dict[str, str] = (
+            packing_merge_config.get(
+                "field_mapping",
+                {
+                    "pdi_date": "PDI",
+                    "packing_date": "Packing",
+                    "dispatched_date": "Dispatch",
+                },
+            )
         )
 
         logger.info("Merge Engine initialised.")
@@ -474,6 +494,153 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def _base_spool_no(self, row: pd.Series) -> Optional[str]:
+        """
+        The Packing & Dispatch workbook's own spool_no is prefixed
+        with the drawing revision (its spool_ext_no), e.g.
+        "1-V17565-PIND-0086-03" for drawing revision "1-". The DPR
+        master dataset's Spool No does not carry that prefix. Strip
+        it off before building the Composite Key so the two datasets
+        match.
+        """
+
+        spool_no = row.get("spool_no")
+        ext = row.get("spool_ext_no")
+
+        if is_empty(spool_no):
+            return None
+
+        if not is_empty(ext) and str(spool_no).startswith(str(ext)):
+            return str(spool_no)[len(str(ext)):]
+
+        return spool_no
+
+    # -----------------------------------------------------
+
+    def apply_packing_dates(
+        self,
+        master: pd.DataFrame,
+        packing_spools: Optional[list[dict]],
+    ) -> pd.DataFrame:
+        """
+        Packing & Dispatch backfill (as given by the person, in
+        their own words): the DPR/Weekly Production Planning
+        workbooks don't track PDI, Packing, or Dispatch dates at all
+        - those 3 columns come entirely from the separate Packing &
+        Dispatch workbooks (data/upload/packing/), matched to this
+        dataset by Composite Key (see _base_spool_no() for how the
+        packing workbook's spool number is matched against this
+        dataset's Spool No).
+
+        Rule: a spool's PDI / Packing / Dispatch date is overwritten
+        with the Packing & Dispatch workbook's value WHENEVER that
+        value is present (non-blank) - even if this dataset already
+        had a different value there, since the packing workbook is
+        the current, authoritative source for these 3 fields. If the
+        packing workbook's value for a field is blank, the existing
+        value in this dataset is left completely untouched (not
+        cleared) - a blank in a new upload must never erase data
+        that's already known.
+
+        Config: see config/business_rules.json ->
+        packing_dispatch_merge.field_mapping, which maps each
+        packing workbook field to the DPR master field it feeds -
+        not hardcoded here.
+
+        No-op (returns master unchanged) if the feature is disabled,
+        no Packing & Dispatch workbook was uploaded this run, or none
+        of its rows had a usable Composite Key.
+        """
+
+        if not self.packing_merge_enabled:
+            return master
+
+        if not packing_spools:
+            return master
+
+        packing_df = pd.DataFrame(packing_spools)
+
+        required = {"project_code", "drawing_no", "spool_no", "spool_ext_no"}
+        missing = required - set(packing_df.columns)
+        if missing:
+            logger.warning(
+                "Packing & Dispatch data is missing expected "
+                f"column(s) {sorted(missing)}; skipping the "
+                "PDI/Packing/Dispatch backfill for this run."
+            )
+            return master
+
+        source_fields = [
+            field for field in self.packing_field_mapping
+            if field in packing_df.columns
+        ]
+        if not source_fields:
+            logger.warning(
+                "None of the configured packing_dispatch_merge "
+                "field_mapping source fields "
+                f"{list(self.packing_field_mapping)} were found in "
+                "the Packing & Dispatch data; skipping the backfill "
+                "for this run."
+            )
+            return master
+
+        packing_df[COMPOSITE_KEY] = packing_df.apply(
+            lambda row: create_composite_key(
+                row.get("project_code"),
+                row.get("drawing_no"),
+                self._base_spool_no(row),
+            ),
+            axis=1,
+        )
+
+        def _first_present(series: pd.Series):
+            for value in series:
+                if not is_empty(value):
+                    return value
+            return None
+
+        packing_lookup = (
+            packing_df.groupby(COMPOSITE_KEY)[source_fields]
+            .agg(_first_present)
+            .reset_index()
+        )
+
+        master = master.merge(
+            packing_lookup,
+            on=COMPOSITE_KEY,
+            how="left",
+        )
+
+        filled_counts: dict[str, int] = {}
+
+        for source_field in source_fields:
+
+            target_field = self.packing_field_mapping[source_field]
+
+            if target_field not in master.columns:
+                master[target_field] = None
+
+            has_packing_value = ~master[source_field].apply(is_empty)
+            master.loc[has_packing_value, target_field] = master.loc[
+                has_packing_value, source_field
+            ]
+            filled_counts[target_field] = int(has_packing_value.sum())
+
+        master = master.drop(columns=source_fields)
+
+        logger.info(
+            "Packing & Dispatch backfill: "
+            + ", ".join(
+                f"{field}={count}" for field, count in filled_counts.items()
+            )
+            + " spool(s) updated from the Packing & Dispatch "
+            "workbook(s)."
+        )
+
+        return master
+
+    # -----------------------------------------------------
+
     def merge(
         self,
         fabrication: pd.DataFrame,
@@ -483,6 +650,7 @@ class MergeEngine:
         activity_date_field: str = "Activity Date",
         line_history: Optional[pd.DataFrame] = None,
         siop_planned: Optional[pd.DataFrame] = None,
+        packing_spools: Optional[list[dict]] = None,
     ) -> pd.DataFrame:
         """
         Build the Master Spool Dataset.
@@ -516,6 +684,13 @@ class MergeEngine:
             apply_siop_fallback(). Used only to fill in Planned
             Start for spools the Weekly Production Planning
             workbook doesn't have.
+
+        packing_spools
+            Raw spool rows read from the Packing & Dispatch
+            workbook(s) (packing.reader.read_all_workbooks() output,
+            one dict per spool), or None/empty if none were uploaded
+            this run - see apply_packing_dates(). Used to backfill
+            PDI / Packing / Dispatch on the Master Spool Dataset.
 
         Returns
         -------
@@ -578,6 +753,8 @@ class MergeEngine:
             on=COMPOSITE_KEY,
             how="left",
         )
+
+        master = self.apply_packing_dates(master, packing_spools)
 
         logger.info(
             f"Merge Engine completed. {len(master)} spool(s) in "

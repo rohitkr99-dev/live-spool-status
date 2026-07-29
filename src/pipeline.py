@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from ageing import AgeingEngine
 from activity_metrics import ActivityMetricsEngine
@@ -75,9 +76,23 @@ class Pipeline:
 
     # -----------------------------------------------------
 
-    def run(self) -> dict:
+    def run(
+        self,
+        packing_spools: Optional[list[dict]] = None,
+    ) -> dict:
         """
         Run the full pipeline once.
+
+        Parameters
+        ----------
+        packing_spools
+            Raw spool rows read from the Packing & Dispatch
+            workbook(s) (packing.reader.read_all_workbooks() output),
+            or None if none were uploaded this run / the caller
+            doesn't have them. Passed straight through to
+            MergeEngine.merge() -> apply_packing_dates(), which
+            backfills PDI / Packing / Dispatch on the Master Spool
+            Dataset. See main.py -> read_packing_spools_for_merge().
 
         Returns
         -------
@@ -179,6 +194,7 @@ class Pipeline:
             cleaned_datasets["planning_welding"],
             line_history=line_history_cleaned,
             siop_planned=siop_planned_cleaned,
+            packing_spools=packing_spools,
         )
 
         with_rules = self.business_rule_engine.apply(master)

@@ -26,6 +26,16 @@
 "override_stage_order": ["Fit-Up", "Welding", "PDQC"]
 },
 
+"packing_dispatch_merge": {
+"enabled": true,
+"field_mapping": {
+"pdi_date": "PDI",
+"packing_date": "Packing",
+"dispatched_date": "Dispatch"
+},
+"comment": "Backfills PDI / Packing / Dispatch on the DPR master dataset from the separate Packing & Dispatch workbooks (data/upload/packing/), matched by Composite Key (Project Code + Drawing No + Spool No - the packing workbook's own spool_no is stripped of its drawing-revision prefix, e.g. 'spool_ext_no', before matching). A DPR field is overwritten with the packing workbook's value ONLY when that value is present (non-blank) - a blank in the packing workbook never clears a value the DPR master already has. See merge.py -> apply_packing_dates()."
+},
+
 "completed": {
 "completion_field": "Packing",
 "also_completed_if_any_filled": ["Dispatch"],
