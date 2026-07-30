@@ -1,0 +1,11 @@
+# Working data - pulled from Drive each sync, never committed
+data/upload/*
+!data/upload/*/
+!data/upload/*/README.txt
+!data/upload/*/.gitkeep
+
+# Intermediate pipeline output - only website/data/ is meant to be public
+processed/
+
+# Optional: log lines mention workbook filenames, keep them local too
+logs/*.log
