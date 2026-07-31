@@ -42,6 +42,15 @@ jobs:
         if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: python3 main.py
 
+      - name: Run the Production dashboard pipeline
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        # continue-on-error: this pipeline is additive (see
+        # src/production/) - a failure here (e.g. a workbook it
+        # needs is temporarily missing) should never block the
+        # Projects dashboard's own commit/push above.
+        continue-on-error: true
+        run: python3 production_main.py
+
       - name: Commit and push updated dashboard data
         if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: |
