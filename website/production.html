@@ -4,16 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#F3F4F9">
-<title>Production — DEE Piping Systems Thailand</title>
+<title>DEE Piping Systems — Production</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="assets/dee-mark.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/hub.css">
+<link rel="stylesheet" href="css/production.css?v=20260731">
 </head>
-<body class="hub">
+<body>
 
 <div class="ambient" aria-hidden="true">
   <span class="ambient__orb ambient__orb--ember"></span>
@@ -22,37 +24,177 @@
   <div class="ambient__grid"></div>
 </div>
 
-<header class="hub-header">
-  <div class="hub-header__inner">
-    <div class="hub-header__brand">
-      <img src="assets/dee-mark.png" alt="DEE Piping Systems">
-      <div>
-        <span class="hub-header__name">DEE Piping Systems</span>
-        <span class="hub-header__region">Thailand — Operations Hub</span>
+<div class="app-shell">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <a class="topbar__brand" href="index.html" aria-label="DEE Piping Systems — back to site home">
+      <img class="topbar__logo" src="assets/dee-mark.png" alt="DEE Piping Systems logo">
+      <div class="topbar__divider" aria-hidden="true"></div>
+      <div class="topbar__title">
+        <span class="topbar__eyebrow">DEE Piping Systems — Production</span>
+        <h1>Production</h1>
       </div>
-    </div>
-    <a class="hub-header__back" href="index.html">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 8H4m0 0l3.5-4M4 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      All Departments
     </a>
-  </div>
-</header>
+    <div class="topbar__meta">
+      <a class="btn btn--ghost" href="index.html">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 10 10 4l6 6M6 8.5V16h8V8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All Departments
+      </a>
+      <div class="topbar__updated">
+        <span class="topbar__updated-label">Data as of</span>
+        <span class="topbar__updated-value" id="last-updated">—</span>
+      </div>
+      <input type="file" id="upload-input" accept="application/json,.json" hidden>
+      <button class="btn btn--ghost" id="clear-data-btn" type="button" title="Forget the dashboard data saved in this browser" hidden>
+        Clear Saved Data
+      </button>
+      <button class="btn btn--primary" id="upload-btn" type="button" title="Upload the production_data.json file written by python3 production_main.py">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 13V4M6 8l4-4 4 4M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Upload Data
+      </button>
+    </div>
+  </header>
 
-<main>
-  <section class="coming-soon">
-    <div class="coming-soon__mark"><img src="assets/icons/icon-production.png" alt=""></div>
-    <span class="coming-soon__badge">Coming Soon</span>
-    <h1>Production</h1>
-    <p>Throughput, work-center utilization, and shift-level output tracking for the fabrication shop floor. This dashboard is being built — check back soon.</p>
-    <a class="btn btn--primary" href="index.html">Back to Departments</a>
-  </section>
-</main>
+  <main>
 
-<footer class="hub-footer">
-  <span>DEE Piping Systems — Thailand · Internal Operations Portal</span>
-  <span id="footer-year"></span>
-</footer>
+    <!-- ============ KPI STRIP ============ -->
+    <section class="kpi-strip" id="kpi-strip" aria-label="Key metrics">
+      <div class="kpi-card" data-kpi="total-spools">
+        <span class="kpi-card__label">Total Spools</span>
+        <span class="kpi-card__value" id="kpi-total-spools">—</span>
+      </div>
+      <div class="kpi-card" data-kpi="with-start">
+        <span class="kpi-card__label">With Planned Start</span>
+        <span class="kpi-card__value" id="kpi-with-start">—</span>
+        <span class="kpi-card__sub">ageing tracked</span>
+      </div>
+      <div class="kpi-card" data-kpi="missing-start">
+        <span class="kpi-card__label">Missing Planned Start</span>
+        <span class="kpi-card__value" id="kpi-missing-start" style="color:#8A8FA6">—</span>
+        <span class="kpi-card__sub">not in Master Planning Sheet</span>
+      </div>
+      <div class="kpi-card kpi-card--complete" data-kpi="packed">
+        <span class="kpi-card__label">Packed</span>
+        <span class="kpi-card__value" id="kpi-packed">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+      <div class="kpi-card kpi-card--warning" data-kpi="delayed">
+        <span class="kpi-card__label">Delayed vs. Target</span>
+        <span class="kpi-card__value" id="kpi-delayed">—</span>
+        <span class="kpi-card__sub">spools, current stage</span>
+      </div>
+      <div class="kpi-card" data-kpi="welding-progress">
+        <span class="kpi-card__label">Welding In Progress</span>
+        <span class="kpi-card__value" id="kpi-welding-progress">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+      <div class="kpi-card" data-kpi="welding-not-started">
+        <span class="kpi-card__label">Welding Not Started</span>
+        <span class="kpi-card__value" id="kpi-welding-not-started">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+    </section>
 
-<script type="module" src="js/hub.js"></script>
+    <!-- ============ OVERVIEW: DISTRIBUTION + IDEAL VS ACTUAL ============ -->
+    <section class="charts-grid charts-grid--single-row" aria-label="Category overview">
+      <div class="charts-grid__head">
+        <h3>Overview</h3>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Spool Distribution</h3>
+          <span class="chart-card__hint">Spool count by category</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-category-pie"></canvas></div>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Ideal vs. Actual Time</h3>
+          <span class="chart-card__hint">Target vs. average actual days, Planned Start &rarr; Packed, per category</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-ideal-vs-actual"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE-WISE AGEING, PER CATEGORY ============ -->
+    <section class="activity-charts-grid production-stage-grid" aria-label="Stage-wise ageing by category">
+      <div class="charts-grid__head">
+        <h3>Stage-wise Ageing by Category</h3>
+        <span class="chart-card__hint">Target day (from Planned Start) vs. average actual day, per stage</span>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>&le;8 Joint Single Spool &ndash; CS/SS</h3>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-le8_cs_ss"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>&gt;8 Joint Single Spool &ndash; CS/SS</h3>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-gt8_cs_ss"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>&le;8 Joint Single Spool &ndash; AS</h3>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-le8_as"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>&gt;8 Joint Single Spool &ndash; AS</h3>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-gt8_as"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>SB</h3>
+          <span class="chart-card__hint">Any material/joint count, Spool Size &le; 2"</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-sb"></canvas></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span>Data is pre-calculated in Python (src/production/) — this page only displays it. Reads the same DPR / Weekly Production Planning / Line History Sheet workbooks as the Projects dashboard.</span>
+    <span id="footer-generated"></span>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- The ?v=... on production-*.js/css below is a cache-buster - see
+     the identical note in packing-dispatch.html. Bump this date
+     string any time these files change. -->
+<script src="vendor/chart.umd.min.js"></script>
+
+<script src="js/production-config.js?v=20260731"></script>
+<script>
+  // Reuses the shared Chart.js visual theme from js/chartTheme.js,
+  // which reads SPOOL_STATUS_CONFIG for its palette - alias it here
+  // so this page doesn't need to load the Projects dashboard's whole
+  // config.js. Same pattern as packing-dispatch.html.
+  const SPOOL_STATUS_CONFIG = {
+    chartGridColor: "rgba(23, 21, 43, 0.08)",
+    chartTextColor: "#55566E",
+    chartTextColorStrong: "#1B1A2E",
+    chartWellColor: "#FFFFFF",
+  };
+</script>
+<script src="js/chartTheme.js"></script>
+<script src="js/production-data.js?v=20260731"></script>
+<script src="js/production-kpi.js?v=20260731"></script>
+<script src="js/production-charts.js?v=20260731"></script>
+<script src="js/production-app.js?v=20260731"></script>
+
 </body>
 </html>

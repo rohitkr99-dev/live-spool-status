@@ -1,0 +1,32 @@
+/**
+ * production.css
+ * ---------------------------------------------------------
+ * A handful of layout rules specific to production.html that aren't
+ * covered by the shared css/styles.css. Kept in its own tiny file
+ * rather than edited into styles.css, so nothing here can affect
+ * the Projects or Packing & Dispatch dashboards - same convention
+ * as css/packing.css.
+ */
+
+/* "Overview" section has exactly 2 cards (pie + comparison) - keep
+   the wide card to one row so it doesn't leave an empty cell beside
+   it, same fix as packing.css -> .charts-grid--single-row. */
+.charts-grid--single-row {
+  grid-template-rows: auto;
+}
+.charts-grid--single-row .chart-card--wide {
+  grid-row: auto;
+}
+
+/* The 5 per-category stage-ageing charts: 3 per row on desktop,
+   wrapping to 2 on the second row, matching .activity-charts-grid's
+   3-column layout used elsewhere on the site. */
+.production-stage-grid .chart-card__body {
+  min-height: 300px;
+}
+
+@media (max-width: 900px) {
+  .production-stage-grid {
+    grid-template-columns: 1fr;
+  }
+}
