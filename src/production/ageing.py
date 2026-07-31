@@ -14,6 +14,16 @@ Today - Planned Start (not Today - previous-stage-date), and a
 spool with no Planned Start at all is left out of ageing (it has no
 anchor to measure from) but still counted in the category
 distribution.
+
+Rule 0 (checked first, same principle as business_rules.py's
+"Production Order Not Released" rule for the Projects pipeline): a
+spool whose Prod Order Release date is blank hasn't been released
+to production yet and is excluded from this dashboard entirely -
+not counted in the category distribution, ageing, or any chart.
+Confirmed with the project owner: this dashboard should only ever
+cover released spools; a released-but-Planned-Start-missing spool
+is a real gap worth surfacing, an unreleased spool with no Planned
+Start is expected and not a gap at all.
 """
 
 from __future__ import annotations
@@ -21,7 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
-from utils import create_composite_key, days_between, parse_date, today
+from utils import create_composite_key, days_between, is_empty, parse_date, today
 from production.classify import classify_category
 from production.welding_finish import determine_welding_finish
 
@@ -36,6 +46,16 @@ TRACKED_STAGES = [
 ]
 
 
+def _to_float(value) -> float | None:
+    if value is None:
+        return None
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    return None if result != result else result  # NaN check without importing math/pandas
+
+
 @dataclass
 class SpoolRecord:
     composite_key: str
@@ -44,6 +64,7 @@ class SpoolRecord:
     spool_no: str
     category_key: str
     planned_start: date | None
+    planned_start_source: str | None = None
     stage_dates: dict[str, date | None] = field(default_factory=dict)
     welding_status: str = ""
     stage_actual_days: dict[str, int | None] = field(default_factory=dict)
@@ -52,6 +73,12 @@ class SpoolRecord:
     is_complete: bool = False
     is_delayed: bool = False
     target_days: dict[str, int] = field(default_factory=dict)
+    material: str = ""
+    spool_size: float | None = None
+    inch_dia: float | None = None
+    quantity: float | None = None
+    weight: float | None = None
+    surface_area: float | None = None
 
 
 def build_spool_records(
@@ -60,11 +87,19 @@ def build_spool_records(
     line_history_lookup,
     welding_db_lookup,
     rules: dict,
-) -> list[SpoolRecord]:
+    siop_planned_df=None,
+) -> tuple[list[SpoolRecord], int]:
+    """
+    Returns (records, excluded_not_released_count). See Rule 0 in
+    the module docstring above - excluded_not_released_count is how
+    many DPR rows were dropped for having no Prod Order Release
+    date, purely for KPI transparency.
+    """
 
     fields = rules["welding_finish_fields"]
 
     planned_start_lookup: dict[str, date] = {}
+    planned_start_source: dict[str, str] = {}
     for row_dict in master_planning_df.to_dict(orient="records"):
         ck = create_composite_key(
             row_dict.get("Project Code"),
@@ -74,9 +109,34 @@ def build_spool_records(
         planned_start = parse_date(row_dict.get(fields["planned_start_field"]))
         if planned_start is not None:
             planned_start_lookup[ck] = planned_start
+            planned_start_source[ck] = "weekly"
+
+    # SIOP fallback: only fills a gap the Master Planning Sheet left
+    # blank, never overrides it - see config/production_rules.json ->
+    # welding_finish_fields.siop_comment.
+    if siop_planned_df is not None and not siop_planned_df.empty:
+        for row_dict in siop_planned_df.to_dict(orient="records"):
+            ck = create_composite_key(
+                row_dict.get("Project Code"),
+                row_dict.get("Drawing No"),
+                row_dict.get("Spool No"),
+            )
+            if ck in planned_start_lookup:
+                continue
+            siop_start = parse_date(row_dict.get(fields["siop_planned_start_field"]))
+            if siop_start is not None:
+                planned_start_lookup[ck] = siop_start
+                planned_start_source[ck] = "siop"
 
     target_matrix = rules["target_days"]
     records: list[SpoolRecord] = []
+
+    release_field = fields["prod_order_release_field"]
+    total_rows = len(fabrication_df)
+    fabrication_df = fabrication_df[
+        ~fabrication_df[release_field].apply(is_empty)
+    ]
+    excluded_not_released = total_rows - len(fabrication_df)
 
     for row in fabrication_df.to_dict(orient="records"):
 
@@ -115,9 +175,16 @@ def build_spool_records(
             spool_no=str(row.get("Spool No") or ""),
             category_key=category_key,
             planned_start=planned_start,
+            planned_start_source=planned_start_source.get(ck),
             stage_dates=stage_dates,
             welding_status=welding_status,
             target_days=target_days,
+            material=str(row.get(fields["material_field"]) or ""),
+            spool_size=_to_float(row.get(fields["spool_size_field"])),
+            inch_dia=_to_float(row.get(fields["inch_dia_field"])),
+            quantity=_to_float(row.get(fields["quantity_field"])),
+            weight=_to_float(row.get(fields["weight_field"])),
+            surface_area=_to_float(row.get(fields["surface_area_field"])),
         )
 
         if planned_start is not None:
@@ -152,4 +219,4 @@ def build_spool_records(
 
         records.append(record)
 
-    return records
+    return records, excluded_not_released

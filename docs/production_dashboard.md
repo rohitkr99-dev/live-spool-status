@@ -72,6 +72,88 @@ Every "in progress" / "not started" spool is aged as `Today - Planned
 Start` for this dashboard — a rule specific to this Production Table, not
 a change to the Projects pipeline's existing Stage Age logic.
 
+## Production Order Release (Rule 0)
+
+Before anything else, `src/production/ageing.py` excludes any spool whose
+`Prod Order Release` date (DPR) is blank — same principle as the existing
+Projects pipeline's "Production Order Not Released" rule
+(`src/business_rules.py`). An unreleased spool isn't active in production
+yet, so it's excluded entirely: not counted in the category distribution,
+ageing, or any chart, and never shown as a "missing Planned Start" gap.
+
+This was confirmed after a first pass got it wrong: of the 966 spools that
+initially looked like they had no Planned Start, 918 turned out to simply
+be un-released — expected, not a gap. Only 48 were genuinely released
+with no Planned Start recorded anywhere. On the project owner's real data
+this brings `total_spools` from 8,881 down to 7,963.
+
+## Planned Start / SIOP fallback
+
+Planned Start comes from the Weekly workbook's Master Planning Sheet
+(`Start Date` column) first. For a spool that workbook has no row for,
+`src/production/ageing.py` falls back to the SIOP Planned Spools
+workbook's `Start Date` column (`config/settings.json` →
+`input_files.siop_planned`, optional) — but only to fill the gap, never
+to override a Planned Start the Master Planning Sheet already gave. On
+the project owner's real files (2026-07-31): of the 7,963 released
+spools, 3,711 were initially missing Planned Start from the Weekly
+workbook alone; the SIOP file covered 2,745 of those, leaving 48 still
+missing (not in either workbook — no anchor date exists for them at all,
+so they're excluded from ageing but still counted in the category
+distribution).
+
+Note: the SIOP workbook's real column is named `Start Date`, not
+`Planned Start Date` as `config/column_mapping.json`'s `siop_planned`
+section expects — so that mapping likely never actually renamed
+anything, in either this dashboard or the existing Projects pipeline's
+own SIOP fallback (`src/merge.py` → `apply_siop_fallback()`). This
+dashboard reads the real column name directly
+(`production_rules.json` → `welding_finish_fields.siop_planned_start_field`)
+rather than relying on that mapping. The Projects pipeline's own copy of
+this bug was flagged to the project owner but not fixed here, since
+`column_mapping.json` is shared with that pipeline.
+
+## Spool List table + global chart filters
+
+`website/production.html` also has a full spool list table
+(`js/production-table.js`) - one row per spool, every column has its own
+multi-select filter (funnel icon in the header), and a subtotal row
+reflects whatever combination of filters is currently applied (sum for
+Quantity/Weight/Surface Area, average for the day/size columns, count for
+everything else). The 5 stage-day columns show the "crossed stage" rule
+requested by the project owner: a stage the spool has already passed
+shows its actual day count, the one stage currently in progress shows a
+running `Today - Planned Start` count, everything after that is blank -
+see `src/production/summary.py` -> `_stage_display_days()`.
+
+Above the charts, a separate global filter bar controls all 7 charts at
+once: a metric switcher (Spool Count / Quantity / Inch Dia / Weight /
+Surface Area) and a Project multi-select. These are intentionally
+independent of the table's per-column filters - two separate filter
+systems sharing the same underlying per-spool array.
+
+**Architecture note:** this pushed chart aggregation itself into
+JavaScript (`js/production-filters.js` -> `ProductionAggregate`), a
+change from the dashboard's original all-in-Python design. That was
+unavoidable once charts needed to react to an open-ended combination of
+metric + Project selections - Python can't precompute every combination
+in advance. The per-spool numbers charts aggregate FROM (category,
+Welding Finish, days per stage, delayed flag, weight/quantity/etc.) are
+still 100% computed in Python (`src/production/summary.py` ->
+`build_spool_rows()`) and shipped in `production_data.json` -> `spools`;
+JS only groups, sums, and averages what Python already calculated. The
+non-metric-based numbers in `stage_ageing`/`ideal_vs_actual`/
+`category_distribution` at the top of the bundle are still computed in
+Python too (unfiltered, Spool-Count-weighted) but are no longer read by
+the charts - kept for now as a simple unfiltered reference/fallback.
+
+Weighted averages: when a non-count metric is selected, each stage's
+"Actual" bar becomes a weighted average of each spool's day count,
+weighted by that spool's value for the selected metric (a heavier spool
+counts for more of the average). Target bars never change with the
+metric - a target is a fixed per-category constant, there's no
+"weighted" version of it.
+
 ## Ageing / delay
 
 `src/production/ageing.py` walks each spool through Welding Finish → PDQC
@@ -89,6 +171,13 @@ ageing but still counted in the category distribution.
 `src/production/summary.py` for the exact structure. The website only
 displays these pre-calculated numbers; no aggregation happens in
 JavaScript.
+
+`.github/workflows/drive-sync.yml` runs `production_main.py` right after
+`main.py` on every Drive sync that changes a file, so newly-released
+spools (or a newly-uploaded SIOP file) flow through automatically -
+Rule 0 above is checked fresh on every run, nothing is cached. This step
+is `continue-on-error: true` so a Production pipeline failure never
+blocks the Projects dashboard's own commit/push.
 
 ## Charts (website/production.html)
 

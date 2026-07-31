@@ -32,7 +32,7 @@ from typing import Any
 
 from production.logger import logger
 from production.reader import load_sources
-from production.ageing import build_spool_records
+from production.ageing import build_spool_records, TRACKED_STAGES
 from production.welding_finish import (
     build_line_history_lookup,
     build_welding_db_lookup,
@@ -42,8 +42,10 @@ from production.summary import (
     build_category_meta,
     build_ideal_vs_actual,
     build_kpis,
+    build_projects_list,
     build_spool_rows,
     build_stage_ageing,
+    METRICS,
 )
 
 PRODUCTION_SETTINGS_PATH = Path("config/production_settings.json")
@@ -97,12 +99,13 @@ def run(
         f"Welding DB covers {len(welding_db_lookup)} spools."
     )
 
-    records = build_spool_records(
+    records, excluded_not_released = build_spool_records(
         sources.fabrication,
         sources.master_planning,
         line_history_lookup,
         welding_db_lookup,
         rules,
+        siop_planned_df=sources.siop_planned,
     )
 
     if not records:
@@ -118,8 +121,13 @@ def run(
         "category_distribution": build_category_distribution(records, category_meta),
         "stage_ageing": build_stage_ageing(records, category_meta, rules["stage_labels"]),
         "ideal_vs_actual": build_ideal_vs_actual(records, category_meta),
-        "kpis": build_kpis(records),
-        "spools": build_spool_rows(records, category_meta),
+        "kpis": build_kpis(records, excluded_not_released),
+        "spools": build_spool_rows(records, category_meta, rules["stage_labels"]),
+        "target_days": rules["target_days"],
+        "stage_order": TRACKED_STAGES,
+        "stage_labels": rules["stage_labels"],
+        "metrics": METRICS,
+        "projects": build_projects_list(records),
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])

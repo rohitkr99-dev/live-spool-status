@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-07-29T13:02:27.027007",
+  "generated_at": "2026-07-29T08:05:11.037301",
   "kpis": {
     "total_spools": 8881,
     "planned": 7931,
     "unplanned": 950,
-    "completed": 4513,
+    "completed": 4343,
     "average_total_age_days": 42.4,
     "oldest_spool": {
       "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
@@ -21,10 +21,10 @@
     "Fit-Up": 1147,
     "Welding": 60,
     "PDQC": 316,
-    "Ready for Painting": 360,
-    "Under Painting": 1515,
-    "Packing": 52,
-    "Dispatch": 1996,
+    "Ready for Painting": 361,
+    "Under Painting": 1640,
+    "Packing": 96,
+    "Dispatch": 1826,
     "Completed": 2517,
     "Production Order Not Released": 918
   }

@@ -54,6 +54,7 @@ class ProductionSources:
     master_planning: pd.DataFrame
     welding_db: pd.DataFrame
     line_history: pd.DataFrame | None
+    siop_planned: pd.DataFrame | None
 
 
 def load_sources() -> ProductionSources:
@@ -77,9 +78,13 @@ def load_sources() -> ProductionSources:
     logger.info("Reading Line History Sheet (optional) ...")
     line_history = excel_reader.read_line_history()
 
+    logger.info("Reading SIOP Planned Spools workbook (optional, Planned Start fallback) ...")
+    siop_planned = excel_reader.read_siop_planned()
+
     return ProductionSources(
         fabrication=fabrication,
         master_planning=planning_sheets["master_sheet"],
         welding_db=planning_sheets["welding_sheet"],
         line_history=line_history,
+        siop_planned=siop_planned,
     )

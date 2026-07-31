@@ -141,12 +141,16 @@ def build_ideal_vs_actual(
     return out
 
 
-def build_kpis(records: list[SpoolRecord]) -> dict[str, Any]:
+def build_kpis(records: list[SpoolRecord], excluded_not_released: int = 0) -> dict[str, Any]:
     with_anchor = [r for r in records if r.planned_start is not None]
     return {
         "total_spools": len(records),
+        "excluded_not_released": excluded_not_released,
         "spools_with_planned_start": len(with_anchor),
         "spools_missing_planned_start": len(records) - len(with_anchor),
+        "spools_planned_start_from_siop": sum(
+            1 for r in with_anchor if r.planned_start_source == "siop"
+        ),
         "completed_packed": sum(1 for r in with_anchor if r.is_complete),
         "delayed": sum(1 for r in with_anchor if r.is_delayed),
         "welding_in_progress": sum(
@@ -158,7 +162,44 @@ def build_kpis(records: list[SpoolRecord]) -> dict[str, Any]:
     }
 
 
-def build_spool_rows(records: list[SpoolRecord], category_meta: dict[str, dict]) -> list[dict]:
+def _status_label(record: SpoolRecord, stage_labels: dict[str, str]) -> str:
+    if record.planned_start is None:
+        return "No Planned Start"
+    if record.is_complete:
+        return "Packed (Delayed)" if record.is_delayed else "Packed"
+    if record.current_stage is None:
+        return "Packed"
+    label = stage_labels.get(record.current_stage, record.current_stage)
+    return f"{label} (Delayed)" if record.is_delayed else label
+
+
+def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
+    """
+    The 5 stage-day columns for the spool table, per the project
+    owner's rule: a stage the spool has already CROSSED shows its
+    actual day count; the one stage currently in progress (the
+    "current stage") shows a running Today - Planned Start count;
+    every stage after that is blank (not yet reached, not running
+    yet either). Every value is None (blank) for a spool with no
+    Planned Start - there's nothing to count from.
+    """
+    out: dict[str, int | None] = {}
+    for stage in TRACKED_STAGES:
+        actual = record.stage_actual_days.get(stage)
+        if actual is not None:
+            out[stage] = actual
+        elif stage == record.current_stage and record.current_age_days is not None:
+            out[stage] = record.current_age_days
+        else:
+            out[stage] = None
+    return out
+
+
+def build_spool_rows(
+    records: list[SpoolRecord],
+    category_meta: dict[str, dict],
+    stage_labels: dict[str, str],
+) -> list[dict]:
     rows = []
     for r in records:
         rows.append({
@@ -167,7 +208,14 @@ def build_spool_rows(records: list[SpoolRecord], category_meta: dict[str, dict])
             "spool_no": r.spool_no,
             "category": category_meta[r.category_key]["label"],
             "category_key": r.category_key,
+            "material": r.material,
+            "spool_size": r.spool_size,
+            "inch_dia": r.inch_dia,
+            "quantity": r.quantity,
+            "weight": r.weight,
+            "surface_area": r.surface_area,
             "planned_start": r.planned_start.isoformat() if r.planned_start else None,
+            "planned_start_source": r.planned_start_source,
             "welding_finish": (
                 r.stage_dates.get("welding_finish").isoformat()
                 if r.stage_dates.get("welding_finish") else None
@@ -177,5 +225,27 @@ def build_spool_rows(records: list[SpoolRecord], category_meta: dict[str, dict])
             "current_age_days": r.current_age_days,
             "is_complete": r.is_complete,
             "is_delayed": r.is_delayed,
+            "status": _status_label(r, stage_labels),
+            "stage_days": _stage_display_days(r),
         })
     return rows
+
+
+def build_projects_list(records: list[SpoolRecord]) -> list[str]:
+    return sorted({r.project_code for r in records if r.project_code})
+
+
+# Global chart metric switcher - the field on each spool row (above)
+# each metric sums/weights by, and its display label + unit. Used
+# both to sum the pie chart's category distribution and, for the
+# stage/ideal-vs-actual charts, as the WEIGHT in a weighted average
+# of each spool's actual days (a spool with a larger metric value
+# counts for more of the average) - "Spool Count" is the original,
+# unweighted behaviour (every spool weighted equally).
+METRICS = [
+    {"key": "spool_count", "label": "Spool Count", "field": None, "unit": "spools"},
+    {"key": "quantity", "label": "Quantity", "field": "quantity", "unit": "qty"},
+    {"key": "inch_dia", "label": "Inch Dia", "field": "inch_dia", "unit": "in"},
+    {"key": "weight", "label": "Weight", "field": "weight", "unit": "wt"},
+    {"key": "surface_area", "label": "Surface Area", "field": "surface_area", "unit": "sq.ft"},
+]

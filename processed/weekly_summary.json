@@ -92,7 +92,7 @@
     "planned": 94,
     "unplanned": 0,
     "completed": 86,
-    "average_total_age_days": 49.0,
+    "average_total_age_days": 48.9,
     "current_stage_breakdown": {
       "Under Painting": 7,
       "Packing": 1,
@@ -105,14 +105,13 @@
     "total_spools": 95,
     "planned": 95,
     "unplanned": 0,
-    "completed": 63,
-    "average_total_age_days": 53.1,
+    "completed": 55,
+    "average_total_age_days": 53.2,
     "current_stage_breakdown": {
       "PDQC": 1,
       "Ready for Painting": 3,
-      "Under Painting": 19,
-      "Packing": 9,
-      "Dispatch": 63
+      "Under Painting": 36,
+      "Dispatch": 55
     }
   },
   {
@@ -120,14 +119,14 @@
     "total_spools": 233,
     "planned": 233,
     "unplanned": 0,
-    "completed": 161,
-    "average_total_age_days": 49.8,
+    "completed": 113,
+    "average_total_age_days": 50.2,
     "current_stage_breakdown": {
       "PDQC": 1,
       "Ready for Painting": 4,
-      "Under Painting": 66,
-      "Packing": 1,
-      "Dispatch": 160,
+      "Under Painting": 73,
+      "Packing": 42,
+      "Dispatch": 112,
       "Completed": 1
     }
   },
@@ -136,14 +135,14 @@
     "total_spools": 268,
     "planned": 268,
     "unplanned": 0,
-    "completed": 106,
-    "average_total_age_days": 48.0,
+    "completed": 71,
+    "average_total_age_days": 48.2,
     "current_stage_breakdown": {
       "PDQC": 2,
       "Ready for Painting": 6,
-      "Under Painting": 152,
-      "Packing": 2,
-      "Dispatch": 106
+      "Under Painting": 170,
+      "Packing": 19,
+      "Dispatch": 71
     }
   },
   {
@@ -151,14 +150,14 @@
     "total_spools": 148,
     "planned": 148,
     "unplanned": 0,
-    "completed": 72,
-    "average_total_age_days": 42.3,
+    "completed": 41,
+    "average_total_age_days": 42.6,
     "current_stage_breakdown": {
       "PDQC": 7,
-      "Ready for Painting": 7,
-      "Under Painting": 58,
-      "Packing": 4,
-      "Dispatch": 71,
+      "Ready for Painting": 8,
+      "Under Painting": 82,
+      "Packing": 10,
+      "Dispatch": 40,
       "Completed": 1
     }
   },
@@ -167,15 +166,15 @@
     "total_spools": 387,
     "planned": 387,
     "unplanned": 0,
-    "completed": 126,
-    "average_total_age_days": 39.6,
+    "completed": 94,
+    "average_total_age_days": 39.7,
     "current_stage_breakdown": {
       "Fit-Up": 4,
       "PDQC": 7,
       "Ready for Painting": 10,
-      "Under Painting": 213,
-      "Packing": 27,
-      "Dispatch": 126
+      "Under Painting": 251,
+      "Packing": 21,
+      "Dispatch": 94
     }
   },
   {
@@ -183,14 +182,12 @@
     "total_spools": 315,
     "planned": 315,
     "unplanned": 0,
-    "completed": 1,
+    "completed": 0,
     "average_total_age_days": 30.2,
     "current_stage_breakdown": {
       "PDQC": 7,
       "Ready for Painting": 35,
-      "Under Painting": 267,
-      "Packing": 5,
-      "Dispatch": 1
+      "Under Painting": 273
     }
   },
   {
@@ -198,16 +195,16 @@
     "total_spools": 430,
     "planned": 430,
     "unplanned": 0,
-    "completed": 16,
+    "completed": 2,
     "average_total_age_days": 29.3,
     "current_stage_breakdown": {
       "Fit-Up": 3,
       "Welding": 1,
       "PDQC": 25,
       "Ready for Painting": 112,
-      "Under Painting": 271,
+      "Under Painting": 285,
       "Packing": 2,
-      "Dispatch": 16
+      "Dispatch": 2
     }
   },
   {
@@ -230,15 +227,14 @@
     "total_spools": 549,
     "planned": 549,
     "unplanned": 0,
-    "completed": 1,
+    "completed": 0,
     "average_total_age_days": 9.8,
     "current_stage_breakdown": {
       "Fit-Up": 177,
       "Welding": 40,
       "PDQC": 197,
       "Ready for Painting": 125,
-      "Under Painting": 9,
-      "Dispatch": 1
+      "Under Painting": 10
     }
   },
   {

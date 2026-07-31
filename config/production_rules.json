@@ -77,12 +77,20 @@
     "total_joints_field": "Total Joints",
     "material_field": "Material",
     "planned_start_field": "Planned Start",
+    "siop_planned_start_field": "Start Date",
+    "siop_comment": "Fallback source of Planned Start (config/settings.json -> input_files.siop_planned) for spools the Weekly workbook's Master Planning Sheet has no row for. Only fills a gap - never overrides a Planned Start the Master Planning Sheet already provides, same rule the existing Projects pipeline's SIOP fallback uses. Reads the file's real column name ('Start Date') directly rather than via config/column_mapping.json's siop_planned section, which expects 'Planned Start Date' - a name that doesn't match either SIOP file seen so far, so that mapping has likely never actually renamed anything. Not changed here since it's shared with the Projects pipeline.",
     "pdqc_field": "PDQC",
     "release_for_painting_field": "RFP",
     "pdi_clearance_field": "PDI",
     "packed_field": "Packing",
+    "prod_order_release_field": "Prod Order Release",
+    "prod_order_release_comment": "Rule 0, same principle as the existing Projects pipeline's business_rules.py: a spool whose Prod Order Release date is blank hasn't been released to production yet, so it's excluded from this dashboard entirely (not counted in category distribution, ageing, or any chart) rather than showing up as a false 'missing Planned Start' gap. Confirmed with the project owner (2026-07-31): of the spools that looked like they had no Planned Start, the large majority (918 of 966 on his real data) were simply not yet released - only 48 were genuinely released with no Planned Start recorded anywhere.",
     "line_history_joint_no_field": "Joint No",
     "line_history_frun_field": "Welding FRun Date",
-    "welding_db_activity_date_field": "Activity Date"
+    "welding_db_activity_date_field": "Activity Date",
+    "weight_field": "Total Wt.",
+    "quantity_field": "Total Qty",
+    "surface_area_field": "Surface Area Out",
+    "spool_details_comment": "Weight and Quantity are read as-is from the DPR's own 'Total Wt' / 'Total Qty' columns, per the project owner's explicit instruction - no recalculation from unit weight x quantity or similar."
   }
 }
