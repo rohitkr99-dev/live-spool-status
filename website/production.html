@@ -63,16 +63,22 @@
       <div class="kpi-card" data-kpi="total-spools">
         <span class="kpi-card__label">Total Spools</span>
         <span class="kpi-card__value" id="kpi-total-spools">—</span>
+        <span class="kpi-card__sub">Production Order Released</span>
+      </div>
+      <div class="kpi-card" data-kpi="not-released">
+        <span class="kpi-card__label">Not Yet Released</span>
+        <span class="kpi-card__value" id="kpi-not-released" style="color:#8A8FA6">—</span>
+        <span class="kpi-card__sub">excluded from this dashboard</span>
       </div>
       <div class="kpi-card" data-kpi="with-start">
         <span class="kpi-card__label">With Planned Start</span>
         <span class="kpi-card__value" id="kpi-with-start">—</span>
-        <span class="kpi-card__sub">ageing tracked</span>
+        <span class="kpi-card__sub" id="kpi-with-start-sub">ageing tracked</span>
       </div>
       <div class="kpi-card" data-kpi="missing-start">
         <span class="kpi-card__label">Missing Planned Start</span>
         <span class="kpi-card__value" id="kpi-missing-start" style="color:#8A8FA6">—</span>
-        <span class="kpi-card__sub">not in Master Planning Sheet</span>
+        <span class="kpi-card__sub">released, but not in Master Planning Sheet or SIOP</span>
       </div>
       <div class="kpi-card kpi-card--complete" data-kpi="packed">
         <span class="kpi-card__label">Packed</span>
@@ -94,6 +100,21 @@
         <span class="kpi-card__value" id="kpi-welding-not-started">—</span>
         <span class="kpi-card__sub">spools</span>
       </div>
+    </section>
+
+    <!-- ============ GLOBAL CHART FILTERS ============ -->
+    <section class="production-global-filters" aria-label="Global chart filters">
+      <div class="production-global-filters__group">
+        <label for="metric-select">Show charts in</label>
+        <select id="metric-select"></select>
+      </div>
+      <div class="production-global-filters__group">
+        <label for="project-select">Project</label>
+        <select id="project-select" multiple size="1"></select>
+        <button type="button" class="btn btn--ghost btn--tiny" id="project-reset-btn">All Projects</button>
+      </div>
+      <span class="production-global-filters__hint">Ctrl/Cmd-click to select multiple projects</span>
+      <span class="production-global-filters__count" id="chart-spool-count-note"></span>
     </section>
 
     <!-- ============ OVERVIEW: DISTRIBUTION + IDEAL VS ACTUAL ============ -->
@@ -161,6 +182,36 @@
       </div>
     </section>
 
+    <!-- ============ SPOOL LIST TABLE ============ -->
+    <section class="chart-card production-table-card" aria-label="Spool list">
+      <div class="chart-card__head production-table-card__head">
+        <div>
+          <h3>Spool List</h3>
+          <span class="chart-card__hint">Every column has its own filter (click the funnel icon) - subtotal row reflects whatever's currently filtered</span>
+        </div>
+        <div class="production-table-card__actions">
+          <span id="table-filtered-count"></span>
+          <button type="button" class="btn btn--ghost btn--tiny" id="table-clear-filters-btn">Clear All Filters</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table id="spool-table" class="production-table">
+          <thead><tr id="spool-table-head-row"></tr></thead>
+          <tbody id="spool-table-body"></tbody>
+          <tfoot><tr id="spool-table-subtotal"></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="table-pagination">
+        <button type="button" class="btn btn--ghost btn--tiny" id="table-prev-page">&larr; Prev</button>
+        <span id="table-page-info"></span>
+        <button type="button" class="btn btn--ghost btn--tiny" id="table-next-page">Next &rarr;</button>
+      </div>
+    </section>
+
+    <div class="table-filter-popover" id="table-filter-popover" hidden></div>
+
   </main>
 
   <footer class="app-footer">
@@ -193,7 +244,9 @@
 <script src="js/chartTheme.js"></script>
 <script src="js/production-data.js?v=20260731"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
+<script src="js/production-filters.js?v=20260731"></script>
 <script src="js/production-charts.js?v=20260731"></script>
+<script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 
 </body>

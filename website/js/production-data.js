@@ -82,6 +82,11 @@ const ProductionData = {
     kpis: null,
     spools: [],
     generatedAt: null,
+    metrics: [],
+    projects: [],
+    targetDays: {},
+    stageOrder: [],
+    stageLabels: {},
   },
 
   hasData: false,
@@ -186,6 +191,11 @@ const ProductionData = {
     this.store.kpis = bundle.kpis || null;
     this.store.spools = bundle.spools || [];
     this.store.generatedAt = bundle.generated_at || null;
+    this.store.metrics = bundle.metrics || [{ key: "spool_count", label: "Spool Count", field: null, unit: "spools" }];
+    this.store.projects = bundle.projects || [];
+    this.store.targetDays = bundle.target_days || {};
+    this.store.stageOrder = bundle.stage_order || [];
+    this.store.stageLabels = bundle.stage_labels || {};
 
     this.hasData = true;
 

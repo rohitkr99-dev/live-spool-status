@@ -170,3 +170,92 @@ def test_build_welding_db_lookup_takes_max_activity_date():
     })
     lookup = build_welding_db_lookup(df, "Activity Date")
     assert lookup["P1|D1|S1"] == date(2026, 2, 9)
+
+
+# ---------------------------------------------------------------
+# build_spool_records - Planned Start / SIOP fallback
+# ---------------------------------------------------------------
+
+def _minimal_rules():
+    return {
+        "sb_max_spool_size": 2,
+        "zero_size_fallback_category": "le8_cs_ss",
+        "joint_threshold": 8,
+        "material_groups": {"AS": ["F11", "P11", "P22", "P91"]},
+        "target_days": {
+            "le8_cs_ss": {"welding_finish": 5, "pdqc": 6, "release_for_painting": 10,
+                          "pdi_clearance": 14, "packed": 15},
+        },
+        "welding_finish_fields": {
+            "spool_size_field": "Spool Size",
+            "inch_dia_field": "Inch Dia",
+            "total_joints_field": "Total Joints",
+            "material_field": "Material",
+            "planned_start_field": "Planned Start",
+            "siop_planned_start_field": "Start Date",
+            "pdqc_field": "PDQC",
+            "release_for_painting_field": "RFP",
+            "pdi_clearance_field": "PDI",
+            "packed_field": "Packing",
+            "prod_order_release_field": "Prod Order Release",
+            "quantity_field": "Total Qty",
+            "weight_field": "Total Wt",
+            "surface_area_field": "Surface Area Out",
+        },
+    }
+
+
+def test_siop_fills_gap_but_never_overrides_weekly_planned_start():
+    from production.ageing import build_spool_records
+
+    fabrication_df = pd.DataFrame([
+        {"Project Code": "P1", "Drawing No": "D1", "Spool No": "S1",
+         "Material": "CS", "Spool Size": 8, "Inch Dia": 8, "Total Joints": 3,
+         "Prod Order Release": "2026-01-01",
+         "PDQC": None, "RFP": None, "PDI": None, "Packing": None},
+        {"Project Code": "P1", "Drawing No": "D2", "Spool No": "S2",
+         "Material": "CS", "Spool Size": 8, "Inch Dia": 8, "Total Joints": 3,
+         "Prod Order Release": "2026-01-01",
+         "PDQC": None, "RFP": None, "PDI": None, "Packing": None},
+        {"Project Code": "P1", "Drawing No": "D3", "Spool No": "S3",
+         "Material": "CS", "Spool Size": 8, "Inch Dia": 8, "Total Joints": 3,
+         "Prod Order Release": "2026-01-01",
+         "PDQC": None, "RFP": None, "PDI": None, "Packing": None},
+        {"Project Code": "P1", "Drawing No": "D4", "Spool No": "S4",
+         "Material": "CS", "Spool Size": 8, "Inch Dia": 8, "Total Joints": 3,
+         "Prod Order Release": None,
+         "PDQC": None, "RFP": None, "PDI": None, "Packing": None},
+    ])
+
+    # Weekly workbook only has S1.
+    master_planning_df = pd.DataFrame([
+        {"Project Code": "P1", "Drawing No": "D1", "Spool No": "S1",
+         "Planned Start": pd.Timestamp("2026-01-01")},
+    ])
+
+    # SIOP has both S1 (should be ignored - Weekly already covers it)
+    # and S2 (should fill the gap). S3 is in neither.
+    siop_df = pd.DataFrame([
+        {"Project Code": "P1", "Drawing No": "D1", "Spool No": "S1",
+         "Start Date": pd.Timestamp("2026-06-01")},
+        {"Project Code": "P1", "Drawing No": "D2", "Spool No": "S2",
+         "Start Date": pd.Timestamp("2026-02-15")},
+    ])
+
+    records, excluded_not_released = build_spool_records(
+        fabrication_df, master_planning_df, {}, {}, _minimal_rules(),
+        siop_planned_df=siop_df,
+    )
+    by_spool = {r.spool_no: r for r in records}
+
+    assert excluded_not_released == 1
+    assert "S4" not in by_spool  # no Prod Order Release -> excluded entirely
+
+    assert by_spool["S1"].planned_start == date(2026, 1, 1)
+    assert by_spool["S1"].planned_start_source == "weekly"
+
+    assert by_spool["S2"].planned_start == date(2026, 2, 15)
+    assert by_spool["S2"].planned_start_source == "siop"
+
+    assert by_spool["S3"].planned_start is None
+    assert by_spool["S3"].planned_start_source is None

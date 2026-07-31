@@ -13,6 +13,7 @@ const ProductionApp = {
   async init() {
     this.setupUploadControl();
     this.setupClearControl();
+    this.setupGlobalFilters();
     await this.loadInitialData();
   },
 
@@ -23,13 +24,56 @@ const ProductionApp = {
   },
 
   renderAll(store) {
+    this.currentStore = store;
     ProductionKPI.render(store.kpis);
+    this.populateGlobalFilters(store);
     ProductionCharts.render(store);
+    ProductionTable.init(store);
 
     document.getElementById("last-updated").textContent = ProductionKPI.formatTimestamp(store.generatedAt);
     document.getElementById("clear-data-btn").hidden = false;
 
     document.body.classList.add("is-ready");
+  },
+
+  setupGlobalFilters() {
+    document.getElementById("metric-select").addEventListener("change", (e) => {
+      ProductionFilters.setMetric(e.target.value);
+      if (this.currentStore) ProductionCharts.render(this.currentStore);
+    });
+
+    document.getElementById("project-select").addEventListener("change", (e) => {
+      const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+      ProductionFilters.setProjects(selected);
+      if (this.currentStore) ProductionCharts.render(this.currentStore);
+    });
+
+    document.getElementById("project-reset-btn").addEventListener("click", () => {
+      document.getElementById("project-select").selectedIndex = -1;
+      ProductionFilters.setProjects(null);
+      if (this.currentStore) ProductionCharts.render(this.currentStore);
+    });
+  },
+
+  populateGlobalFilters(store) {
+    const metricSelect = document.getElementById("metric-select");
+    metricSelect.innerHTML = "";
+    (store.metrics || []).forEach((metric) => {
+      const option = document.createElement("option");
+      option.value = metric.key;
+      option.textContent = metric.label;
+      metricSelect.appendChild(option);
+    });
+    metricSelect.value = ProductionFilters.selectedMetricKey;
+
+    const projectSelect = document.getElementById("project-select");
+    projectSelect.innerHTML = "";
+    (store.projects || []).forEach((project) => {
+      const option = document.createElement("option");
+      option.value = project;
+      option.textContent = project;
+      projectSelect.appendChild(option);
+    });
   },
 
   async loadInitialData() {
