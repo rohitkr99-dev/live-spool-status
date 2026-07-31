@@ -1,0 +1,88 @@
+{
+  "comment": "Category grouping + target-day matrix for the Production department dashboard (website/production.html, src/production/). Confirmed with the project owner against real DPR data on 2026-07-30 - see docs/production_dashboard.md for the full derivation and the Welding Finish rule this feeds into.",
+
+  "joint_threshold": 8,
+  "joint_threshold_comment": "'Total Joints' <= this value is the '<=8 Joint' bucket, otherwise '>8 Joint'. A blank/unreadable Total Joints defaults to the <=8 bucket (the smaller/safer target).",
+
+  "sb_max_spool_size": 2,
+  "sb_comment": "Any spool (any material, any joint count) whose 'Spool Size' is <= this value is SB, overriding the material/joint-count buckets below - checked BEFORE the zero-size fallback.",
+
+  "zero_size_fallback_category": "le8_cs_ss",
+  "zero_size_fallback_comment": "If 'Spool Size' is 0/blank AND 'Inch Dia' is 0/blank, the spool is placed in the 1st category (<=8 Joint Single Spool - CS/SS) regardless of its actual material or joint count, per the project owner's rule. This check runs BEFORE the SB check.",
+
+  "material_groups": {
+    "comment": "'Material' (DPR 'Item Category Code') values that fall into the AS bucket. Everything else (CS, SS, DUPLEX, or any other/unrecognised value) falls into the combined CS/SS bucket - the target-day table gives CS and SS the same targets, so they are not split further.",
+    "AS": ["F11", "P11", "P22", "P91"]
+  },
+
+  "categories": [
+    {
+      "key": "le8_cs_ss",
+      "label": "<=8 Joint Single Spool - CS/SS",
+      "short_label": "\u22648 Joint CS/SS"
+    },
+    {
+      "key": "gt8_cs_ss",
+      "label": ">8 Joint Single Spool - CS/SS",
+      "short_label": ">8 Joint CS/SS"
+    },
+    {
+      "key": "le8_as",
+      "label": "<=8 Joint Single Spool - AS",
+      "short_label": "\u22648 Joint AS"
+    },
+    {
+      "key": "gt8_as",
+      "label": ">8 Joint Single Spool - AS",
+      "short_label": ">8 Joint AS"
+    },
+    {
+      "key": "sb",
+      "label": "SB",
+      "short_label": "SB"
+    }
+  ],
+
+  "stage_order": [
+    "planned_start",
+    "welding_finish",
+    "pdqc",
+    "release_for_painting",
+    "pdi_clearance",
+    "packed"
+  ],
+  "stage_labels": {
+    "planned_start": "Planned Start",
+    "welding_finish": "Welding Finish",
+    "pdqc": "PDQC",
+    "release_for_painting": "Release for Painting",
+    "pdi_clearance": "PDI Clearance",
+    "packed": "Packed"
+  },
+  "pwht_comment": "PWHT is deliberately not tracked here (per the project owner's instruction - not every spool needs PWHT, and it isn't in scope for this dashboard yet).",
+
+  "target_days": {
+    "comment": "Target day-from-Planned-Start for each stage, per category - the table the project owner supplied, confirmed against real DPR data.",
+    "le8_cs_ss":  { "planned_start": 1, "welding_finish": 5,  "pdqc": 6,  "release_for_painting": 10, "pdi_clearance": 14, "packed": 15 },
+    "gt8_cs_ss":  { "planned_start": 1, "welding_finish": 8,  "pdqc": 11, "release_for_painting": 15, "pdi_clearance": 19, "packed": 20 },
+    "le8_as":     { "planned_start": 1, "welding_finish": 8,  "pdqc": 12, "release_for_painting": 16, "pdi_clearance": 20, "packed": 21 },
+    "gt8_as":     { "planned_start": 1, "welding_finish": 12, "pdqc": 16, "release_for_painting": 20, "pdi_clearance": 24, "packed": 25 },
+    "sb":         { "planned_start": 1, "welding_finish": 5,  "pdqc": 9,  "release_for_painting": 13, "pdi_clearance": 17, "packed": 18 }
+  },
+
+  "welding_finish_fields": {
+    "comment": "Field names this module reads from the already-loaded Fabrication / Line History / Welding DB dataframes (see reader.ExcelReader, reused as-is - no column_mapping.json changes were needed).",
+    "spool_size_field": "Spool Size",
+    "inch_dia_field": "Inch Dia",
+    "total_joints_field": "Total Joints",
+    "material_field": "Material",
+    "planned_start_field": "Planned Start",
+    "pdqc_field": "PDQC",
+    "release_for_painting_field": "RFP",
+    "pdi_clearance_field": "PDI",
+    "packed_field": "Packing",
+    "line_history_joint_no_field": "Joint No",
+    "line_history_frun_field": "Welding FRun Date",
+    "welding_db_activity_date_field": "Activity Date"
+  }
+}

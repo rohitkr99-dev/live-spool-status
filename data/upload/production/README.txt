@@ -1,22 +1,25 @@
 Production - upload folder
 ---------------------------------------------------------
-This folder is reserved for the "Production" department's source
-workbooks (data/upload/production/) - the landing page card that
-currently links to website/production.html ("Coming Soon").
+This folder is reserved for FUTURE Production-only charts that need
+their own source workbooks - it's not used yet.
 
-This is a different department from "Projects" (website/dashboard.html,
-the DPR / Weekly Production Planning / Line History Sheet pipeline) -
-if you're looking for where to put DPR/Weekly Planning files, that's
-data/upload/projects/, not this folder.
+The "Production" landing page card (website/production.html) is now
+LIVE, but its first set of charts (spool ageing by category vs. the
+target-day matrix - see src/production/) reuses the SAME DPR /
+Weekly Production Planning / Line History Sheet workbooks as
+"Projects" (website/dashboard.html), read straight out of
+data/upload/projects/. Nothing needs to be uploaded here for those
+charts to work.
 
-There's no pipeline built for this department yet. Once you drop
-files in here, python3 main.py will notice them and print a message
-telling you a pipeline hasn't been built yet for this folder - it
-won't error out, and it won't silently ignore them either. When
-you're ready to build this department's dashboard, share the sample
-workbook(s) and the metrics you want, the same way Packing & Dispatch
-was built (see src/packing/ for that pipeline as a reference, and
-src/departments.py for how to register a new one).
+If you're looking for where to put DPR/Weekly Planning files, that's
+still data/upload/projects/, not this folder.
+
+This folder stays reserved for later: more Production-specific
+charts, fed by different workbooks dropped in here, on top of the
+ones already live. When that expansion happens, wire a new reader
+into src/production/ (or a sibling module) the same way
+src/packing/ was built - see src/departments.py for how to register
+a folder like this once a pipeline actually reads it.
 
 This file exists only so the empty folder can be tracked and uploaded
 through GitHub's web interface (git doesn't track empty folders, and

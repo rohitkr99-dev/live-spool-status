@@ -48,13 +48,18 @@ DEPARTMENTS: list[Department] = [
     # "projects", not "production" - see the note on the next entry.
     Department("projects", "Projects", "data/upload/projects", built=True),
     Department("packing", "Packing & Dispatch", "data/upload/packing", built=True),
-    # "Production" on the landing page (website/production.html) is a
-    # SEPARATE, currently-unbuilt department from "Projects" above -
-    # easy to conflate since the DPR/Weekly-Planning pipeline is also
-    # commonly called "the Production pipeline" in code comments
-    # (src/pipeline.py etc.), but that pipeline's landing-page card is
-    # "Projects", not this one. Don't repoint this folder at the DPR
-    # pipeline - see data/upload/production/README.txt.
+    # "Production" on the landing page (website/production.html) is now
+    # LIVE (see src/production/, production_main.py) - spool ageing by
+    # category vs. a target-day matrix. But it's a SEPARATE pipeline
+    # from "Projects" above, and it does NOT read this folder - it
+    # reuses the same workbooks already in data/upload/projects/. This
+    # folder (data/upload/production/) stays built=False: it's still
+    # genuinely unwatched/unprocessed, reserved for a later expansion
+    # of the Production page with its own, different source workbooks.
+    # Easy to conflate since the DPR/Weekly-Planning pipeline is also
+    # commonly called "the Production pipeline" in older code comments
+    # (src/pipeline.py etc.) - that one's landing-page card is
+    # "Projects", not this one. See data/upload/production/README.txt.
     Department("production", "Production", "data/upload/production", built=False),
     Department("quality", "Quality Assurance / Control", "data/upload/quality", built=False),
     Department("painting", "Painting", "data/upload/painting", built=False),

@@ -1,0 +1,22 @@
+{
+  "application": {
+    "name": "Production Department Dashboard - Spool Ageing vs. Target",
+    "version": "1.0.0"
+  },
+
+  "comment": "This pipeline reuses config/settings.json's paths.upload_folder and input_files (fabrication/planning/line_history) - see src/production/reader.py. It reads the SAME DPR / Weekly Production Planning / Line History Sheet workbooks already synced into data/upload/projects/ by scripts/sync_drive.py for the Projects dashboard; nothing new needs to be uploaded or synced for this dashboard. data/upload/production/ remains reserved for future Production-only charts that need their own source workbooks - see its README.txt.",
+
+  "paths": {
+    "processed_folder": "processed",
+    "website_data_folder": "website/data"
+  },
+
+  "output_files": {
+    "bundle": "production_data.json"
+  },
+
+  "publishing": {
+    "publish_to_website": true,
+    "comment": "When true, every run also copies production_data.json into paths.website_data_folder - the file website/production.html auto-loads for every visitor of the hosted site, same pattern as config/packing_settings.json."
+  }
+}
