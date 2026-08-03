@@ -18,28 +18,28 @@
   "categories": [
     {
       "key": "le8_cs_ss",
-      "label": "<=8 Joint Single Spool - CS/SS",
-      "short_label": "\u22648 Joint CS/SS"
+      "label": "\u22648 Joints (CS/SS)",
+      "short_label": "\u22648 Joints (CS/SS)"
     },
     {
       "key": "gt8_cs_ss",
-      "label": ">8 Joint Single Spool - CS/SS",
-      "short_label": ">8 Joint CS/SS"
+      "label": ">8 Joints (CS/SS)",
+      "short_label": ">8 Joints (CS/SS)"
     },
     {
       "key": "le8_as",
-      "label": "<=8 Joint Single Spool - AS",
-      "short_label": "\u22648 Joint AS"
+      "label": "\u22648 Joints (Alloy)",
+      "short_label": "\u22648 Joints (Alloy)"
     },
     {
       "key": "gt8_as",
-      "label": ">8 Joint Single Spool - AS",
-      "short_label": ">8 Joint AS"
+      "label": ">8 Joints (Alloy)",
+      "short_label": ">8 Joints (Alloy)"
     },
     {
       "key": "sb",
-      "label": "SB",
-      "short_label": "SB"
+      "label": "Small Bore (CS/SS/AS)",
+      "short_label": "Small Bore (CS/SS/AS)"
     }
   ],
 

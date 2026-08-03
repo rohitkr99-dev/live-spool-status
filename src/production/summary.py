@@ -166,32 +166,58 @@ def _status_label(record: SpoolRecord, stage_labels: dict[str, str]) -> str:
     if record.planned_start is None:
         return "No Planned Start"
     if record.is_complete:
-        return "Packed (Delayed)" if record.is_delayed else "Packed"
+        return "Packed"
     if record.current_stage is None:
         return "Packed"
-    label = stage_labels.get(record.current_stage, record.current_stage)
-    return f"{label} (Delayed)" if record.is_delayed else label
+    return stage_labels.get(record.current_stage, record.current_stage)
+
+
+def _delay_status_label(record: SpoolRecord) -> str:
+    if record.planned_start is None:
+        return "N/A"
+    return "Delayed" if record.is_delayed else "On Time"
 
 
 def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
     """
-    The 5 stage-day columns for the spool table, per the project
-    owner's rule: a stage the spool has already CROSSED shows its
-    actual day count; the one stage currently in progress (the
-    "current stage") shows a running Today - Planned Start count;
-    every stage after that is blank (not yet reached, not running
-    yet either). Every value is None (blank) for a spool with no
-    Planned Start - there's nothing to count from.
+    The 5 stage-day columns for the spool table. Each value is the
+    INDIVIDUAL time that stage took - the gap since the previous
+    milestone (the stage before it, or Planned Start for the first
+    one) - not the cumulative day count from Planned Start.
+    src/production/ageing.py's stage_actual_days is cumulative (it
+    has to be, to compare against the target-day matrix, which is
+    itself a cumulative day-from-Planned-Start table); this
+    function's job is to turn that cumulative series into
+    individual per-stage durations for display, so e.g. a spool
+    whose Packed date lands on cumulative day 105 with PDI Clearance
+    reached on cumulative day 100 shows a Packed age of 5 (105 - 100),
+    not 105.
+
+    The one stage currently in progress (the "current stage") shows
+    a running count since the last-reached milestone (Today minus
+    that milestone's date); every stage after that is blank. Every
+    value is None (blank) for a spool with no Planned Start - there's
+    nothing to count from.
     """
     out: dict[str, int | None] = {}
+    previous_cumulative = 0  # Planned Start itself, day 0
+
     for stage in TRACKED_STAGES:
         actual = record.stage_actual_days.get(stage)
+
         if actual is not None:
-            out[stage] = actual
+            out[stage] = actual - previous_cumulative
+            previous_cumulative = actual
         elif stage == record.current_stage and record.current_age_days is not None:
-            out[stage] = record.current_age_days
+            out[stage] = record.current_age_days - previous_cumulative
+            # Every stage after this one is still un-reached -
+            # nothing more to compute, they stay None below.
+            for remaining_stage in TRACKED_STAGES[TRACKED_STAGES.index(stage) + 1:]:
+                out[remaining_stage] = None
+            break
         else:
             out[stage] = None
+
     return out
 
 
@@ -226,6 +252,7 @@ def build_spool_rows(
             "is_complete": r.is_complete,
             "is_delayed": r.is_delayed,
             "status": _status_label(r, stage_labels),
+            "delay_status": _delay_status_label(r),
             "stage_days": _stage_display_days(r),
         })
     return rows

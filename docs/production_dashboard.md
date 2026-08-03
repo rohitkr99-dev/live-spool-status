@@ -17,9 +17,18 @@ view of them. It does not import from, or modify, `src/pipeline.py`,
 Every spool is classified into exactly one of 5 categories, in this order
 (`src/production/classify.py`, config `config/production_rules.json`):
 
+| Key | Displayed as |
+|---|---|
+| `le8_cs_ss` | &le;8 Joints (CS/SS) |
+| `gt8_cs_ss` | >8 Joints (CS/SS) |
+| `le8_as` | &le;8 Joints (Alloy) |
+| `gt8_as` | >8 Joints (Alloy) |
+| `sb` | Small Bore (CS/SS/AS) |
+
+
 1. **Spool Size is 0/blank AND Inch Dia is 0/blank** → always category 1
-   (`<=8 Joint Single Spool - CS/SS`), regardless of actual material or
-   joint count.
+   (`le8_cs_ss`, displayed as "&le;8 Joints (CS/SS)"), regardless of actual
+   material or joint count.
 2. **Spool Size <= 2** (any material, any joint count) → `SB`.
 3. Otherwise, by Material and Total Joints:
    - Material in `{F11, P11, P22, P91}` → `AS`; anything else (CS, SS,
@@ -120,11 +129,19 @@ this bug was flagged to the project owner but not fixed here, since
 multi-select filter (funnel icon in the header), and a subtotal row
 reflects whatever combination of filters is currently applied (sum for
 Quantity/Weight/Surface Area, average for the day/size columns, count for
-everything else). The 5 stage-day columns show the "crossed stage" rule
-requested by the project owner: a stage the spool has already passed
-shows its actual day count, the one stage currently in progress shows a
-running `Today - Planned Start` count, everything after that is blank -
-see `src/production/summary.py` -> `_stage_display_days()`.
+everything else). The 5 stage-day columns show the INDIVIDUAL time each
+stage took - the gap since the previous milestone, not the cumulative
+day count from Planned Start (a spool reaching PDI Clearance on
+cumulative day 100 and Packed on cumulative day 105 shows a Packed age
+of 5, not 105). A stage the spool has already passed shows that
+individual gap; the one stage currently in progress shows a running
+count since the last-reached milestone; everything after that is blank -
+see `src/production/summary.py` -> `_stage_display_days()`. Note this is
+a different number from the charts above the table: the charts compare
+CUMULATIVE actual vs. the cumulative target-day matrix (the matrix the
+project owner supplied is itself cumulative from Planned Start), while
+the table exists to show where time is actually being spent stage by
+stage.
 
 Above the charts, a separate global filter bar controls all 7 charts at
 once: a metric switcher (Spool Count / Quantity / Inch Dia / Weight /
