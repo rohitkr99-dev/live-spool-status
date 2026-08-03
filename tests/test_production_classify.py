@@ -259,3 +259,65 @@ def test_siop_fills_gap_but_never_overrides_weekly_planned_start():
 
     assert by_spool["S3"].planned_start is None
     assert by_spool["S3"].planned_start_source is None
+
+
+# ---------------------------------------------------------------
+# _stage_display_days - individual (incremental) durations
+# ---------------------------------------------------------------
+
+def test_stage_display_days_are_individual_not_cumulative():
+    from production.summary import _stage_display_days
+    from production.ageing import SpoolRecord
+
+    # Mirrors the real spool the project owner flagged: cumulative
+    # actual days were 16 / 16 / 18 / 100 / 105 - individual gaps
+    # should be 16 / 0 / 2 / 82 / 5.
+    record = SpoolRecord(
+        composite_key="P1|D1|S1", project_code="P1", drawing_no="D1", spool_no="S1",
+        category_key="le8_cs_ss", planned_start=date(2025, 9, 29),
+        stage_actual_days={
+            "welding_finish": 16, "pdqc": 16, "release_for_painting": 18,
+            "pdi_clearance": 100, "packed": 105,
+        },
+        current_stage=None,
+    )
+    days = _stage_display_days(record)
+    assert days == {
+        "welding_finish": 16, "pdqc": 0, "release_for_painting": 2,
+        "pdi_clearance": 82, "packed": 5,
+    }
+
+
+def test_stage_display_days_current_stage_is_individual_running_count():
+    from production.summary import _stage_display_days
+    from production.ageing import SpoolRecord
+
+    record = SpoolRecord(
+        composite_key="P1|D1|S1", project_code="P1", drawing_no="D1", spool_no="S1",
+        category_key="le8_cs_ss", planned_start=date(2025, 9, 29),
+        stage_actual_days={
+            "welding_finish": 16, "pdqc": 16, "release_for_painting": None,
+            "pdi_clearance": None, "packed": None,
+        },
+        current_stage="release_for_painting",
+        current_age_days=25,  # Today - Planned Start = 25
+    )
+    days = _stage_display_days(record)
+    # release_for_painting is running since PDQC's cumulative day (16):
+    # 25 - 16 = 9. Nothing after it is reached yet.
+    assert days == {
+        "welding_finish": 16, "pdqc": 0, "release_for_painting": 9,
+        "pdi_clearance": None, "packed": None,
+    }
+
+
+def test_stage_display_days_no_planned_start_is_all_blank():
+    from production.summary import _stage_display_days
+    from production.ageing import SpoolRecord
+
+    record = SpoolRecord(
+        composite_key="P1|D1|S1", project_code="P1", drawing_no="D1", spool_no="S1",
+        category_key="le8_cs_ss", planned_start=None,
+    )
+    days = _stage_display_days(record)
+    assert all(v is None for v in days.values())

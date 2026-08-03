@@ -140,6 +140,14 @@ table.production-table {
 .production-table tbody tr.is-delayed-row td:first-child {
   box-shadow: inset 3px 0 0 #A82E30;
 }
+.production-table td.cell-delayed {
+  color: #A82E30;
+  font-weight: 700;
+}
+.production-table td.cell-on-time {
+  color: #1E8F86;
+  font-weight: 600;
+}
 .production-table tfoot td {
   font-weight: 700;
   background: #F8F8FC;

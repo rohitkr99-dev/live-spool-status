@@ -25,11 +25,14 @@ const SpoolFabline = {
     );
 
     // Bottleneck = the largest WIP stage, excluding the terminal
-    // "Completed" bucket (that's the goal state, not a jam) and
-    // "Production Order Not Released" (fabrication hasn't even
-    // started for those spools yet, so they can't be a fabrication
-    // bottleneck - see business_rules.py Rule 0).
-    const EXCLUDED_FROM_BOTTLENECK = ["Completed", "Production Order Not Released"];
+    // "Completed" bucket and "Dispatch" (already Packed and just
+    // awaiting shipment - not a fabrication bottleneck, per the
+    // project owner: "any box which is packed is not a bottleneck
+    // for the company") and "Production Order Not Released"
+    // (fabrication hasn't even started for those spools yet, so
+    // they can't be a fabrication bottleneck either - see
+    // business_rules.py Rule 0).
+    const EXCLUDED_FROM_BOTTLENECK = ["Completed", "Dispatch", "Production Order Not Released"];
     let bottleneckStage = null;
     let bottleneckCount = -1;
     for (const stage of order) {

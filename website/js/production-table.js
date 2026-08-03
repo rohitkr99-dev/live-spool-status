@@ -27,6 +27,7 @@ const ProductionTable = {
     { key: "spool_no", label: "Spool No", type: "text" },
     { key: "category", label: "Category", type: "text" },
     { key: "status", label: "Status", type: "text" },
+    { key: "delay_status", label: "On Time / Delayed", type: "text" },
     { key: "material", label: "Material", type: "text" },
     { key: "spool_size", label: "Spool Size", type: "number" },
     { key: "inch_dia", label: "Inch Dia", type: "number" },
@@ -208,6 +209,10 @@ const ProductionTable = {
       this.COLUMNS.forEach((column) => {
         const td = document.createElement("td");
         td.textContent = this.formatValue(row, column);
+        if (column.key === "delay_status") {
+          if (row.delay_status === "Delayed") td.classList.add("cell-delayed");
+          else if (row.delay_status === "On Time") td.classList.add("cell-on-time");
+        }
         tr.appendChild(td);
       });
       frag.appendChild(tr);
