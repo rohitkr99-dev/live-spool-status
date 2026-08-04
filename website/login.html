@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Spool Status - Login</title>
+    <title>DEE Live Dashboard - Login</title>
 
     <style>
-        body{
+        *{
             margin:0;
+            padding:0;
+            box-sizing:border-box;
             font-family:Arial, Helvetica, sans-serif;
+        }
+
+        body{
             background:#f4f6f9;
             display:flex;
             justify-content:center;
@@ -17,62 +22,70 @@
         }
 
         .login-box{
-            width:360px;
-            background:white;
-            padding:30px;
-            border-radius:10px;
-            box-shadow:0 5px 15px rgba(0,0,0,.15);
+            width:380px;
+            background:#fff;
+            padding:35px;
+            border-radius:12px;
+            box-shadow:0 10px 25px rgba(0,0,0,.15);
         }
 
         h2{
             text-align:center;
-            margin-bottom:25px;
             color:#004d99;
+            margin-bottom:30px;
         }
 
         input{
             width:100%;
             padding:12px;
-            margin-top:10px;
             margin-bottom:18px;
             border:1px solid #ccc;
-            border-radius:5px;
-            box-sizing:border-box;
+            border-radius:6px;
+            font-size:15px;
         }
 
         button{
             width:100%;
             padding:12px;
             background:#004d99;
-            color:white;
+            color:#fff;
             border:none;
-            border-radius:5px;
+            border-radius:6px;
             cursor:pointer;
             font-size:16px;
         }
 
         button:hover{
-            background:#003366;
+            background:#003d80;
         }
 
         #error{
             color:red;
-            margin-top:15px;
             text-align:center;
+            margin-top:15px;
+            font-size:14px;
         }
     </style>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+
 </head>
 
 <body>
 
 <div class="login-box">
 
-    <h2>Live Spool Status</h2>
+    <h2>DEE Live Dashboard</h2>
 
     <input
         type="email"
         id="email"
-        placeholder="Email">
+        placeholder="Email Address">
 
     <input
         type="password"
@@ -87,45 +100,32 @@
 
 </div>
 
-<script type="module">
+<script>
 
-import { auth } from "./firebase-config.js";
-
-import {
-    signInWithEmailAndPassword,
-    onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-onAuthStateChanged(auth,(user)=>{
+firebase.auth().onAuthStateChanged(function(user){
 
     if(user){
-
         window.location.href="index.html";
-
     }
 
 });
 
-document
-.getElementById("loginBtn")
-.addEventListener("click",()=>{
+document.getElementById("loginBtn").addEventListener("click",function(){
 
     const email=document.getElementById("email").value.trim();
-
     const password=document.getElementById("password").value;
 
-    signInWithEmailAndPassword(auth,email,password)
+    firebase.auth().signInWithEmailAndPassword(email,password)
 
-    .then(()=>{
+    .then(function(){
 
         window.location.href="index.html";
 
     })
 
-    .catch(error=>{
+    .catch(function(error){
 
-        document.getElementById("error").innerText=error.message;
+        document.getElementById("error").innerHTML=error.message;
 
     });
 
