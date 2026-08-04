@@ -321,3 +321,27 @@ def test_stage_display_days_no_planned_start_is_all_blank():
     )
     days = _stage_display_days(record)
     assert all(v is None for v in days.values())
+
+
+def test_stage_cumulative_days_stays_cumulative_for_charts():
+    # Regression guard: charts must keep comparing cumulative actual
+    # vs. the cumulative target matrix - _stage_cumulative_days()
+    # must NOT collapse to individual per-stage gaps the way
+    # _stage_display_days() (the table's field) intentionally does.
+    from production.summary import _stage_cumulative_days
+    from production.ageing import SpoolRecord
+
+    record = SpoolRecord(
+        composite_key="P1|D1|S1", project_code="P1", drawing_no="D1", spool_no="S1",
+        category_key="le8_cs_ss", planned_start=date(2025, 9, 29),
+        stage_actual_days={
+            "welding_finish": 16, "pdqc": 16, "release_for_painting": 18,
+            "pdi_clearance": 100, "packed": 105,
+        },
+        current_stage=None,
+    )
+    days = _stage_cumulative_days(record)
+    assert days == {
+        "welding_finish": 16, "pdqc": 16, "release_for_painting": 18,
+        "pdi_clearance": 100, "packed": 105,
+    }

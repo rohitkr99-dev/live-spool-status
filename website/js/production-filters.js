@@ -142,7 +142,7 @@ const ProductionAggregate = {
         let pendingCount = 0;
 
         catSpools.forEach((s) => {
-          const days = s.stage_days ? s.stage_days[stage] : null;
+          const days = s.stage_days_cumulative ? s.stage_days_cumulative[stage] : null;
           const weight = this._weightFor(s, metric);
           if (days === null || days === undefined) return;
 
@@ -195,7 +195,7 @@ const ProductionAggregate = {
       const openPairs = [];
       catSpools.forEach((s) => {
         const weight = this._weightFor(s, metric);
-        const packedDays = s.stage_days ? s.stage_days.packed : null;
+        const packedDays = s.stage_days_cumulative ? s.stage_days_cumulative.packed : null;
         if (s.is_complete && packedDays !== null && packedDays !== undefined) {
           completedPairs.push([packedDays, weight]);
         } else if (!s.is_complete && s.current_age_days !== null && s.current_age_days !== undefined) {
