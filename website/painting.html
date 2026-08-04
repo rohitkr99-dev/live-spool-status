@@ -31,10 +31,13 @@
         <span class="hub-header__region">Thailand — Operations Hub</span>
       </div>
     </div>
-    <a class="hub-header__back" href="index.html">
-      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 8H4m0 0l3.5-4M4 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      All Departments
-    </a>
+    <div class="hub-header__actions">
+      <a class="hub-header__back" href="index.html">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 8H4m0 0l3.5-4M4 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All Departments
+      </a>
+      <div class="user-menu" id="user-menu"></div>
+    </div>
   </div>
 </header>
 
@@ -57,6 +60,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth-guard.js"></script>
+<script src="js/user-menu.js"></script>
 
 <script type="module" src="js/hub.js"></script>
 </body>

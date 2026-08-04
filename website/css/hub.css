@@ -147,6 +147,12 @@ body.hub[data-loading="true"] { overflow: hidden; height: 100vh; }
 }
 .hub-header__back:hover { color: var(--ember); border-color: var(--ember); }
 
+.hub-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* =====================================================
    HOMEPAGE INTRO
    ===================================================== */
