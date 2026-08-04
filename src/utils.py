@@ -12,6 +12,7 @@ keys, and common validations.
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -173,6 +174,105 @@ def today() -> date:
     """
 
     return date.today()
+
+
+_MONTH_NAMES = {
+    "jan": 1, "january": 1,
+    "feb": 2, "february": 2,
+    "mar": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "may": 5,
+    "jun": 6, "june": 6,
+    "jul": 7, "july": 7,
+    "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10,
+    "nov": 11, "november": 11,
+    "dec": 12, "december": 12,
+}
+
+# Longest names first, so e.g. "september" matches whole rather than
+# stopping at "sep" - matters because both are valid alternatives.
+_MONTH_PATTERN = "|".join(
+    sorted(_MONTH_NAMES, key=len, reverse=True)
+)
+
+
+def extract_file_period(
+    filename: str,
+    reference_date: date | None = None,
+) -> tuple[int, int, int]:
+    """
+    Best-effort guess at which real-world period a workbook filename
+    refers to, so that when more than one file of the same type is
+    present in the upload folder (e.g. two DPR workbooks - a project
+    can close and drop out of the newest file, but its spools should
+    still be visible from an older one still sitting in Drive), the
+    pipeline can tell which file is more recent - see reader.py's
+    multi-file merge helpers.
+
+    Returns a (year, month, day) tuple that sorts oldest-first.
+    Tries, in order:
+
+      1. A full numeric date in the name (DD-MM-YYYY, DD/MM/YYYY, or
+         YYYY-MM-DD, with '-', '/' or '.' as the separator) - most
+         reliable, since it names an exact day (e.g. the Line History
+         Sheet's "27-07-2026").
+      2. A month name (full or abbreviated), optionally followed by a
+         2- or 4-digit year (e.g. "July'26", "July_26", "August" with
+         no year at all). A month with no year defaults to the
+         current year - or the previous year, if that would make the
+         file look like it's from the future - since these workbooks
+         are essentially always recent. A filename that spells out
+         the year is always more reliable than this guess.
+
+    Returns (0, 0, 0) - sorting before every real date, i.e. treated
+    as the OLDEST - when nothing recognisable is found, so a file
+    whose period can't be determined never accidentally wins a
+    latest-file-wins merge over one that can be dated.
+    """
+
+    if reference_date is None:
+        reference_date = today()
+
+    name = filename.lower()
+
+    match = re.search(r"(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})", name)
+    if match:
+        day, month, year = (int(group) for group in match.groups())
+        if 1 <= month <= 12 and 1 <= day <= 31:
+            return (year, month, day)
+
+    match = re.search(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})", name)
+    if match:
+        year, month, day = (int(group) for group in match.groups())
+        if 1 <= month <= 12 and 1 <= day <= 31:
+            return (year, month, day)
+
+    match = re.search(
+        rf"({_MONTH_PATTERN})[\s_'\-]*?(\d{{4}}|\d{{2}})?(?!\d)",
+        name,
+    )
+    if match:
+        month = _MONTH_NAMES[match.group(1)]
+        year_text = match.group(2)
+
+        if year_text:
+            year = int(year_text)
+            if year < 100:
+                year += 2000
+        else:
+            year = reference_date.year
+            if (year, month, 1) > (
+                reference_date.year,
+                reference_date.month,
+                reference_date.day,
+            ):
+                year -= 1
+
+        return (year, month, 1)
+
+    return (0, 0, 0)
 
 
 def days_between(

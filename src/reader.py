@@ -18,7 +18,12 @@ from typing import Optional
 
 import pandas as pd
 
-from config_loader import load_business_rules, load_settings, load_stages
+from config_loader import (
+    load_business_rules,
+    load_schema,
+    load_settings,
+    load_stages,
+)
 from column_mapper import standardize_columns
 from logger import logger
 from constants import (
@@ -28,12 +33,22 @@ from constants import (
     SIOP_PLANNED,
     SIOP_PLANNED_START,
 )
-from utils import convert_excel_serial_dates
+from utils import convert_excel_serial_dates, extract_file_period
 
 
 class ExcelReader:
     """
     Reads configured Excel files.
+
+    Multi-file merge
+    -----------------
+    Every file_pattern below can now match more than one file - e.g.
+    both "DPR_Fabrication_Jobs_July_26.xlsb" and an older
+    "DPR_Fabrication_Jobs_June_26.xlsb" sitting in the same upload
+    folder. This is deliberate: a project can close and drop out of
+    the newest workbook, but its spools should stay visible as long
+    as an older workbook that still has them is around. See
+    _matching_files_oldest_first() and _merge_latest_wins() below.
     """
 
     def __init__(self):
@@ -41,6 +56,73 @@ class ExcelReader:
         self.settings = load_settings()
         self.stages = load_stages()
         self.business_rules = load_business_rules()
+        self.schema = load_schema()
+
+    # -----------------------------------------------------
+
+    def _matching_files_oldest_first(
+        self, folder: Path, pattern: str
+    ) -> list[Path]:
+        """
+        Every file in `folder` matching `pattern`, oldest first, per
+        extract_file_period()'s best guess at each filename's period.
+        Files whose period can't be determined sort first (treated as
+        oldest) rather than raising - see extract_file_period().
+        """
+
+        files = list(folder.glob(pattern))
+        files.sort(key=lambda file: extract_file_period(file.name))
+        return files
+
+    def _merge_latest_wins(
+        self,
+        frames_oldest_first: list[pd.DataFrame],
+        key_columns: list[str],
+    ) -> pd.DataFrame:
+        """
+        Concatenate multiple files' worth of one-row-per-spool data
+        (Fabrication, the Weekly workbook's Master Planning Sheet,
+        SIOP Planned Spools) into one dataframe, keeping only the
+        most recent file's row for any spool that appears in more
+        than one file. A spool that only exists in an older file
+        (e.g. a now-closed project dropped from the newest workbook)
+        is kept as-is.
+
+        Rows missing one or more key columns (blank filler rows,
+        mostly) are left alone rather than being deduplicated
+        together - dropping duplicates on an all-blank key would
+        otherwise collapse many unrelated blank rows into one before
+        cleaner.py's own blank-row removal gets a chance to run.
+
+        If the key columns aren't present at all (shouldn't normally
+        happen - standardize_columns() always renames them the same
+        way), the frames are simply concatenated with no attempt at
+        cross-file deduplication, and downstream duplicate handling
+        is left to cleaner.py as before.
+        """
+
+        combined = pd.concat(frames_oldest_first, ignore_index=True)
+
+        available_key = [
+            column for column in key_columns if column in combined.columns
+        ]
+
+        if len(available_key) != len(key_columns):
+            return combined
+
+        key_present = pd.Series(True, index=combined.index)
+        for column in available_key:
+            series = combined[column]
+            key_present &= series.notna() & (
+                series.astype(str).str.strip() != ""
+            )
+
+        keyed = combined[key_present].drop_duplicates(
+            subset=available_key, keep="last"
+        )
+        unkeyed = combined[~key_present]
+
+        return pd.concat([keyed, unkeyed]).sort_index()
 
     def _fabrication_date_columns(self) -> list[str]:
         """
@@ -73,68 +155,108 @@ class ExcelReader:
 
     def read_fabrication(self) -> pd.DataFrame:
         """
-        Read DPR workbook.
+        Read every matching DPR workbook (oldest to newest - see
+        class docstring), merging them so a spool present in more
+        than one file uses the newest file's row.
         """
 
         config = self.settings["input_files"]["fabrication"]
 
         folder = Path(self.settings["paths"]["upload_folder"])
 
-        files = list(folder.glob(config["file_pattern"]))
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
 
         if not files:
             raise FileNotFoundError(
                 "Fabrication workbook not found."
             )
 
-        file = files[0]
+        frames = []
 
-        logger.info(f"Reading {file.name}")
+        for file in files:
 
-        dataframe = pd.read_excel(
-            file,
-            sheet_name=config["sheet_name"],
-            header=config.get("header_row", 0),
-            engine="pyxlsb"
+            logger.info(f"Reading {file.name}")
+
+            frame = pd.read_excel(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="pyxlsb"
+            )
+
+            frame = standardize_columns(
+                frame,
+                FABRICATION
+            )
+
+            frame = convert_excel_serial_dates(
+                frame,
+                self._fabrication_date_columns()
+            )
+
+            logger.info(
+                f"Loaded {len(frame)} fabrication rows from {file.name}."
+            )
+
+            frames.append(frame)
+
+        dataframe = self._merge_latest_wins(
+            frames, self.schema_composite_key()
         )
 
-        dataframe = standardize_columns(
-            dataframe,
-            FABRICATION
-        )
-
-        dataframe = convert_excel_serial_dates(
-            dataframe,
-            self._fabrication_date_columns()
-        )
-
-        logger.info(
-            f"Loaded {len(dataframe)} fabrication rows."
-        )
+        if len(files) > 1:
+            logger.info(
+                f"Merged {len(files)} fabrication workbook(s): "
+                f"{len(dataframe)} spool row(s) after latest-file-wins "
+                "de-duplication."
+            )
 
         return dataframe
 
+    def schema_composite_key(self) -> list[str]:
+        """
+        The Project Code / Drawing No / Spool No columns that
+        uniquely identify a spool (config/schema.json's
+        composite_key), shared by every one-row-per-spool source
+        (Fabrication, the Weekly workbook's Master Planning Sheet,
+        SIOP Planned Spools) for the multi-file merge above - same
+        key cleaner.py's remove_duplicate_records() uses for
+        within-file duplicates.
+        """
+
+        return self.schema["composite_key"]
+
     def read_planning(self) -> dict[str, pd.DataFrame]:
         """
-        Read planning workbook.
+        Read every matching Weekly Production Planning workbook
+        (oldest to newest - see class docstring). Each workbook
+        contributes all 3 sheets.
+
+        Master Planning Sheet (one row per spool) is merged with
+        latest-file-wins: a spool present in more than one workbook
+        uses the newest one's row, but a spool only present in an
+        older workbook (e.g. a since-closed project) is kept.
+
+        Fit-Up DB / Welding DB are transactional - one row per joint,
+        the same spool repeating across many rows is normal, not a
+        duplicate - so every workbook's rows are simply concatenated,
+        same as reading one workbook has always done.
         """
 
         config = self.settings["input_files"]["planning"]
 
         folder = Path(self.settings["paths"]["upload_folder"])
 
-        files = list(folder.glob(config["file_pattern"]))
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
 
         if not files:
             raise FileNotFoundError(
                 "Planning workbook not found."
             )
-
-        file = files[0]
-
-        logger.info(f"Reading {file.name}")
-
-        sheets = {}
 
         planned_start_field = (
             self.business_rules["planned_spool"]["age_start_field"]
@@ -156,29 +278,58 @@ class ExcelReader:
             },
         }
 
-        for key, spec in sheet_specs.items():
+        frames_by_sheet: dict[str, list[pd.DataFrame]] = {
+            key: [] for key in sheet_specs
+        }
 
-            df = pd.read_excel(
-                file,
-                sheet_name=config[key],
-                header=config.get(spec["header_key"], 0),
-                engine="pyxlsb"
-            )
+        for file in files:
 
-            df = standardize_columns(
-                df,
-                PLANNING
-            )
+            logger.info(f"Reading {file.name}")
 
-            df = convert_excel_serial_dates(
-                df,
-                spec["date_columns"]
-            )
+            for key, spec in sheet_specs.items():
 
-            sheets[key] = df
+                df = pd.read_excel(
+                    file,
+                    sheet_name=config[key],
+                    header=config.get(spec["header_key"], 0),
+                    engine="pyxlsb"
+                )
 
+                df = standardize_columns(
+                    df,
+                    PLANNING
+                )
+
+                df = convert_excel_serial_dates(
+                    df,
+                    spec["date_columns"]
+                )
+
+                frames_by_sheet[key].append(df)
+
+                logger.info(
+                    f"{file.name} -> {config[key]} : {len(df)} rows"
+                )
+
+        sheets = {
+            "master_sheet": self._merge_latest_wins(
+                frames_by_sheet["master_sheet"],
+                self.schema_composite_key(),
+            ),
+            "fitup_sheet": pd.concat(
+                frames_by_sheet["fitup_sheet"], ignore_index=True
+            ),
+            "welding_sheet": pd.concat(
+                frames_by_sheet["welding_sheet"], ignore_index=True
+            ),
+        }
+
+        if len(files) > 1:
             logger.info(
-                f"{config[key]} : {len(df)} rows"
+                f"Merged {len(files)} planning workbook(s): "
+                f"{len(sheets['master_sheet'])} Master Planning Sheet "
+                "row(s) after latest-file-wins de-duplication; "
+                "Fit-Up DB / Welding DB rows concatenated as-is."
             )
 
         return sheets
@@ -208,7 +359,9 @@ class ExcelReader:
 
         folder = Path(self.settings["paths"]["upload_folder"])
 
-        files = list(folder.glob(config["file_pattern"]))
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
 
         if not files:
             logger.warning(
@@ -219,41 +372,61 @@ class ExcelReader:
             )
             return None
 
-        file = files[0]
-
-        logger.info(f"Reading {file.name}")
-
-        dataframe = pd.read_excel(
-            file,
-            sheet_name=config["sheet_name"],
-            header=config.get("header_row", 0),
-            engine="pyxlsb"
-        )
-
-        dataframe = standardize_columns(
-            dataframe,
-            LINE_HISTORY
-        )
-
         business_rules = self.business_rules.get(
             "line_history_override", {}
         )
+        date_columns = [
+            business_rules.get(
+                "fitup_date_field", "Weld FitUp Date"
+            ),
+            business_rules.get(
+                "weld_run_date_field", "Welding FRun Date"
+            ),
+        ]
 
-        dataframe = convert_excel_serial_dates(
-            dataframe,
-            [
-                business_rules.get(
-                    "fitup_date_field", "Weld FitUp Date"
-                ),
-                business_rules.get(
-                    "weld_run_date_field", "Welding FRun Date"
-                ),
-            ],
-        )
+        frames = []
 
-        logger.info(
-            f"Loaded {len(dataframe)} Line History Sheet rows."
-        )
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            frame = pd.read_excel(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="pyxlsb"
+            )
+
+            frame = standardize_columns(
+                frame,
+                LINE_HISTORY
+            )
+
+            frame = convert_excel_serial_dates(
+                frame,
+                date_columns,
+            )
+
+            logger.info(
+                f"Loaded {len(frame)} Line History Sheet rows from "
+                f"{file.name}."
+            )
+
+            frames.append(frame)
+
+        # One row per joint - the same spool (and even the same
+        # joint, if an older extract's period overlaps a newer one)
+        # repeating across files is expected, same as it already is
+        # within a single file, so every file's rows are kept as-is
+        # rather than deduplicated - unlike the one-row-per-spool
+        # sources above.
+        dataframe = pd.concat(frames, ignore_index=True)
+
+        if len(files) > 1:
+            logger.info(
+                f"Merged {len(files)} Line History Sheet workbook(s): "
+                f"{len(dataframe)} row(s) total."
+            )
 
         return dataframe
 
@@ -285,7 +458,9 @@ class ExcelReader:
 
         folder = Path(self.settings["paths"]["upload_folder"])
 
-        files = list(folder.glob(config["file_pattern"]))
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
 
         if not files:
             logger.warning(
@@ -296,29 +471,45 @@ class ExcelReader:
             )
             return None
 
-        file = files[0]
+        frames = []
 
-        logger.info(f"Reading {file.name}")
+        for file in files:
 
-        dataframe = pd.read_excel(
-            file,
-            sheet_name=config["sheet_name"],
-            header=config.get("header_row", 0),
-            engine="pyxlsb"
+            logger.info(f"Reading {file.name}")
+
+            frame = pd.read_excel(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="pyxlsb"
+            )
+
+            frame = standardize_columns(
+                frame,
+                SIOP_PLANNED
+            )
+
+            frame = convert_excel_serial_dates(
+                frame,
+                [SIOP_PLANNED_START],
+            )
+
+            logger.info(
+                f"Loaded {len(frame)} SIOP Planned Spools rows from "
+                f"{file.name}."
+            )
+
+            frames.append(frame)
+
+        dataframe = self._merge_latest_wins(
+            frames, self.schema_composite_key()
         )
 
-        dataframe = standardize_columns(
-            dataframe,
-            SIOP_PLANNED
-        )
-
-        dataframe = convert_excel_serial_dates(
-            dataframe,
-            [SIOP_PLANNED_START],
-        )
-
-        logger.info(
-            f"Loaded {len(dataframe)} SIOP Planned Spools rows."
-        )
+        if len(files) > 1:
+            logger.info(
+                f"Merged {len(files)} SIOP Planned Spools workbook(s): "
+                f"{len(dataframe)} spool row(s) after latest-file-wins "
+                "de-duplication."
+            )
 
         return dataframe
