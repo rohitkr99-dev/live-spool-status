@@ -143,6 +143,15 @@ project owner supplied is itself cumulative from Planned Start), while
 the table exists to show where time is actually being spent stage by
 stage.
 
+Each spool row in the bundle therefore carries BOTH fields -
+`stage_days` (individual, table only) and `stage_days_cumulative`
+(cumulative, charts only, via `_stage_cumulative_days()`) - and they
+must stay separate. A 2026-08-03 regression had the charts briefly
+reading `stage_days` (the individual-duration field) instead of
+`stage_days_cumulative`, which made every "Actual" bar look tiny next
+to the correctly-cumulative Target bar - fixed in
+`js/production-filters.js`.
+
 Above the charts, a separate global filter bar controls all 7 charts at
 once: a metric switcher (Spool Count / Quantity / Inch Dia / Weight /
 Surface Area) and a Project multi-select. These are intentionally

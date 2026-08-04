@@ -180,7 +180,7 @@ def _delay_status_label(record: SpoolRecord) -> str:
 
 def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
     """
-    The 5 stage-day columns for the spool table. Each value is the
+    The 5 stage-day columns for the spool TABLE. Each value is the
     INDIVIDUAL time that stage took - the gap since the previous
     milestone (the stage before it, or Planned Start for the first
     one) - not the cumulative day count from Planned Start.
@@ -198,6 +198,15 @@ def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
     that milestone's date); every stage after that is blank. Every
     value is None (blank) for a spool with no Planned Start - there's
     nothing to count from.
+
+    IMPORTANT: this is for the table only. The CHARTS (production-
+    filters.js -> ProductionAggregate) need the CUMULATIVE version
+    instead, since the target-day matrix they compare against is
+    itself cumulative from Planned Start - see _stage_cumulative_days()
+    below, exposed as the bundle's "stage_days_cumulative" field. A
+    2026-08-03 regression mixed these two up (charts briefly read the
+    individual-duration field, making every "Actual" bar look tiny
+    next to the correctly-cumulative Target bar) - keep them separate.
     """
     out: dict[str, int | None] = {}
     previous_cumulative = 0  # Planned Start itself, day 0
@@ -218,6 +227,27 @@ def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
         else:
             out[stage] = None
 
+    return out
+
+
+def _stage_cumulative_days(record: SpoolRecord) -> dict[str, int | None]:
+    """
+    The CUMULATIVE (days-from-Planned-Start) counterpart to
+    _stage_display_days() above - for the CHARTS, not the table. A
+    reached stage shows its actual cumulative day count; the current
+    stage shows a running Today - Planned Start count; every stage
+    after that is blank. This is directly comparable to the target-
+    day matrix, which is itself cumulative.
+    """
+    out: dict[str, int | None] = {}
+    for stage in TRACKED_STAGES:
+        actual = record.stage_actual_days.get(stage)
+        if actual is not None:
+            out[stage] = actual
+        elif stage == record.current_stage and record.current_age_days is not None:
+            out[stage] = record.current_age_days
+        else:
+            out[stage] = None
     return out
 
 
@@ -254,6 +284,7 @@ def build_spool_rows(
             "status": _status_label(r, stage_labels),
             "delay_status": _delay_status_label(r),
             "stage_days": _stage_display_days(r),
+            "stage_days_cumulative": _stage_cumulative_days(r),
         })
     return rows
 
