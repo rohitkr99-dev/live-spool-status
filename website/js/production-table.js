@@ -71,9 +71,34 @@ const ProductionTable = {
     return String(value);
   },
 
+  /**
+   * Distinct values for a column's filter dropdown - Excel-style
+   * cascading: only computed from spools that still pass every OTHER
+   * currently-active column filter (this column's own filter is
+   * deliberately excluded from that "context", and any value the user
+   * already has checked is always kept in the list too, so they can
+   * still see and uncheck it even if it would otherwise be filtered
+   * out by itself).
+   */
   distinctValuesFor(column) {
+    const filters = ProductionFilters.tableColumnFilters;
+    const columnsByKey = {};
+    this.COLUMNS.forEach((c) => { columnsByKey[c.key] = c; });
+
+    const otherKeys = Object.keys(filters).filter((key) => key !== column.key);
+
+    const contextRows = otherKeys.length === 0
+      ? this.store.spools
+      : this.store.spools.filter((row) =>
+          otherKeys.every((key) => filters[key].has(this.columnFilterValue(row, columnsByKey[key])))
+        );
+
     const values = new Set();
-    this.store.spools.forEach((row) => values.add(this.columnFilterValue(row, column)));
+    contextRows.forEach((row) => values.add(this.columnFilterValue(row, column)));
+
+    const selected = filters[column.key];
+    if (selected) selected.forEach((v) => values.add(v));
+
     const list = Array.from(values);
     return column.type === "number" || column.type === "day"
       ? list.sort((a, b) => (a === "(blank)" ? -1 : b === "(blank)" ? 1 : Number(a) - Number(b)))
