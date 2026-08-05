@@ -80,8 +80,41 @@ const ProductionCharts = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        // A single wide card with a round chart in it leaves a lot of
+        // empty space either side of the circle - putting the legend
+        // there (instead of a cramped row underneath) uses that space
+        // and gives room to show each slice's % alongside its label.
+        // Falls back to a bottom legend on narrow/mobile widths where
+        // there's no side space to use.
         plugins: {
-          legend: { position: "bottom" },
+          legend: {
+            position: window.innerWidth < 640 ? "bottom" : "right",
+            align: "center",
+            labels: {
+              boxWidth: 13,
+              boxHeight: 13,
+              padding: 14,
+              font: { size: 12.5, weight: "600" },
+              generateLabels(chart) {
+                const data = chart.data;
+                if (!data.labels.length || !data.datasets.length) return [];
+                const dataset = data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                return data.labels.map((label, i) => {
+                  const value = dataset.data[i];
+                  const pct = total ? ((value / total) * 100).toFixed(1) : "0.0";
+                  return {
+                    text: `${label} \u2013 ${pct}%`,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.borderColor,
+                    lineWidth: dataset.borderWidth,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              },
+            },
+          },
           tooltip: {
             callbacks: {
               label(item) {

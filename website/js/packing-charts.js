@@ -123,8 +123,38 @@ const PackingCharts = {
         responsive: true,
         maintainAspectRatio: false,
         cutout: "62%",
+        // Wide standalone card leaves a lot of empty space either side
+        // of the ring - put the legend there (with each slice's %)
+        // instead of a cramped row underneath. Falls back to bottom on
+        // narrow/mobile widths where there's no side space to use.
         plugins: {
-          legend: { position: "bottom" },
+          legend: {
+            position: window.innerWidth < 640 ? "bottom" : "right",
+            align: "center",
+            labels: {
+              boxWidth: 13,
+              boxHeight: 13,
+              padding: 14,
+              font: { size: 12.5, weight: "600" },
+              generateLabels(chart) {
+                const data = chart.data;
+                if (!data.labels.length || !data.datasets.length) return [];
+                const dataset = data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                return rows.map((r, i) => {
+                  const pct = total ? ((dataset.data[i] / total) * 100).toFixed(1) : "0.0";
+                  return {
+                    text: `${r.status} \u2013 ${r.spool_count.toLocaleString("en-US")} (${pct}%)`,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.borderColor,
+                    lineWidth: dataset.borderWidth,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              },
+            },
+          },
           tooltip: {
             callbacks: {
               label(item) {
