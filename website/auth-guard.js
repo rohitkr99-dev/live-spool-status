@@ -6,6 +6,15 @@ function updateActivity() {
     localStorage.setItem("lastActivity", Date.now());
 }
 
+// The page starts hidden (see the inline <style> + auth-pending class
+// in each page's <head>). This is the only place that reveals it -
+// every other path through this file either redirects to login.html
+// or leaves the page hidden, so a visitor never sees real content
+// flash on screen before the login check finishes.
+function revealPage() {
+    document.documentElement.classList.remove("auth-pending");
+}
+
 firebase.auth().onAuthStateChanged(function(user) {
 
     // Ignore duplicate calls
@@ -37,6 +46,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 
         return;
     }
+
+    revealPage();
 
     ["click","mousemove","keydown","touchstart"].forEach(function(event){
 

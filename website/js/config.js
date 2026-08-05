@@ -16,7 +16,7 @@ const SPOOL_STATUS_CONFIG = {
   // dashboard_data.json (written by `python3 main.py` to
   // processed/dashboard_data.json - see src/pipeline.py ->
   // write_dashboard_bundle()) via the "Upload Data" button.
-  bundleFilename: "dashboard_data.json",
+  bundleFilename: "a778fe28a3.json",
 
   // Where the "published" bundle lives, relative to index.html - see
   // config/settings.json -> paths.website_data_folder /
@@ -28,7 +28,7 @@ const SPOOL_STATUS_CONFIG = {
   // If nothing is reachable at this URL (e.g. running purely locally
   // with no publish step), the dashboard falls back to whatever was
   // last uploaded on THIS browser, exactly as before.
-  publishedDataUrl: "data/dashboard_data.json",
+  publishedDataUrl: "data/a778fe28a3.json",
 
   // Shared literals for Chart.js configs, which draw on a <canvas>
   // and so can't read CSS custom properties - kept here once instead

@@ -6,8 +6,8 @@ Run this to refresh the Production department dashboard
 (website/production.html) - spool ageing by category vs. the
 target-day matrix:
 
-    processed/production_data.json
-    website/data/production_data.json   (if publishing is enabled)
+    processed/<filename set in config/production_settings.json: output_files.bundle>
+    website/data/<same filename>   (if publishing is enabled)
 
 Usage:
     python3 production_main.py
@@ -21,7 +21,7 @@ both expect the same upload folder to be current.
 To publish an update to the hosted dashboard:
 
     python3 production_main.py
-    git add website/data/production_data.json
+    git add website/data/
     git commit -m "Update production dashboard data"
     git push
 

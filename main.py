@@ -8,9 +8,15 @@ file in processed/ - currently:
 
   - Production / Spool Ageing, aka "Projects" on the landing page
     (data/upload/projects/)
-    -> processed/dashboard_data.json
+    -> processed/<name from config/settings.json: output_files.dashboard_bundle>
   - Packing & Dispatch (data/upload/packing/)
-    -> processed/packing_dispatch_data.json
+    -> processed/<name from config/packing_settings.json: output_files.bundle>
+
+  The actual filenames are deliberately non-descriptive (set in the
+  config files above) so a casual visitor to the public GitHub repo
+  can't guess the published data URL from the name alone. This is a
+  minor deterrent, not real access control - see the note in
+  config/settings.json.
 
 Usage:
     python3 main.py            # process every built department once and exit

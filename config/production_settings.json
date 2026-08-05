@@ -12,11 +12,11 @@
   },
 
   "output_files": {
-    "bundle": "production_data.json"
+    "bundle": "9c94afa0a9.json"
   },
 
   "publishing": {
     "publish_to_website": true,
-    "comment": "When true, every run also copies production_data.json into paths.website_data_folder - the file website/production.html auto-loads for every visitor of the hosted site, same pattern as config/packing_settings.json."
+    "comment": "When true, every run also copies the production bundle (see output_files.bundle above) into paths.website_data_folder - the file website/production.html auto-loads for every visitor of the hosted site, same pattern as config/packing_settings.json."
   }
 }

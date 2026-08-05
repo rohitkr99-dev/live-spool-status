@@ -20,12 +20,12 @@
   },
 
   "output_files": {
-    "bundle": "packing_dispatch_data.json"
+    "bundle": "dedb903311.json"
   },
 
   "publishing": {
     "publish_to_website": true,
-    "comment": "When true, every run also copies packing_dispatch_data.json into paths.website_data_folder - the file website/packing-dispatch.html auto-loads for every visitor of the hosted site, same pattern as config/settings.json for the Production pipeline."
+    "comment": "When true, every run also copies the packing bundle (see output_files.bundle above) into paths.website_data_folder - the file website/packing-dispatch.html auto-loads for every visitor of the hosted site, same pattern as config/settings.json for the Production pipeline."
   },
 
   "status_normalization": {

@@ -59,7 +59,7 @@
 "activity_metrics": "activity_metrics.json",
 "exceptions": "exceptions.json",
 "validation_report": "validation_report.json",
-"dashboard_bundle": "dashboard_data.json"
+"dashboard_bundle": "a778fe28a3.json"
 },
 
 "refresh": {
@@ -70,7 +70,7 @@
 
 "publishing": {
 "publish_to_website": true,
-"comment": "When true, every pipeline run also copies dashboard_data.json into paths.website_data_folder (website/data/dashboard_data.json by default) - that's the file the hosted website auto-loads for every viewer. Set to false if you only want the local upload-a-file workflow and don't want the published copy touched."
+"comment": "When true, every pipeline run also copies the dashboard bundle (see output_files.dashboard_bundle above) into paths.website_data_folder (website/data/ by default) - that's the file the hosted website auto-loads for every viewer. Set to false if you only want the local upload-a-file workflow and don't want the published copy touched."
 },
 
 "logging": {

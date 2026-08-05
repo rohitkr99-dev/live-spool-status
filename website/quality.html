@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-pending">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,17 @@
 <title>Quality Assurance / Control — DEE Piping Systems Thailand</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="assets/dee-mark.png">
+
+<!-- Page stays hidden until auth-guard.js confirms a valid login and
+     calls revealPage() - see website/auth-guard.js. This must load
+     before any real content so nothing flashes on screen for a
+     visitor who isn't logged in. -->
+<style>html.auth-pending body { visibility: hidden; }</style>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth-guard.js"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -56,10 +67,6 @@
   <span id="footer-year"></span>
 </footer>
 
-<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script src="auth-guard.js"></script>
 <script src="js/user-menu.js"></script>
 
 <script type="module" src="js/hub.js"></script>

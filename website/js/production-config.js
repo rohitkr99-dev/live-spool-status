@@ -10,13 +10,13 @@
 
 const PRODUCTION_CONFIG = {
 
-  bundleFilename: "production_data.json",
+  bundleFilename: "9c94afa0a9.json",
 
   // See config/production_settings.json -> paths.website_data_folder
   // / publishing.publish_to_website, and src/production/pipeline.py
   // -> run(). Every page load tries to fetch this first
   // (production-data.js -> fetchPublished()).
-  publishedDataUrl: "data/production_data.json",
+  publishedDataUrl: "data/9c94afa0a9.json",
 
   // One colour per category, used consistently across every chart
   // on this page (pie slice, "target" bar, "actual" bar tint).

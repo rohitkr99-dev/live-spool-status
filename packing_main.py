@@ -5,8 +5,8 @@ packing_main.py
 Run this to process the Packing & Dispatch workbooks currently in
 data/upload/packing/ and refresh:
 
-    processed/packing_dispatch_data.json
-    website/data/packing_dispatch_data.json   (if publishing is enabled)
+    processed/<filename set in config/packing_settings.json: output_files.bundle>
+    website/data/<same filename>   (if publishing is enabled)
 
 Usage:
     python3 packing_main.py
@@ -20,7 +20,7 @@ always drop in the complete, current set of workbooks before running.
 To publish an update to the hosted dashboard:
 
     python3 packing_main.py
-    git add website/data/packing_dispatch_data.json
+    git add website/data/
     git commit -m "Update packing & dispatch data"
     git push
 

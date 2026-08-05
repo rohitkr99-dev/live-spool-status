@@ -10,14 +10,14 @@
 
 const PACKING_CONFIG = {
 
-  bundleFilename: "packing_dispatch_data.json",
+  bundleFilename: "dedb903311.json",
 
   // See config/packing_settings.json -> paths.website_data_folder /
   // publishing.publish_to_website, and src/packing/pipeline.py ->
   // run(). Every page load tries to fetch this first (packing-data.js
   // -> fetchPublished()) so a hosted copy of the site shows whatever
   // was last published, with no upload needed.
-  publishedDataUrl: "data/packing_dispatch_data.json",
+  publishedDataUrl: "data/dedb903311.json",
 
   // Status vocabulary + colour, matching src/packing/normalize.py ->
   // normalize_status() exactly. Grey->blue->green reads as a simple
