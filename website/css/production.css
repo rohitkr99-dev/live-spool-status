@@ -18,7 +18,18 @@
   grid-row: auto;
 }
 
-/* The 5 per-category stage-ageing charts: 3 per row on desktop,
+/* Delayed vs. In Time by Project - a single card spanning the full
+   width of its .charts-grid row (not sharing space 1.4fr/1fr with a
+   second card, like the Overview section's cards do), since it can
+   have as many bars as there are active projects. */
+.chart-card--full {
+  grid-column: 1 / -1;
+}
+.chart-card--full .chart-card__body {
+  min-height: 340px;
+}
+
+/* The 6 per-category stage-ageing charts: 3 per row on desktop,
    wrapping to 2 on the second row, matching .activity-charts-grid's
    3-column layout used elsewhere on the site. */
 .production-stage-grid .chart-card__body {

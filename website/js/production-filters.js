@@ -128,14 +128,20 @@ const ProductionAggregate = {
    * reached that stage, plus the pending backlog's weighted average
    * current age. Mirrors src/production/summary.py -> build_stage_ageing(),
    * but computed here so it can react to the metric + project filters.
+   *
+   * categoryStages is store.category_stages - an ordered {key,label}
+   * list PER CATEGORY (not one shared list for everyone), since a
+   * category like "loose" tracks fewer stages under different labels
+   * than the rest - see src/production/summary.py -> build_category_stages().
    */
-  stageAgeing(spools, categories, stageOrder, stageLabels, targetDays, metric) {
+  stageAgeing(spools, categories, categoryStages, targetDays, metric) {
     const out = {};
 
     categories.forEach((cat) => {
       const catSpools = spools.filter((s) => s.category_key === cat.key && s.planned_start);
+      const stageList = (categoryStages && categoryStages[cat.key]) || [];
 
-      const stages = stageOrder.map((stage) => {
+      const stages = stageList.map(({ key: stage, label }) => {
         const reachedPairs = [];
         const pendingPairs = [];
         let reachedCount = 0;
@@ -160,7 +166,7 @@ const ProductionAggregate = {
 
         return {
           stage,
-          label: stageLabels[stage] || stage,
+          label,
           target_days: (targetDays[cat.key] || {})[stage] ?? null,
           avg_actual_days: reached.avg,
           reached_count: reachedCount,
@@ -182,22 +188,29 @@ const ProductionAggregate = {
   },
 
   /**
-   * One row per category: target total (Planned Start -> Packed)
-   * vs. the metric-weighted average ACTUAL total for Packed spools,
-   * plus the weighted average current age of spools still open.
-   * Mirrors src/production/summary.py -> build_ideal_vs_actual().
+   * One row per category: target total (Planned Start -> that
+   * category's LAST tracked stage) vs. the metric-weighted average
+   * ACTUAL total for spools that reached it, plus the weighted
+   * average current age of spools still open. Mirrors
+   * src/production/summary.py -> build_ideal_vs_actual() - the
+   * terminal stage is "packed" for every category except "loose"
+   * (whose last tracked stage is "pdi_clearance"/Release for
+   * Packing - see categoryStages), so it's looked up per category
+   * rather than hardcoded.
    */
-  idealVsActual(spools, categories, targetDays, metric) {
+  idealVsActual(spools, categories, categoryStages, targetDays, metric) {
     return categories.map((cat) => {
       const catSpools = spools.filter((s) => s.category_key === cat.key && s.planned_start);
+      const stageList = (categoryStages && categoryStages[cat.key]) || [];
+      const lastStage = stageList.length ? stageList[stageList.length - 1].key : "packed";
 
       const completedPairs = [];
       const openPairs = [];
       catSpools.forEach((s) => {
         const weight = this._weightFor(s, metric);
-        const packedDays = s.stage_days_cumulative ? s.stage_days_cumulative.packed : null;
-        if (s.is_complete && packedDays !== null && packedDays !== undefined) {
-          completedPairs.push([packedDays, weight]);
+        const lastStageDays = s.stage_days_cumulative ? s.stage_days_cumulative[lastStage] : null;
+        if (s.is_complete && lastStageDays !== null && lastStageDays !== undefined) {
+          completedPairs.push([lastStageDays, weight]);
         } else if (!s.is_complete && s.current_age_days !== null && s.current_age_days !== undefined) {
           openPairs.push([s.current_age_days, weight]);
         }
@@ -210,12 +223,37 @@ const ProductionAggregate = {
         key: cat.key,
         label: cat.label,
         short_label: cat.short_label,
-        target_total_days: (targetDays[cat.key] || {}).packed ?? null,
+        target_total_days: (targetDays[cat.key] || {})[lastStage] ?? null,
         avg_actual_total_days: completed.avg,
         completed_count: completed.count,
         avg_open_age_days: open.avg,
         open_count: open.count,
       };
     });
+  },
+
+  /**
+   * Delayed vs. On Time spool counts per project, for the stacked
+   * bar chart. Reads delay_status directly (already computed in
+   * Python from the same is_delayed flag the table uses) - spools
+   * with no Planned Start ("N/A") are skipped, since there's nothing
+   * to judge them against. Unreleased spools never reach this at
+   * all - src/production/ageing.py excludes them from the bundle
+   * before any of this data is even built.
+   */
+  delayedByProject(spools) {
+    const byProject = {};
+    spools.forEach((s) => {
+      if (s.delay_status !== "Delayed" && s.delay_status !== "On Time") return;
+      if (!byProject[s.project_code]) {
+        byProject[s.project_code] = { project: s.project_code, delayed: 0, onTime: 0 };
+      }
+      if (s.delay_status === "Delayed") byProject[s.project_code].delayed += 1;
+      else byProject[s.project_code].onTime += 1;
+    });
+
+    return Object.values(byProject).sort(
+      (a, b) => (b.delayed + b.onTime) - (a.delayed + a.onTime)
+    );
   },
 };

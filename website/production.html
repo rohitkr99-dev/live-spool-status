@@ -143,9 +143,20 @@
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
           <h3>Ideal vs. Actual Time</h3>
-          <span class="chart-card__hint">Target vs. average actual days, Planned Start &rarr; Packed, per category</span>
+          <span class="chart-card__hint">Target vs. average actual days, Planned Start &rarr; final tracked stage, per category</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-ideal-vs-actual"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ DELAYED VS IN TIME, BY PROJECT ============ -->
+    <section class="charts-grid charts-grid--single-row" aria-label="Delayed vs in time by project">
+      <div class="charts-grid__head">
+        <h3>Delayed vs. In Time by Project</h3>
+        <span class="chart-card__hint">Released spools only - excludes anything still awaiting Production Order Release</span>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__body"><canvas id="chart-delayed-by-project"></canvas></div>
       </div>
     </section>
 
@@ -190,6 +201,14 @@
           <span class="chart-card__hint">Any material/joint count, Spool Size &le; 2"</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-sb"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Loose</h3>
+          <span class="chart-card__hint">Zero Total Joints &amp; zero Inch Dia</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-stage-loose"></canvas></div>
       </div>
     </section>
 

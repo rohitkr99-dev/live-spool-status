@@ -40,6 +40,7 @@ from production.welding_finish import (
 from production.summary import (
     build_category_distribution,
     build_category_meta,
+    build_category_stages,
     build_ideal_vs_actual,
     build_kpis,
     build_projects_list,
@@ -114,15 +115,17 @@ def run(
         )
 
     category_meta = build_category_meta(rules)
+    category_stages = build_category_stages(rules)
 
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "categories": list(category_meta.values()),
         "category_distribution": build_category_distribution(records, category_meta),
+        "category_stages": category_stages,
         "stage_ageing": build_stage_ageing(records, category_meta, rules["stage_labels"]),
         "ideal_vs_actual": build_ideal_vs_actual(records, category_meta),
         "kpis": build_kpis(records, excluded_not_released),
-        "spools": build_spool_rows(records, category_meta, rules["stage_labels"]),
+        "spools": build_spool_rows(records, category_meta, rules["stage_labels"], category_stages),
         "target_days": rules["target_days"],
         "stage_order": TRACKED_STAGES,
         "stage_labels": rules["stage_labels"],

@@ -77,6 +77,7 @@ const ProductionData = {
   store: {
     categories: [],
     categoryDistribution: [],
+    categoryStages: {},
     stageAgeing: {},
     idealVsActual: [],
     kpis: null,
@@ -186,6 +187,7 @@ const ProductionData = {
 
     this.store.categories = bundle.categories || [];
     this.store.categoryDistribution = bundle.category_distribution || [];
+    this.store.categoryStages = bundle.category_stages || {};
     this.store.stageAgeing = bundle.stage_ageing || {};
     this.store.idealVsActual = bundle.ideal_vs_actual || [];
     this.store.kpis = bundle.kpis || null;

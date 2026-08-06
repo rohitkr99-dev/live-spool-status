@@ -22,6 +22,33 @@ def build_category_meta(rules: dict) -> dict[str, dict[str, Any]]:
     return {c["key"]: c for c in rules["categories"]}
 
 
+def build_category_stages(rules: dict) -> dict[str, list[dict[str, str]]]:
+    """
+    Per category, the ordered list of {key, label} stages its chart
+    should plot - e.g. "loose" only shows 3 of the 6 possible stages,
+    under different labels for 2 of them (see config/production_
+    rules.json -> category_tracked_stages / category_stage_labels).
+    Every other category falls back to the full standard 5-stage list
+    (after Planned Start) under the shared stage_labels, unchanged
+    from before this per-category override existed.
+    """
+    tracked_by_category = rules.get("category_tracked_stages", {})
+    label_overrides = rules.get("category_stage_labels", {})
+    default_stages = [s for s in rules["stage_order"] if s != "planned_start"]
+    shared_labels = rules["stage_labels"]
+
+    out: dict[str, list[dict[str, str]]] = {}
+    for cat in rules["categories"]:
+        key = cat["key"]
+        stages = tracked_by_category.get(key, default_stages)
+        overrides = label_overrides.get(key, {})
+        out[key] = [
+            {"key": stage, "label": overrides.get(stage, shared_labels.get(stage, stage))}
+            for stage in stages
+        ]
+    return out
+
+
 def build_category_distribution(
     records: list[SpoolRecord], category_meta: dict[str, dict]
 ) -> list[dict[str, Any]]:
@@ -162,13 +189,16 @@ def build_kpis(records: list[SpoolRecord], excluded_not_released: int = 0) -> di
     }
 
 
-def _status_label(record: SpoolRecord, stage_labels: dict[str, str]) -> str:
+def _status_label(record: SpoolRecord, stage_labels: dict[str, str], category_stages: dict) -> str:
     if record.planned_start is None:
         return "No Planned Start"
-    if record.is_complete:
-        return "Packed"
-    if record.current_stage is None:
-        return "Packed"
+    if record.is_complete or record.current_stage is None:
+        # The label of this category's own LAST tracked stage - e.g.
+        # "Packed" for every standard category, but "Release for
+        # Packing" for "loose", which never has a separate Packed
+        # milestone (see config/production_rules.json).
+        stages = category_stages.get(record.category_key) or []
+        return stages[-1]["label"] if stages else "Packed"
     return stage_labels.get(record.current_stage, record.current_stage)
 
 
@@ -255,6 +285,7 @@ def build_spool_rows(
     records: list[SpoolRecord],
     category_meta: dict[str, dict],
     stage_labels: dict[str, str],
+    category_stages: dict,
 ) -> list[dict]:
     rows = []
     for r in records:
@@ -281,7 +312,7 @@ def build_spool_rows(
             "current_age_days": r.current_age_days,
             "is_complete": r.is_complete,
             "is_delayed": r.is_delayed,
-            "status": _status_label(r, stage_labels),
+            "status": _status_label(r, stage_labels, category_stages),
             "delay_status": _delay_status_label(r),
             "stage_days": _stage_display_days(r),
             "stage_days_cumulative": _stage_cumulative_days(r),

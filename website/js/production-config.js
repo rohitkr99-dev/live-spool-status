@@ -26,9 +26,16 @@ const PRODUCTION_CONFIG = {
     le8_as: "#1E8F86",
     gt8_as: "#D9A22D",
     sb: "#A82E30",
+    loose: "#3E7CB1",
   },
 
   targetColor: "#8A8FA6",
   actualColor: "#4333A5",
   actualDelayedColor: "#A82E30",
+
+  // Matches css/production.css -> .production-table td.cell-delayed
+  // / .cell-on-time, so the Delayed vs. In Time by Project chart uses
+  // the exact same two colours as the spool table's own delay flag.
+  delayedColor: "#A82E30",
+  onTimeColor: "#1E8F86",
 };

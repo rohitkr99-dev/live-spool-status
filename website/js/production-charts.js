@@ -10,16 +10,22 @@
  * delayed flag) is still 100% computed in Python - see
  * src/production/.
  *
- * Deliberately no stacked bars anywhere (grouped/clustered bars
- * only), per the project owner's instruction - stacking target-vs-
- * actual would hide exactly the comparison the chart exists to show.
+ * Deliberately no stacked bars anywhere EXCEPT the Delayed vs. In
+ * Time by Project chart, per the project owner's instruction -
+ * stacking target-vs-actual would hide exactly the comparison those
+ * charts exist to show, but Delayed/On Time genuinely is a part-of-
+ * whole split per project, which is what stacking is for.
  *
  * Charts:
  *   1. chart-category-pie      Spool count/metric by category (pie)
- *   2-6. chart-stage-<key>     Target vs. Actual days per stage,
+ *   2. chart-delayed-by-project  Delayed vs. In Time spool count per
+ *                              project (stacked bar) - unreleased
+ *                              spools never reach this dashboard at
+ *                              all (excluded in src/production/ageing.py)
+ *   3-8. chart-stage-<key>     Target vs. Actual days per stage,
  *                              one chart per category (grouped bar)
- *   7. chart-ideal-vs-actual   Target vs. Actual total cycle time,
- *                              all 5 categories side by side (grouped bar)
+ *   9. chart-ideal-vs-actual   Target vs. Actual total cycle time,
+ *                              every category side by side (grouped bar)
  */
 
 const ProductionCharts = {
@@ -34,13 +40,15 @@ const ProductionCharts = {
 
     const distribution = ProductionAggregate.categoryDistribution(chartSpools, store.categories, metric);
     const stageAgeing = ProductionAggregate.stageAgeing(
-      chartSpools, store.categories, store.stageOrder, store.stageLabels, store.targetDays, metric
+      chartSpools, store.categories, store.categoryStages, store.targetDays, metric
     );
     const idealVsActual = ProductionAggregate.idealVsActual(
-      chartSpools, store.categories, store.targetDays, metric
+      chartSpools, store.categories, store.categoryStages, store.targetDays, metric
     );
+    const delayedByProject = ProductionAggregate.delayedByProject(chartSpools);
 
     this.renderCategoryPie(distribution, metric);
+    this.renderDelayedByProject(delayedByProject);
     this.renderStageCharts(stageAgeing, store.categories, metric);
     this.renderIdealVsActual(idealVsActual, metric);
 
@@ -129,6 +137,55 @@ const ProductionCharts = {
     });
   },
 
+  renderDelayedByProject(rows) {
+    const ctx = this._ctx("chart-delayed-by-project");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.project);
+    const delayedData = rows.map((r) => r.delayed);
+    const onTimeData = rows.map((r) => r.onTime);
+
+    this.instances.delayedByProject = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Delayed",
+            data: delayedData,
+            backgroundColor: PRODUCTION_CONFIG.delayedColor,
+          },
+          {
+            label: "In Time",
+            data: onTimeData,
+            backgroundColor: PRODUCTION_CONFIG.onTimeColor,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, beginAtZero: true, title: { display: true, text: "Spool count" } },
+        },
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              afterBody(items) {
+                const row = rows[items[0].dataIndex];
+                const total = row.delayed + row.onTime;
+                const pct = total ? Math.round((row.delayed / total) * 100) : 0;
+                return [`${pct}% of this project's tracked spools are delayed`];
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
   renderStageCharts(stageAgeing, categories, metric) {
     (categories || []).forEach((cat) => {
       const canvasId = `chart-stage-${cat.key}`;
@@ -203,7 +260,7 @@ const ProductionCharts = {
     const actualData = idealVsActual.map((c) => c.avg_actual_total_days);
 
     const actualLabel = metric.key === "spool_count"
-      ? "Actual avg. total (Packed spools only)"
+      ? "Actual avg. total (completed spools only)"
       : `Actual avg. total, weighted by ${metric.label}`;
 
     this.instances.idealVsActual = new Chart(ctx, {
@@ -212,7 +269,7 @@ const ProductionCharts = {
         labels,
         datasets: [
           {
-            label: "Target total (Planned Start \u2192 Packed)",
+            label: "Target total (Planned Start \u2192 final stage)",
             data: targetData,
             backgroundColor: PRODUCTION_CONFIG.targetColor,
           },
@@ -235,7 +292,7 @@ const ProductionCharts = {
             callbacks: {
               afterBody(items) {
                 const row = idealVsActual[items[0].dataIndex];
-                const lines = [`Completed (Packed): ${row.completed_count}`];
+                const lines = [`Completed: ${row.completed_count}`];
                 if (row.open_count) {
                   lines.push(
                     `Still open: ${row.open_count}` +

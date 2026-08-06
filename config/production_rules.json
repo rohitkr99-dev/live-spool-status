@@ -7,8 +7,11 @@
   "sb_max_spool_size": 2,
   "sb_comment": "Any spool (any material, any joint count) whose 'Spool Size' is <= this value is SB, overriding the material/joint-count buckets below - checked BEFORE the zero-size fallback.",
 
+  "loose_fallback_category": "loose",
+  "loose_fallback_comment": "If 'Total Joints' is 0/blank AND 'Inch Dia' is 0/blank, the spool is placed in the standalone 'loose' category - checked FIRST, before the zero-size fallback below, the SB check, and the material/joint-count buckets, so a spool that matches this rule is never also counted in any other category. This is a DIFFERENT field than the zero-size fallback below (Total Joints here, vs. Spool Size there) - confirmed with the project owner on 2026-08-06 that these are deliberately two separate rules on two separate fields.",
+
   "zero_size_fallback_category": "le8_cs_ss",
-  "zero_size_fallback_comment": "If 'Spool Size' is 0/blank AND 'Inch Dia' is 0/blank, the spool is placed in the 1st category (<=8 Joint Single Spool - CS/SS) regardless of its actual material or joint count, per the project owner's rule. This check runs BEFORE the SB check.",
+  "zero_size_fallback_comment": "If 'Spool Size' is 0/blank AND 'Inch Dia' is 0/blank, the spool is placed in the 1st category (<=8 Joint Single Spool - CS/SS) regardless of its actual material or joint count, per the project owner's rule. This check runs BEFORE the SB check (but AFTER the loose_fallback_category check above).",
 
   "material_groups": {
     "comment": "'Material' (DPR 'Item Category Code') values that fall into the AS bucket. Everything else (CS, SS, DUPLEX, or any other/unrecognised value) falls into the combined CS/SS bucket - the target-day table gives CS and SS the same targets, so they are not split further.",
@@ -40,6 +43,11 @@
       "key": "sb",
       "label": "Small Bore (CS/SS/AS)",
       "short_label": "Small Bore (CS/SS/AS)"
+    },
+    {
+      "key": "loose",
+      "label": "Loose (Zero Joints & Inch Dia)",
+      "short_label": "Loose"
     }
   ],
 
@@ -61,13 +69,28 @@
   },
   "pwht_comment": "PWHT is deliberately not tracked here (per the project owner's instruction - not every spool needs PWHT, and it isn't in scope for this dashboard yet).",
 
+  "category_tracked_stages_comment": "Which of the 6 stages above actually apply to each category, and in what order. Any category not listed here (i.e. all 5 original ones) falls back to the full standard list (welding_finish, pdqc, release_for_painting, pdi_clearance, packed) - unchanged behaviour. 'loose' is the one exception: zero-joint spools have nothing to weld, so welding_finish is skipped entirely, and this category has no separate 'Packed' milestone tracked - PDI (relabelled 'Release for Packing' below) is its final/terminal stage.",
+  "category_tracked_stages": {
+    "loose": ["pdqc", "release_for_painting", "pdi_clearance"]
+  },
+
+  "category_stage_labels_comment": "Per-category overrides of stage_labels above, for a category that displays the SAME underlying field under a different name. 'loose' reuses the existing PDQC and PDI fields (confirmed with the project owner: 'PDQC Offer Date' = the same PDQC date, 'Release for Packing' = the same PDI date) but with wording that matches how that category is actually talked about on the shop floor.",
+  "category_stage_labels": {
+    "loose": {
+      "pdqc": "PDQC Offer Date",
+      "release_for_painting": "Release for Painting",
+      "pdi_clearance": "Release for Packing"
+    }
+  },
+
   "target_days": {
-    "comment": "Target day-from-Planned-Start for each stage, per category - the table the project owner supplied, confirmed against real DPR data.",
+    "comment": "Target day-from-Planned-Start for each stage, per category - the table the project owner supplied, confirmed against real DPR data. 'loose' only has 3 stages targeted (see category_tracked_stages above) - no welding_finish or packed entry is needed for it.",
     "le8_cs_ss":  { "planned_start": 1, "welding_finish": 5,  "pdqc": 6,  "release_for_painting": 10, "pdi_clearance": 14, "packed": 15 },
     "gt8_cs_ss":  { "planned_start": 1, "welding_finish": 8,  "pdqc": 11, "release_for_painting": 15, "pdi_clearance": 19, "packed": 20 },
     "le8_as":     { "planned_start": 1, "welding_finish": 8,  "pdqc": 12, "release_for_painting": 16, "pdi_clearance": 20, "packed": 21 },
     "gt8_as":     { "planned_start": 1, "welding_finish": 12, "pdqc": 16, "release_for_painting": 20, "pdi_clearance": 24, "packed": 25 },
-    "sb":         { "planned_start": 1, "welding_finish": 5,  "pdqc": 9,  "release_for_painting": 13, "pdi_clearance": 17, "packed": 18 }
+    "sb":         { "planned_start": 1, "welding_finish": 5,  "pdqc": 9,  "release_for_painting": 13, "pdi_clearance": 17, "packed": 18 },
+    "loose":      { "planned_start": 1, "pdqc": 4, "release_for_painting": 8, "pdi_clearance": 12 }
   },
 
   "welding_finish_fields": {

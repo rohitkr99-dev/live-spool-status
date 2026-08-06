@@ -1,10 +1,15 @@
 """
 src/production/ageing.py
 ---------------------------------------------------------
-For every spool: which of the 5 target stages (Welding Finish,
-PDQC, Release for Painting, PDI Clearance, Packed) it has reached,
-how many days that took from Planned Start, and how that compares
-to the category's target-day matrix (config/production_rules.json).
+For every spool: which of its category's target stages it has
+reached, how many days that took from Planned Start, and how that
+compares to the category's target-day matrix (config/production_
+rules.json). Most categories track the same 5 stages (Welding
+Finish, PDQC, Release for Painting, PDI Clearance, Packed); "loose"
+tracks only 3 (see config/production_rules.json ->
+category_tracked_stages) - which stages apply to a given spool is
+looked up per-category below, not assumed to be the same list for
+everyone.
 
 This is a separate, purpose-built rule for this dashboard - not a
 reuse of the existing Projects pipeline's Stage Age / Total Age
@@ -129,6 +134,7 @@ def build_spool_records(
                 planned_start_source[ck] = "siop"
 
     target_matrix = rules["target_days"]
+    category_tracked_stages = rules.get("category_tracked_stages", {})
     records: list[SpoolRecord] = []
 
     release_field = fields["prod_order_release_field"]
@@ -187,8 +193,16 @@ def build_spool_records(
             surface_area=_to_float(row.get(fields["surface_area_field"])),
         )
 
+        # Which stages actually apply to this spool's category - the 5
+        # standard ones for every category except an entry in
+        # category_tracked_stages (currently just "loose", which skips
+        # welding_finish entirely and has no separate "packed" milestone -
+        # see config/production_rules.json for why).
+        tracked_stages = category_tracked_stages.get(category_key, TRACKED_STAGES)
+        last_stage = tracked_stages[-1]
+
         if planned_start is not None:
-            for stage in TRACKED_STAGES:
+            for stage in tracked_stages:
                 stage_date = stage_dates.get(stage)
                 record.stage_actual_days[stage] = (
                     days_between(planned_start, stage_date)
@@ -196,20 +210,21 @@ def build_spool_records(
                     else None
                 )
 
-            record.is_complete = stage_dates.get("packed") is not None
+            record.is_complete = stage_dates.get(last_stage) is not None
 
             current_stage = None
-            for stage in TRACKED_STAGES:
+            for stage in tracked_stages:
                 if stage_dates.get(stage) is None:
                     current_stage = stage
                     break
             record.current_stage = current_stage
 
             if current_stage is None:
-                # Fully packed - use actual Packed days as the final
-                # position, no "current age" clock still running.
-                record.current_age_days = record.stage_actual_days.get("packed")
-                target_for_position = target_days.get("packed")
+                # Fully through its last tracked stage - use that
+                # stage's actual days as the final position, no
+                # "current age" clock still running.
+                record.current_age_days = record.stage_actual_days.get(last_stage)
+                target_for_position = target_days.get(last_stage)
             else:
                 record.current_age_days = days_between(planned_start, today())
                 target_for_position = target_days.get(current_stage)
