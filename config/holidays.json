@@ -3,7 +3,22 @@
 
   "weekend_comment": "Weekends are hard-coded as Saturday+Sunday in src/utils.py (WEEKEND_WEEKDAYS) since that's confirmed against the DEE Piping Systems Thailand company calendar - change that constant, not this file, if the weekend pattern ever changes.",
 
-  "2026_comment": "The 2026 DEE Piping Systems (Thailand) calendar was reviewed pixel-by-pixel on 2026-08-06 and has exactly 15 non-weekend holiday dates: Jan 1, Jan 2, Mar 3, Apr 13-15, May 1, Jun 3, Jul 28, Aug 12, Oct 13, Oct 23, Dec 7, Dec 31 (14 dates, colour-coded 'Traditional Holiday' on the calendar), plus Jan 16 (colour-coded differently, as 'Sports Day & New Year' per the calendar's own legend, but not named in the calendar's own written holiday list - the project owner asked to confirm what Jan 16 actually is before adding any of these 15 dates here). Left empty (dates: []) per the project owner's explicit instruction on 2026-08-06 to start with weekends-only and add this list in once confirmed - see the chat where this file was introduced for the full pixel-verified date list ready to paste in.",
+  "2026_comment": "The 14 dates below are every non-weekend holiday on the 2026 DEE Piping Systems (Thailand) company calendar, pixel-verified on 2026-08-06. Jan 16 was also colour-marked on that calendar (as 'Sports Day') but the project owner confirmed on 2026-08-06 that it's a normal working day in practice (most staff worked that day), so it's deliberately NOT in this list.",
 
-  "dates": []
+  "dates": [
+    "2026-01-01",
+    "2026-01-02",
+    "2026-03-03",
+    "2026-04-13",
+    "2026-04-14",
+    "2026-04-15",
+    "2026-05-01",
+    "2026-06-03",
+    "2026-07-28",
+    "2026-08-12",
+    "2026-10-13",
+    "2026-10-23",
+    "2026-12-07",
+    "2026-12-31"
+  ]
 }
