@@ -32,6 +32,14 @@ const ProductionCharts = {
 
   instances: {},
 
+  // Matches website/js/charts.js -> SpoolCharts.chartFont exactly, so
+  // every bar chart's axis ticks/legend/tooltip text look identical
+  // to the Projects dashboard's own charts.
+  chartFont: {
+    family: "Inter, sans-serif",
+    size: 11,
+  },
+
   render(store) {
     this.destroyAll();
 
@@ -154,11 +162,13 @@ const ProductionCharts = {
             label: "Delayed",
             data: delayedData,
             backgroundColor: PRODUCTION_CONFIG.delayedColor,
+            borderRadius: 2,
           },
           {
             label: "In Time",
             data: onTimeData,
             backgroundColor: PRODUCTION_CONFIG.onTimeColor,
+            borderRadius: 2,
           },
         ],
       },
@@ -166,12 +176,24 @@ const ProductionCharts = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { stacked: true },
-          y: { stacked: true, beginAtZero: true, title: { display: true, text: "Spool count" } },
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont },
+            title: { display: true, text: "Spool count", font: this.chartFont },
+          },
         },
         plugins: {
-          legend: { position: "bottom" },
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
           tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
             callbacks: {
               afterBody(items) {
                 const row = rows[items[0].dataIndex];
@@ -212,11 +234,13 @@ const ProductionCharts = {
               label: "Target (days from Planned Start)",
               data: targetData,
               backgroundColor: PRODUCTION_CONFIG.targetColor,
+              borderRadius: 3,
             },
             {
               label: actualLabel,
               data: actualData,
               backgroundColor: color,
+              borderRadius: 3,
             },
           ],
         },
@@ -224,11 +248,22 @@ const ProductionCharts = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, title: { display: true, text: "Days from Planned Start" } },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+              ticks: { font: this.chartFont },
+              title: { display: true, text: "Days from Planned Start", font: this.chartFont },
+            },
           },
           plugins: {
-            legend: { position: "bottom" },
+            legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
             tooltip: {
+              titleFont: this.chartFont,
+              bodyFont: this.chartFont,
               callbacks: {
                 afterBody(items) {
                   const stage = stages[items[0].dataIndex];
@@ -272,11 +307,13 @@ const ProductionCharts = {
             label: "Target total (Planned Start \u2192 final stage)",
             data: targetData,
             backgroundColor: PRODUCTION_CONFIG.targetColor,
+            borderRadius: 3,
           },
           {
             label: actualLabel,
             data: actualData,
             backgroundColor: PRODUCTION_CONFIG.actualColor,
+            borderRadius: 3,
           },
         ],
       },
@@ -284,11 +321,22 @@ const ProductionCharts = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true, title: { display: true, text: "Days from Planned Start" } },
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont },
+            title: { display: true, text: "Days from Planned Start", font: this.chartFont },
+          },
         },
         plugins: {
-          legend: { position: "bottom" },
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
           tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
             callbacks: {
               afterBody(items) {
                 const row = idealVsActual[items[0].dataIndex];

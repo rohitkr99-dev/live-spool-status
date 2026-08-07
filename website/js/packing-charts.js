@@ -291,6 +291,10 @@ const PackingCharts = {
     return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
   },
 
+  // Style (legend, grid, fonts) matches the Projects dashboard's own
+  // bar charts (website/js/charts.js) for visual parity, same as
+  // renderProjectStatusChart() above - only the per-series colour
+  // passed in by each caller differs.
   _renderTrendChart(key, canvasId, trend, granularity, metric, color, label) {
     this.destroy(key);
     const ctx = document.getElementById(canvasId);
@@ -311,12 +315,27 @@ const PackingCharts = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { ticks: { autoSkip: true, maxRotation: 0, minRotation: 0 } },
-          y: { beginAtZero: true, title: { display: true, text: this.metricLabel(metric) } },
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { family: "IBM Plex Mono, monospace", size: 10 },
+              autoSkip: true,
+              maxRotation: 0,
+              minRotation: 0,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont },
+            title: { display: true, text: this.metricLabel(metric), font: this.chartFont },
+          },
         },
         plugins: {
           legend: { display: false },
           tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
             callbacks: {
               title(items) {
                 const raw = rawKeys[items[0].dataIndex];

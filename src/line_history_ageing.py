@@ -83,7 +83,7 @@ from constants import (
     LH_WELDING_AGE,
     PDQC,
 )
-from utils import parse_date, today
+from utils import parse_date, today, working_day_variance
 
 
 def _lh_value(row: pd.Series, field: str) -> Optional[float]:
@@ -107,12 +107,9 @@ def _day_gap(
     start: Optional[date],
     end: Optional[date],
 ) -> Optional[int]:
-    """(end - start).days, or None if either date is missing."""
+    """Working days from start to end (see utils.py -> working_day_variance()), or None if either date is missing."""
 
-    if start is None or end is None:
-        return None
-
-    return (end - start).days
+    return working_day_variance(start, end)
 
 
 def total_age_anchor_date(

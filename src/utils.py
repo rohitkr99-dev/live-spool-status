@@ -12,8 +12,10 @@ keys, and common validations.
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -25,6 +27,107 @@ import pandas as pd
 FISCAL_WEEK_ANCHOR_MONTH = 3
 FISCAL_WEEK_ANCHOR_DAY = 30
 FISCAL_WEEKS_PER_CYCLE = 52
+
+
+# ---------------------------------------------------------------
+# Working-day calendar (weekends + company holidays), used by
+# days_between() and working_day_variance() below - the single
+# shared day-counting logic behind every ageing calculation on the
+# site (Projects dashboard: ageing.py; Production dashboard:
+# production/ageing.py). Confirmed with the project owner
+# (2026-08-06) against the DEE Piping Systems (Thailand) company
+# calendar: weekends are Saturday+Sunday, and holiday dates live in
+# config/holidays.json (empty for now - see that file's comments).
+# ---------------------------------------------------------------
+
+# Python's date.weekday(): Monday=0 ... Sunday=6.
+WEEKEND_WEEKDAYS = {5, 6}
+
+_HOLIDAYS_CACHE: set[date] | None = None
+
+
+def _load_holidays() -> set[date]:
+    """
+    config/holidays.json -> a set of holiday dates, cached after the
+    first read (same lifetime as a single pipeline run - there's no
+    scenario where this file changes mid-run). Missing file, missing
+    key, or a bad date string all fail soft to "no extra holidays"
+    (weekends are still always excluded regardless) rather than
+    crashing the whole pipeline over a calendar typo.
+    """
+
+    global _HOLIDAYS_CACHE
+    if _HOLIDAYS_CACHE is not None:
+        return _HOLIDAYS_CACHE
+
+    holidays: set[date] = set()
+    filepath = Path("config") / "holidays.json"
+
+    try:
+        with filepath.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+        for raw in data.get("dates", []):
+            try:
+                holidays.add(datetime.strptime(raw, "%Y-%m-%d").date())
+            except (TypeError, ValueError):
+                pass
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
+    _HOLIDAYS_CACHE = holidays
+    return holidays
+
+
+def _working_days_delta(start_date: date, end_date: date) -> int:
+    """
+    Signed count of working days (excludes Saturdays, Sundays, and
+    config/holidays.json dates) strictly after start_date, up to and
+    including end_date - e.g. Mon->Tue = 1, Fri->Mon = 1 (weekend
+    skipped), Mon->Mon = 0. Negative when end_date is before
+    start_date (walks the other direction and negates), matching
+    plain (end - start).days's sign convention.
+
+    A day-by-day walk, not a vectorised one - simplest to verify
+    correct against a printed calendar, and every span in this
+    codebase (a spool's age, a gap between two stages) is at most a
+    few hundred days, so the loop cost is not worth trading
+    readability for.
+    """
+
+    if end_date == start_date:
+        return 0
+
+    forward = end_date > start_date
+    lo, hi = (start_date, end_date) if forward else (end_date, start_date)
+    holidays = _load_holidays()
+
+    count = 0
+    current = lo + timedelta(days=1)
+    while current <= hi:
+        if current.weekday() not in WEEKEND_WEEKDAYS and current not in holidays:
+            count += 1
+        current += timedelta(days=1)
+
+    return count if forward else -count
+
+
+def working_day_variance(
+    start_date: date | None,
+    end_date: date | None,
+) -> int | None:
+    """
+    Signed working-day gap between two dates (positive = end_date is
+    later, negative = end_date is earlier) - None if either date is
+    missing. Use this (not days_between() below) wherever a negative
+    result is meaningful, e.g. Planning Variance ("ahead of" vs.
+    "behind" plan) or a stage-to-stage gap where the two dates might
+    legitimately be out of the expected order in the source data.
+    """
+
+    if start_date is None or end_date is None:
+        return None
+
+    return _working_days_delta(start_date, end_date)
 
 
 def fiscal_week_info(value: date) -> dict[str, Any]:
@@ -280,17 +383,16 @@ def days_between(
     end_date: date | None
 ) -> int:
     """
-    Calculate days between two dates.
+    Working days between two dates (excludes Saturdays, Sundays, and
+    config/holidays.json dates - see working_day_variance() above).
 
-    Negative values return zero.
+    Negative values return zero - use working_day_variance() instead
+    if a negative ("ahead of plan") result should be preserved.
     """
 
-    if start_date is None or end_date is None:
-        return 0
+    variance = working_day_variance(start_date, end_date)
 
-    days = (end_date - start_date).days
-
-    return max(days, 0)
+    return max(variance, 0) if variance is not None else 0
 
 
 def create_composite_key(

@@ -111,6 +111,7 @@ from utils import (
     parse_date,
     to_json_safe,
     today,
+    working_day_variance,
 )
 
 UNASSIGNED = "Unassigned"
@@ -247,7 +248,7 @@ class SummaryEngine:
         if reference_date is None:
             reference_date = today()
 
-        return (reference_date - planned_start).days
+        return working_day_variance(planned_start, reference_date)
 
     # -----------------------------------------------------
 
@@ -575,10 +576,7 @@ class SummaryEngine:
         start = parse_date(row.get(previous_stage.date_field))
         end = parse_date(row.get(stage.date_field))
 
-        if start is None or end is None:
-            return None
-
-        return (end - start).days
+        return working_day_variance(start, end)
 
     # -----------------------------------------------------
 

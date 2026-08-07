@@ -53,7 +53,7 @@ from constants import (
     SPOOL_NO,
 )
 from logger import logger
-from utils import create_composite_key, is_empty, parse_date
+from utils import create_composite_key, is_empty, parse_date, working_day_variance
 
 
 class MergeEngine:
@@ -372,10 +372,11 @@ class MergeEngine:
             if fitup_coverage_complete and effective_fitup_dates:
                 record[LH_FITUP_LAST_DATE] = max(effective_fitup_dates)
 
-            # LH Welding Age: mean of (Welding FRun - Weld FitUp)
+            # LH Welding Age: mean of (Welding FRun - Weld FitUp),
+            # in working days (see utils.py -> working_day_variance()),
             # over joints with BOTH dates present.
             joint_durations = [
-                (weld_run_date - fitup_date).days
+                working_day_variance(fitup_date, weld_run_date)
                 for fitup_date, weld_run_date in zip(
                     fitup_values.apply(parse_date),
                     weldrun_values.apply(parse_date),

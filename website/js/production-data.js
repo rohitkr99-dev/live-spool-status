@@ -187,7 +187,7 @@ const ProductionData = {
 
     this.store.categories = bundle.categories || [];
     this.store.categoryDistribution = bundle.category_distribution || [];
-    this.store.categoryStages = bundle.category_stages || {};
+    this.store.categoryStages = this._resolveCategoryStages(bundle);
     this.store.stageAgeing = bundle.stage_ageing || {};
     this.store.idealVsActual = bundle.ideal_vs_actual || [];
     this.store.kpis = bundle.kpis || null;
@@ -202,5 +202,34 @@ const ProductionData = {
     this.hasData = true;
 
     return this.store;
+  },
+
+  /**
+   * store.categoryStages tells every chart which stages to plot per
+   * category (see src/production/summary.py -> build_category_stages()).
+   * A data file published from BEFORE that field existed won't have
+   * it - without this fallback, every category's stage chart would
+   * silently get an empty stage list and render blank instead of
+   * showing the standard 5-stage charts it always used to. This
+   * reconstructs that same standard list from the older stage_order /
+   * stage_labels fields every bundle has always had, so old data
+   * still renders exactly as before (just without the newer
+   * per-category categories like "loose", which need a freshly
+   * regenerated file to exist at all).
+   */
+  _resolveCategoryStages(bundle) {
+    if (bundle.category_stages && Object.keys(bundle.category_stages).length) {
+      return bundle.category_stages;
+    }
+    const stageOrder = (bundle.stage_order || []).filter((s) => s !== "planned_start");
+    const stageLabels = bundle.stage_labels || {};
+    const fallback = {};
+    (bundle.categories || []).forEach((cat) => {
+      fallback[cat.key] = stageOrder.map((stage) => ({
+        key: stage,
+        label: stageLabels[stage] || stage,
+      }));
+    });
+    return fallback;
   },
 };
