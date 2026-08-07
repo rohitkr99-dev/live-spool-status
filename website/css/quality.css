@@ -1,0 +1,55 @@
+/**
+ * quality.css
+ * ---------------------------------------------------------
+ * A handful of layout rules specific to quality.html that aren't
+ * covered by the shared css/styles.css. Kept in its own tiny file
+ * rather than edited into styles.css, so nothing here can affect
+ * the Projects, Production, or Packing & Dispatch dashboards - same
+ * convention as css/production.css / css/packing.css.
+ */
+
+/* Top Rework Types is the tallest/most detail-dense chart (11 bars
+   with a legend-free horizontal layout) - give it more room than the
+   default chart-card body height. */
+.chart-card--tall .chart-card__body {
+  min-height: 420px;
+}
+
+/* Rework by Project can have as many bars as there are active
+   projects - full width, same treatment as Production's
+   "Delayed vs. In Time by Project". */
+.chart-card--full {
+  grid-column: 1 / -1;
+}
+.chart-card--full .chart-card__body {
+  min-height: 340px;
+}
+
+/* Trend chart's granularity toggle sits inline with the card title. */
+.chart-card__head--with-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chart-card__control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-soft, #55566E);
+}
+.chart-card__control select {
+  font: inherit;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline, rgba(23,21,43,0.15));
+  background: #FFFFFF;
+}
+
+@media (max-width: 900px) {
+  .quality-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}

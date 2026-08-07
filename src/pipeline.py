@@ -185,6 +185,15 @@ class Pipeline:
 
         siop_planned_cleaned = self.read_and_clean_siop_planned()
 
+        # ---- QA/QC Rework Data (optional) --------------------------
+        # PDQC override (config/settings.json -> input_files.rework,
+        # merge.py -> apply_rework_pdqc_override()). Same best-effort
+        # contract as the Line History Sheet and SIOP Planned Spools
+        # workbook above: never raises, only replaces PDQC for
+        # spools it covers.
+
+        rework_cleaned = self.read_and_clean_rework()
+
         # ---- Merge -> Business Rules -> Ageing -----------------------
 
         master = self.merge_engine.merge(
@@ -195,6 +204,7 @@ class Pipeline:
             line_history=line_history_cleaned,
             siop_planned=siop_planned_cleaned,
             packing_spools=packing_spools,
+            rework=rework_cleaned,
         )
 
         with_rules = self.business_rule_engine.apply(master)
@@ -319,6 +329,44 @@ class Pipeline:
             raw,
             "siop_planned",
             is_transactional=False,
+        )
+
+        return cleaned
+
+    # -----------------------------------------------------
+
+    def read_and_clean_rework(self):
+        """
+        Best-effort read + clean of the QA/QC Production Rework Data
+        workbook. Returns None (never raises) if the file is
+        missing, disabled, or fails to read/parse for any reason -
+        see reader.py -> read_rework() and merge.py ->
+        apply_rework_pdqc_override(), both of which already treat
+        None as "no PDQC override this run".
+
+        Transactional (one row per offer-for-inspection event, not
+        per spool) - a spool offered more than once after a rework
+        is expected, not a duplicate - same as the Line History
+        Sheet.
+        """
+
+        try:
+            raw = self.reader.read_rework()
+        except Exception as error:
+            logger.warning(
+                f"Could not read Rework Data workbook ({error}). "
+                "Every spool will keep its existing PDQC date for "
+                "this run."
+            )
+            return None
+
+        if raw is None:
+            return None
+
+        cleaned, _ = self.cleaner.clean_dataframe(
+            raw,
+            "rework",
+            is_transactional=True,
         )
 
         return cleaned

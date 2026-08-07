@@ -61,7 +61,19 @@ DEPARTMENTS: list[Department] = [
     # (src/pipeline.py etc.) - that one's landing-page card is
     # "Projects", not this one. See data/upload/production/README.txt.
     Department("production", "Production", "data/upload/production", built=False),
-    Department("quality", "Quality Assurance / Control", "data/upload/quality", built=False),
+    # "Quality Assurance / Control" on the landing page
+    # (website/quality.html) is now LIVE (see src/quality/,
+    # quality_main.py) - rework analysis from the Production Rework
+    # Data workbook. This folder (data/upload/quality/) is read
+    # TWICE per full refresh, same pattern as data/upload/packing/:
+    # once inside the core Projects pipeline (best-effort, via
+    # config/settings.json -> input_files.rework - see src/reader.py
+    # -> read_rework() and src/merge.py ->
+    # apply_rework_pdqc_override()) purely to override PDQC, and
+    # once inside quality_main.py, which builds this department's
+    # own dashboard bundle. The two are independent; a problem with
+    # either never stops the other.
+    Department("quality", "Quality Assurance / Control", "data/upload/quality", built=True),
     Department("painting", "Painting", "data/upload/painting", built=False),
 ]
 

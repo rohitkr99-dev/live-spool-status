@@ -1,0 +1,107 @@
+"""
+src/quality/pipeline.py
+---------------------------------------------------------
+Orchestrates the Quality Assurance/Control dashboard pipeline:
+
+  data/upload/quality/*Rework*.xlsx
+        v  (reader.py, reusing the top-level ExcelReader)
+  rework dataframe (one row per offer-for-inspection event) +
+  Project Name lookup (from the DPR, optional)
+        v  (summary.py)
+  quality_data.json
+        |
+        +--> processed/quality_data.json    (always)
+        +--> website/data/quality_data.json (if publishing enabled)
+
+Entry point: quality_main.py (repo root), same pattern as
+production_main.py / packing_main.py. This module makes no changes
+to, and does not import from, src/pipeline.py, src/merge.py,
+src/business_rules.py or src/ageing.py - the Projects pipeline
+(including its own separate use of the Rework Data workbook, for
+the PDQC override) is untouched.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from quality.logger import logger
+from quality.reader import load_sources
+from quality.summary import (
+    build_first_offer_split,
+    build_kpis,
+    build_rework_by_project,
+    build_rework_cycles,
+    build_rework_trend,
+    build_top_rework_types,
+)
+
+QUALITY_SETTINGS_PATH = Path("config/quality_settings.json")
+
+
+class QualityPipelineError(Exception):
+    pass
+
+
+def load_quality_settings() -> dict[str, Any]:
+    if not QUALITY_SETTINGS_PATH.exists():
+        raise QualityPipelineError(f"Missing config file: {QUALITY_SETTINGS_PATH}")
+    with QUALITY_SETTINGS_PATH.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
+
+    settings = settings or load_quality_settings()
+
+    logger.info("Starting Quality Assurance/Control dashboard pipeline ...")
+
+    sources = load_sources()
+
+    top_n = settings.get("top_rework_types_count", 10)
+
+    cycles = build_rework_cycles(sources.rework)
+
+    bundle = {
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "kpis": build_kpis(sources.rework, cycles),
+        "top_rework_types": build_top_rework_types(sources.rework, top_n=top_n),
+        "rework_by_project": build_rework_by_project(sources.rework, sources.project_names),
+        "first_offer_split": build_first_offer_split(sources.rework),
+        "rework_trend": build_rework_trend(sources.rework),
+        "rework_cycles": cycles,
+    }
+
+    processed_folder = Path(settings["paths"]["processed_folder"])
+    website_data_folder = Path(settings["paths"]["website_data_folder"])
+    bundle_filename = settings["output_files"]["bundle"]
+
+    processed_folder.mkdir(parents=True, exist_ok=True)
+    output_path = processed_folder / bundle_filename
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(bundle, f, ensure_ascii=False, indent=None)
+    logger.info(f"Wrote {output_path}")
+
+    files_written = [str(output_path)]
+
+    if settings.get("publishing", {}).get("publish_to_website", False):
+        website_data_folder.mkdir(parents=True, exist_ok=True)
+        published_path = website_data_folder / bundle_filename
+        with published_path.open("w", encoding="utf-8") as f:
+            json.dump(bundle, f, ensure_ascii=False, indent=None)
+        logger.info(f"Published {published_path}")
+        files_written.append(str(published_path))
+
+    logger.info(
+        f"Quality dashboard: {bundle['kpis']['total_spools']} spool(s), "
+        f"{bundle['kpis']['rework_events']} rework event(s), "
+        f"{bundle['kpis']['overall_rework_rate_pct']}% overall rework rate."
+    )
+
+    return {
+        "kpis": bundle["kpis"],
+        "files_written": files_written,
+    }

@@ -1,0 +1,24 @@
+{
+  "application": {
+    "name": "Quality Assurance / Control Dashboard - Rework Analysis",
+    "version": "1.0.0"
+  },
+
+  "comment": "This pipeline reuses config/settings.json's paths.quality_upload_folder and input_files.rework - see src/quality/reader.py. It reads the same Production Rework Data workbook that also feeds the PDQC override in the Projects pipeline (src/merge.py -> apply_rework_pdqc_override()); nothing new needs to be uploaded for this dashboard beyond that one workbook, in data/upload/quality/.",
+
+  "paths": {
+    "processed_folder": "processed",
+    "website_data_folder": "website/data"
+  },
+
+  "output_files": {
+    "bundle": "c20a675d03.json"
+  },
+
+  "publishing": {
+    "publish_to_website": true,
+    "comment": "When true, every run also copies the quality bundle (see output_files.bundle above) into paths.website_data_folder - the file website/quality.html auto-loads for every visitor of the hosted site, same pattern as config/production_settings.json."
+  },
+
+  "top_rework_types_count": 10
+}

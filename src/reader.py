@@ -30,6 +30,8 @@ from constants import (
     FABRICATION,
     LINE_HISTORY,
     PLANNING,
+    REWORK,
+    REWORK_OFFER_DATE,
     SIOP_PLANNED,
     SIOP_PLANNED_START,
 )
@@ -510,6 +512,107 @@ class ExcelReader:
                 f"Merged {len(files)} SIOP Planned Spools workbook(s): "
                 f"{len(dataframe)} spool row(s) after latest-file-wins "
                 "de-duplication."
+            )
+
+        return dataframe
+
+    # -----------------------------------------------------
+
+    def read_rework(self) -> Optional[pd.DataFrame]:
+        """
+        Read the QA/QC Production Rework Data workbook - one row per
+        offer-for-inspection event, so the same spool's Composite
+        Key repeating is expected (a spool offered more than once
+        after a rework is not a duplicate). Used as the primary
+        source of PDQC for any spool it covers - see merge.py ->
+        apply_rework_pdqc_override() - and as the source data for
+        the Quality Assurance/Control dashboard (src/quality/).
+
+        Unlike Fabrication/Planning, this file lives in its own
+        folder (config/settings.json -> paths.quality_upload_folder,
+        data/upload/quality/ by default) rather than
+        paths.upload_folder, since it's synced from Drive
+        separately. It's also a plain .xlsx workbook (read via
+        openpyxl), not .xlsb like the other sources.
+
+        OPTIONAL and best-effort, same contract as the Line History
+        Sheet and SIOP Planned Spools workbook: a missing file (or
+        the feature being disabled) only logs a warning and returns
+        None - every spool then keeps whatever PDQC the existing
+        date-field/Line-History logic already produced, unchanged.
+        """
+
+        config = self.settings["input_files"].get("rework", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get(
+                "quality_upload_folder", "data/upload/quality"
+            )
+        )
+
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
+
+        if not files:
+            logger.warning(
+                "Rework workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). Every "
+                "spool will keep its existing PDQC date for this "
+                "run, and the Quality Assurance/Control dashboard "
+                "will have no data to refresh from."
+            )
+            return None
+
+        frames = []
+
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            frame = pd.read_excel(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="openpyxl"
+            )
+
+            frame = standardize_columns(
+                frame,
+                REWORK
+            )
+
+            frame = convert_excel_serial_dates(
+                frame,
+                [REWORK_OFFER_DATE],
+            )
+
+            logger.info(
+                f"Loaded {len(frame)} Rework Data rows from "
+                f"{file.name}."
+            )
+
+            frames.append(frame)
+
+        dataframe = pd.concat(frames, ignore_index=True)
+
+        if len(files) > 1:
+            # Transactional (one row per offer event, not per
+            # spool) - every matching file's rows all matter, so
+            # they're simply concatenated, same as Fit-Up DB /
+            # Welding DB. Exact duplicate rows (the same file synced
+            # more than once, or an old file whose date range fully
+            # overlaps a newer one) are dropped so they can't double
+            # -count in the Quality dashboard's rework percentages.
+            before = len(dataframe)
+            dataframe = dataframe.drop_duplicates()
+            logger.info(
+                f"Merged {len(files)} Rework Data workbook(s): "
+                f"{len(dataframe)} row(s) after exact-duplicate "
+                f"removal (from {before})."
             )
 
         return dataframe

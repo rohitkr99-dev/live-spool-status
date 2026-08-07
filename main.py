@@ -63,14 +63,20 @@ data/upload/ has one subfolder per department (see src/departments.py
 for the full registry - it's also what the file-watcher and the
 "file dropped but no pipeline yet" message below both read from).
 Folders that don't have a pipeline built yet (currently: Production,
-Quality, Painting) still get watched and reported on, they're just
-not processed - dropping files in early doesn't do any harm, and
-doesn't go unnoticed either. Building a new department's pipeline
-follows the same shape as src/packing/ (reader -> normalize -> summary
--> pipeline -> its own JSON bundle -> its own dashboard page) - once
-it's ready, wire it into main.py the same way
-run_production()/run_packing() are wired below, and flip that
-department's `built` flag to True in src/departments.py.
+Painting) still get watched and reported on, they're just not
+processed - dropping files in early doesn't do any harm, and doesn't
+go unnoticed either. Building a new department's pipeline follows the
+same shape as src/packing/ (reader -> normalize -> summary -> pipeline
+-> its own JSON bundle -> its own dashboard page) - once it's ready,
+wire it into main.py the same way run_production()/run_packing() are
+wired below, and flip that department's `built` flag to True in
+src/departments.py. Quality Assurance / Control (src/quality/) is
+built, but - like Production (src/production/) - its own dashboard
+bundle is refreshed by its own standalone entry point
+(quality_main.py), not from inside main.py; what main.py DOES do for
+Quality is read data/upload/quality/'s Rework Data workbook
+best-effort as part of the Projects pipeline above, purely for the
+PDQC override (see src/merge.py -> apply_rework_pdqc_override()).
 """
 
 import sys

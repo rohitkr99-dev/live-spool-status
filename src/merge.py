@@ -47,8 +47,10 @@ from constants import (
     LH_LAST_WELDING_FRUN,
     LH_WELDING_AGE,
     LINE_HISTORY_STAGE,
+    PDQC,
     PLANNED_START,
     PROJECT_CODE,
+    REWORK_OFFER_DATE,
     SIOP_PLANNED_START,
     SPOOL_NO,
 )
@@ -495,6 +497,110 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def apply_rework_pdqc_override(
+        self,
+        master: pd.DataFrame,
+        rework: Optional[pd.DataFrame],
+    ) -> pd.DataFrame:
+        """
+        QA/QC Rework Report PDQC override (as given by the person,
+        in their own words): the Production Rework Data workbook -
+        QC's own record of every offer-for-inspection event per
+        spool - becomes the primary source of truth for PDQC on any
+        spool it covers, replacing the existing DPR-date-field/Line-
+        History-derived PDQC. A spool can appear more than once in
+        that workbook (offered again after a rework); its PDQC
+        becomes the LATEST "Prod offer" date across all of its rows.
+
+        That latest offer date is then compared against whatever
+        PDQC value the logic above already produced for the spool,
+        and the LATER of the two wins - PDQC must never move
+        backwards, even if the rework workbook's latest offer date
+        happens to be earlier than the existing one (e.g. a stale
+        rework file, or a spool that has since progressed further
+        via the normal DPR fields).
+
+        A spool not found in the rework workbook (its Composite Key
+        isn't there) keeps its existing PDQC unchanged.
+
+        No-op (returns master unchanged) if the workbook wasn't
+        uploaded this run - see reader.py -> read_rework(), which
+        already treats a missing/unreadable file as optional, same
+        as the Line History Sheet and SIOP Planned Spools workbook.
+        """
+
+        if rework is None or rework.empty:
+            return master
+
+        if REWORK_OFFER_DATE not in rework.columns:
+            logger.warning(
+                "Rework workbook has no usable Prod Offer Date "
+                "column; skipping the PDQC override for this run."
+            )
+            return master
+
+        rework = self.add_composite_key(rework)
+
+        latest_offer_field = "Rework Latest Offer Date"
+
+        latest_offer = (
+            rework.dropna(subset=[REWORK_OFFER_DATE])
+            .groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE]
+            .max()
+            .reset_index()
+            .rename(columns={REWORK_OFFER_DATE: latest_offer_field})
+        )
+
+        if latest_offer.empty:
+            logger.warning(
+                "Rework workbook had no usable Prod Offer Date "
+                "values; skipping the PDQC override for this run."
+            )
+            return master
+
+        master = master.merge(latest_offer, on=COMPOSITE_KEY, how="left")
+
+        if PDQC not in master.columns:
+            master[PDQC] = None
+
+        existing_pdqc = pd.to_datetime(master[PDQC], errors="coerce")
+        rework_date = pd.to_datetime(
+            master[latest_offer_field], errors="coerce"
+        )
+
+        def later_of(existing: pd.Timestamp, latest: pd.Timestamp):
+            if pd.isna(latest):
+                return existing
+            if pd.isna(existing):
+                return latest
+            return max(existing, latest)
+
+        new_pdqc = pd.Series(
+            [
+                later_of(existing, latest)
+                for existing, latest in zip(existing_pdqc, rework_date)
+            ],
+            index=master.index,
+        )
+
+        matched = ~rework_date.isna()
+        changed = matched & (
+            existing_pdqc.isna() | (new_pdqc != existing_pdqc)
+        )
+
+        master[PDQC] = new_pdqc
+        master = master.drop(columns=[latest_offer_field])
+
+        logger.info(
+            f"Rework PDQC override: {int(matched.sum())} spool(s) "
+            f"matched in the rework workbook, {int(changed.sum())} "
+            "PDQC date(s) updated."
+        )
+
+        return master
+
+    # -----------------------------------------------------
+
     def _base_spool_no(self, row: pd.Series) -> Optional[str]:
         """
         The Packing & Dispatch workbook's own spool_no is prefixed
@@ -652,6 +758,7 @@ class MergeEngine:
         line_history: Optional[pd.DataFrame] = None,
         siop_planned: Optional[pd.DataFrame] = None,
         packing_spools: Optional[list[dict]] = None,
+        rework: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
         """
         Build the Master Spool Dataset.
@@ -692,6 +799,12 @@ class MergeEngine:
             one dict per spool), or None/empty if none were uploaded
             this run - see apply_packing_dates(). Used to backfill
             PDI / Packing / Dispatch on the Master Spool Dataset.
+
+        rework
+            Cleaned Rework Data dataframe (one row per offer-for-
+            inspection event), or None if it wasn't uploaded this
+            run - see apply_rework_pdqc_override(). Used to replace
+            PDQC with the latest "Prod offer" date per spool.
 
         Returns
         -------
@@ -756,6 +869,8 @@ class MergeEngine:
         )
 
         master = self.apply_packing_dates(master, packing_spools)
+
+        master = self.apply_rework_pdqc_override(master, rework)
 
         logger.info(
             f"Merge Engine completed. {len(master)} spool(s) in "

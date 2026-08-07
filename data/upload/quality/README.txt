@@ -1,19 +1,32 @@
 Quality Assurance / Control - upload folder
 ---------------------------------------------------------
-This folder is reserved for the Quality Assurance / Control
-department's source workbooks (data/upload/quality/).
+This folder holds the Production Rework Data workbook - QC's own
+record of every offer-for-inspection event per spool (Project Code,
+Drawing No., Spool No, MAT, Size, Prod offer date, Prod Eng.,
+QC observation, Final status, Type of Rework). Drop the latest
+export in here (any filename containing "Rework", .xlsx - see
+config/settings.json -> input_files.rework) and:
 
-There's no pipeline built for this department yet. Once you drop
-files in here, python3 main.py will notice them and print a message
-telling you a pipeline hasn't been built yet for this folder - it
-won't error out, and it won't silently ignore them either. When
-you're ready to build this department's dashboard, share the sample
-workbook(s) and the metrics you want, the same way Packing & Dispatch
-was built (see src/packing/ for that pipeline as a reference, and
-src/departments.py for how to register a new one).
+  - `python3 main.py` picks it up as part of the Projects pipeline,
+    best-effort, purely to override PDQC (see src/reader.py ->
+    read_rework() and src/merge.py -> apply_rework_pdqc_override()).
+    A spool found in this workbook gets its PDQC replaced with the
+    LATER of (its existing PDQC, the latest "Prod offer" date across
+    all of its rows here) - PDQC never moves backwards. A spool not
+    found here keeps its existing PDQC unchanged.
 
-This file exists only so the empty folder can be tracked and uploaded
-through GitHub's web interface (git doesn't track empty folders, and
-GitHub's browser uploader won't create one on its own). Delete this
-file once you've added real workbooks here - it's ignored by the
-pipeline either way (see src/departments.py -> has_uploaded_files()).
+  - `python3 quality_main.py` builds the Quality Assurance/Control
+    dashboard (website/quality.html) from the same workbook - top
+    rework types, rework rate by project, first-offer acceptance,
+    trend over time, and rework-cycle distribution. See
+    src/quality/.
+
+Like data/upload/packing/, files here aren't checked into git
+(see .gitignore) - Google Drive sync (scripts/sync_drive.py,
+the "quality" subfolder) or a manual upload through GitHub's web
+interface repopulates this folder before each pipeline run.
+
+This README exists only so the empty folder can be tracked and
+uploaded through GitHub's web interface (git doesn't track empty
+folders). It's ignored by both pipelines either way (see
+src/departments.py -> has_uploaded_files()).

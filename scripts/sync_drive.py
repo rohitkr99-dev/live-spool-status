@@ -13,9 +13,10 @@ subfolder per *built* department (see src/departments.py):
     <root folder>/
       projects/   -> mirrors data/upload/projects/  (DPR / Weekly / Line History / SIOP workbooks)
       packing/    -> mirrors data/upload/packing/    (one .xlsx per project)
+      quality/    -> mirrors data/upload/quality/    (Production Rework Data workbook)
 
-When a currently-unbuilt department (production / quality / painting)
-gets its pipeline wired into main.py later, add a matching line to
+When a currently-unbuilt department (production / painting) gets its
+pipeline wired into main.py later, add a matching line to
 DEPARTMENT_DRIVE_SUBFOLDERS below and create the matching Drive
 subfolder - nothing else about this script needs to change.
 
@@ -51,6 +52,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 DEPARTMENT_DRIVE_SUBFOLDERS = {
     "projects": Path("data/upload/projects"),
     "packing": Path("data/upload/packing"),
+    "quality": Path("data/upload/quality"),
 }
 
 # Local placeholder files that must survive even when Drive has nothing

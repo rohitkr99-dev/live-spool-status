@@ -7,6 +7,7 @@
 
 "paths": {
 "upload_folder": "data/upload/projects",
+"quality_upload_folder": "data/upload/quality",
 "archive_folder": "data/archive",
 "processed_folder": "processed",
 "logs_folder": "logs",
@@ -43,6 +44,13 @@
 "sheet_name": "Sheet1",
 "header_row": 1,
 "comment": "Optional fallback source of Planned Start for spools not found in the Weekly Production Planning workbook - see merge.py -> apply_siop_fallback(). Filename is inconsistent; this pattern just requires SIOP, then Planned, then Spools to appear in that order."
+},
+"rework": {
+"enabled": true,
+"file_pattern": "*Rework*.xlsx",
+"sheet_name": "Rework Data",
+"header_row": 0,
+"comment": "QA/QC's Production Rework Data workbook - lives in paths.quality_upload_folder (data/upload/quality/), NOT paths.upload_folder, since it's synced separately from the DPR/Weekly/Line History/SIOP files. Optional PDQC override source - see reader.py -> read_rework() and merge.py -> apply_rework_pdqc_override(). Also the source for the Quality Assurance/Control dashboard - see src/quality/ and config/quality_settings.json."
 }
 },
 

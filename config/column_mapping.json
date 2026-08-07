@@ -72,5 +72,21 @@
 "Drawing No": "Drawing No",
 "Spool No": "Spool No",
 "Planned Start Date": "SIOP Planned Start"
+},
+
+"rework": {
+"Project Code": "Project Code",
+"Drawing No.": "Drawing No",
+"Drawing No": "Drawing No",
+"Spool No": "Spool No",
+"MAT": "Rework Material",
+"Size": "Rework Size",
+"Prod offer": "Prod Offer Date",
+"Prod Offer": "Prod Offer Date",
+"Prod Eng.": "Prod Engineer",
+"Prod Eng": "Prod Engineer",
+"QC observation": "QC Observation",
+"Final status": "Final Status",
+"Type of Rework": "Rework Type"
 }
 }

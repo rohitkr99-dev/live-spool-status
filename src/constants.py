@@ -51,6 +51,10 @@ LH_LAST_WELDING_FRUN = "LH Last Welding FRun Date"
 
 SIOP_PLANNED_START = "SIOP Planned Start"
 
+REWORK_OFFER_DATE = "Prod Offer Date"
+REWORK_FINAL_STATUS = "Final Status"
+REWORK_TYPE = "Rework Type"
+
 CURRENT_STAGE = "Current Stage"
 NEXT_STAGE = "Next Stage"
 
@@ -70,6 +74,7 @@ FABRICATION = "fabrication"
 PLANNING = "planning"
 LINE_HISTORY = "line_history"
 SIOP_PLANNED = "siop_planned"
+REWORK = "rework"
 
 # ==================================================
 # Log Messages

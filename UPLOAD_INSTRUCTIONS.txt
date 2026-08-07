@@ -1,0 +1,77 @@
+HOW TO APPLY THESE FILES ON GITHUB (WEB BROWSER ONLY)
+=======================================================
+
+This zip contains only the NEW and CHANGED files, in the exact same
+folder structure as your repo. Unzip it on your computer first -
+you'll get one top-level folder called "live-spool-status-changes"
+containing everything below.
+
+Because a couple of these are brand-new folders (src/quality/,
+data/upload/quality/ already exists), the easiest way to do this
+with no git/command line is one folder at a time, using GitHub's
+"Add file -> Upload files" button:
+
+1. Go to your repo on github.com, click "Add file" -> "Upload files".
+2. On your computer, open the unzipped "live-spool-status-changes"
+   folder and drag in the CONTENTS one top-level folder at a time
+   (.github, README_DEPARTMENTS.md, config, data, main.py,
+   quality_main.py, scripts, src, tests, website) - GitHub preserves
+   the folder structure inside whatever you drop in, and will ask
+   "replace existing file?" for anything that already exists there
+   (say yes to those - config/settings.json, config/column_mapping.json,
+   main.py, scripts/sync_drive.py, src/constants.py, src/departments.py,
+   src/merge.py, src/pipeline.py, src/reader.py, website/index.html,
+   website/quality.html, .github/workflows/drive-sync.yml, and
+   data/upload/quality/README.txt are all REPLACING an existing file -
+   everything else is brand new).
+3. Repeat for each top-level folder until everything from the list
+   below has been uploaded.
+4. Scroll down and commit directly to main (or open a PR if you
+   prefer to review the diff first).
+
+Full file list (27 changed + 2 brand new files):
+
+CHANGED (replacing an existing file):
+  .github/workflows/drive-sync.yml
+  README_DEPARTMENTS.md
+  config/column_mapping.json
+  config/settings.json
+  data/upload/quality/README.txt
+  main.py
+  scripts/sync_drive.py
+  src/constants.py
+  src/departments.py
+  src/merge.py
+  src/pipeline.py
+  src/reader.py
+  website/index.html
+  website/quality.html
+
+NEW:
+  config/quality_settings.json
+  quality_main.py
+  src/quality/__init__.py
+  src/quality/logger.py
+  src/quality/pipeline.py
+  src/quality/reader.py
+  src/quality/summary.py
+  tests/test_rework_pdqc_override.py
+  website/css/quality.css
+  website/data/c20a675d03.json
+  website/js/quality-app.js
+  website/js/quality-charts.js
+  website/js/quality-config.js
+  website/js/quality-data.js
+  website/js/quality-kpi.js
+
+After uploading, the Quality dashboard is live at
+website/quality.html and shows the chart data already baked into
+website/data/c20a675d03.json (built from the Production Rework Data
+file you sent me). To refresh it with a newer file later, you'll
+need someone who can run Python (python3 quality_main.py) - or just
+let the existing Google Drive sync GitHub Action do it automatically
+now that data/upload/quality/ is wired into it (see
+scripts/sync_drive.py).
+
+What each change does is explained in full in my last chat message -
+this file is just the "how do I actually get it into GitHub" part.
