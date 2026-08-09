@@ -70,8 +70,8 @@ const ProductionApp = {
     projectSelect.innerHTML = "";
     (store.projects || []).forEach((project) => {
       const option = document.createElement("option");
-      option.value = project;
-      option.textContent = project;
+      option.value = project.code;
+      option.textContent = project.name ? `${project.name} (${project.code})` : project.code;
       projectSelect.appendChild(option);
     });
   },

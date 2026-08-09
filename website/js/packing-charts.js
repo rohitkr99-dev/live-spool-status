@@ -412,7 +412,7 @@ const PackingCharts = {
     const datasets = projects.map((code) => {
       const rows = shipments.filter((s) => s.project_code === code);
       return {
-        label: rows[0].project_name || code,
+        label: rows[0].project_name ? `${rows[0].project_name} (${code})` : code,
         data: rows.map((s) => ({ x: dayOf(s.dispatch_date), y: s.weight_mt, r: radiusFor(s.box_count || 1), _shipment: s })),
         backgroundColor: `${projectColor[code]}B3`,
         borderColor: projectColor[code],
@@ -449,7 +449,7 @@ const PackingCharts = {
               label(item) {
                 const s = item.raw._shipment;
                 return [
-                  `${s.project_name || s.project_code}`,
+                  `${s.project_name ? `${s.project_name} (${s.project_code})` : s.project_code}`,
                   `${s.box_count} box(es) · ${s.weight_mt.toFixed(2)} MT`,
                   `Dispatched ${s.dispatch_date}`,
                 ];

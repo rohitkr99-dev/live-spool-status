@@ -179,7 +179,25 @@ const ProductionCharts = {
           x: {
             stacked: true,
             grid: { display: false },
-            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+            ticks: {
+              // Project Name leads, Code in brackets on its own
+              // line (2026-08-08 site-wide convention - see
+              // docs/ageing-and-project-naming-conventions.md).
+              // Chart.js renders every line of a multi-line tick in
+              // the SAME font/size (no true two-size text without a
+              // custom-drawn axis, which isn't worth it for an X-
+              // axis with autoSkip/rotation already doing real work
+              // here - see that doc for why this one chart is the
+              // documented exception to the smaller-code rule).
+              callback(value, index) {
+                const row = rows[index];
+                if (!row) return "";
+                return row.projectName ? [row.projectName, `(${row.project})`] : [row.project];
+              },
+              font: { family: "IBM Plex Mono, monospace", size: 10 },
+              maxRotation: 0,
+              autoSkip: true,
+            },
           },
           y: {
             stacked: true,
@@ -195,6 +213,10 @@ const ProductionCharts = {
             titleFont: this.chartFont,
             bodyFont: this.chartFont,
             callbacks: {
+              title(items) {
+                const row = rows[items[0].dataIndex];
+                return row.projectName ? `${row.projectName} (${row.project})` : row.project;
+              },
               afterBody(items) {
                 const row = rows[items[0].dataIndex];
                 const total = row.delayed + row.onTime;

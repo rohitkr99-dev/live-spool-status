@@ -186,7 +186,7 @@ const PackingPdfExport = {
           doc.rect(margin, y - 14, contentWidth, rowHeight, "F");
         }
         const cells = [
-          p.project_name ? `${p.project_name}` : p.project_code,
+          p.project_name ? `${p.project_name} (${p.project_code})` : p.project_code,
           String(p.total_spools ?? 0),
           String(p.spools_pending ?? 0),
           String(p.spools_packed ?? 0),

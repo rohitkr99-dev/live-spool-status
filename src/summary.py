@@ -964,6 +964,7 @@ class SummaryEngine:
             exceptions.append({
                 "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
                 "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                "project_name": to_json_safe(row.get(PROJECT_NAME)),
                 "drawing_no": to_json_safe(row.get(DRAWING_NO)),
                 "spool_no": to_json_safe(row.get(SPOOL_NO)),
                 "current_stage": to_json_safe(row.get(CURRENT_STAGE)),

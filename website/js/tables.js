@@ -90,9 +90,9 @@ const SpoolTables = {
    * raw HTML (e.g. "<span class=...>Yes</span>") and never match.
    */
   typeAware(displayFn, plainFn) {
-    return (data, type) => {
-      if (type === "display") return displayFn(data);
-      if (type === "filter" || type === "sort" || type === "type") return plainFn(data);
+    return (data, type, row) => {
+      if (type === "display") return displayFn(data, type, row);
+      if (type === "filter" || type === "sort" || type === "type") return plainFn(data, type, row);
       return data;
     };
   },
@@ -124,8 +124,34 @@ const SpoolTables = {
    * charts (see charts.js -> drawTwoPartYLabels).
    */
   renderProjectName() {
+    // Project Name leads, Code in brackets and smaller (2026-08-08
+    // site-wide convention - see
+    // docs/ageing-and-project-naming-conventions.md).
     return this.typeAware(
-      (d) => (d === null || d === undefined || d === "" ? '<span class="bool-no">—</span>' : `<span class="project-name-cell">${d}</span>`),
+      (d, type, row) => {
+        const code = row && row["Project Code"];
+        if ((d === null || d === undefined || d === "") && !code) return '<span class="bool-no">—</span>';
+        if (d === null || d === undefined || d === "") return `<span class="project-name-cell">${code}</span>`;
+        return `<span class="project-name-cell">${d}</span> <span class="project-code-suffix">(${code})</span>`;
+      },
+      (d) => (d === null || d === undefined ? "" : d),
+    );
+  },
+
+  /**
+   * Same as renderProjectName() above, but for bundles keyed with
+   * lowercase snake_case field names (project_code/project_name) -
+   * e.g. exceptions.json - rather than master_spools.json's
+   * "Project Code"/"Project Name".
+   */
+  renderProjectNameLower() {
+    return this.typeAware(
+      (d, type, row) => {
+        const code = row && row.project_code;
+        if ((d === null || d === undefined || d === "") && !code) return '<span class="bool-no">—</span>';
+        if (d === null || d === undefined || d === "") return `<span class="project-name-cell">${code}</span>`;
+        return `<span class="project-name-cell">${d}</span> <span class="project-code-suffix">(${code})</span>`;
+      },
       (d) => (d === null || d === undefined ? "" : d),
     );
   },
@@ -158,7 +184,7 @@ const SpoolTables = {
       scrollCollapse: true,
       columns: [
         { data: "Project Name", render: this.renderProjectName() },
-        { data: "Project Code" },
+        { data: "Project Code", visible: false },
         { data: "Drawing No" },
         { data: "Spool No" },
         { data: "Material", render: this.renderText() },
@@ -232,7 +258,7 @@ const SpoolTables = {
       buttons: this.exportButtons("Oldest Spools"),
       columns: [
         { data: "Project Name", render: this.renderProjectName() },
-        { data: "Project Code" },
+        { data: "Project Code", visible: false },
         { data: "Drawing No" },
         { data: "Spool No" },
         { data: "Current Stage", render: this.renderStage() },
@@ -255,7 +281,8 @@ const SpoolTables = {
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("Exceptions"),
       columns: [
-        { data: "project_code" },
+        { data: "project_name", render: this.renderProjectNameLower() },
+        { data: "project_code", visible: false },
         { data: "drawing_no" },
         { data: "spool_no" },
         { data: "current_stage", render: this.renderStage() },

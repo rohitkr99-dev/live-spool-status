@@ -119,6 +119,8 @@ const QualityCharts = {
       totalSpools: p.total_spools,
       reworkEvents: p.rework_events,
       totalEvents: p.total_events,
+      projectCode: p.project_code,
+      projectName: p.project_name,
     }));
 
     this.instances.byProject = new Chart(ctx, {
@@ -148,6 +150,10 @@ const QualityCharts = {
           },
           tooltip: {
             callbacks: {
+              title(items) {
+                const e = extra[items[0].dataIndex];
+                return e.projectName ? `${e.projectName} (${e.projectCode})` : e.projectCode;
+              },
               afterBody(items) {
                 const i = items[0].dataIndex;
                 const e = extra[i];
@@ -160,7 +166,24 @@ const QualityCharts = {
           },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: this.chartFont } },
+          x: {
+            grid: { display: false },
+            ticks: {
+              // Project Name leads, Code in brackets on its own
+              // line (2026-08-08 site-wide convention - see
+              // docs/ageing-and-project-naming-conventions.md - same
+              // documented exception as Production's per-project
+              // chart: multi-line same-size text, not a custom-drawn
+              // two-size axis, since this axis can also need to
+              // autoSkip/rotate for many projects).
+              callback(value, index) {
+                const e = extra[index];
+                if (!e) return "";
+                return e.projectName ? [e.projectName, `(${e.projectCode})`] : [e.projectCode];
+              },
+              font: this.chartFont,
+            },
+          },
           y: {
             beginAtZero: true,
             ticks: { font: this.chartFont, callback: (v) => `${v}%` },
@@ -233,6 +256,16 @@ const QualityCharts = {
   renderReworkTrend(trend, granularity) {
     const ctx = this._ctx("chart-rework-trend");
     if (!ctx || !trend) return;
+
+    // Called on its own (not via render()/destroyAll()) every time
+    // the Day/Week/Month dropdown changes - see quality-app.js ->
+    // setupTrendGranularityControl(). Without this, Chart.js throws
+    // "Canvas is already in use" on the 2nd+ call and silently
+    // aborts, which is why switching the dropdown looked like it
+    // did nothing (2026-08-08 bug report).
+    if (this.instances.trend) {
+      this.instances.trend.destroy();
+    }
 
     const series = trend[granularity] || [];
     const labels = series.map((p) => p.period);

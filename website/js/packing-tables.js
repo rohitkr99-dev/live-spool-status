@@ -19,9 +19,9 @@ const PackingTables = {
   dt: {},
 
   typeAware(displayFn, plainFn) {
-    return (data, type) => {
-      if (type === "display") return displayFn(data);
-      if (type === "filter" || type === "sort" || type === "type") return plainFn(data);
+    return (data, type, row) => {
+      if (type === "display") return displayFn(data, type, row);
+      if (type === "filter" || type === "sort" || type === "type") return plainFn(data, type, row);
       return data;
     };
   },
@@ -84,9 +84,19 @@ const PackingTables = {
   },
 
   renderProjectName() {
+    // Project Name leads, Code in brackets and smaller (2026-08-08
+    // site-wide convention - see
+    // docs/ageing-and-project-naming-conventions.md). Falls back to
+    // the bare code if a workbook's Summary sheet never gave us a
+    // parsed name for it - see src/packing/summary.py ->
+    // build_project_names().
     return this.typeAware(
-      (d) => (d ? `<span class="project-name-cell">${d}</span>` : '<span class="bool-no">—</span>'),
-      (d) => d || "",
+      (d, type, row) => {
+        if (!d && !row.project_code) return '<span class="bool-no">—</span>';
+        if (!d) return `<span class="project-name-cell">${row.project_code}</span>`;
+        return `<span class="project-name-cell">${d}</span> <span class="project-code-suffix">(${row.project_code})</span>`;
+      },
+      (d, type, row) => d || row.project_code || "",
     );
   },
 
@@ -129,7 +139,7 @@ const PackingTables = {
       scrollX: true,
       columns: [
         { data: "project_name", render: this.renderProjectName() },
-        { data: "project_code", name: "project_code" },
+        { data: "project_code", name: "project_code", visible: false },
         { data: "total_spools", className: "mono-cell", render: this.renderNumber() },
         { data: "spools_pending", className: "mono-cell", render: this.renderNumber() },
         { data: "spools_packed", className: "mono-cell", render: this.renderNumber() },
@@ -182,7 +192,7 @@ const PackingTables = {
       scrollX: true,
       columns: [
         { data: "project_name", render: this.renderProjectName() },
-        { data: "project_code", name: "project_code" },
+        { data: "project_code", name: "project_code", visible: false },
         { data: "box_no", render: this.renderText() },
         { data: "status", render: this.renderStatusPill() },
         { data: "qty", className: "mono-cell", render: this.renderNumber() },
@@ -202,13 +212,14 @@ const PackingTables = {
       deferRender: true,
       pageLength: 25,
       lengthMenu: [10, 25, 50, 100, 250],
-      order: [[9, "desc"]],
+      order: [[10, "desc"]],
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("Spools"),
       scrollX: true,
       scrollCollapse: true,
       columns: [
-        { data: "project_code", name: "project_code" },
+        { data: "project_name", render: this.renderProjectName() },
+        { data: "project_code", name: "project_code", visible: false },
         { data: "drawing_no", render: this.renderText() },
         { data: "spool_no", render: this.renderText() },
         { data: "box_no", render: this.renderText() },

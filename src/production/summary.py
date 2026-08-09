@@ -237,6 +237,21 @@ def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
     2026-08-03 regression mixed these two up (charts briefly read the
     individual-duration field, making every "Actual" bar look tiny
     next to the correctly-cumulative Target bar) - keep them separate.
+
+    Ageing can never be negative (2026-08-08 decision, applies site-
+    wide - see docs/ageing-and-project-naming-conventions.md): each
+    stage's cumulative day count (record.stage_actual_days /
+    current_age_days) is already >= 0 - see utils.days_between() -
+    but the INDIVIDUAL duration computed here is a subtraction of two
+    such values, and that subtraction can still go negative when a
+    later milestone's date lands chronologically before the one
+    before it (e.g. a spool whose PDQC date - especially now that
+    some are overridden from the QA/QC rework report, see
+    merge.py -> apply_rework_pdqc_override() - falls before its
+    recorded Welding Finish date; a real data-quality situation, not
+    a bug). That's clamped to 0 below. previous_cumulative keeps
+    tracking the true (unclamped) cumulative day count regardless, so
+    a clamp on one stage doesn't distort the next stage's duration.
     """
     out: dict[str, int | None] = {}
     previous_cumulative = 0  # Planned Start itself, day 0
@@ -245,10 +260,10 @@ def _stage_display_days(record: SpoolRecord) -> dict[str, int | None]:
         actual = record.stage_actual_days.get(stage)
 
         if actual is not None:
-            out[stage] = actual - previous_cumulative
+            out[stage] = max(actual - previous_cumulative, 0)
             previous_cumulative = actual
         elif stage == record.current_stage and record.current_age_days is not None:
-            out[stage] = record.current_age_days - previous_cumulative
+            out[stage] = max(record.current_age_days - previous_cumulative, 0)
             # Every stage after this one is still un-reached -
             # nothing more to compute, they stay None below.
             for remaining_stage in TRACKED_STAGES[TRACKED_STAGES.index(stage) + 1:]:
@@ -291,6 +306,7 @@ def build_spool_rows(
     for r in records:
         rows.append({
             "project_code": r.project_code,
+            "project_name": r.project_name,
             "drawing_no": r.drawing_no,
             "spool_no": r.spool_no,
             "category": category_meta[r.category_key]["label"],
@@ -320,8 +336,24 @@ def build_spool_rows(
     return rows
 
 
-def build_projects_list(records: list[SpoolRecord]) -> list[str]:
-    return sorted({r.project_code for r in records if r.project_code})
+def build_projects_list(records: list[SpoolRecord]) -> list[dict]:
+    """
+    One entry per distinct project, {code, name} - sorted by code.
+    name is "" if no fabrication row for that code had a Project
+    Name (matches SpoolRecord.project_name's own empty-string
+    default). The website shows Name (Code) in the project filter -
+    see website/js/production-app.js -> populateGlobalFilters() -
+    but filters BY code (option.value), so this shape change is
+    display-only; no filtering logic needed updating.
+    """
+    names: dict[str, str] = {}
+    for r in records:
+        if r.project_code and r.project_code not in names:
+            names[r.project_code] = r.project_name or ""
+    return [
+        {"code": code, "name": names[code]}
+        for code in sorted(names)
+    ]
 
 
 # Global chart metric switcher - the field on each spool row (above)

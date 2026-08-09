@@ -54,18 +54,27 @@ def load_config() -> dict[str, Any]:
         return json.load(f)
 
 
-def _finalize_spool_rows(spools: list[dict]) -> list[dict]:
+def _finalize_spool_rows(spools: list[dict], project_names: dict[str, str]) -> list[dict]:
     """
     Convert each spool row's weight to MT (2dp) and its qty to a whole
     number for display, right before it's embedded in the bundle - all
     aggregation (build_kpi_summary etc.) already ran against the
     unrounded kg values, so this has no effect on any total.
+
+    Also attaches project_name (2026-08-08 site-wide convention - see
+    docs/ageing-and-project-naming-conventions.md: every place a
+    project is shown to a person leads with its name, code in
+    brackets - the Spools table didn't have a name to show at all
+    before this). project_summary/shipments/boxes already got this
+    via build_project_summary()/build_shipments() themselves; spools
+    didn't go through either, so it's attached here instead.
     """
     out = []
     for s in spools:
         row = dict(s)
         row["total_wt_mt"] = _mt(row.pop("total_wt"))
         row["total_qty"] = _int(row["total_qty"])
+        row["project_name"] = project_names.get(row.get("project_code"))
         out.append(row)
     return out
 
@@ -131,7 +140,7 @@ def run(config: dict[str, Any] | None = None) -> dict[str, Any]:
         # Every aggregate above ran against unrounded kg values - only
         # now, for the embedded row-level tables, do individual rows
         # get converted to MT (2dp) for display. See _finalize_*_rows().
-        "spools": _finalize_spool_rows(spools),
+        "spools": _finalize_spool_rows(spools, project_names),
         "boxes": _finalize_box_rows(boxes),
     }
 

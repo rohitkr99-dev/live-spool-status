@@ -73,6 +73,7 @@ class SpoolRecord:
     stage_dates: dict[str, date | None] = field(default_factory=dict)
     welding_status: str = ""
     stage_actual_days: dict[str, int | None] = field(default_factory=dict)
+    project_name: str = ""
     current_stage: str | None = None
     current_age_days: int | None = None
     is_complete: bool = False
@@ -177,6 +178,7 @@ def build_spool_records(
         record = SpoolRecord(
             composite_key=ck,
             project_code=str(row.get("Project Code") or ""),
+            project_name=str(row.get("Project Name") or ""),
             drawing_no=str(row.get("Drawing No") or ""),
             spool_no=str(row.get("Spool No") or ""),
             category_key=category_key,

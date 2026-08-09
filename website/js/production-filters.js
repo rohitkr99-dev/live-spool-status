@@ -246,7 +246,12 @@ const ProductionAggregate = {
     spools.forEach((s) => {
       if (s.delay_status !== "Delayed" && s.delay_status !== "On Time") return;
       if (!byProject[s.project_code]) {
-        byProject[s.project_code] = { project: s.project_code, delayed: 0, onTime: 0 };
+        byProject[s.project_code] = {
+          project: s.project_code,
+          projectName: s.project_name || "",
+          delayed: 0,
+          onTime: 0,
+        };
       }
       if (s.delay_status === "Delayed") byProject[s.project_code].delayed += 1;
       else byProject[s.project_code].onTime += 1;

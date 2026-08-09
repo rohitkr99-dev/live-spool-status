@@ -22,7 +22,7 @@ const ProductionTable = {
   // columns comes straight off each spool row; `stageKey` columns
   // instead read row.stage_days[stageKey].
   COLUMNS: [
-    { key: "project_code", label: "Project Code", type: "text" },
+    { key: "project_code", label: "Project", type: "text" },
     { key: "drawing_no", label: "Drawing No", type: "text" },
     { key: "spool_no", label: "Spool No", type: "text" },
     { key: "category", label: "Category", type: "text" },
@@ -44,6 +44,18 @@ const ProductionTable = {
   init(store) {
     this.store = store;
     this.currentPage = 1;
+    // Project Code -> Project Name (2026-08-08 site-wide convention
+    // - see docs/ageing-and-project-naming-conventions.md). The
+    // FILTER VALUE for the project_code column stays the raw code
+    // (rawValue()/columnFilterValue() below are unchanged) - only
+    // the column cell and the filter popover's checkbox LABELS use
+    // this to show Name (Code) instead of the bare code.
+    this.projectNameByCode = {};
+    (store.spools || []).forEach((row) => {
+      if (row.project_code && !this.projectNameByCode[row.project_code]) {
+        this.projectNameByCode[row.project_code] = row.project_name || "";
+      }
+    });
     this.buildHeader();
     this.render();
 
@@ -128,6 +140,17 @@ const ProductionTable = {
     return String(value);
   },
 
+  /**
+   * Name (Code) for the project_code column's filter-popover option
+   * labels - the checkbox's underlying VALUE stays the raw code
+   * (see openFilterPopover() below), this is display text only.
+   */
+  filterOptionLabel(column, value) {
+    if (column.key !== "project_code" || value === "(blank)") return value;
+    const name = this.projectNameByCode[value];
+    return name ? `${name} (${value})` : value;
+  },
+
   buildHeader() {
     const headRow = document.getElementById("spool-table-head-row");
     headRow.innerHTML = "";
@@ -174,7 +197,7 @@ const ProductionTable = {
           const checked = selected ? selected.has(value) : false;
           const label = document.createElement("label");
           label.className = "table-filter-popover__option";
-          label.innerHTML = `<input type="checkbox" value="${value}" ${checked ? "checked" : ""}> <span>${value}</span>`;
+          label.innerHTML = `<input type="checkbox" value="${value}" ${checked ? "checked" : ""}> <span>${this.filterOptionLabel(column, value)}</span>`;
           listEl.appendChild(label);
         });
     };
@@ -233,7 +256,14 @@ const ProductionTable = {
       if (row.is_delayed) tr.classList.add("is-delayed-row");
       this.COLUMNS.forEach((column) => {
         const td = document.createElement("td");
-        td.textContent = this.formatValue(row, column);
+        if (column.key === "project_code") {
+          const name = this.projectNameByCode[row.project_code];
+          td.innerHTML = name
+            ? `<span class="project-name-cell">${name}</span> <span class="project-code-suffix">(${row.project_code})</span>`
+            : (row.project_code || "\u2013");
+        } else {
+          td.textContent = this.formatValue(row, column);
+        }
         if (column.key === "delay_status") {
           if (row.delay_status === "Delayed") td.classList.add("cell-delayed");
           else if (row.delay_status === "On Time") td.classList.add("cell-on-time");
