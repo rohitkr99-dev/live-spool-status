@@ -17,6 +17,8 @@ const ProductionTable = {
   PAGE_SIZE: 50,
   currentPage: 1,
   store: null,
+  sortKey: null,
+  sortDirection: "asc", // "asc" | "desc"
 
   // Column definitions - `key` for the identifier/text/number
   // columns comes straight off each spool row; `stageKey` columns
@@ -157,17 +159,91 @@ const ProductionTable = {
     this.COLUMNS.forEach((column) => {
       const th = document.createElement("th");
       const active = ProductionFilters.tableColumnFilters[column.key] ? " is-filtered" : "";
+      const isSorted = this.sortKey === column.key;
+      const sortIcon = isSorted
+        ? (this.sortDirection === "asc"
+          ? '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true"><path d="M8 4l4 6H4z" fill="currentColor"/></svg>'
+          : '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true"><path d="M8 12L4 6h8z" fill="currentColor"/></svg>')
+        : '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true" class="table-sort-icon--idle"><path d="M8 4l3 4H5zM8 12l-3-4h6z" fill="currentColor"/></svg>';
       th.innerHTML = `
-        <span class="table-th__label">${column.label}</span>
+        <span class="table-th__sort${isSorted ? " is-sorted" : ""}" data-column="${column.key}" title="Sort by ${column.label}">
+          <span class="table-th__label">${column.label}</span>
+          <span class="table-sort-icon">${sortIcon}</span>
+        </span>
         <button type="button" class="table-filter-btn${active}" data-column="${column.key}" title="Filter ${column.label}">
           <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M2 3h12l-4.5 5.5v4L7 14v-5.5L2 3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
         </button>
       `;
+      th.querySelector(".table-th__sort").addEventListener("click", () => this.toggleSort(column));
       th.querySelector(".table-filter-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         this.openFilterPopover(column, e.currentTarget);
       });
       headRow.appendChild(th);
+    });
+  },
+
+  /**
+   * Cycles a column through unsorted -> ascending -> descending ->
+   * unsorted (back to the spool list's natural/default order).
+   * Independent of the per-column filters above - a column can be
+   * sorted, filtered, both, or neither.
+   */
+  toggleSort(column) {
+    if (this.sortKey !== column.key) {
+      this.sortKey = column.key;
+      this.sortDirection = "asc";
+    } else if (this.sortDirection === "asc") {
+      this.sortDirection = "desc";
+    } else {
+      this.sortKey = null;
+      this.sortDirection = "asc";
+    }
+    this.buildHeader();
+    this.currentPage = 1;
+    this.render();
+  },
+
+  /**
+   * Nulls/blanks always sort to the end regardless of direction -
+   * e.g. sorting "PDQC (d)" ascending should surface spools that
+   * HAVE reached PDQC first, not the ones that haven't gotten there
+   * yet (which would otherwise read as "0 days," misleadingly
+   * outranking every real number).
+   */
+  sortedSpools(rows) {
+    if (!this.sortKey) return rows;
+
+    const column = this.COLUMNS.find((c) => c.key === this.sortKey);
+    if (!column) return rows;
+
+    const dir = this.sortDirection === "desc" ? -1 : 1;
+    const isNumeric = column.type === "number" || column.type === "day";
+
+    return [...rows].sort((a, b) => {
+      let av = this.rawValue(a, column);
+      let bv = this.rawValue(b, column);
+
+      // "Project" sorts by NAME (what's actually shown, per the
+      // site-wide Project Name convention - see
+      // docs/ageing-and-project-naming-conventions.md), falling
+      // back to the code for any project missing a name. Filtering
+      // on this column still keys on the raw code - see
+      // filterOptionLabel()'s comment above - only sort order
+      // changed here.
+      if (column.key === "project_code") {
+        av = this.projectNameByCode[av] || av;
+        bv = this.projectNameByCode[bv] || bv;
+      }
+
+      const aBlank = av === null || av === undefined || av === "";
+      const bBlank = bv === null || bv === undefined || bv === "";
+      if (aBlank && bBlank) return 0;
+      if (aBlank) return 1;
+      if (bBlank) return -1;
+
+      if (isNumeric) return (Number(av) - Number(bv)) * dir;
+      return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" }) * dir;
     });
   },
 
@@ -229,7 +305,7 @@ const ProductionTable = {
   },
 
   render() {
-    const filtered = this.filteredSpools();
+    const filtered = this.sortedSpools(this.filteredSpools());
     this.renderRows(filtered);
     this.renderSubtotal(filtered);
     this.renderPagination(filtered.length);

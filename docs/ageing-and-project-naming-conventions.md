@@ -158,7 +158,10 @@ formatted display strings are a UI concern layered on top.
 
 **Where the Project Name actually comes from:** every department's
 Python pipeline needs a `project_name` field attached before this
-convention can apply to it - it isn't automatic. Reference points:
+convention can apply to it - it isn't automatic, and there is now
+exactly ONE canonical source for it: the DPR (Fabrication) workbook's
+`Project Name` column - the same one `master_spools.json` (Projects
+dashboard) has always used. Reference points:
 
 - Core Projects pipeline: `Project Name` already comes straight off
   the DPR (Fabrication) workbook - see `config/schema.json` /
@@ -167,10 +170,18 @@ convention can apply to it - it isn't automatic. Reference points:
   populated from the same Fabrication data at
   `src/production/ageing.py -> build_spool_records()`, exposed in
   the bundle by `src/production/summary.py`.
-- Packing & Dispatch (`src/packing/`): `project_name` was already on
-  `project_summary`/`shipments`/`boxes` rows via
-  `build_project_names()`; `spools` rows didn't have it until
-  2026-08-08 - see `src/packing/pipeline.py -> _finalize_spool_rows()`.
+- Packing & Dispatch (`src/packing/`): each workbook's own Summary
+  sheet title gets parsed for a fallback name
+  (`src/packing/summary.py -> build_project_names()`), but the DPR's
+  name now OVERRIDES it wherever the DPR has that project code - see
+  `src/packing/pipeline.py -> _canonical_project_names()` /
+  `_merge_project_names()`. This was a real, reported bug
+  (2026-08-09): the Summary sheet title for project TJ/25-26/188
+  parsed to "Vogt Power ( Bison )" while the DPR's clean value was
+  "VOGT Bison" - two different-looking names for the same project
+  depending which dashboard you were on. The Summary-sheet-parsed
+  name only survives now as a fallback for a project code the DPR
+  doesn't have yet (e.g. not fabricated).
 - Quality Assurance/Control (`src/quality/`): the Rework Data
   workbook has no Project Name column of its own, so
   `src/quality/reader.py -> load_sources()` reads the Fabrication
@@ -179,7 +190,7 @@ convention can apply to it - it isn't automatic. Reference points:
   the dashboard).
 
 If you build a fifth department with its own source data that has no
-natural link to the DPR's Project Name column, that's a case this
-doc doesn't have an answer for yet - decide deliberately (a fallback
-lookup like Quality's, or accept bare-code display for that one
-surface) rather than silently skipping the convention.
+natural link to the DPR's Project Name column, follow the Packing or
+Quality pattern above rather than inventing a new one: read the DPR
+best-effort (never let a missing DPR file block the department's own
+pipeline), and let its name win over anything parsed locally.

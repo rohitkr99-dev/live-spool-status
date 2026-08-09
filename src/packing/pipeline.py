@@ -39,6 +39,7 @@ from packing.summary import (
     build_shipments,
     build_status_breakdown,
 )
+from reader import ExcelReader
 
 CONFIG_PATH = Path("config/packing_settings.json")
 
@@ -52,6 +53,70 @@ def load_config() -> dict[str, Any]:
         raise PackingPipelineError(f"Missing config file: {CONFIG_PATH}")
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _merge_project_names(
+    parsed: dict[str, str],
+    canonical: dict[str, str],
+) -> dict[str, str]:
+    """
+    Canonical (DPR) names win for every code they cover; a code the
+    DPR doesn't have keeps its Summary-sheet-parsed name. Pulled out
+    of run() as its own function purely so it's unit-testable
+    without needing real workbooks on disk - see
+    tests/test_packing_project_names.py.
+    """
+    merged = dict(parsed)
+    merged.update(canonical)
+    return merged
+
+
+def _canonical_project_names() -> dict[str, str]:
+    """
+    Project Code -> Project Name, straight off the Fabrication (DPR)
+    workbook - the SAME source master_spools.json (Projects
+    dashboard) and the Production/Quality dashboards already use.
+    This is the site-wide canonical source (2026-08-09 decision -
+    see docs/ageing-and-project-naming-conventions.md): Packing used
+    to parse its own name out of each workbook's Summary sheet title
+    (build_project_names() below, e.g. "Vogt Power ( Bison )") which
+    could read differently than the DPR's clean "VOGT Bison" for the
+    exact same project - confusing when a person sees two different
+    names for one project across dashboards. The DPR name now wins
+    wherever it's available; the Summary-sheet-parsed name only
+    survives as a fallback for a project code the DPR doesn't have
+    (e.g. not fabricated yet) - see run() below.
+
+    Best-effort and optional, same contract as every other place
+    that reads the DPR purely for a name lookup (see
+    src/quality/reader.py -> load_sources()): a missing/unreadable
+    DPR file just means every project falls back to its Summary-
+    sheet-parsed name, never blocks this pipeline.
+    """
+
+    try:
+        fabrication = ExcelReader().read_fabrication()
+    except Exception as error:
+        logger.warning(
+            f"Could not read Fabrication (DPR) workbook for the "
+            f"canonical Project Name lookup ({error}). Falling back "
+            "to each workbook's own Summary sheet title for every "
+            "project this run."
+        )
+        return {}
+
+    if fabrication is None or fabrication.empty:
+        return {}
+    if "Project Code" not in fabrication.columns or "Project Name" not in fabrication.columns:
+        return {}
+
+    lookup: dict[str, str] = {}
+    for _, row in fabrication[["Project Code", "Project Name"]].dropna().iterrows():
+        code = str(row["Project Code"]).strip()
+        name = str(row["Project Name"]).strip()
+        if code and name and code not in lookup:
+            lookup[code] = name
+    return lookup
 
 
 def _finalize_spool_rows(spools: list[dict], project_names: dict[str, str]) -> list[dict]:
@@ -127,6 +192,19 @@ def run(config: dict[str, Any] | None = None) -> dict[str, Any]:
         )
 
     project_names = build_project_names(workbook_results)
+
+    canonical_names = _canonical_project_names()
+    if canonical_names:
+        overridden = sum(
+            1 for code, name in canonical_names.items()
+            if code in project_names and project_names[code] != name
+        )
+        project_names = _merge_project_names(project_names, canonical_names)
+        logger.info(
+            f"Canonical Project Names from the DPR: {len(canonical_names)} "
+            f"project(s) matched, {overridden} name(s) replaced a "
+            "Summary-sheet-parsed name that read differently."
+        )
 
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

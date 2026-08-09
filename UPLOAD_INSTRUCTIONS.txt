@@ -1,61 +1,51 @@
 HOW TO APPLY THESE FILES ON GITHUB (WEB BROWSER ONLY)
 =======================================================
 
-This zip contains only the files that CHANGED since your last
-update (all 16 of them - the Quality dashboard itself is already in
-your repo from before, this is fixes + the new Project Name
-convention on top of it). Unzip it, then use GitHub's
+Only 5 files changed this time. Unzip this, then use GitHub's
 "Add file -> Upload files" button, dragging in the CONTENTS one
-top-level folder at a time (docs, src, tests, website). Every file
-in this zip already exists in your repo, so GitHub will ask
-"replace existing file?" for all of them - say yes to each.
+top-level folder at a time (docs, src, tests, website). All 5 files
+already exist in your repo, so GitHub will ask "replace existing
+file?" for each - say yes.
 
 Folders to drag in, one at a time:
-  docs      (new folder - 1 file)
-  src       (3 files, inside src/packing/ and src/production/, plus
-             src/summary.py directly in src/)
+  docs      (1 file)
+  src       (1 file, inside src/packing/)
   tests     (1 new file)
-  website   (11 files, inside website/css/ and website/js/)
+  website   (2 files, inside website/css/ and website/js/)
 
 Full file list:
 
-  docs/ageing-and-project-naming-conventions.md   (NEW)
+  docs/ageing-and-project-naming-conventions.md
   src/packing/pipeline.py
-  src/production/ageing.py
-  src/production/summary.py
-  src/summary.py
-  tests/test_production_stage_display_days.py     (NEW)
-  website/css/styles.css
-  website/js/packing-charts.js
-  website/js/packing-pdfExport.js
-  website/js/packing-tables.js
-  website/js/production-app.js
-  website/js/production-charts.js
-  website/js/production-filters.js
+  tests/test_packing_project_names.py             (NEW)
+  website/css/production.css
   website/js/production-table.js
-  website/js/quality-charts.js
-  website/js/tables.js
 
 What changed, in short:
 
-1. Ageing can never go negative - fixed a bug in the Production
-   dashboard's spool table where a stage's "days" column could show
-   a negative number (e.g. "PDQC (d): -17"). Also documented the
-   rule site-wide so it doesn't regress elsewhere - see the new
-   docs/ file.
+1. Project Name consistency between Packing and the other
+   dashboards. Packing was parsing its own project name out of each
+   workbook's Summary sheet title (e.g. "Vogt Power ( Bison )"),
+   independent of the DPR-based name every other dashboard uses
+   ("VOGT Bison" for that same project) - two different names for
+   one project depending which page you were on. Fixed: the DPR
+   (Fabrication workbook) is now the single canonical Project Name
+   source everywhere, and it overrides Packing's own parsed name
+   wherever the DPR has that project code. The Summary-sheet-parsed
+   name only survives as a fallback for a project the DPR doesn't
+   have yet.
 
-2. Fixed the Quality dashboard's "Rework Rate Over Time" chart not
-   responding to the Day/Week/Month dropdown - it was throwing a
-   silent error every time you switched it.
+2. Sorting added to the Production dashboard's Spool List table.
+   Click any column header to sort ascending, click again for
+   descending, click a third time to go back to unsorted - there's
+   a small arrow indicator showing the current sort. Blank/
+   unreached values (e.g. a spool that hasn't hit PDQC yet) always
+   sort to the bottom so they don't misleadingly rank ahead of real
+   numbers. The "Project" column sorts by name (not the raw code),
+   matching what's actually shown in that column.
 
-3. Project Name now leads everywhere a project is shown (tables,
-   chart axes, filters), with the Project Code alongside in
-   brackets, smaller where the surface allows it - across the
-   Projects, Production, Packing & Dispatch, and Quality dashboards.
-   Full reasoning and the (few, deliberate) exceptions are in
-   docs/ageing-and-project-naming-conventions.md.
-
-After uploading, run `python3 main.py` (and `python3 production_main.py`
-/ `python3 packing_main.py` if you use them) at least once so the
-new project_name fields actually populate the dashboards - the code
-changes alone won't show new data until the pipelines re-run.
+After uploading, run `python3 packing_main.py` once so Packing's
+project names actually get corrected - the code change alone won't
+fix already-published data until the pipeline re-runs. The
+Production sorting change is pure front-end (website/js,
+website/css) and works immediately, no pipeline re-run needed.
