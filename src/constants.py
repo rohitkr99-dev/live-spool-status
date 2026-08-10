@@ -54,6 +54,7 @@ SIOP_PLANNED_START = "SIOP Planned Start"
 REWORK_OFFER_DATE = "Prod Offer Date"
 REWORK_FINAL_STATUS = "Final Status"
 REWORK_TYPE = "Rework Type"
+REWORK_LATEST_STATUS = "Rework Latest Status"
 
 MH_GROUP = "MH Group"
 MH_QTY = "MH Qty"

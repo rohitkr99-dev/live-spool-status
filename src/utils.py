@@ -230,6 +230,52 @@ def parse_date(value: Any) -> date | None:
         return None
 
 
+def resolve_multi_date_text_cells(
+    dataframe: pd.DataFrame,
+    column: str,
+) -> pd.DataFrame:
+    """
+    Handles a data-entry pattern seen in the Rework Data workbook's
+    "Prod offer" column: a re-offer typed into the SAME cell as the
+    first offer, "/"-separated (e.g. "24-07-2026/07-08-2026"),
+    instead of a new row. Left alone, pd.to_datetime() turns a value
+    like that into NaT (unparseable), which silently drops that row
+    from the PDQC override and every Quality dashboard chart that
+    reads this column.
+
+    For any cell that's text containing "/", this parses every
+    piece as a date (day-first, matching the rest of the sheet) and
+    keeps the LATEST one - confirmed with the project owner
+    (2026-08-10): the date after the "/" is the current one, so the
+    row's effective offer date is always the max of whatever's in
+    the cell, however many dates got typed into it.
+
+    Must run BEFORE convert_excel_serial_dates() on the same column
+    - that function's own pd.to_datetime(errors="coerce") pass would
+    otherwise turn these strings into NaT first, leaving nothing for
+    this function to recover. Cells that are already a single real
+    date (the overwhelming majority) pass through unchanged.
+    """
+
+    if column not in dataframe.columns:
+        return dataframe
+
+    dataframe = dataframe.copy()
+
+    def resolve(value):
+        if not isinstance(value, str) or "/" not in value:
+            return value
+        pieces = [p.strip() for p in value.split("/") if p.strip()]
+        parsed = [
+            pd.to_datetime(p, dayfirst=True, errors="coerce") for p in pieces
+        ]
+        parsed = [p for p in parsed if pd.notna(p)]
+        return max(parsed) if parsed else pd.NaT
+
+    dataframe[column] = dataframe[column].apply(resolve)
+    return dataframe
+
+
 def convert_excel_serial_dates(
     dataframe: pd.DataFrame,
     columns: list[str]

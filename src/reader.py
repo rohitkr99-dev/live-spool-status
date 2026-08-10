@@ -38,7 +38,11 @@ from constants import (
     SIOP_PLANNED,
     SIOP_PLANNED_START,
 )
-from utils import convert_excel_serial_dates, extract_file_period
+from utils import (
+    convert_excel_serial_dates,
+    extract_file_period,
+    resolve_multi_date_text_cells,
+)
 
 
 class ExcelReader:
@@ -586,6 +590,11 @@ class ExcelReader:
             frame = standardize_columns(
                 frame,
                 REWORK
+            )
+
+            frame = resolve_multi_date_text_cells(
+                frame,
+                REWORK_OFFER_DATE,
             )
 
             frame = convert_excel_serial_dates(

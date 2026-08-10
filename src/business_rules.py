@@ -193,6 +193,23 @@ class BusinessRuleEngine:
         self.line_history_stage_rank: dict[str, int] = {
             name: rank for rank, name in enumerate(override_stage_order)
         }
+        # Index into self.stages of the last-ranked override stage
+        # (PDQC, by default, per config/business_rules.json ->
+        # line_history_override.override_stage_order) - used by
+        # is_stage_reached_with_line_history()'s "future operation
+        # date" escape hatch, added 2026-08-10. None (and that
+        # escape hatch silently skipped) if the name isn't found
+        # among the configured stages.
+        pdqc_stage_name = (
+            override_stage_order[-1] if override_stage_order else None
+        )
+        self._pdqc_stage_index: Optional[int] = next(
+            (
+                index for index, stage in enumerate(self.stages)
+                if stage.name == pdqc_stage_name
+            ),
+            None,
+        ) if pdqc_stage_name else None
 
         logger.info("Business Rule Engine initialised.")
 
@@ -358,63 +375,91 @@ class BusinessRuleEngine:
         Same contract as is_stage_reached(), but for spools where
         the Line History Sheet provided joint-level data (see
         merge.py -> summarize_line_history(), which sets the "Line
-        History Stage" column to "Fit-Up", "Welding", or "PDQC"),
-        the Fit-Up and Welding stages (everything ranked before the
-        last entry in config/business_rules.json ->
-        line_history_override.override_stage_order) get a SECOND
-        vote alongside the normal date-based one - and the more
-        advanced of the two wins.
+        History Stage" column to one of "Fit-Up", "Partial Fit-Up/
+        Welding", "Welding", or "PDQC"), the stages ranked before
+        the last entry in config/business_rules.json ->
+        line_history_override.override_stage_order (Fit-Up, Partial
+        Fit-Up/Welding, Welding) are gated by that joint-level
+        classification instead of their own date field.
 
-        This must never be able to hold a spool back: if the DPR/
-        Weekly Production data already shows real progress past a
-        stage (its own date filled, or any later stage's), that
-        stands even if a single joint's Weld FitUp Date or Welding
-        FRun Date is missing in the Line History Sheet (a common,
-        genuine data gap - e.g. a repair/re-weld joint that only got
-        its run date logged, or one joint whose fit-up simply wasn't
-        recorded there). The Line History Sheet can only ever ADD
-        evidence that a stage is reached (catching cases where the
-        DPR data hasn't been updated yet but the joint-level sheet
-        shows the work is actually done) - never take evidence away.
+        Updated 2026-08-10 (as given by the person, in their own
+        words): the joint-level classification is now AUTHORITATIVE
+        for this band - it can both PROMOTE and DEMOTE a spool's
+        stage relative to the DPR/Weekly's own First Fit-Up/First
+        Welding fields, which only need ONE joint recorded to fire
+        and so can overstate real progress (e.g. 4 of 5 joints fully
+        fit-up and welded, 1 not even started - the DPR fields alone
+        would already show both stages "reached", masking that
+        gap - see "Partial Fit-Up/Welding" in config/stages.json).
 
-        The last-ranked stage (PDQC, by default) is deliberately
-        never gated here at all - once every joint has been fit-up
-        and welded, whether the spool has progressed further is
-        decided purely by the normal date-based walk over PDQC's own
-        field and every stage after it (is_stage_reached()), exactly
-        as before. This is also what happens for every spool whose
+        "Future operation date found but not previous" escape hatch:
+        this demotion power is switched off for any spool that the
+        plain date-based walk (is_stage_reached(), ignoring Line
+        History entirely) already shows has reached PDQC or any
+        stage after it - that DPR-level evidence is independent of
+        Line History and always wins outright, exactly preserving
+        the original (pre-2026-08-10) "never hold back" guarantee
+        for spools that have genuinely moved on. Only within the
+        Fit-Up/Partial Fit-Up-Welding/Welding band, for a spool that
+        HASN'T independently reached PDQC, does the Line History
+        Sheet's joint-level view now get to override the DPR's own
+        (coarser) fields in both directions.
+
+        The last-ranked stage (PDQC, by default) is never gated
+        here at all - once every joint has been fit-up and welded,
+        whether the spool has progressed further is decided purely
+        by the normal date-based walk over PDQC's own field and
+        every stage after it (is_stage_reached()), exactly as
+        before. This is also what happens for every spool whose
         Composite Key isn't in the Line History Sheet at all (or has
         no non-blank Joint No. rows there): "Line History Stage" is
         blank for them, so this falls straight through to the
-        original logic, unchanged.
+        original date-based logic, unchanged - including for the new
+        "Partial Fit-Up/Welding" stage itself, which deliberately
+        shares Fit-Up's own date field (config/stages.json) so such
+        a spool skips straight past it, exactly reproducing the old
+        two-stage Fit-Up/Welding behaviour.
         """
 
         stage = self.stages[stage_index]
 
-        original_reached = self.is_stage_reached(row, stage_index)
+        if not self.line_history_override_enabled:
+            return self.is_stage_reached(row, stage_index)
 
-        if original_reached:
+        if stage.name not in self.line_history_stage_rank:
+            # Not part of the override band at all (RFP/PDI/Packing/
+            # Dispatch) - always plain date-based.
+            return self.is_stage_reached(row, stage_index)
+
+        last_rank = len(self.line_history_stage_rank) - 1
+        stage_rank = self.line_history_stage_rank[stage.name]
+
+        if stage_rank >= last_rank:
+            # PDQC itself - never gated here.
+            return self.is_stage_reached(row, stage_index)
+
+        if (
+            self._pdqc_stage_index is not None
+            and self.is_stage_reached(row, self._pdqc_stage_index)
+        ):
+            # Escape hatch: real DPR-level evidence of reaching PDQC
+            # or beyond already exists independently of Line
+            # History - that wins outright, no demotion possible.
             return True
 
-        if self.line_history_override_enabled:
+        line_history_stage = row.get(LINE_HISTORY_STAGE)
 
-            line_history_stage = row.get(LINE_HISTORY_STAGE)
+        if (
+            is_empty(line_history_stage)
+            or line_history_stage not in self.line_history_stage_rank
+        ):
+            # No usable Line History Sheet coverage for this spool -
+            # fall back to the plain date-based check, unchanged.
+            return self.is_stage_reached(row, stage_index)
 
-            if (
-                not is_empty(line_history_stage)
-                and stage.name in self.line_history_stage_rank
-                and line_history_stage in self.line_history_stage_rank
-            ):
-                last_rank = len(self.line_history_stage_rank) - 1
-                stage_rank = self.line_history_stage_rank[stage.name]
-
-                if stage_rank < last_rank:
-                    return (
-                        self.line_history_stage_rank[line_history_stage]
-                        > stage_rank
-                    )
-
-        return False
+        return (
+            self.line_history_stage_rank[line_history_stage] > stage_rank
+        )
 
     # -----------------------------------------------------
 
@@ -467,24 +512,26 @@ class BusinessRuleEngine:
             being effectively Dispatched), instead of "waiting for
             Packing".
 
-        Rule 1.5 - Line History Sheet override (Fit-Up/Welding/PDQC)
+        Rule 1.5 - Line History Sheet override (Fit-Up/Partial Fit-Up-
+                   Welding/Welding/PDQC) - updated 2026-08-10
             For a spool whose Composite Key is found in the uploaded
             Line History Sheet with at least one non-blank Joint No.
-            row, the Fit-Up and Welding stages above get a second,
-            joint-level vote (see merge.py ->
-            summarize_line_history(), is_stage_reached_with_line_
-            history()) - and whichever of the two (the normal
-            date-based check, or the joint-level one) shows MORE
-            progress wins. This can only advance a stage, never hold
-            one back: a spool already showing real progress in the
-            DPR/Weekly data (e.g. a Packing or Dispatch date) is
-            never pinned at an earlier stage just because one joint
-            is missing a date in the Line History Sheet - a common,
-            genuine gap (a repair/re-weld joint, a row that hasn't
-            been updated yet, etc.), not evidence the spool actually
-            regressed. PDQC onward still uses Rule 1 alone. If the
-            spool isn't in the sheet (or has no non-blank Joint No.
-            rows there), Rule 1 alone applies, exactly as before.
+            row, the Fit-Up/Partial Fit-Up-Welding/Welding band
+            above is decided by that joint-level classification
+            (see merge.py -> summarize_line_history(), is_stage_
+            reached_with_line_history()) instead of the plain
+            date-based check - it can both promote AND demote a
+            spool relative to the DPR/Weekly's own, coarser First
+            Fit-Up/First Welding fields (which only need ONE joint
+            recorded to fire). The one exception: a spool the plain
+            date-based walk already shows has reached PDQC or any
+            stage after it keeps that outright - Line History's
+            joint-level view (which could simply be lagging behind
+            real production activity) never demotes a spool that has
+            demonstrably moved on. PDQC onward always uses Rule 1
+            alone. If the spool isn't in the sheet (or has no
+            non-blank Joint No. rows there), Rule 1 alone applies,
+            exactly as before.
 
         The Completed flag is evaluated independently of the
         Current Stage walk (see determine_completed_flag): a spool

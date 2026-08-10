@@ -616,9 +616,19 @@ class SummaryEngine:
         Dispatch is not included, since - like Fit-Up needing a
         Planned Start anchor instead of a "previous stage" date -
         it would need its own special-cased anchor the person hasn't
-        specified; only Fit-Up through Packing (the current 7-stage
+        specified; only Fit-Up through Packing (the current 8-stage
         configuration in config/stages.json, minus Dispatch) are
         reported, matching what the dashboard already displays.
+
+        "Partial Fit-Up/Welding" (added 2026-08-10, see config/
+        stages.json) is also skipped here: it deliberately shares
+        Fit-Up's own date field (it has no distinct arrival date of
+        its own - it's a Line-History-only joint-completeness
+        snapshot, not a real milestone), so the generic "gap between
+        this stage's date and the previous stage's date" formula
+        would report a meaningless, always-zero dwell time for every
+        spool. It has no Line-History-aware special case either
+        (unlike Fit-Up/Welding/PDQC above) - see _stage_dwell_age().
 
         A transition with a negative gap (a later date earlier than
         the one before it) is a data-entry anomaly - see
@@ -647,6 +657,16 @@ class SummaryEngine:
         for index in range(len(self.stages) - 1):
 
             stage = self.stages[index]
+
+            if (
+                index > 0
+                and stage.date_field == self.stages[index - 1].date_field
+            ):
+                # A stage sharing its date field with the one before
+                # it (e.g. "Partial Fit-Up/Welding") has no distinct
+                # arrival date to measure a dwell time from - see
+                # the docstring above.
+                continue
 
             ages = working.apply(
                 lambda row, stage_index=index: self._stage_dwell_age(

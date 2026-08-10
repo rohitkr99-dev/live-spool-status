@@ -51,11 +51,34 @@ from constants import (
     PLANNED_START,
     PROJECT_CODE,
     REWORK_OFFER_DATE,
+    REWORK_FINAL_STATUS,
+    REWORK_LATEST_STATUS,
     SIOP_PLANNED_START,
     SPOOL_NO,
 )
 from logger import logger
 from utils import create_composite_key, is_empty, parse_date, working_day_variance
+
+
+def _normalize_rework_status(raw) -> str:
+    """
+    Same normalization as src/quality/summary.py's _normalize_status
+    (kept as a separate small copy here rather than a shared import,
+    consistent with how the rest of this module is self-contained) -
+    "Final Status" is free text from the shop floor and varies in
+    case ("Accept" / "accept" / "ACCEPT") and occasionally means
+    something that's neither an accept nor a rework ("Project hold",
+    "SPOOL DELETED"), which normalizes to "Other".
+    """
+
+    if pd.isna(raw):
+        return "Other"
+    text = str(raw).strip().upper()
+    if text == "ACCEPT":
+        return "Accept"
+    if text == "REWORK":
+        return "Rework"
+    return "Other"
 
 
 class MergeEngine:
@@ -216,20 +239,39 @@ class MergeEngine:
             LH Welding Age            - see welding_age below
             LH Last Welding FRun Date - see last_welding_frun below
 
-        Rule (as given by the person, in their own words):
+        Rule (as given by the person, in their own words, updated
+        2026-08-10 to add a mid-stage):
             - Rows with a blank Joint No. are ignored.
             - If a spool ends up with no non-blank-Joint-No. rows at
               all (including if it isn't in the sheet at all), it is
               simply absent from the returned summary - the existing
               date-field-based Fit-Up/Welding/PDQC logic is used for
               it unchanged.
-            - Otherwise: if any joint's Weld FitUp Date (AG) is
-              blank -> "Fit-Up". Else if any joint's Welding FRun
-              Date (AL) is blank -> "Welding". Else -> "PDQC" (i.e.
-              every joint is both fit-up and welded; whether the
-              spool has progressed past PDQC is then decided by the
-              normal date-based walk over PDQC/RFP/PDI/Packing/
-              Dispatch, unchanged).
+            - Otherwise, per joint, an "effective" Weld FitUp Date is
+              that joint's own Weld FitUp Date, or - only when that's
+              blank - its Welding FRun Date used in its place (you
+              cannot weld a joint that hasn't been fit up, so a
+              logged weld run date is itself evidence the fit-up
+              happened even if that field wasn't separately filled
+              in - the same substitution already used for LH Fit-Up
+              Last Date below, now also driving this classification).
+              Welding presence itself is checked RAW (no later field
+              within this pair to infer it from). Then:
+                - no joint has an effective Fit-Up date and no joint
+                  has a Welding FRun Date at all -> "Fit-Up" (nothing
+                  started)
+                - every joint has an effective Fit-Up date, but at
+                  least one is still missing its Welding FRun Date
+                  -> "Welding" (status message "Waiting for
+                  Welding" - unchanged from before this update)
+                - every joint has both -> "PDQC" (whether the spool
+                  has progressed past PDQC is then decided by the
+                  normal date-based walk over PDQC/RFP/PDI/Packing/
+                  Dispatch, unchanged)
+                - anything else (a genuine mix that's neither of the
+                  above - e.g. some joints fully done and others not
+                  started, or some joints only fit-up while others
+                  aren't even that) -> "Partial Fit-Up/Welding"
 
         Per-spool ages (as given by the person, in their own words -
         consumed by ageing.py / summary.py via line_history_ageing.py,
@@ -308,8 +350,8 @@ class MergeEngine:
             )
             return empty_result
 
-        fitup_stage, welding_stage, pdqc_stage = (
-            self.line_history_stage_order[:3]
+        fitup_stage, partial_stage, welding_stage, pdqc_stage = (
+            self.line_history_stage_order[:4]
         )
 
         dataframe = self.add_composite_key(line_history)
@@ -328,15 +370,32 @@ class MergeEngine:
             fitup_values = group[self.line_history_fitup_date_field]
             weldrun_values = group[self.line_history_weld_run_date_field]
 
-            fitup_all_present = not fitup_values.apply(is_empty).any()
-            weldrun_all_present = not weldrun_values.apply(is_empty).any()
+            # Effective Fit-Up presence per joint (2026-08-10 - see
+            # the rule above): a joint's Welding FRun Date being
+            # present substitutes for a blank Weld FitUp Date on
+            # that SAME joint. Welding presence itself stays RAW.
+            effective_fitup_present = [
+                (not is_empty(fitup_value)) or (not is_empty(weldrun_value))
+                for fitup_value, weldrun_value
+                in zip(fitup_values, weldrun_values)
+            ]
+            weldrun_present = [
+                not is_empty(weldrun_value) for weldrun_value in weldrun_values
+            ]
 
-            if not fitup_all_present:
+            fitup_all_present = all(effective_fitup_present)
+            fitup_any_present = any(effective_fitup_present)
+            weldrun_all_present = all(weldrun_present)
+            weldrun_any_present = any(weldrun_present)
+
+            if not fitup_any_present and not weldrun_any_present:
                 stage = fitup_stage
-            elif not weldrun_all_present:
+            elif fitup_all_present and weldrun_all_present:
+                stage = pdqc_stage
+            elif fitup_all_present and not weldrun_all_present:
                 stage = welding_stage
             else:
-                stage = pdqc_stage
+                stage = partial_stage
 
             record = {
                 COMPOSITE_KEY: composite_key,
@@ -520,8 +579,19 @@ class MergeEngine:
         rework file, or a spool that has since progressed further
         via the normal DPR fields).
 
+        Also adds REWORK_LATEST_STATUS ("Rework Latest Status") -
+        the Final Status normalized to Accept/Rework/Other (same
+        normalization as src/quality/summary.py) from THAT SAME ROW,
+        i.e. whichever offer event has the latest Prod Offer Date
+        for that spool. This always stays paired with the latest
+        date, however many times a spool has been re-offered in the
+        workbook - confirmed with the project owner (2026-08-10):
+        always take the status from the latest-dated row, never an
+        earlier one, regardless of how many rows the spool has.
+
         A spool not found in the rework workbook (its Composite Key
-        isn't there) keeps its existing PDQC unchanged.
+        isn't there) keeps its existing PDQC unchanged and gets no
+        REWORK_LATEST_STATUS value (stays absent/NaN).
 
         No-op (returns master unchanged) if the workbook wasn't
         uploaded this run - see reader.py -> read_rework(), which
@@ -543,20 +613,42 @@ class MergeEngine:
 
         latest_offer_field = "Rework Latest Offer Date"
 
-        latest_offer = (
-            rework.dropna(subset=[REWORK_OFFER_DATE])
-            .groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE]
-            .max()
-            .reset_index()
-            .rename(columns={REWORK_OFFER_DATE: latest_offer_field})
-        )
+        rework_valid = rework.dropna(subset=[REWORK_OFFER_DATE])
 
-        if latest_offer.empty:
+        if rework_valid.empty:
             logger.warning(
                 "Rework workbook had no usable Prod Offer Date "
                 "values; skipping the PDQC override for this run."
             )
             return master
+
+        # idxmax (not a plain groupby().max()) so the row that wins
+        # for the date ALSO supplies the status for that same spool
+        # - the two must always come from the same offer event, not
+        # be independently maxed (a spool's highest-ever status
+        # could otherwise get paired with an unrelated later date).
+        latest_row_index = (
+            rework_valid.groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE].idxmax()
+        )
+        status_column = (
+            REWORK_FINAL_STATUS if REWORK_FINAL_STATUS in rework_valid.columns
+            else None
+        )
+        columns_to_take = [COMPOSITE_KEY, REWORK_OFFER_DATE]
+        if status_column:
+            columns_to_take.append(status_column)
+
+        latest_offer = rework_valid.loc[latest_row_index, columns_to_take].rename(
+            columns={REWORK_OFFER_DATE: latest_offer_field}
+        )
+
+        if status_column:
+            latest_offer[REWORK_LATEST_STATUS] = latest_offer[status_column].apply(
+                _normalize_rework_status
+            )
+            latest_offer = latest_offer.drop(columns=[status_column])
+        else:
+            latest_offer[REWORK_LATEST_STATUS] = None
 
         master = master.merge(latest_offer, on=COMPOSITE_KEY, how="left")
 

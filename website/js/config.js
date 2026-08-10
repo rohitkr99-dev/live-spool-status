@@ -57,6 +57,7 @@ const SPOOL_STATUS_CONFIG = {
   stageOrder: [
     "Production Order Not Released",
     "Fit-Up",
+    "Partial Fit-Up/Welding",
     "Welding",
     "PDQC",
     "Ready for Painting",
@@ -69,6 +70,7 @@ const SPOOL_STATUS_CONFIG = {
   stageColor: {
     "Production Order Not Released": "#8A8FA6",
     "Fit-Up": "#C9791F",
+    "Partial Fit-Up/Welding": "#B08628",
     "Welding": "#4333A5",
     "PDQC": "#1E8F86",
     "Ready for Painting": "#6E5FD1",

@@ -22,8 +22,8 @@
 "joint_no_field": "Joint No",
 "fitup_date_field": "Weld FitUp Date",
 "weld_run_date_field": "Welding FRun Date",
-"comment": "When a spool's Composite Key is found in the uploaded Line History Sheet with at least one non-blank Joint No. row: if any of that spool's Weld FitUp Date (AG) values is blank, stage is Fit-Up; else if any Welding FRun Date (AL) value is blank, stage is Welding; else stage is PDQC. The last entry in override_stage_order (PDQC) is where this override stops - PDQC/RFP/PDI/Packing/Dispatch are still decided by the normal date-field-based logic below. If the Composite Key isn't found in the sheet, or has no non-blank Joint No. rows, the existing date-field-based logic is used unchanged for that spool.",
-"override_stage_order": ["Fit-Up", "Welding", "PDQC"]
+"comment": "When a spool's Composite Key is found in the uploaded Line History Sheet with at least one non-blank Joint No. row, its joint-level classification (see merge.py -> summarize_line_history()) is one of: 'Fit-Up' (no joint has an effective Weld FitUp Date and no joint has a Welding FRun Date - nothing started), 'Partial Fit-Up/Welding' (a genuine mix - some joints done, some not), 'Welding' (every joint has an effective Weld FitUp Date, but at least one is still waiting on its Welding FRun Date - shown as status message 'Waiting for Welding', unchanged), or 'PDQC' (every joint has both). 'Effective' Weld FitUp Date means the joint's own Weld FitUp Date, or - only when that's blank - its Welding FRun Date used in its place (you cannot weld an un-fit-up joint, so a logged weld run date is itself evidence the fit-up happened even if that field wasn't separately filled in). As of 2026-08-10 this classification is AUTHORITATIVE for the Fit-Up/Partial Fit-Up-Welding/Welding band - it can both promote AND demote a spool's Current Stage relative to the DPR/Weekly's own, coarser First Fit-Up/First Welding fields (which only need ONE joint recorded to fire) - UNLESS the DPR/Weekly data already shows the spool has reached PDQC or any stage after it via its own date fields, in which case that independent evidence wins outright regardless of Line History. The last entry in override_stage_order (PDQC) is where the override stops either way - PDQC/RFP/PDI/Packing/Dispatch are always decided by the normal date-field-based logic below. If the Composite Key isn't found in the sheet, or has no non-blank Joint No. rows, the existing date-field-based logic is used unchanged for that spool. See business_rules.py -> is_stage_reached_with_line_history().",
+"override_stage_order": ["Fit-Up", "Partial Fit-Up/Welding", "Welding", "PDQC"]
 },
 
 "packing_dispatch_merge": {
@@ -59,6 +59,7 @@
 "status_messages": {
 "Not Released": "Production Order Not Released",
 "Fit-Up": "Fabrication Yet to Start",
+"Partial Fit-Up/Welding": "Fit-Up & Welding Partially Complete",
 "Welding": "Waiting for Welding",
 "PDQC": "Waiting for PDQC",
 "RFP": "Waiting for RFP",
