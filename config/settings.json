@@ -8,6 +8,7 @@
 "paths": {
 "upload_folder": "data/upload/projects",
 "quality_upload_folder": "data/upload/quality",
+"production_upload_folder": "data/upload/production",
 "archive_folder": "data/archive",
 "processed_folder": "processed",
 "logs_folder": "logs",
@@ -51,6 +52,13 @@
 "sheet_name": "Rework Data",
 "header_row": 0,
 "comment": "QA/QC's Production Rework Data workbook - lives in paths.quality_upload_folder (data/upload/quality/), NOT paths.upload_folder, since it's synced separately from the DPR/Weekly/Line History/SIOP files. Optional PDQC override source - see reader.py -> read_rework() and merge.py -> apply_rework_pdqc_override(). Also the source for the Quality Assurance/Control dashboard - see src/quality/ and config/quality_settings.json."
+},
+"material_handover": {
+"enabled": true,
+"file_pattern": "*Material*Handover*.xlsx",
+"sheet_name": "Sheet1",
+"header_row": 0,
+"comment": "Material Handover tracking workbook (one row per spool) - lives in paths.production_upload_folder (data/upload/production/), the folder previously reserved for future Production-only charts (see that folder's README.txt and src/departments.py). Optional, best-effort source for the Material Handover section of the Production dashboard - see reader.py -> read_material_handover() and src/production/material_handover.py. A missing file only skips that section; it never blocks the rest of the Production dashboard."
 }
 },
 

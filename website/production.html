@@ -23,7 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/production.css?v=20260731">
+<link rel="stylesheet" href="css/production.css?v=20260810">
 </head>
 <body>
 
@@ -160,6 +160,78 @@
       </div>
     </section>
 
+    <!-- ============ MATERIAL HANDOVER ============ -->
+    <section id="material-handover-section" hidden>
+
+      <section class="charts-grid__head" aria-label="Material Handover">
+        <h3>Material Handover</h3>
+        <span class="chart-card__hint">Whether required material has been handed over to Production, per spool - data/upload/production/ Material Handover workbook</span>
+      </section>
+
+      <section class="kpi-strip" aria-label="Material Handover metrics">
+        <div class="kpi-card" data-kpi="mh-total">
+          <span class="kpi-card__label">Material Handover Items</span>
+          <span class="kpi-card__value" id="mh-kpi-total">—</span>
+          <span class="kpi-card__sub">spools tracked</span>
+        </div>
+        <div class="kpi-card kpi-card--complete" data-kpi="mh-resolved">
+          <span class="kpi-card__label">Handed Over</span>
+          <span class="kpi-card__value" id="mh-kpi-resolved">—</span>
+          <span class="kpi-card__sub">of tracked items</span>
+        </div>
+        <div class="kpi-card kpi-card--warning" data-kpi="mh-pending">
+          <span class="kpi-card__label">Pending / On Hold</span>
+          <span class="kpi-card__value" id="mh-kpi-pending">—</span>
+          <span class="kpi-card__sub">spools</span>
+        </div>
+        <div class="kpi-card" data-kpi="mh-hold-reasons">
+          <span class="kpi-card__label">Open Hold Reasons</span>
+          <span class="kpi-card__value" id="mh-kpi-hold-reasons">—</span>
+          <span class="kpi-card__sub">distinct, among pending items</span>
+        </div>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row" aria-label="Material Handover status and trend">
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Handover Status</h3>
+            <span class="chart-card__hint">Handed over vs. currently pending/on hold</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-status"></canvas></div>
+        </div>
+        <div class="chart-card chart-card--wide">
+          <div class="chart-card__head">
+            <h3>Handover Volume by Month</h3>
+            <span class="chart-card__hint">Item count by Handover Date</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-trend"></canvas></div>
+        </div>
+      </section>
+
+      <section class="activity-charts-grid" aria-label="Material Handover breakdowns">
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Top Pending / Hold Reasons</h3>
+            <span class="chart-card__hint">Currently pending items only</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-pending"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>By Concern Department</h3>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-department"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>By Material</h3>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-material"></canvas></div>
+        </div>
+      </section>
+
+    </section>
+
     <!-- ============ STAGE-WISE AGEING, PER CATEGORY ============ -->
     <section class="activity-charts-grid production-stage-grid" aria-label="Stage-wise ageing by category">
       <div class="charts-grid__head">
@@ -261,7 +333,7 @@
 
 <script src="vendor/chart.umd.min.js"></script>
 
-<script src="js/production-config.js?v=20260731"></script>
+<script src="js/production-config.js?v=20260810"></script>
 <script>
   // Reuses the shared Chart.js visual theme from js/chartTheme.js,
   // which reads SPOOL_STATUS_CONFIG for its palette - alias it here
@@ -275,10 +347,10 @@
   };
 </script>
 <script src="js/chartTheme.js"></script>
-<script src="js/production-data.js?v=20260731"></script>
+<script src="js/production-data.js?v=20260810"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
 <script src="js/production-filters.js?v=20260731"></script>
-<script src="js/production-charts.js?v=20260731"></script>
+<script src="js/production-charts.js?v=20260810"></script>
 <script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 

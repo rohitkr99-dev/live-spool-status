@@ -38,4 +38,12 @@ const PRODUCTION_CONFIG = {
   // the exact same two colours as the spool table's own delay flag.
   delayedColor: "#A82E30",
   onTimeColor: "#1E8F86",
+
+  // Material Handover section (src/production/material_handover.py).
+  // Pending/On Hold reuses delayedColor's red family so "something's
+  // not resolved" reads the same way it does everywhere else on this
+  // page; department/material bars use a neutral tone since they're
+  // not good/bad splits.
+  mhPendingColor: "#A82E30",
+  mhNeutralColor: "#6E5FD1",
 };

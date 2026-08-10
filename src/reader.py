@@ -29,6 +29,9 @@ from logger import logger
 from constants import (
     FABRICATION,
     LINE_HISTORY,
+    MATERIAL_HANDOVER,
+    MH_EXPECTED_DATE,
+    MH_HANDOVER_DATE,
     PLANNING,
     REWORK,
     REWORK_OFFER_DATE,
@@ -613,6 +616,98 @@ class ExcelReader:
                 f"Merged {len(files)} Rework Data workbook(s): "
                 f"{len(dataframe)} row(s) after exact-duplicate "
                 f"removal (from {before})."
+            )
+
+        return dataframe
+
+    def read_material_handover(self) -> Optional[pd.DataFrame]:
+        """
+        Read the Material Handover workbook - one row per spool,
+        showing whether the material required to fabricate it has
+        been handed over to Production yet (and, if not, why it's
+        on hold). Source data for the Material Handover section of
+        the Production dashboard - see src/production/material_handover.py.
+
+        Lives in paths.production_upload_folder (data/upload/
+        production/), the folder previously reserved for future
+        Production-only charts (see that folder's README.txt). Plain
+        .xlsx, read via openpyxl - same as the Rework Data workbook.
+
+        OPTIONAL and best-effort, same contract as the Line History
+        Sheet / SIOP Planned Spools / Rework workbooks: a missing
+        file (or the feature being disabled) only logs a warning and
+        returns None - the Material Handover section is then simply
+        omitted from the Production dashboard, nothing else on it is
+        affected.
+        """
+
+        config = self.settings["input_files"].get("material_handover", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get(
+                "production_upload_folder", "data/upload/production"
+            )
+        )
+
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
+
+        if not files:
+            logger.warning(
+                "Material Handover workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). The "
+                "Production dashboard's Material Handover section "
+                "will have no data to show for this run."
+            )
+            return None
+
+        frames = []
+
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            frame = pd.read_excel(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="openpyxl"
+            )
+
+            frame = standardize_columns(
+                frame,
+                MATERIAL_HANDOVER
+            )
+
+            frame = convert_excel_serial_dates(
+                frame,
+                [MH_HANDOVER_DATE, MH_EXPECTED_DATE],
+            )
+
+            logger.info(
+                f"Loaded {len(frame)} Material Handover rows from "
+                f"{file.name}."
+            )
+
+            frames.append(frame)
+
+        # One row per spool (like Fabrication/Master Planning) - if
+        # more than one file is present, the latest file's row wins
+        # for any spool appearing in both, same rule as everywhere
+        # else multi-file merge applies.
+        dataframe = self._merge_latest_wins(
+            frames, self.schema_composite_key()
+        )
+
+        if len(files) > 1:
+            logger.info(
+                f"Merged {len(files)} Material Handover workbook(s): "
+                f"{len(dataframe)} spool row(s) after latest-file-wins "
+                "de-duplication."
             )
 
         return dataframe

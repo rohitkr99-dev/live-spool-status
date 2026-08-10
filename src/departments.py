@@ -50,17 +50,18 @@ DEPARTMENTS: list[Department] = [
     Department("packing", "Packing & Dispatch", "data/upload/packing", built=True),
     # "Production" on the landing page (website/production.html) is now
     # LIVE (see src/production/, production_main.py) - spool ageing by
-    # category vs. a target-day matrix. But it's a SEPARATE pipeline
-    # from "Projects" above, and it does NOT read this folder - it
-    # reuses the same workbooks already in data/upload/projects/. This
-    # folder (data/upload/production/) stays built=False: it's still
-    # genuinely unwatched/unprocessed, reserved for a later expansion
-    # of the Production page with its own, different source workbooks.
-    # Easy to conflate since the DPR/Weekly-Planning pipeline is also
-    # commonly called "the Production pipeline" in older code comments
-    # (src/pipeline.py etc.) - that one's landing-page card is
-    # "Projects", not this one. See data/upload/production/README.txt.
-    Department("production", "Production", "data/upload/production", built=False),
+    # category vs. a target-day matrix, reusing the same DPR/Weekly
+    # workbooks already in data/upload/projects/. This folder
+    # (data/upload/production/) was reserved for a later expansion of
+    # that same page with its own, different source workbook - that
+    # expansion has now happened (the Material Handover section, see
+    # src/production/material_handover.py and config/settings.json ->
+    # input_files.material_handover), so this folder is now genuinely
+    # read too and built flips to True. Easy to conflate since the
+    # DPR/Weekly-Planning pipeline is also commonly called "the
+    # Production pipeline" in older code comments (src/pipeline.py
+    # etc.) - that one's landing-page card is "Projects", not this one.
+    Department("production", "Production", "data/upload/production", built=True),
     # "Quality Assurance / Control" on the landing page
     # (website/quality.html) is now LIVE (see src/quality/,
     # quality_main.py) - rework analysis from the Production Rework

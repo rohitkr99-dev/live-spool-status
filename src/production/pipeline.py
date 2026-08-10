@@ -48,6 +48,7 @@ from production.summary import (
     build_stage_ageing,
     METRICS,
 )
+from production.material_handover import build_material_handover_summary
 
 PRODUCTION_SETTINGS_PATH = Path("config/production_settings.json")
 PRODUCTION_RULES_PATH = Path("config/production_rules.json")
@@ -117,6 +118,16 @@ def run(
     category_meta = build_category_meta(rules)
     category_stages = build_category_stages(rules)
 
+    try:
+        material_handover = build_material_handover_summary(sources.material_handover)
+    except Exception as error:
+        # Best-effort, same contract as reader.py's own read - a
+        # problem here only means the Material Handover section is
+        # empty for this run, never that the rest of the Production
+        # dashboard fails to build.
+        logger.warning(f"Could not build Material Handover summary ({error}).")
+        material_handover = build_material_handover_summary(None)
+
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "categories": list(category_meta.values()),
@@ -131,6 +142,7 @@ def run(
         "stage_labels": rules["stage_labels"],
         "metrics": METRICS,
         "projects": build_projects_list(records),
+        "material_handover": material_handover,
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])

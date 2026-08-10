@@ -26,6 +26,15 @@
  *                              one chart per category (grouped bar)
  *   9. chart-ideal-vs-actual   Target vs. Actual total cycle time,
  *                              every category side by side (grouped bar)
+ *
+ *   Material Handover section (independent of the metric/Project
+ *   filters above - it's a separate source workbook, see
+ *   src/production/material_handover.py):
+ *   10. chart-mh-status        Handed Over vs. Pending/On Hold (donut)
+ *   11. chart-mh-pending       Top pending/hold reasons (horizontal bar)
+ *   12. chart-mh-department    Item count by Concern Department (bar)
+ *   13. chart-mh-material      Item count by material group (bar)
+ *   14. chart-mh-trend         Handover volume by month (bar)
  */
 
 const ProductionCharts = {
@@ -59,6 +68,7 @@ const ProductionCharts = {
     this.renderDelayedByProject(delayedByProject);
     this.renderStageCharts(stageAgeing, store.categories, metric);
     this.renderIdealVsActual(idealVsActual, metric);
+    this.renderMaterialHandover(store.materialHandover);
 
     document.getElementById("chart-spool-count-note").textContent =
       `${chartSpools.length.toLocaleString()} spool(s) in this view`;
@@ -372,6 +382,191 @@ const ProductionCharts = {
                 return lines;
               },
             },
+          },
+        },
+      },
+    });
+  },
+
+  // -----------------------------------------------------------
+  // Material Handover section - independent of the metric/Project
+  // filters above (different source workbook, always shows every
+  // spool in the Material Handover file). See
+  // src/production/material_handover.py for how each field below
+  // is computed.
+  // -----------------------------------------------------------
+
+  renderMaterialHandover(materialHandover) {
+    const section = document.getElementById("material-handover-section");
+    if (!section) return;
+
+    if (!materialHandover || !materialHandover.available) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+
+    const kpis = materialHandover.kpis || {};
+    this._setText("mh-kpi-total", (kpis.total_items ?? 0).toLocaleString());
+    this._setText("mh-kpi-resolved", `${kpis.resolved_pct ?? 0}%`);
+    this._setText("mh-kpi-pending", (kpis.pending_count ?? 0).toLocaleString());
+    this._setText("mh-kpi-hold-reasons", (kpis.distinct_pending_reasons ?? 0).toLocaleString());
+
+    this.renderMHStatus(materialHandover.status_overview);
+    this.renderMHBar("chart-mh-pending", materialHandover.pending_breakdown, {
+      indexAxis: "y",
+      color: PRODUCTION_CONFIG.mhPendingColor,
+      axisTitle: "Items",
+    });
+    this.renderMHBar("chart-mh-department", materialHandover.department_breakdown, {
+      color: PRODUCTION_CONFIG.mhNeutralColor,
+      axisTitle: "Items",
+    });
+    this.renderMHBar("chart-mh-material", materialHandover.material_breakdown, {
+      color: PRODUCTION_CONFIG.actualColor,
+      axisTitle: "Items",
+    });
+    this.renderMHTrend(materialHandover.monthly_trend);
+  },
+
+  _setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  },
+
+  renderMHStatus(overview) {
+    const ctx = this._ctx("chart-mh-status");
+    if (!ctx || !overview || !overview.length) return;
+
+    const labels = overview.map((s) => s.label);
+    const data = overview.map((s) => s.value);
+    const colors = overview.map((s) =>
+      s.key === "pending" ? PRODUCTION_CONFIG.mhPendingColor : PRODUCTION_CONFIG.onTimeColor
+    );
+
+    this.instances.mhStatus = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderColor: "#FFFFFF", borderWidth: 2 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          legend: {
+            position: window.innerWidth < 640 ? "bottom" : "right",
+            align: "center",
+            labels: {
+              boxWidth: 13,
+              boxHeight: 13,
+              padding: 14,
+              font: { size: 12.5, weight: "600" },
+              generateLabels(chart) {
+                const data = chart.data;
+                if (!data.labels.length || !data.datasets.length) return [];
+                const dataset = data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                return data.labels.map((label, i) => {
+                  const value = dataset.data[i];
+                  const pct = total ? ((value / total) * 100).toFixed(1) : "0.0";
+                  return {
+                    text: `${label} \u2013 ${pct}%`,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.borderColor,
+                    lineWidth: dataset.borderWidth,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label(item) {
+                const total = item.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = total ? ((item.raw / total) * 100).toFixed(1) : "0.0";
+                return ` ${item.label}: ${item.raw.toLocaleString()} (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
+  // Shared renderer for the three simple single-series MH bar
+  // charts (pending reasons, department, material) - only the
+  // canvas id, orientation, and colour differ between them.
+  renderMHBar(canvasId, rows, { indexAxis = "x", color, axisTitle }) {
+    const ctx = this._ctx(canvasId);
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.label);
+    const data = rows.map((r) => r.value);
+    const valueAxis = indexAxis === "y" ? "x" : "y";
+
+    this.instances[canvasId] = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: color, borderRadius: 4 }],
+      },
+      options: {
+        indexAxis,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          [indexAxis]: {
+            grid: { display: false },
+            ticks: { font: this.chartFont, autoSkip: true, maxRotation: indexAxis === "x" ? 0 : undefined },
+          },
+          [valueAxis]: {
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont, precision: 0 },
+            title: { display: true, text: axisTitle, font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
+
+  renderMHTrend(rows) {
+    const ctx = this._ctx("chart-mh-trend");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.label);
+    const data = rows.map((r) => r.value);
+
+    this.instances.mhTrend = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Handover activity",
+          data,
+          backgroundColor: PRODUCTION_CONFIG.actualColor,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont, precision: 0 },
+            title: { display: true, text: "Items", font: this.chartFont },
           },
         },
       },

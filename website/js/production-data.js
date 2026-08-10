@@ -88,6 +88,7 @@ const ProductionData = {
     targetDays: {},
     stageOrder: [],
     stageLabels: {},
+    materialHandover: null,
   },
 
   hasData: false,
@@ -198,6 +199,7 @@ const ProductionData = {
     this.store.targetDays = bundle.target_days || {};
     this.store.stageOrder = bundle.stage_order || [];
     this.store.stageLabels = bundle.stage_labels || {};
+    this.store.materialHandover = bundle.material_handover || null;
 
     this.hasData = true;
 

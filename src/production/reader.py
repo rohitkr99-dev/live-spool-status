@@ -55,6 +55,7 @@ class ProductionSources:
     welding_db: pd.DataFrame
     line_history: pd.DataFrame | None
     siop_planned: pd.DataFrame | None
+    material_handover: pd.DataFrame | None
 
 
 def load_sources() -> ProductionSources:
@@ -63,8 +64,10 @@ def load_sources() -> ProductionSources:
     ExcelReader. Raises FileNotFoundError (from ExcelReader) if the
     DPR or Weekly Production Planning workbook isn't in
     data/upload/projects/ - both are required. The Line History
-    Sheet is optional; see welding_finish.py for what happens to
-    Welding Finish when it's missing.
+    Sheet, SIOP Planned Spools, and Material Handover workbooks are
+    all optional; see welding_finish.py for what happens to Welding
+    Finish when Line History is missing, and material_handover.py
+    for what happens when the Material Handover workbook is missing.
     """
 
     excel_reader = ExcelReader()
@@ -81,10 +84,22 @@ def load_sources() -> ProductionSources:
     logger.info("Reading SIOP Planned Spools workbook (optional, Planned Start fallback) ...")
     siop_planned = excel_reader.read_siop_planned()
 
+    material_handover = None
+    try:
+        logger.info("Reading Material Handover workbook (optional) ...")
+        material_handover = excel_reader.read_material_handover()
+    except Exception as error:
+        logger.warning(
+            f"Could not read Material Handover workbook ({error}). "
+            "The Production dashboard's Material Handover section "
+            "will be omitted for this run."
+        )
+
     return ProductionSources(
         fabrication=fabrication,
         master_planning=planning_sheets["master_sheet"],
         welding_db=planning_sheets["welding_sheet"],
         line_history=line_history,
         siop_planned=siop_planned,
+        material_handover=material_handover,
     )

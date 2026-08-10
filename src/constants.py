@@ -55,6 +55,16 @@ REWORK_OFFER_DATE = "Prod Offer Date"
 REWORK_FINAL_STATUS = "Final Status"
 REWORK_TYPE = "Rework Type"
 
+MH_GROUP = "MH Group"
+MH_QTY = "MH Qty"
+MH_SPOOL_SIZE = "MH Spool Size"
+MH_INCH_DIA = "MH Inch Dia"
+MH_DEPARTMENT = "MH Department"
+MH_FIRST_STATUS = "MH First Status"
+MH_CURRENT_STATUS = "MH Current Status"
+MH_HANDOVER_DATE = "MH Handover Date"
+MH_EXPECTED_DATE = "MH Expected Date"
+
 CURRENT_STAGE = "Current Stage"
 NEXT_STAGE = "Next Stage"
 
@@ -75,6 +85,7 @@ PLANNING = "planning"
 LINE_HISTORY = "line_history"
 SIOP_PLANNED = "siop_planned"
 REWORK = "rework"
+MATERIAL_HANDOVER = "material_handover"
 
 # ==================================================
 # Log Messages
