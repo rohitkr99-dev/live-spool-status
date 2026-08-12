@@ -426,7 +426,26 @@ const ProductionCharts = {
       color: PRODUCTION_CONFIG.actualColor,
       axisTitle: "Items",
     });
-    this.renderMHTrend(materialHandover.monthly_trend);
+    this.renderMHTimeSeriesBar("chart-mh-trend", materialHandover.monthly_trend, {
+      label: "Handover activity",
+      color: PRODUCTION_CONFIG.actualColor,
+      axisTitle: "Items",
+    });
+    this.renderMHTimeSeriesBar(
+      "chart-mh-weekly-inch-dia",
+      materialHandover.weekly_inch_dia,
+      {
+        label: "Inch dia handed over",
+        color: PRODUCTION_CONFIG.actualColor,
+        axisTitle: "Inch Dia",
+      }
+    );
+    this.renderMHTimeliness(
+      materialHandover.timeliness_split,
+      materialHandover.timeliness_unmatched_count
+    );
+    this.renderMHWeeklyFirstTimeSplit(materialHandover.weekly_first_time_split);
+    this.renderMHFirstPassYield(materialHandover.weekly_first_pass_yield);
   },
 
   _setText(id, text) {
@@ -497,6 +516,87 @@ const ProductionCharts = {
     });
   },
 
+  renderMHTimeliness(split, unmatchedCount) {
+    const ctx = this._ctx("chart-mh-timeliness");
+    if (!ctx || !split || !split.length) return;
+
+    const colorByKey = {
+      timely: PRODUCTION_CONFIG.onTimeColor,
+      delayed_issue: PRODUCTION_CONFIG.mhIssueColor,
+      delayed_no_issue: PRODUCTION_CONFIG.mhPendingColor,
+    };
+
+    const labels = split.map((s) => s.label);
+    const data = split.map((s) => s.value);
+    const colors = split.map((s) => colorByKey[s.key] || PRODUCTION_CONFIG.mhNeutralColor);
+
+    this.instances.mhTimeliness = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderColor: "#FFFFFF", borderWidth: 2 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          legend: {
+            position: window.innerWidth < 640 ? "bottom" : "right",
+            align: "center",
+            labels: {
+              boxWidth: 13,
+              boxHeight: 13,
+              padding: 14,
+              font: { size: 12.5, weight: "600" },
+              generateLabels(chart) {
+                const data = chart.data;
+                if (!data.labels.length || !data.datasets.length) return [];
+                const dataset = data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                return data.labels.map((label, i) => {
+                  const value = dataset.data[i];
+                  const pct = total ? ((value / total) * 100).toFixed(1) : "0.0";
+                  return {
+                    text: `${label} \u2013 ${pct}%`,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.borderColor,
+                    lineWidth: dataset.borderWidth,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label(item) {
+                const total = item.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = total ? ((item.raw / total) * 100).toFixed(1) : "0.0";
+                return ` ${item.label}: ${item.raw.toLocaleString()} (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Transparency note: items handed over but with no Planned
+    // Start match (Weekly workbook nor SIOP fallback) are excluded
+    // from this chart entirely, not silently folded into one of the
+    // three buckets - surfaced here so the count is visible, not
+    // hidden. See build_timeliness_split() in material_handover.py.
+    const hint = document.querySelector(
+      '[aria-label="Material Handover weekly throughput and timeliness"] .chart-card:last-child .chart-card__hint'
+    );
+    if (hint && unmatchedCount) {
+      hint.textContent =
+        `vs. Planned Start (Weekly Production Planning, SIOP fallback) \u2013 ` +
+        `${unmatchedCount.toLocaleString()} handed-over item(s) excluded, no Planned Start found`;
+    }
+  },
+
   // Shared renderer for the three simple single-series MH bar
   // charts (pending reasons, department, material) - only the
   // canvas id, orientation, and colour differ between them.
@@ -535,21 +635,21 @@ const ProductionCharts = {
     });
   },
 
-  renderMHTrend(rows) {
-    const ctx = this._ctx("chart-mh-trend");
+  renderMHTimeSeriesBar(canvasId, rows, { label, color, axisTitle }) {
+    const ctx = this._ctx(canvasId);
     if (!ctx || !rows || !rows.length) return;
 
     const labels = rows.map((r) => r.label);
     const data = rows.map((r) => r.value);
 
-    this.instances.mhTrend = new Chart(ctx, {
+    this.instances[canvasId] = new Chart(ctx, {
       type: "bar",
       data: {
         labels,
         datasets: [{
-          label: "Handover activity",
+          label,
           data,
-          backgroundColor: PRODUCTION_CONFIG.actualColor,
+          backgroundColor: color,
           borderRadius: 4,
         }],
       },
@@ -566,7 +666,103 @@ const ProductionCharts = {
             beginAtZero: true,
             grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
             ticks: { font: this.chartFont, precision: 0 },
-            title: { display: true, text: "Items", font: this.chartFont },
+            title: { display: true, text: axisTitle, font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
+
+  renderMHWeeklyFirstTimeSplit(rows) {
+    const ctx = this._ctx("chart-mh-weekly-first-time");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.label);
+
+    this.instances.mhWeeklyFirstTime = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Clean on first check",
+            data: rows.map((r) => r.clean_first_time),
+            backgroundColor: PRODUCTION_CONFIG.mhCleanColor,
+            borderRadius: 3,
+            stack: "handover",
+          },
+          {
+            label: "Issue found first time",
+            data: rows.map((r) => r.issue_first_time),
+            backgroundColor: PRODUCTION_CONFIG.mhIssueColor,
+            borderRadius: 3,
+            stack: "handover",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { font: { size: 12 }, boxWidth: 12, boxHeight: 12 } },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont, precision: 0 },
+            title: { display: true, text: "Items handed over", font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
+
+  renderMHFirstPassYield(rows) {
+    const ctx = this._ctx("chart-mh-first-pass-yield");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.label);
+    const data = rows.map((r) => r.value);
+
+    this.instances.mhFirstPassYield = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "First-pass yield",
+          data,
+          borderColor: PRODUCTION_CONFIG.mhCleanColor,
+          backgroundColor: PRODUCTION_CONFIG.mhCleanColor,
+          tension: 0.25,
+          pointRadius: 3,
+          spanGaps: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (item) => ` ${item.formattedValue}%` } },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont, callback: (v) => `${v}%` },
+            title: { display: true, text: "First-pass yield", font: this.chartFont },
           },
         },
       },

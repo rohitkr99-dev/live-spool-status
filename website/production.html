@@ -230,6 +230,40 @@
         </div>
       </section>
 
+      <section class="charts-grid charts-grid--single-row" aria-label="Material Handover weekly throughput and timeliness">
+        <div class="chart-card chart-card--wide">
+          <div class="chart-card__head">
+            <h3>Weekly Handover (Inch Dia)</h3>
+            <span class="chart-card__hint">Total inch-dia handed over per week, by Handover Date</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-weekly-inch-dia"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Handover Timeliness</h3>
+            <span class="chart-card__hint">vs. Planned Start (Weekly Production Planning, SIOP fallback)</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-timeliness"></canvas></div>
+        </div>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row" aria-label="Material Handover first-pass quality">
+        <div class="chart-card chart-card--wide">
+          <div class="chart-card__head">
+            <h3>Weekly First-Time Handover vs. Issue Found</h3>
+            <span class="chart-card__hint">Of items handed over that week: clean on first check vs. needed an issue resolved first</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-weekly-first-time"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Weekly First-Pass Yield</h3>
+            <span class="chart-card__hint">% of that week's handovers clean on the first check</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-mh-first-pass-yield"></canvas></div>
+        </div>
+      </section>
+
     </section>
 
     <!-- ============ STAGE-WISE AGEING, PER CATEGORY ============ -->
@@ -333,7 +367,7 @@
 
 <script src="vendor/chart.umd.min.js"></script>
 
-<script src="js/production-config.js?v=20260810"></script>
+<script src="js/production-config.js?v=20260812"></script>
 <script>
   // Reuses the shared Chart.js visual theme from js/chartTheme.js,
   // which reads SPOOL_STATUS_CONFIG for its palette - alias it here
@@ -350,7 +384,7 @@
 <script src="js/production-data.js?v=20260810"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
 <script src="js/production-filters.js?v=20260731"></script>
-<script src="js/production-charts.js?v=20260810"></script>
+<script src="js/production-charts.js?v=20260812b"></script>
 <script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 

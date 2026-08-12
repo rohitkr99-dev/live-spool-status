@@ -118,15 +118,34 @@ def run(
     category_meta = build_category_meta(rules)
     category_stages = build_category_stages(rules)
 
+    # Planned Start per spool (Weekly Production Planning workbook's
+    # own field, falling back to the SIOP Planned Spools workbook
+    # only where the Weekly workbook has a gap - see ageing.py's
+    # build_spool_records()) - reused as-is for the Material
+    # Handover "timeliness" split below, rather than reading a
+    # second copy of the Weekly workbook just for that. Given by
+    # the person, 2026-08-12: "the program is saving Week in
+    # Projects Dashboard Spool list... it also has the SIOP planned
+    # start date" - this IS that same value, already computed here
+    # for this dashboard's own ageing, keyed by the same Composite
+    # Key used everywhere else in the repo.
+    planned_start_lookup = {
+        record.composite_key: record.planned_start
+        for record in records
+        if record.planned_start is not None
+    }
+
     try:
-        material_handover = build_material_handover_summary(sources.material_handover)
+        material_handover = build_material_handover_summary(
+            sources.material_handover, planned_start_lookup
+        )
     except Exception as error:
         # Best-effort, same contract as reader.py's own read - a
         # problem here only means the Material Handover section is
         # empty for this run, never that the rest of the Production
         # dashboard fails to build.
         logger.warning(f"Could not build Material Handover summary ({error}).")
-        material_handover = build_material_handover_summary(None)
+        material_handover = build_material_handover_summary(None, {})
 
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

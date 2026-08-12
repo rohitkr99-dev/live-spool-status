@@ -46,4 +46,6 @@ const PRODUCTION_CONFIG = {
   // not good/bad splits.
   mhPendingColor: "#A82E30",
   mhNeutralColor: "#6E5FD1",
+  mhCleanColor: "#1E8F86",
+  mhIssueColor: "#C9791F",
 };
