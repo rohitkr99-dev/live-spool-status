@@ -160,6 +160,57 @@
       </div>
     </section>
 
+    <!-- ============ BACKLOG BY OPERATION ============ -->
+    <section id="backlog-section">
+
+      <section class="charts-grid__head" aria-label="Backlog by Operation">
+        <h3>Backlog by Operation</h3>
+        <span class="chart-card__hint">Spools currently stuck at each operation, by days past their target date (uses the metric selector above)</span>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row" aria-label="Fit-Up and Welding backlog">
+        <div class="chart-card chart-card--full">
+          <div class="chart-card__head">
+            <h3>Fit-Up &amp; Welding Backlog</h3>
+            <span class="chart-card__hint">No separate Fit-Up target exists - spools not yet at Welding Finish are combined here</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-backlog-welding_finish"></canvas></div>
+        </div>
+      </section>
+
+      <section class="activity-charts-grid" aria-label="PDQC, Release for Painting and PDI Clearance backlog">
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>PDQC Backlog</h3>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-backlog-pdqc"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Release for Painting Backlog</h3>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-backlog-release_for_painting"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__head">
+            <h3>Painting Backlog</h3>
+            <span class="chart-card__hint">PDI Clearance</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-backlog-pdi_clearance"></canvas></div>
+        </div>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row" aria-label="Packing backlog">
+        <div class="chart-card chart-card--full">
+          <div class="chart-card__head">
+            <h3>Packing Backlog</h3>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-backlog-packed"></canvas></div>
+        </div>
+      </section>
+
+    </section>
+
     <!-- ============ MATERIAL HANDOVER ============ -->
     <section id="material-handover-section" hidden>
 
@@ -367,7 +418,7 @@
 
 <script src="vendor/chart.umd.min.js"></script>
 
-<script src="js/production-config.js?v=20260812"></script>
+<script src="js/production-config.js?v=20260812c"></script>
 <script>
   // Reuses the shared Chart.js visual theme from js/chartTheme.js,
   // which reads SPOOL_STATUS_CONFIG for its palette - alias it here
@@ -381,10 +432,10 @@
   };
 </script>
 <script src="js/chartTheme.js"></script>
-<script src="js/production-data.js?v=20260810"></script>
+<script src="js/production-data.js?v=20260812c"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
 <script src="js/production-filters.js?v=20260731"></script>
-<script src="js/production-charts.js?v=20260812b"></script>
+<script src="js/production-charts.js?v=20260812c"></script>
 <script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 

@@ -89,6 +89,7 @@ const ProductionData = {
     stageOrder: [],
     stageLabels: {},
     materialHandover: null,
+    backlog: null,
   },
 
   hasData: false,
@@ -200,6 +201,7 @@ const ProductionData = {
     this.store.stageOrder = bundle.stage_order || [];
     this.store.stageLabels = bundle.stage_labels || {};
     this.store.materialHandover = bundle.material_handover || null;
+    this.store.backlog = bundle.backlog || null;
 
     this.hasData = true;
 

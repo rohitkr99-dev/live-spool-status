@@ -130,6 +130,37 @@ def working_day_variance(
     return _working_days_delta(start_date, end_date)
 
 
+def add_working_days(start_date: date, working_days: int) -> date:
+    """
+    The calendar date reached after `working_days` working days from
+    start_date (excludes Saturdays, Sundays, and config/holidays.json
+    dates, same rules as _working_days_delta()/days_between() above)
+    - i.e. the inverse of those functions: add_working_days(start,
+    working_day_variance(start, end)) == end, when end is itself a
+    working day. working_days <= 0 returns start_date unchanged
+    (matching days_between()'s own "negative means zero" clamping -
+    there's no such thing as a target date before Planned Start).
+
+    Used by production/backlog.py to turn a category's target_days
+    matrix entry (a WORKING-day count from Planned Start - the same
+    number and the same working-day arithmetic already used for this
+    dashboard's is_delayed flag, see production/ageing.py) into an
+    actual calendar target DATE.
+    """
+
+    if working_days <= 0:
+        return start_date
+
+    holidays = _load_holidays()
+    current = start_date
+    counted = 0
+    while counted < working_days:
+        current += timedelta(days=1)
+        if current.weekday() not in WEEKEND_WEEKDAYS and current not in holidays:
+            counted += 1
+    return current
+
+
 def fiscal_week_info(value: date) -> dict[str, Any]:
     """
     Return the fiscal week number (1-52) and week start/end dates

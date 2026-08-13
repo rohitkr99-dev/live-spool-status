@@ -48,4 +48,17 @@ const PRODUCTION_CONFIG = {
   mhNeutralColor: "#6E5FD1",
   mhCleanColor: "#1E8F86",
   mhIssueColor: "#C9791F",
+
+  // Backlog by Operation section (src/production/backlog.py) - a
+  // 4-step severity ramp reused identically across all 5 backlog
+  // charts, from "on time" (same teal as onTimeColor) through to
+  // "worst" (same red as delayedColor), with two intermediate
+  // ambers so the 4 buckets are visually distinguishable at a
+  // glance without relying on the legend alone.
+  backlogBucketColor: {
+    "No Backlog": "#1E8F86",
+    "0-7 Days": "#D9A22D",
+    "8-30 Days": "#C9791F",
+    "Beyond 30 Days": "#A82E30",
+  },
 };

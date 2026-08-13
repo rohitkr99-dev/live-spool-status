@@ -68,6 +68,7 @@ const ProductionCharts = {
     this.renderDelayedByProject(delayedByProject);
     this.renderStageCharts(stageAgeing, store.categories, metric);
     this.renderIdealVsActual(idealVsActual, metric);
+    this.renderBacklogCharts(store.backlog, metric);
     this.renderMaterialHandover(store.materialHandover);
 
     document.getElementById("chart-spool-count-note").textContent =
@@ -395,6 +396,80 @@ const ProductionCharts = {
   // src/production/material_handover.py for how each field below
   // is computed.
   // -----------------------------------------------------------
+
+  // -----------------------------------------------------
+  // Backlog by Operation section (src/production/backlog.py).
+  // Reacts to the metric selector above (same METRICS list as
+  // every other chart on this page), but NOT the Project filter -
+  // each bucket is pre-aggregated across ALL five metrics in
+  // Python already, so re-slicing it by Project client-side isn't
+  // possible without shipping per-spool rows down to the browser,
+  // which nothing here currently does.
+  // -----------------------------------------------------
+
+  renderBacklogCharts(backlog, metric) {
+    if (!backlog) return;
+
+    const metricField = metric.field || "spool_count";
+
+    for (const stageKey of Object.keys(backlog)) {
+      this.renderBacklogChart(
+        `chart-backlog-${stageKey}`,
+        backlog[stageKey],
+        metricField,
+        metric.label
+      );
+    }
+  },
+
+  renderBacklogChart(canvasId, stageBacklog, metricField, metricLabel) {
+    const ctx = this._ctx(canvasId);
+    if (!ctx || !stageBacklog || !stageBacklog.buckets) return;
+
+    const buckets = stageBacklog.buckets;
+    const labels = buckets.map((b) => b.bucket);
+    const data = buckets.map((b) => b[metricField] ?? 0);
+    const colors = buckets.map(
+      (b) => PRODUCTION_CONFIG.backlogBucketColor[b.bucket] || PRODUCTION_CONFIG.mhNeutralColor
+    );
+
+    this.instances[canvasId] = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: metricLabel,
+          data,
+          backgroundColor: colors,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` ${metricLabel}: ${Number(item.raw).toLocaleString()}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: this.chartFont },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            ticks: { font: this.chartFont, precision: 0 },
+            title: { display: true, text: metricLabel, font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
 
   renderMaterialHandover(materialHandover) {
     const section = document.getElementById("material-handover-section");

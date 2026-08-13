@@ -49,6 +49,7 @@ from production.summary import (
     METRICS,
 )
 from production.material_handover import build_material_handover_summary
+from production.backlog import build_backlog_summary
 
 PRODUCTION_SETTINGS_PATH = Path("config/production_settings.json")
 PRODUCTION_RULES_PATH = Path("config/production_rules.json")
@@ -162,6 +163,7 @@ def run(
         "metrics": METRICS,
         "projects": build_projects_list(records),
         "material_handover": material_handover,
+        "backlog": build_backlog_summary(records),
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])
