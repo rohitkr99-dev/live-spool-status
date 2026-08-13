@@ -420,6 +420,51 @@ const ProductionCharts = {
         metric.label
       );
     }
+
+    this.wireBacklogExportButtons(backlog);
+  },
+
+  // "Export to Excel" buttons (2026-08-13) - client-side only, no
+  // second Python pass: each button reads the SAME per-spool `rows`
+  // list already sitting in the bundle behind that chart's buckets
+  // (src/production/backlog.py -> build_backlog_chart()), so the
+  // export always matches exactly what the chart is showing. Uses
+  // the vendored SheetJS build (website/vendor/xlsx.core.min.js) -
+  // Production dashboard has no jQuery/DataTables dependency
+  // elsewhere, so this is lighter than pulling in the DataTables
+  // Buttons stack the Projects dashboard's tables use for the same
+  // purpose (website/js/tables.js -> exportButtons()).
+  //
+  // Buttons use .onclick (assignment, not addEventListener) so that
+  // repeated render() calls (e.g. on metric-switcher change) simply
+  // REPLACE the handler rather than stacking up duplicate listeners
+  // that would each fire on a single click.
+  wireBacklogExportButtons(backlog) {
+    const buttons = document.querySelectorAll("[data-backlog-export]");
+
+    buttons.forEach((button) => {
+      const stageKey = button.dataset.backlogExport;
+      const stageLabel = button.dataset.backlogLabel || stageKey;
+      const stageBacklog = backlog[stageKey];
+
+      const hasRows = stageBacklog && stageBacklog.rows && stageBacklog.rows.length;
+      button.disabled = !hasRows;
+
+      button.onclick = () => {
+        if (!hasRows || typeof XLSX === "undefined") return;
+        this.exportBacklogRows(stageBacklog.rows, stageLabel);
+      };
+    });
+  },
+
+  exportBacklogRows(rows, stageLabel) {
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "Backlog");
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    const safeLabel = stageLabel.replace(/[&/\\?%*:|"<>]/g, "-");
+    XLSX.writeFile(workbook, `${safeLabel} - ${dateStamp}.xlsx`);
   },
 
   renderBacklogChart(canvasId, stageBacklog, metricField, metricLabel) {

@@ -85,6 +85,7 @@ class SpoolRecord:
     quantity: float | None = None
     weight: float | None = None
     surface_area: float | None = None
+    week: str = ""
 
 
 def build_spool_records(
@@ -193,6 +194,7 @@ def build_spool_records(
             quantity=_to_float(row.get(fields["quantity_field"])),
             weight=_to_float(row.get(fields["weight_field"])),
             surface_area=_to_float(row.get(fields["surface_area_field"])),
+            week=str(row.get("Week") or ""),
         )
 
         # Which stages actually apply to this spool's category - the 5

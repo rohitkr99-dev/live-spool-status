@@ -23,7 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/production.css?v=20260810">
+<link rel="stylesheet" href="css/production.css?v=20260813">
 </head>
 <body>
 
@@ -173,6 +173,7 @@
           <div class="chart-card__head">
             <h3>Fit-Up &amp; Welding Backlog</h3>
             <span class="chart-card__hint">No separate Fit-Up target exists - spools not yet at Welding Finish are combined here</span>
+            <button type="button" class="btn-export" data-backlog-export="welding_finish" data-backlog-label="Fit-Up &amp; Welding Backlog">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-welding_finish"></canvas></div>
         </div>
@@ -182,12 +183,14 @@
         <div class="chart-card">
           <div class="chart-card__head">
             <h3>PDQC Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="pdqc" data-backlog-label="PDQC Backlog">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-pdqc"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
             <h3>Release for Painting Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="release_for_painting" data-backlog-label="Release for Painting Backlog">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-release_for_painting"></canvas></div>
         </div>
@@ -195,6 +198,7 @@
           <div class="chart-card__head">
             <h3>Painting Backlog</h3>
             <span class="chart-card__hint">PDI Clearance</span>
+            <button type="button" class="btn-export" data-backlog-export="pdi_clearance" data-backlog-label="Painting Backlog">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-pdi_clearance"></canvas></div>
         </div>
@@ -204,6 +208,7 @@
         <div class="chart-card chart-card--full">
           <div class="chart-card__head">
             <h3>Packing Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="packed" data-backlog-label="Packing Backlog">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-packed"></canvas></div>
         </div>
@@ -417,6 +422,7 @@
 <script src="js/user-menu.js"></script>
 
 <script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/xlsx.core.min.js"></script>
 
 <script src="js/production-config.js?v=20260812c"></script>
 <script>
@@ -435,7 +441,7 @@
 <script src="js/production-data.js?v=20260812c"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
 <script src="js/production-filters.js?v=20260731"></script>
-<script src="js/production-charts.js?v=20260812c"></script>
+<script src="js/production-charts.js?v=20260813"></script>
 <script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 

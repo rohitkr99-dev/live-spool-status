@@ -163,7 +163,9 @@ def run(
         "metrics": METRICS,
         "projects": build_projects_list(records),
         "material_handover": material_handover,
-        "backlog": build_backlog_summary(records),
+        "backlog": build_backlog_summary(
+            records, category_meta, rules.get("category_tracked_stages", {})
+        ),
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])
