@@ -275,6 +275,7 @@ const SpoolStageAgeing = {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          datalabels: { display: false },
           tooltip: { titleFont: this.chartFont, bodyFont: this.chartFont },
         },
         scales: {

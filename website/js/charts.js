@@ -20,6 +20,14 @@ const SpoolCharts = {
   overviewMetric: "count",
   masterSpools: [],
 
+  // Weekly Progress chart's from/to week-range filter (2026-08-13) -
+  // null until the first render, when it's set to "the last 8 weeks
+  // present in the data" (see renderWeeklyChart()). From then on it
+  // only changes when the person picks a different range from the
+  // two <select>s - render() calls never reset it back to auto.
+  weeklyRangeFrom: null,
+  weeklyRangeTo: null,
+
   chartFont: {
     family: "Inter, sans-serif",
     size: 11,
@@ -85,6 +93,7 @@ const SpoolCharts = {
     this.masterSpools = store.masterSpools || [];
 
     this.setupOverviewMetricFilter();
+    this.setupWeeklyRangeFilter();
     this.renderOverviewCharts();
 
     this.activityMetrics = store.activityMetrics || [];
@@ -121,6 +130,55 @@ const SpoolCharts = {
   overviewMetricConfig() {
     return SPOOL_STATUS_CONFIG.overviewMetrics.find((m) => m.key === this.overviewMetric)
       || SPOOL_STATUS_CONFIG.overviewMetrics[0];
+  },
+
+  // -----------------------------------------------------
+  // Weekly Progress chart's from/to week-range filter
+  // -----------------------------------------------------
+
+  setupWeeklyRangeFilter() {
+    const fromSelect = document.getElementById("weekly-range-from");
+    const toSelect = document.getElementById("weekly-range-to");
+    if (!fromSelect || !toSelect || fromSelect.dataset.wired) return;
+    fromSelect.dataset.wired = "true";
+
+    const onChange = () => {
+      const from = parseInt(fromSelect.value, 10);
+      const to = parseInt(toSelect.value, 10);
+      if (isNaN(from) || isNaN(to)) return;
+      // Keep "From" <= "To" - swap rather than reject, so picking
+      // either end past the other just flips the range instead of
+      // silently doing nothing.
+      this.weeklyRangeFrom = Math.min(from, to);
+      this.weeklyRangeTo = Math.max(from, to);
+      this.renderWeeklyChart();
+    };
+
+    fromSelect.addEventListener("change", onChange);
+    toSelect.addEventListener("change", onChange);
+  },
+
+  /**
+   * Fills both <select>s with every week NUMBER actually present in
+   * the data (ascending, deduplicated) - only rebuilds the options
+   * when the available set has actually changed, so an in-progress
+   * selection isn't clobbered by every re-render. Returns nothing;
+   * callers read the selects' own .value afterwards.
+   */
+  refreshWeeklyRangeOptions(weekNumbers) {
+    const fromSelect = document.getElementById("weekly-range-from");
+    const toSelect = document.getElementById("weekly-range-to");
+    if (!fromSelect || !toSelect) return;
+
+    const signature = weekNumbers.join(",");
+    if (fromSelect.dataset.weeksSignature === signature) return;
+    fromSelect.dataset.weeksSignature = signature;
+
+    const optionsHtml = weekNumbers
+      .map((n) => `<option value="${n}">Week ${n}</option>`)
+      .join("");
+    fromSelect.innerHTML = optionsHtml;
+    toSelect.innerHTML = optionsHtml;
   },
 
   renderOverviewCharts() {
@@ -213,6 +271,7 @@ const SpoolCharts = {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          datalabels: { display: false },
           tooltip: {
             titleFont: this.chartFont,
             bodyFont: this.chartFont,
@@ -241,19 +300,52 @@ const SpoolCharts = {
 
     this.destroy("weekly");
 
-    const records = this.buildStageBreakdown("Week", ["Unassigned"])
-      .sort((a, b) => {
-        const numA = parseInt(String(a.key).match(/\d+/), 10);
-        const numB = parseInt(String(b.key).match(/\d+/), 10);
-        return (isNaN(numA) ? Infinity : numA) - (isNaN(numB) ? Infinity : numB);
-      });
+    const allRecords = this.buildStageBreakdown("Week", ["Unassigned"])
+      .map((r) => ({
+        ...r,
+        weekNumber: parseInt(String(r.key).match(/\d+/), 10),
+      }))
+      .filter((r) => !isNaN(r.weekNumber))
+      .sort((a, b) => a.weekNumber - b.weekNumber);
+
+    const weekNumbers = allRecords.map((r) => r.weekNumber);
+    this.refreshWeeklyRangeOptions(weekNumbers);
+
+    // First render (or a data refresh that dropped the previously
+    // selected range entirely) - default to the last 8 weeks present
+    // in the data, so the chart doesn't keep shrinking every bar as
+    // more weeks accumulate over the life of the project. Any
+    // explicit choice the person has made via the two <select>s
+    // (setupWeeklyRangeFilter()) is preserved across re-renders from
+    // here on, never silently reset back to this default.
+    const rangeStillValid =
+      this.weeklyRangeFrom !== null
+      && weekNumbers.includes(this.weeklyRangeFrom)
+      && weekNumbers.includes(this.weeklyRangeTo);
+
+    if (!rangeStillValid) {
+      const last8 = weekNumbers.slice(-8);
+      this.weeklyRangeFrom = last8[0] ?? null;
+      this.weeklyRangeTo = last8[last8.length - 1] ?? null;
+    }
+
+    const fromSelect = document.getElementById("weekly-range-from");
+    const toSelect = document.getElementById("weekly-range-to");
+    if (fromSelect) fromSelect.value = String(this.weeklyRangeFrom);
+    if (toSelect) toSelect.value = String(this.weeklyRangeTo);
+
+    const records = allRecords.filter(
+      (r) => r.weekNumber >= this.weeklyRangeFrom && r.weekNumber <= this.weeklyRangeTo
+    );
 
     const labels = records.map((r) => r.key);
     const datasets = this.stageDatasets(records);
 
     const metricConfig = this.overviewMetricConfig();
     const hint = document.getElementById("chart-weekly-hint");
-    if (hint) hint.textContent = `${metricConfig.unitLabel} by current stage, per planned week`;
+    if (hint) {
+      hint.textContent = `${metricConfig.unitLabel} by current stage - Week ${this.weeklyRangeFrom} to Week ${this.weeklyRangeTo}`;
+    }
 
     const ctx = document.getElementById("chart-weekly").getContext("2d");
 
@@ -265,6 +357,7 @@ const SpoolCharts = {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          datalabels: { display: false },
           tooltip: { titleFont: this.chartFont, bodyFont: this.chartFont },
         },
         scales: {

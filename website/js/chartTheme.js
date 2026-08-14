@@ -38,6 +38,58 @@
   Chart.defaults.plugins.legend.labels.boxWidth = 7;
   Chart.defaults.plugins.legend.labels.boxHeight = 7;
 
+  // Data labels (2026-08-13, "add data labels to all bar charts in
+  // all pages" - given by the person). chartjs-plugin-datalabels,
+  // once registered, defaults to ON for every chart type it can
+  // draw on - which would also clutter every pie/doughnut/line
+  // chart on this dashboard with raw-value labels nobody asked for.
+  // So: OFF globally first, then explicitly back ON only for
+  // Chart.defaults.set('bar', ...) below - the only chart TYPE the
+  // person asked for.
+  //
+  // display: 'auto' (not `true`) - the plugin's own overlap
+  // detection, so a dense chart (a weekly trend with 50+ bars, say)
+  // silently drops labels that would collide rather than rendering
+  // an unreadable wall of numbers; a normal handful-of-bars chart is
+  // completely unaffected by this and always shows every label.
+  //
+  // Every STACKED bar chart on this dashboard opts back OUT
+  // individually, in its own chart config (plugins.datalabels sets
+  // display:false there) - stacked segments are usually too narrow
+  // for a label to read cleanly, and the person explicitly asked to
+  // exclude stacked bars for now. Current full list, so a new
+  // stacked chart added later doesn't accidentally inherit labels
+  // and forget to opt out: charts.js (chart-project, chart-weekly),
+  // production-charts.js (chart-delayed-by-project, chart-mh-
+  // weekly-first-time), stageAgeing.js (chart-stage-ageing-dist),
+  // stageThroughput.js (chart-stage-throughput), packing-charts.js
+  // (chart-project-status).
+  if (typeof ChartDataLabels !== "undefined") {
+
+    Chart.register(ChartDataLabels);
+    Chart.defaults.set("plugins.datalabels", { display: false });
+
+    Chart.defaults.set("bar", {
+      plugins: {
+        datalabels: {
+          display: "auto",
+          color: cfg.chartTextColorStrong,
+          font: { family: "'IBM Plex Mono', monospace", size: 10, weight: "600" },
+          anchor: "end",
+          align: "end",
+          offset: 4,
+          clip: false,
+          formatter(value) {
+            if (value === null || value === undefined || value === 0) return "";
+            return typeof value === "number"
+              ? value.toLocaleString(undefined, { maximumFractionDigits: 1 })
+              : value;
+          },
+        },
+      },
+    });
+  }
+
   // Rounded, breathing bars in every bar chart on the dashboard,
   // applied once here rather than per chart file - the modern
   // "BI tool" look (Power BI / Tableau) leans on soft corners and

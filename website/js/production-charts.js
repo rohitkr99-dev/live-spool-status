@@ -186,6 +186,9 @@ const ProductionCharts = {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          datalabels: { display: false },
+        },
         scales: {
           x: {
             stacked: true,
@@ -825,6 +828,7 @@ const ProductionCharts = {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: "bottom", labels: { font: { size: 12 }, boxWidth: 12, boxHeight: 12 } },
+          datalabels: { display: false },
         },
         scales: {
           x: {

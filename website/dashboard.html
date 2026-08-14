@@ -144,9 +144,17 @@
         <div class="chart-card__body"><canvas id="chart-project"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="chart-card__head">
-          <h3>Weekly Progress</h3>
-          <span class="chart-card__hint" id="chart-weekly-hint">Spool count by current stage, per planned week</span>
+        <div class="chart-card__head chart-card__head--with-control">
+          <div>
+            <h3>Weekly Progress</h3>
+            <span class="chart-card__hint" id="chart-weekly-hint">Spool count by current stage, per planned week</span>
+          </div>
+          <div class="chart-card__control" id="weekly-range-filter">
+            <label for="weekly-range-from">From</label>
+            <select id="weekly-range-from"></select>
+            <label for="weekly-range-to">to</label>
+            <select id="weekly-range-to"></select>
+          </div>
         </div>
         <div class="chart-card__body"><canvas id="chart-weekly"></canvas></div>
       </div>
@@ -470,6 +478,7 @@
 <script src="vendor/jszip.min.js"></script>
 <script src="vendor/buttons.html5.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/chartjs-plugin-datalabels.min.js"></script>
 <script src="vendor/chartjs-chart-treemap.min.js"></script>
 <script src="vendor/jspdf.umd.min.js"></script>
 

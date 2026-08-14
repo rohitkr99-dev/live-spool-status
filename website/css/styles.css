@@ -769,6 +769,35 @@ a { color: inherit; }
   color: var(--frost-faint);
 }
 
+/* Weekly Progress chart's from/to week-range control (2026-08-13) -
+   same "title + control on one line" pattern quality.css already
+   uses for its trend chart's granularity toggle, duplicated here
+   since dashboard.html doesn't load quality.css. */
+.chart-card__head--with-control {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chart-card__control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--frost-faint);
+  white-space: nowrap;
+}
+.chart-card__control select {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 7px;
+  border: 1px solid var(--glass-border-strong);
+  background: #FFFFFF;
+  color: var(--frost);
+}
+
 .chart-card__body {
   position: relative;
   flex: 1;
