@@ -69,25 +69,35 @@
     Chart.register(ChartDataLabels);
     Chart.defaults.set("plugins.datalabels", { display: false });
 
-    Chart.defaults.set("bar", {
-      plugins: {
-        datalabels: {
-          display: "auto",
-          color: cfg.chartTextColorStrong,
-          font: { family: "'IBM Plex Mono', monospace", size: 10, weight: "600" },
-          anchor: "end",
-          align: "end",
-          offset: 4,
-          clip: false,
-          formatter(value) {
-            if (value === null || value === undefined || value === 0) return "";
-            return typeof value === "number"
-              ? value.toLocaleString(undefined, { maximumFractionDigits: 1 })
-              : value;
-          },
-        },
+    // CORRECTED 2026-08-14: Chart.js v4 keeps chart-TYPE-specific
+    // defaults (bar-only, line-only, etc.) in a SEPARATE registry,
+    // Chart.overrides[type] - one per registered controller, each
+    // already pre-populated with that type's own scale/plugin
+    // defaults. Chart.defaults.set("bar", {...}) (the previous
+    // version of this block) only ever writes into Chart.defaults,
+    // which per-type chart creation never reads for this - it's a
+    // silent no-op, no error, the labels just never appear. Merging
+    // into Chart.overrides.bar.plugins.datalabels directly (rather
+    // than overwriting Chart.overrides.bar wholesale) preserves its
+    // existing scale defaults, which are load-bearing for every bar
+    // chart already on this dashboard.
+    Chart.overrides.bar = Chart.overrides.bar || {};
+    Chart.overrides.bar.plugins = Chart.overrides.bar.plugins || {};
+    Chart.overrides.bar.plugins.datalabels = {
+      display: "auto",
+      color: cfg.chartTextColorStrong,
+      font: { family: "'IBM Plex Mono', monospace", size: 10, weight: "600" },
+      anchor: "end",
+      align: "end",
+      offset: 4,
+      clip: false,
+      formatter(value) {
+        if (value === null || value === undefined || value === 0) return "";
+        return typeof value === "number"
+          ? value.toLocaleString(undefined, { maximumFractionDigits: 1 })
+          : value;
       },
-    });
+    };
   }
 
   // Rounded, breathing bars in every bar chart on the dashboard,
