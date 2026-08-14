@@ -214,7 +214,7 @@ const SpoolStageThroughput = {
           },
           y: {
             stacked: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont },
           },
         },

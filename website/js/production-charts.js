@@ -216,7 +216,7 @@ const ProductionCharts = {
           y: {
             stacked: true,
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont },
             title: { display: true, text: "Spool count", font: this.chartFont },
           },
@@ -290,7 +290,7 @@ const ProductionCharts = {
             },
             y: {
               beginAtZero: true,
-              grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+              grid: { display: false },
               ticks: { font: this.chartFont },
               title: { display: true, text: "Days from Planned Start", font: this.chartFont },
             },
@@ -363,7 +363,7 @@ const ProductionCharts = {
           },
           y: {
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont },
             title: { display: true, text: "Days from Planned Start", font: this.chartFont },
           },
@@ -510,7 +510,7 @@ const ProductionCharts = {
           },
           y: {
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont, precision: 0 },
             title: { display: true, text: metricLabel, font: this.chartFont },
           },
@@ -749,7 +749,7 @@ const ProductionCharts = {
           },
           [valueAxis]: {
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont, precision: 0 },
             title: { display: true, text: axisTitle, font: this.chartFont },
           },
@@ -787,7 +787,7 @@ const ProductionCharts = {
           },
           y: {
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont, precision: 0 },
             title: { display: true, text: axisTitle, font: this.chartFont },
           },
@@ -839,7 +839,7 @@ const ProductionCharts = {
           y: {
             stacked: true,
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont, precision: 0 },
             title: { display: true, text: "Items handed over", font: this.chartFont },
           },
@@ -884,7 +884,7 @@ const ProductionCharts = {
           y: {
             beginAtZero: true,
             max: 100,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont, callback: (v) => `${v}%` },
             title: { display: true, text: "First-pass yield", font: this.chartFont },
           },

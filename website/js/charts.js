@@ -280,7 +280,7 @@ const SpoolCharts = {
           twoPartYLabels: { labels: twoPartLabels },
         },
         scales: {
-          x: { stacked: true, grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont } },
+          x: { stacked: true, grid: { display: false }, ticks: { font: this.chartFont } },
           y: {
             stacked: true,
             grid: { display: false },
@@ -362,7 +362,7 @@ const SpoolCharts = {
         },
         scales: {
           x: { stacked: true, grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true } },
-          y: { stacked: true, grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont } },
+          y: { stacked: true, grid: { display: false }, ticks: { font: this.chartFont } },
         },
       },
     });
@@ -432,7 +432,7 @@ const SpoolCharts = {
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0 } },
-          y: { grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont, precision: 0 } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont, precision: 0 } },
         },
       },
     });
@@ -568,7 +568,7 @@ const SpoolCharts = {
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true } },
-          y: { grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont } },
         },
       },
     });

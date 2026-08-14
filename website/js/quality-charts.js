@@ -93,7 +93,7 @@ const QualityCharts = {
         scales: {
           x: {
             beginAtZero: true,
-            grid: { color: "rgba(23, 21, 43, 0.06)" },
+            grid: { display: false },
             ticks: { font: this.chartFont },
           },
           y: {
@@ -187,7 +187,7 @@ const QualityCharts = {
           y: {
             beginAtZero: true,
             ticks: { font: this.chartFont, callback: (v) => `${v}%` },
-            grid: { color: "rgba(23, 21, 43, 0.06)" },
+            grid: { display: false },
           },
         },
       },
@@ -308,7 +308,7 @@ const QualityCharts = {
           y: {
             beginAtZero: true,
             ticks: { font: this.chartFont, callback: (v) => `${v}%` },
-            grid: { color: "rgba(23, 21, 43, 0.06)" },
+            grid: { display: false },
           },
         },
       },
@@ -361,7 +361,7 @@ const QualityCharts = {
           y: {
             beginAtZero: true,
             ticks: { font: this.chartFont },
-            grid: { color: "rgba(23, 21, 43, 0.06)" },
+            grid: { display: false },
           },
         },
       },

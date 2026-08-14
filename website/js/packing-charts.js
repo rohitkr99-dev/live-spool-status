@@ -223,7 +223,7 @@ const PackingCharts = {
           twoPartYLabels: { labels: twoPartLabels },
         },
         scales: {
-          x: { stacked: true, beginAtZero: true, grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont }, title: { display: true, text: "Spool count", font: this.chartFont } },
+          x: { stacked: true, beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Spool count", font: this.chartFont } },
           y: {
             stacked: true,
             grid: { display: false },
@@ -327,7 +327,7 @@ const PackingCharts = {
           },
           y: {
             beginAtZero: true,
-            grid: { color: SPOOL_STATUS_CONFIG.chartGridColor },
+            grid: { display: false },
             ticks: { font: this.chartFont },
             title: { display: true, text: this.metricLabel(metric), font: this.chartFont },
           },

@@ -69,6 +69,60 @@ class ExcelReader:
 
     # -----------------------------------------------------
 
+    def _read_excel_sheet_or_none(
+        self,
+        file: Path,
+        sheet_name: str,
+        header: int,
+        engine: str,
+        source_label: str,
+    ) -> Optional[pd.DataFrame]:
+        """
+        pd.read_excel(), but never raises - used by every OPTIONAL
+        source's read loop (read_line_history(), read_siop_planned(),
+        read_rework(), read_material_handover()). A workbook whose
+        internal sheet has been renamed or restructured (e.g. the
+        configured sheet_name no longer exists once a source system
+        re-exports the file under a new template) is exactly as
+        recoverable as a missing file, per each of those methods'
+        own "OPTIONAL and best-effort" contract - but before this,
+        only the FILE-NOT-FOUND case was actually protected; a wrong
+        sheet name inside a file that WAS found crashed the read
+        uncaught, which crashed load_sources(), which crashed the
+        whole Production dashboard pipeline (2026-08-14 - confirmed
+        against the person's real GitHub Actions failure: a Line
+        History Sheet re-export renamed internally, sheet_name
+        "Sheet2" no longer present).
+
+        On failure, logs the sheets ACTUALLY found in the file (a
+        direct, actionable diagnostic for exactly this scenario) and
+        returns None so the caller can skip just this one file,
+        rather than letting any bad file bring the whole run down.
+        """
+
+        try:
+            return pd.read_excel(
+                file, sheet_name=sheet_name, header=header, engine=engine
+            )
+        except Exception as error:
+
+            available_sheets = None
+            try:
+                available_sheets = pd.ExcelFile(file, engine=engine).sheet_names
+            except Exception:
+                pass
+
+            sheet_detail = (
+                f" Sheets actually found in this file: {available_sheets}."
+                if available_sheets is not None else ""
+            )
+            logger.warning(
+                f"Could not read sheet '{sheet_name}' from {file.name} "
+                f"for {source_label} ({error}).{sheet_detail} Skipping "
+                "this file for this run."
+            )
+            return None
+
     def _matching_files_oldest_first(
         self, folder: Path, pattern: str
     ) -> list[Path]:
@@ -399,12 +453,15 @@ class ExcelReader:
 
             logger.info(f"Reading {file.name}")
 
-            frame = pd.read_excel(
+            frame = self._read_excel_sheet_or_none(
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb"
+                engine="pyxlsb",
+                source_label="Line History Sheet",
             )
+            if frame is None:
+                continue
 
             frame = standardize_columns(
                 frame,
@@ -422,6 +479,15 @@ class ExcelReader:
             )
 
             frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "Line History Sheet: no matching file could be read "
+                "successfully this run. Every spool will use the "
+                "existing date-field-based Fit-Up/Welding/PDQC logic "
+                "for this run."
+            )
+            return None
 
         # One row per joint - the same spool (and even the same
         # joint, if an older extract's period overlaps a newer one)
@@ -486,12 +552,15 @@ class ExcelReader:
 
             logger.info(f"Reading {file.name}")
 
-            frame = pd.read_excel(
+            frame = self._read_excel_sheet_or_none(
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb"
+                engine="pyxlsb",
+                source_label="SIOP Planned Spools workbook",
             )
+            if frame is None:
+                continue
 
             frame = standardize_columns(
                 frame,
@@ -509,6 +578,15 @@ class ExcelReader:
             )
 
             frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "SIOP Planned Spools workbook: no matching file could "
+                "be read successfully this run. Every spool not found "
+                "in the Weekly Production Planning workbook will show "
+                "Planned = No, unchanged."
+            )
+            return None
 
         dataframe = self._merge_latest_wins(
             frames, self.schema_composite_key()
@@ -580,12 +658,15 @@ class ExcelReader:
 
             logger.info(f"Reading {file.name}")
 
-            frame = pd.read_excel(
+            frame = self._read_excel_sheet_or_none(
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl"
+                engine="openpyxl",
+                source_label="Rework workbook",
             )
+            if frame is None:
+                continue
 
             frame = standardize_columns(
                 frame,
@@ -608,6 +689,16 @@ class ExcelReader:
             )
 
             frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "Rework workbook: no matching file could be read "
+                "successfully this run. Every spool will keep its "
+                "existing PDQC date for this run, and the Quality "
+                "Assurance/Control dashboard will have no data to "
+                "refresh from."
+            )
+            return None
 
         dataframe = pd.concat(frames, ignore_index=True)
 
@@ -680,12 +771,15 @@ class ExcelReader:
 
             logger.info(f"Reading {file.name}")
 
-            frame = pd.read_excel(
+            frame = self._read_excel_sheet_or_none(
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl"
+                engine="openpyxl",
+                source_label="Material Handover workbook",
             )
+            if frame is None:
+                continue
 
             frame = standardize_columns(
                 frame,
@@ -703,6 +797,15 @@ class ExcelReader:
             )
 
             frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "Material Handover workbook: no matching file could "
+                "be read successfully this run. The Production "
+                "dashboard's Material Handover section will have no "
+                "data to show for this run."
+            )
+            return None
 
         # One row per spool (like Fabrication/Master Planning) - if
         # more than one file is present, the latest file's row wins

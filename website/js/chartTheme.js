@@ -201,13 +201,31 @@
         }
         dataset.backgroundColor = resolveColors(chart.ctx, chart.chartArea, dataset.__spoolBaseColor, horizontal);
       });
+    },
+    // Shadow save/restore scoped to EACH individual dataset's own
+    // draw (the SINGULAR beforeDatasetDraw/afterDatasetDraw hooks,
+    // not the plural ones above) - fixed 2026-08-14. Chart.js always
+    // finishes every dataset's singular before/afterDatasetDraw
+    // BEFORE it ever reaches the plural afterDatasetsDraw phase,
+    // where chartjs-plugin-datalabels draws its labels - so scoping
+    // save/restore to the singular hooks guarantees the shadow is
+    // torn down before any label gets drawn, regardless of plugin
+    // REGISTRATION order. The previous version used the plural
+    // hooks for save/restore too, which only worked by accident of
+    // this plugin happening to register after ChartDataLabels; once
+    // datalabels started drawing (2026-08-13), every label was drawn
+    // while the bar shadow was still active on the canvas context -
+    // producing exactly the doubled/ghosted label text reported.
+    beforeDatasetDraw(chart) {
+      if (chart.config.type !== "bar" || !chart.chartArea) return;
+      const horizontal = chart.options.indexAxis === "y";
       chart.ctx.save();
       chart.ctx.shadowColor = "rgba(23, 21, 43, 0.16)";
       chart.ctx.shadowBlur = 9;
       chart.ctx.shadowOffsetY = horizontal ? 0 : 4;
       chart.ctx.shadowOffsetX = horizontal ? 4 : 0;
     },
-    afterDatasetsDraw(chart) {
+    afterDatasetDraw(chart) {
       if (chart.config.type !== "bar") return;
       chart.ctx.restore();
     },

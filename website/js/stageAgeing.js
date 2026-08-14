@@ -222,7 +222,7 @@ const SpoolStageAgeing = {
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: false } },
-          y: { grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont }, title: { display: true, text: "Average days", font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Average days", font: this.chartFont } },
         },
       },
     });
@@ -280,7 +280,7 @@ const SpoolStageAgeing = {
         },
         scales: {
           x: { stacked: true, grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: false } },
-          y: { stacked: true, grid: { color: SPOOL_STATUS_CONFIG.chartGridColor }, ticks: { font: this.chartFont, precision: 0 }, title: { display: true, text: "Spool count", font: this.chartFont } },
+          y: { stacked: true, grid: { display: false }, ticks: { font: this.chartFont, precision: 0 }, title: { display: true, text: "Spool count", font: this.chartFont } },
         },
       },
     });
