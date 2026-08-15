@@ -2,6 +2,8 @@
 
 A professional Production Intelligence System for monitoring fabrication spool progress, production ageing, planning status, and project KPIs.
 
+> **Working on this repo as Claude?** Read [`CHANGELOG.md`](CHANGELOG.md) first - it has the project's history and the reasoning behind decisions that aren't obvious from the code alone, and instructions for keeping it updated as you work.
+
 ---
 
 ## Overview

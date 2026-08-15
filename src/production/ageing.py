@@ -38,7 +38,7 @@ from datetime import date
 
 from utils import create_composite_key, days_between, is_empty, parse_date, today
 from production.classify import classify_category
-from production.welding_finish import determine_welding_finish
+from welding_finish import determine_welding_finish
 
 # Stages (after Planned Start) walked in order to find each spool's
 # "current" (first not-yet-reached) stage.

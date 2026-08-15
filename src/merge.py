@@ -55,6 +55,12 @@ from constants import (
     REWORK_LATEST_STATUS,
     SIOP_PLANNED_START,
     SPOOL_NO,
+    WELDING_FINISH,
+)
+from welding_finish import (
+    build_line_history_lookup,
+    build_welding_db_lookup,
+    determine_welding_finish,
 )
 from logger import logger
 from utils import create_composite_key, is_empty, parse_date, working_day_variance
@@ -556,6 +562,72 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def apply_welding_finish(
+        self,
+        master: pd.DataFrame,
+        welding_db: pd.DataFrame,
+        line_history: Optional[pd.DataFrame],
+        activity_date_field: str,
+    ) -> pd.DataFrame:
+        """
+        Adds a "Welding Finish" column to master - the date the LAST
+        joint finished welding, using the EXACT same calculation the
+        Production dashboard already used (src/welding_finish.py,
+        promoted to this shared top-level location 2026-08-15) -
+        both dashboards now agree, computed from the same source
+        data through the same function, rather than two
+        independently-built definitions of "Welding done".
+
+        Added 2026-08-15 (given by the person, in their own words:
+        "the rules under Production pages are actual and Projects
+        numbers should have been updated as per that only").
+        config/stages.json's "Welding" stage now points its
+        date_field at this column instead of the looser "First
+        Welding" (still computed and left on master unchanged - see
+        summarize_first_activity() above - in case anything else
+        still reads it; nothing for stage-gating does any more).
+
+        Deliberately called BEFORE apply_rework_pdqc_override() in
+        merge() below, so this reads the SAME raw DPR PDQC value the
+        Production pipeline's own welding_finish.py call does (which
+        has no rework-PDQC-override concept of its own) - not the
+        rework-corrected PDQC the rest of THIS pipeline's stage walk
+        uses everywhere else. Using the post-override PDQC here would
+        reintroduce a small residual mismatch between the two
+        dashboards for exactly the spools that override touches.
+        """
+
+        if WELDING_FINISH not in master.columns:
+            master[WELDING_FINISH] = None
+
+        line_history_lookup = build_line_history_lookup(
+            line_history,
+            self.line_history_joint_no_field,
+            self.line_history_weld_run_date_field,
+        )
+        welding_db_lookup = build_welding_db_lookup(
+            welding_db,
+            activity_date_field,
+        )
+
+        results = master.apply(
+            lambda row: determine_welding_finish(
+                row[COMPOSITE_KEY],
+                row.get(PDQC),
+                line_history_lookup,
+                welding_db_lookup,
+            )[0],
+            axis=1,
+        )
+        master[WELDING_FINISH] = results
+
+        logger.info(
+            f"Welding Finish (all-joints-done) computed for "
+            f"{int(results.notna().sum())} of {len(master)} spool(s)."
+        )
+
+        return master
+
     def apply_rework_pdqc_override(
         self,
         master: pd.DataFrame,
@@ -961,6 +1033,10 @@ class MergeEngine:
         )
 
         master = self.apply_packing_dates(master, packing_spools)
+
+        master = self.apply_welding_finish(
+            master, welding_db, line_history, activity_date_field
+        )
 
         master = self.apply_rework_pdqc_override(master, rework)
 

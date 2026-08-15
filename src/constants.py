@@ -25,6 +25,7 @@ PLANNED_START = "Planned Start"
 ACTUAL_START_DATE = "Actual Start Date"
 FIRST_FITUP = "First Fit-Up"
 FIRST_WELDING = "First Welding"
+WELDING_FINISH = "Welding Finish"
 FIRST_ACTIVITY_DATE = "First Activity Date"
 LAST_ACTIVITY_DATE = "Last Activity"
 

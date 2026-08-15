@@ -33,7 +33,7 @@ from typing import Any
 from production.logger import logger
 from production.reader import load_sources
 from production.ageing import build_spool_records, TRACKED_STAGES
-from production.welding_finish import (
+from welding_finish import (
     build_line_history_lookup,
     build_welding_db_lookup,
 )
