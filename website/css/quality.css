@@ -53,3 +53,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* "Export to Excel" buttons (Welder Performance / Production Rework
+   downloads) - same rule as website/css/production.css's Backlog
+   export buttons, duplicated here since quality.html doesn't load
+   production.css. Positioned in the top-right of .chart-card__head
+   / .charts-grid__head, both already position:relative. */
+.btn-export {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-export:hover { background: var(--ice-soft); }
+.btn-export:disabled { opacity: 0.5; cursor: default; }

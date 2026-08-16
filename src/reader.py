@@ -40,10 +40,15 @@ from constants import (
     REWORK_OFFER_DATE,
     SIOP_PLANNED,
     SIOP_PLANNED_START,
+    WELDER_MONTH,
+    WELDER_PERFORMANCE,
+    WELDER_PROCESS,
+    WELDER_TOTAL_WELD_JOINT,
 )
 from utils import (
     convert_excel_serial_dates,
     extract_file_period,
+    normalize_month_name,
     resolve_multi_date_text_cells,
 )
 
@@ -918,6 +923,130 @@ class ExcelReader:
                 f"Merged {len(files)} Material Handover workbook(s): "
                 f"{len(dataframe)} spool row(s) after latest-file-wins "
                 "de-duplication."
+            )
+
+        return dataframe
+
+    def read_welder_performance(self) -> Optional[pd.DataFrame]:
+        """
+        Read the Welder Performance Record workbook - one row per
+        welder/job/welding-process entry, NDT'd during that period.
+        Source data for the Welder Performance section of the
+        Quality dashboard (src/quality/welder_performance.py),
+        including its auto-computed "Weld Reject Rate" summary and
+        its download button.
+
+        Lives in paths.quality_upload_folder (data/upload/quality/),
+        same folder as the Rework Data workbook. Plain .xlsx, read
+        via openpyxl.
+
+        OPTIONAL and best-effort, same contract as Rework/Material
+        Handover: a missing file only logs a warning and returns
+        None - the Quality dashboard's other sections (driven by
+        Rework Data) are unaffected.
+
+        Rows whose "Month" value doesn't resolve to a real calendar
+        month (e.g. a stray "Total" footer row sitting inside the
+        sheet's data range) are dropped rather than silently
+        mis-bucketed - see utils.normalize_month_name().
+        """
+
+        config = self.settings["input_files"].get("welder_performance", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get(
+                "quality_upload_folder", "data/upload/quality"
+            )
+        )
+
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
+
+        if not files:
+            logger.warning(
+                "Welder Performance workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). The "
+                "Quality dashboard's Welder Performance section will "
+                "have no data to show for this run."
+            )
+            return None
+
+        frames = []
+
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            frame = self._read_excel_sheet_or_none(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="openpyxl",
+                source_label="Welder Performance workbook",
+                standardize_key=WELDER_PERFORMANCE,
+                required_columns=[
+                    WELDER_MONTH, WELDER_PROCESS, WELDER_TOTAL_WELD_JOINT,
+                ],
+            )
+            if frame is None:
+                continue
+
+            frame = standardize_columns(frame, WELDER_PERFORMANCE)
+
+            frame[WELDER_MONTH] = frame[WELDER_MONTH].apply(normalize_month_name)
+            before = len(frame)
+            frame = frame.dropna(subset=[WELDER_MONTH])
+            dropped = before - len(frame)
+            if dropped:
+                logger.info(
+                    f"{file.name}: dropped {dropped} row(s) with an "
+                    "unrecognized Month value (e.g. a footer/Total row)."
+                )
+
+            numeric_columns = [
+                "Total Weld Joint", "Total NDT Joint", "NDT Accept Joint",
+                "Rejected Joint", "Total NDT Length", "NDT Accepted Length",
+                "NDT Rejected Length",
+            ]
+            for column in numeric_columns:
+                if column in frame.columns:
+                    frame[column] = pd.to_numeric(frame[column], errors="coerce")
+
+            logger.info(
+                f"Loaded {len(frame)} Welder Performance rows from "
+                f"{file.name}."
+            )
+
+            frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "Welder Performance workbook: no matching file could "
+                "be read successfully this run. The Quality "
+                "dashboard's Welder Performance section will have no "
+                "data to show for this run."
+            )
+            return None
+
+        dataframe = pd.concat(frames, ignore_index=True)
+
+        if len(files) > 1:
+            # Transactional (one row per welder/job/process entry,
+            # not per spool) - every matching file's rows all matter,
+            # same as the Rework Data workbook. Exact duplicate rows
+            # (the same file synced more than once, or an old file
+            # whose period fully overlaps a newer one) are dropped so
+            # they can't double-count in the summary/charts.
+            before = len(dataframe)
+            dataframe = dataframe.drop_duplicates()
+            logger.info(
+                f"Merged {len(files)} Welder Performance workbook(s): "
+                f"{len(dataframe)} row(s) after exact-duplicate "
+                f"removal (from {before})."
             )
 
         return dataframe

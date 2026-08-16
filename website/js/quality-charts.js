@@ -18,6 +18,15 @@
  *                              between day / week / month (line)
  *   5. chart-rework-cycles      How many rework cycles spools
  *                              needed before acceptance (bar)
+ *
+ * Plus (2026-08-16):
+ *   - "Download Production Rework Data" button - raw rows + the
+ *     Compare Rework Status Monthly / Rework Type Monthly summary
+ *     blocks (src/quality/summary.py), exported client-side.
+ *   - Welder Performance section (5 charts, hidden when that
+ *     optional source wasn't part of this run's Drive sync) +
+ *     its own "Download Welder Performance Record" button -
+ *     numbers from src/quality/welder_performance.py.
  */
 
 const QualityCharts = {
@@ -39,6 +48,8 @@ const QualityCharts = {
     this.renderFirstOfferSplit(store.firstOfferSplit);
     this.renderReworkTrend(store.reworkTrend, this.trendGranularity);
     this.renderReworkCycles(store.reworkCycles);
+    this.wireReworkExportButton(store.reworkExport);
+    this.renderWelderPerformance(store.welderPerformance);
   },
 
   destroyAll() {
@@ -366,5 +377,330 @@ const QualityCharts = {
         },
       },
     });
+  },
+
+  // ---- "Download Production Rework Data" ------------------------
+  //
+  // Client-side only, same pattern as the Production dashboard's
+  // Backlog "Export to Excel" buttons (website/js/production-
+  // charts.js -> wireBacklogExportButtons()): the raw rows and both
+  // auto-computed summary blocks are already sitting in the bundle
+  // (src/quality/pipeline.py -> "rework_export"), so the download
+  // always matches exactly what's currently loaded - no second
+  // Python pass at click time.
+
+  wireReworkExportButton(reworkExport) {
+    const button = document.getElementById("rework-export-btn");
+    if (!button) return;
+
+    const hasData = reworkExport && reworkExport.raw_rows && reworkExport.raw_rows.length;
+    button.disabled = !hasData;
+
+    button.onclick = () => {
+      if (!hasData || typeof XLSX === "undefined") return;
+      this.exportReworkWorkbook(reworkExport);
+    };
+  },
+
+  exportReworkWorkbook(reworkExport) {
+    const workbook = XLSX.utils.book_new();
+
+    const rawSheet = XLSX.utils.json_to_sheet(reworkExport.raw_rows);
+    XLSX.utils.book_append_sheet(workbook, rawSheet, "Production Rework Data");
+
+    const rows = [];
+    rows.push(["Compare Rework Status Monthly"]);
+    rows.push(["Month", "Total Final Inspection Spool", "Acceptable", "Rework", "Rework %"]);
+    (reworkExport.status_monthly || []).forEach((r) => {
+      rows.push([r.month, r.total_final_inspection_spool, r.acceptable, r.rework, `${r.rework_pct}%`]);
+    });
+
+    rows.push([]);
+    rows.push([]);
+    rows.push(["Rework Type Monthly"]);
+    const typeMonthly = reworkExport.type_monthly || { columns: [], rows: [] };
+    rows.push(["Month", ...typeMonthly.columns]);
+    typeMonthly.rows.forEach((r) => {
+      rows.push([r.month, ...typeMonthly.columns.map((c) => r[c])]);
+    });
+
+    const summarySheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Production Rework Data - ${dateStamp}.xlsx`);
+  },
+
+  // ---- Welder Performance section --------------------------------
+  //
+  // All 5 charts + the section's own "Download Welder Performance
+  // Record" button. The whole section stays hidden when the source
+  // workbook wasn't part of this run's Drive sync (welderPerf is
+  // null) - see src/quality/reader.py -> load_sources().
+
+  renderWelderPerformance(welderPerf) {
+    const section = document.getElementById("welder-performance-section");
+    if (!section) return;
+
+    if (!welderPerf) {
+      section.hidden = true;
+      this.wireWelderExportButton(null);
+      return;
+    }
+
+    section.hidden = false;
+
+    this.renderWelderMonthJoint(welderPerf.month_wise_joint);
+    this.renderWelderMonthLength(welderPerf.month_wise_length);
+    this.renderWelderProject(welderPerf.project_wise);
+    this.renderWelderDefectType(welderPerf.defect_type);
+    this.renderWelderProcess(welderPerf.process_wise);
+    this.wireWelderExportButton(welderPerf);
+  },
+
+  renderWelderMonthJoint(rows) {
+    const ctx = this._ctx("chart-welder-month-joint");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.month);
+    const pcts = rows.map((r) => r.reject_pct);
+
+    this.instances.welderMonthJoint = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Total NDT Joints", data: rows.map((r) => r.total_joint), backgroundColor: QUALITY_CONFIG.welderAcceptColor },
+          { label: "Rejected Joints", data: rows.map((r) => r.reject_joint), backgroundColor: QUALITY_CONFIG.welderRejectColor },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "top", labels: { boxWidth: 12, boxHeight: 12, font: { size: 12, weight: "600" } } },
+          tooltip: {
+            callbacks: {
+              afterBody(items) {
+                return [`Reject %: ${pcts[items[0].dataIndex]}%`];
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: this.chartFont } },
+          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+        },
+      },
+    });
+  },
+
+  renderWelderMonthLength(rows) {
+    const ctx = this._ctx("chart-welder-month-length");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.month);
+    const pcts = rows.map((r) => r.reject_pct);
+
+    this.instances.welderMonthLength = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "NDT Length Reject %",
+          data: pcts,
+          borderColor: QUALITY_CONFIG.welderRejectColor,
+          backgroundColor: QUALITY_CONFIG.welderRejectColor,
+          tension: 0.3,
+          fill: false,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label(item) {
+                const r = rows[item.dataIndex];
+                return [`Reject %: ${item.formattedValue}%`, `${r.reject_length_mm} mm / ${r.total_length_mm} mm`];
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: this.chartFont } },
+          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+        },
+      },
+    });
+  },
+
+  renderWelderProject(rows) {
+    const ctx = this._ctx("chart-welder-project");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.project);
+    const pcts = rows.map((r) => r.reject_pct);
+
+    this.instances.welderProject = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Reject %", data: pcts, backgroundColor: QUALITY_CONFIG.welderProjectBarColor }],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterBody(items) {
+                const r = rows[items[0].dataIndex];
+                return [`${r.reject_joint} rejected of ${r.total_joint} joint(s)`];
+              },
+            },
+          },
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont } },
+        },
+      },
+    });
+  },
+
+  renderWelderDefectType(rows) {
+    const ctx = this._ctx("chart-welder-defect-type");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.defect);
+    const palette = QUALITY_CONFIG.welderDefectPalette;
+    const colors = rows.map((_, i) => palette[i % palette.length]);
+    const pcts = rows.map((r) => r.pct);
+
+    this.instances.welderDefect = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [{ data: rows.map((r) => r.count), backgroundColor: colors }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "right", labels: { boxWidth: 12, boxHeight: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label(item) {
+                return ` ${item.label}: ${item.formattedValue} (${pcts[item.dataIndex]}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
+  renderWelderProcess(rows) {
+    const ctx = this._ctx("chart-welder-process");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((r) => r.process);
+
+    this.instances.welderProcess = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Rejected Joints", data: rows.map((r) => r.rejected_joint), backgroundColor: QUALITY_CONFIG.welderProcessBarColor }],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont } },
+        },
+      },
+    });
+  },
+
+  // ---- "Download Welder Performance Record" ----------------------
+  //
+  // Same client-side, no-second-Python-pass pattern as
+  // exportReworkWorkbook() above. Sheet 1 mirrors the person's raw
+  // "Welder Performance - Pipe" sheet; Sheet 2 recreates his manual
+  // "Weld Reject Rate - Pipe" summary sheet's 5 blocks from live
+  // data (src/quality/welder_performance.py).
+
+  wireWelderExportButton(welderPerf) {
+    const button = document.getElementById("welder-export-btn");
+    if (!button) return;
+
+    const hasData = welderPerf && welderPerf.raw_rows && welderPerf.raw_rows.length;
+    button.disabled = !hasData;
+
+    button.onclick = () => {
+      if (!hasData || typeof XLSX === "undefined") return;
+      this.exportWelderWorkbook(welderPerf);
+    };
+  },
+
+  exportWelderWorkbook(welderPerf) {
+    const workbook = XLSX.utils.book_new();
+
+    const rawSheet = XLSX.utils.json_to_sheet(welderPerf.raw_rows);
+    XLSX.utils.book_append_sheet(workbook, rawSheet, "Welder Performance - Pipe");
+
+    const rows = [];
+
+    rows.push(["Month Wise NDT Length Summary (mm.)"]);
+    rows.push(["Month", "Total Length", "Accept Length", "Reject Length", "% Reject"]);
+    (welderPerf.month_wise_length || []).forEach((r) => {
+      rows.push([r.month, r.total_length_mm, r.accept_length_mm, r.reject_length_mm, `${r.reject_pct}%`]);
+    });
+
+    rows.push([]);
+    rows.push([]);
+    rows.push(["Month Wise Joint Summary"]);
+    rows.push(["Month", "Total Joint", "Accept Joint", "Reject Joint", "% Reject"]);
+    (welderPerf.month_wise_joint || []).forEach((r) => {
+      rows.push([r.month, r.total_joint, r.accept_joint, r.reject_joint, `${r.reject_pct}%`]);
+    });
+
+    rows.push([]);
+    rows.push([]);
+    rows.push(["Project Wise Summary"]);
+    rows.push(["Project", "Total Joint", "Accept Joint", "Reject Joint", "% Reject"]);
+    (welderPerf.project_wise || []).forEach((r) => {
+      rows.push([r.project, r.total_joint, r.accept_joint, r.reject_joint, `${r.reject_pct}%`]);
+    });
+
+    rows.push([]);
+    rows.push([]);
+    rows.push(["Type of Defect Wise Summary"]);
+    rows.push(["Defect name", "No of Joint", "% of Rejects"]);
+    (welderPerf.defect_type || []).forEach((r) => {
+      rows.push([r.defect, r.count, `${r.pct}%`]);
+    });
+
+    rows.push([]);
+    rows.push([]);
+    rows.push(["Welding Process Summary"]);
+    rows.push(["Process Name", "Rejected Joint"]);
+    (welderPerf.process_wise || []).forEach((r) => {
+      rows.push([r.process, r.rejected_joint]);
+    });
+
+    const summarySheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Weld Reject Rate - Pipe");
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Welder Performance Record - ${dateStamp}.xlsx`);
   },
 };

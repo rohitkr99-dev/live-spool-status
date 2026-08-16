@@ -35,9 +35,13 @@ from quality.summary import (
     build_kpis,
     build_rework_by_project,
     build_rework_cycles,
+    build_rework_status_monthly,
     build_rework_trend,
+    build_rework_type_monthly,
     build_top_rework_types,
 )
+from quality.welder_performance import build_bundle as build_welder_performance_bundle
+from utils import dataframe_to_json_records
 
 QUALITY_SETTINGS_PATH = Path("config/quality_settings.json")
 
@@ -73,6 +77,32 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
         "first_offer_split": build_first_offer_split(sources.rework),
         "rework_trend": build_rework_trend(sources.rework),
         "rework_cycles": cycles,
+        # Feeds the "Download Production Rework Data" button - raw
+        # rows + the two auto-computed summary blocks, so the
+        # exported .xlsx never needs a second Python pass at click
+        # time (see website/js/quality-charts.js).
+        "rework_export": {
+            "raw_rows": dataframe_to_json_records(
+                sources.rework,
+                columns=[
+                    "Project Code", "Drawing No", "Spool No",
+                    "Rework Material", "Rework Size", "Prod Offer Date",
+                    "Prod Engineer", "QC Observation", "Final Status",
+                    "Rework Type",
+                ],
+            ),
+            "status_monthly": build_rework_status_monthly(sources.rework),
+            "type_monthly": build_rework_type_monthly(sources.rework),
+        },
+        # Optional - None if the Welder Performance Record workbook
+        # hasn't been synced this run; the website hides that
+        # section and disables its download button when null.
+        "welder_performance": (
+            build_welder_performance_bundle(sources.welder_performance)
+            if sources.welder_performance is not None
+            and not sources.welder_performance.empty
+            else None
+        ),
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])

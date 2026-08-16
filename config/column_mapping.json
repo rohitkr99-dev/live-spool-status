@@ -103,5 +103,25 @@
     "HANOVER DATE": "MH Handover Date",
     "HANDOVER DATE": "MH Handover Date",
     "EXPECTED DATE": "MH Expected Date"
+  },
+  "welder_performance": {
+    "Date /Month": "Month",
+    "Date/Month": "Month",
+    "Project Name": "Project Name",
+    "Job No": "Job No",
+    "Job No.": "Job No",
+    "Welder ID": "Welder ID",
+    "Welding Process": "Welding Process",
+    "Total Weld Joint": "Total Weld Joint",
+    "Total NDT Joint": "Total NDT Joint",
+    "NDT Accept Joint": "NDT Accept Joint",
+    "Total Rejected Joint": "Rejected Joint",
+    "Rejected Joint %": "Rejected Joint Pct Raw",
+    "Total NDT (Length mm)": "Total NDT Length",
+    "NDT Accepted (Length mm": "NDT Accepted Length",
+    "NDT Accepted (Length mm)": "NDT Accepted Length",
+    "NDT Rejected. Rejected. (Length mm)": "NDT Rejected Length",
+    "% Rejected. ( By Length mm)": "Rejected Length Pct Raw",
+    "Type of Defect": "Type of Defect"
   }
 }

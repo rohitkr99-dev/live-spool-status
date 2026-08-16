@@ -32,6 +32,7 @@ from quality.logger import logger
 class QualitySources:
     rework: pd.DataFrame
     project_names: dict[str, str]
+    welder_performance: pd.DataFrame | None
 
 
 def _build_project_name_lookup(fabrication: pd.DataFrame) -> dict[str, str]:
@@ -84,4 +85,19 @@ def load_sources() -> QualitySources:
             "Codes instead of names."
         )
 
-    return QualitySources(rework=rework, project_names=project_names)
+    welder_performance: pd.DataFrame | None = None
+    try:
+        logger.info("Reading Welder Performance Record workbook (optional) ...")
+        welder_performance = excel_reader.read_welder_performance()
+    except Exception as error:
+        logger.warning(
+            f"Could not read Welder Performance Record workbook "
+            f"({error}). The Welder Performance section will have "
+            "no data to show for this run."
+        )
+
+    return QualitySources(
+        rework=rework,
+        project_names=project_names,
+        welder_performance=welder_performance,
+    )

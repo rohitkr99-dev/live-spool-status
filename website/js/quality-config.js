@@ -37,4 +37,15 @@ const QUALITY_CONFIG = {
   othersColor: "#8A8FA6",
   trendLineColor: "#4333A5",
   projectBarColor: "#4333A5",
+
+  // Welder Performance section (src/quality/welder_performance.py)
+  welderAcceptColor: "#1E8F86",
+  welderRejectColor: "#A82E30",
+  welderProjectBarColor: "#4333A5",
+  welderProcessBarColor: "#4333A5",
+  // Donut palette for Type of Defect - cycles if there are more
+  // defect codes than colours.
+  welderDefectPalette: [
+    "#4333A5", "#A82E30", "#D9A22D", "#1E8F86", "#C9622B", "#8A8FA6", "#2B6CB0", "#7C3AED",
+  ],
 };

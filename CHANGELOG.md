@@ -146,3 +146,74 @@ read a trend line's value at a glance.
 
 **This file created.** See "For Claude" section above for how to keep it
 updated.
+
+### 2026-08-16 - Welder Performance section + auto-filled downloadable summaries (Quality dashboard)
+
+Asked for two things: (1) automate the "Weld Reject Rate - Pipe"
+summary sheet in his Welder Performance Record workbook from its raw
+data sheet, add charts for it, and a download button in the Quality
+section; (2) add a download button in the Quality section for the
+Production Rework data + its "Compare Rework Status Monthly" /
+"Rework Type Monthly" summaries, auto-filled from the SAME Rework
+Data workbook the Quality dashboard already reads (no new source for
+that one). Both new/changed data sources confirmed as recurring
+Drive-synced inputs (latest-file-wins, like the rest of the
+pipeline), and both download buttons regenerate live from whatever
+data is currently loaded on the page (client-side, via the vendored
+SheetJS build) rather than serving a static cached file.
+
+New source - Welder Performance Record workbook (data/upload/
+quality/*Welder*Performance*.xlsx, "Welder Performance - Pipe"
+sheet): config/settings.json + config/column_mapping.json gain a
+`welder_performance` entry; src/reader.py -> read_welder_performance()
+(multi-file, transactional concat + exact-dup drop, same contract as
+read_rework()); src/utils.py -> normalize_month_name()/MONTH_ORDER
+(the raw sheet has no year field, so months are bucketed by bare
+calendar name, Jan-Dec order - same limitation his own manual sheet
+had). New src/quality/welder_performance.py recomputes his 5 manual
+summary blocks (Month Wise NDT Length, Month Wise Joint, Project
+Wise, Type of Defect, Welding Process) straight from the raw data -
+verified against his real uploaded file, reproduces his manual
+numbers exactly (e.g. January: 648 total / 635 accept / 13 reject
+joints, defect/process breakdowns all matched). Optional/best-effort:
+a missing file just hides the new Welder Performance section.
+
+Rework export - src/quality/summary.py gains build_rework_status_
+monthly() (Year-Month, not bare month name - the live workbook spans
+multiple years, unlike his one-year manual sheet, so bare "April"
+would otherwise conflate every year's April) and build_rework_type_
+monthly(), which classifies each Rework row into his 7 template
+categories (Punching/Orientation/Dimension/Visual/Damage Material-
+Bend/Wrong Material/Incomplete) by keyword-matching the free-text QC
+Observation column, per his explicit instruction - flagged to him
+that real shop-floor remarks are messy enough that a large share
+lands in a catch-all "Other" bucket rather than force a bad match;
+the keyword lists (REWORK_TYPE_CATEGORIES) are meant to be tuned
+against his real data once he's reviewed it. Verified against his
+real uploaded Production_Final_Dimension file's "Projetc Name" sheet
+(mapped to the standard Rework Data column names) - reproduces his
+manual April total (1,585) exactly.
+
+Both wired into src/quality/pipeline.py's existing bundle (rework_
+export + welder_performance keys) - no new pipeline/workflow needed,
+quality_main.py already runs on every Drive sync.
+
+Website (website/quality.html, quality-data.js, quality-config.js,
+quality-charts.js, quality.css): new "Welder Performance" section (5
+charts: month-wise joint reject bar, month-wise NDT-length-reject %
+line, project-wise reject % bar, defect-type pie, process-wise
+rejected-joints bar) that stays hidden when the source workbook isn't
+in the current bundle; a "Download Welder Performance Record" button
+next to it and a "Download Production Rework Data" button on the
+Overview section header - both client-side exports via the vendored
+SheetJS build (website/vendor/xlsx.core.min.js, same one Production's
+Backlog export buttons already use), 2 sheets each (raw data + a
+multi-block summary sheet recreating the person's manual layout).
+Added .btn-export to quality.css (previously only in production.css,
+which quality.html doesn't load).
+
+Not yet done / open for him to confirm: the Rework Type keyword
+categories above should be reviewed against his real, larger Rework
+Data workbook (only tested against a ~1,800-row 1-month sample) -
+the "Other" bucket size there will show whether the categories need
+adjusting.

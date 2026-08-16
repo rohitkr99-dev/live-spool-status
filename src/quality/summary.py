@@ -342,3 +342,112 @@ def build_rework_cycles(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
         }
         for label in order
     ]
+
+
+# -----------------------------------------------------
+# Downloadable "Production Rework" export
+#
+# The two functions below feed the Quality dashboard's "Download
+# Production Rework Data" button (website/js/quality-charts.js),
+# which re-creates the two summary blocks from the person's manual
+# template (Sheet2 in his uploaded Production Final Dimension file:
+# "Compare Rework Status Monthly" and "REWORK TYPE MONTHLY") from
+# live data, client-side, via SheetJS - see wireReworkExportButton()
+# for the sheet layout. Nothing here writes an .xlsx file; these
+# just compute the numbers.
+# -----------------------------------------------------
+
+
+def build_rework_status_monthly(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
+    """
+    "Compare Rework Status Monthly": per calendar month (by Prod
+    Offer Date), total offer events, Accept count, Rework count, and
+    Rework %.
+
+    Grouped by Year-Month ("2023-04"), not bare month name - unlike
+    the person's original one-year manual sheet, this recomputes
+    from the recurring live Rework Data workbook, which spans
+    multiple years, so a bare "April" would otherwise conflate every
+    April on record.
+    """
+
+    df = _with_status(dataframe)
+    df = df.dropna(subset=["Prod Offer Date"])
+    df["_month"] = pd.to_datetime(df["Prod Offer Date"], errors="coerce").dt.strftime("%Y-%m")
+    df = df.dropna(subset=["_month"])
+
+    rows = []
+    for month, group in df.groupby("_month"):
+        total = len(group)
+        rework = int((group["_status"] == "Rework").sum())
+        accept = int((group["_status"] == "Accept").sum())
+        rows.append({
+            "month": month,
+            "total_final_inspection_spool": total,
+            "acceptable": accept,
+            "rework": rework,
+            "rework_pct": _pct(rework, total),
+        })
+
+    rows.sort(key=lambda r: r["month"])
+    return rows
+
+
+REWORK_TYPE_CATEGORIES: list[tuple[str, list[str]]] = [
+    # (label, keywords) - first keyword found in the row's QC
+    # Observation text wins; a row is counted in exactly ONE
+    # category even if its remark mentions more than one issue.
+    # Order matters: "Wrong Material" is checked before "Damage
+    # Material/Bend" so a remark like "spool material wrong / bend"
+    # lands under Wrong Material, not Damage/Bend. This priority
+    # order is a judgment call on free-text shop-floor remarks -
+    # adjust the keyword lists below if it misclassifies real data.
+    ("Wrong Material", ["wrong material", "material wrong", "wrong mat"]),
+    ("Dimension", ["dimension", " dim "]),
+    ("Punching", ["punch"]),
+    ("Orientation", ["orient"]),
+    ("Visual", ["visual"]),
+    ("Damage Material/Bend", ["damage", "bend"]),
+    ("Incomplete", ["incomplete", "missing", "short"]),
+]
+
+
+def _classify_rework_type(observation: Any) -> str:
+    if pd.isna(observation) or not str(observation).strip():
+        return "Other"
+    text = f" {str(observation).strip().lower()} "
+    for label, keywords in REWORK_TYPE_CATEGORIES:
+        if any(keyword in text for keyword in keywords):
+            return label
+    return "Other"
+
+
+def build_rework_type_monthly(dataframe: pd.DataFrame) -> dict[str, Any]:
+    """
+    "REWORK TYPE MONTHLY": per calendar month, a count of Rework-
+    status rows in each of the 7 categories from the person's
+    template, classified from the free-text QC Observation column
+    via _classify_rework_type() - plus an "Other" column for rows
+    that don't match any keyword, so nothing is silently dropped.
+    Rows with a blank/unmatched Observation report as "Other" too.
+    """
+
+    df = _with_status(dataframe)
+    df = df[df["_status"] == "Rework"].copy()
+    df = df.dropna(subset=["Prod Offer Date"])
+    df["_month"] = pd.to_datetime(df["Prod Offer Date"], errors="coerce").dt.strftime("%Y-%m")
+    df = df.dropna(subset=["_month"])
+    df["_category"] = df["QC Observation"].apply(_classify_rework_type)
+
+    columns = [label for label, _ in REWORK_TYPE_CATEGORIES] + ["Other"]
+
+    rows = []
+    for month, group in df.groupby("_month"):
+        counts = group["_category"].value_counts()
+        row = {"month": month}
+        for column in columns:
+            row[column] = int(counts.get(column, 0))
+        rows.append(row)
+
+    rows.sort(key=lambda r: r["month"])
+    return {"columns": columns, "rows": rows}

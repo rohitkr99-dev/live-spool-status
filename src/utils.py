@@ -560,3 +560,28 @@ def dataframe_to_json_records(
         {key: to_json_safe(value) for key, value in record.items()}
         for record in records
     ]
+
+
+MONTH_ORDER: list[str] = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+
+_MONTH_LOOKUP: dict[str, str] = {
+    name[:3].lower(): name for name in MONTH_ORDER
+} | {name.lower(): name for name in MONTH_ORDER} | {"sept": "September"}
+
+
+def normalize_month_name(value: Any) -> str | None:
+    """
+    Map a free-text month value ("Jan", "jan", "January", "Sept",
+    with stray whitespace) to its canonical full name ("January").
+    Returns None for anything unrecognized (e.g. a "Total" footer
+    row sitting inside a data range) so callers can drop those rows
+    rather than silently mis-bucket them.
+    """
+
+    if pd.isna(value):
+        return None
+    key = str(value).strip().lower()
+    return _MONTH_LOOKUP.get(key)

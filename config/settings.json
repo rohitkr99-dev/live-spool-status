@@ -59,6 +59,13 @@
 "sheet_name": "Sheet1",
 "header_row": 0,
 "comment": "Material Handover tracking workbook (one row per spool) - lives in paths.production_upload_folder (data/upload/production/), the folder previously reserved for future Production-only charts (see that folder's README.txt and src/departments.py). Optional, best-effort source for the Material Handover section of the Production dashboard - see reader.py -> read_material_handover() and src/production/material_handover.py. A missing file only skips that section; it never blocks the rest of the Production dashboard."
+},
+"welder_performance": {
+"enabled": true,
+"file_pattern": "*Welder*Performance*.xlsx",
+"sheet_name": "Welder Performance - Pipe",
+"header_row": 3,
+"comment": "Welder Performance Record workbook (one row per welder/job/process entry) - lives in paths.quality_upload_folder (data/upload/quality/), same folder as the Rework Data workbook, synced separately from Drive. Optional, best-effort source for the Welder Performance section of the Quality dashboard - see reader.py -> read_welder_performance() and src/quality/welder_performance.py. A missing file only skips that section; it never blocks the rest of the Quality dashboard. header_row is 3 (0-indexed) because the sheet has a merged title row plus two blank rows before its real header."
 }
 },
 

@@ -48,6 +48,23 @@ WELDING_FRUN_DATE = "Welding FRun Date"
 LINE_HISTORY_STAGE = "Line History Stage"
 LH_FITUP_LAST_DATE = "LH Fit-Up Last Date"
 LH_WELDING_AGE = "LH Welding Age"
+
+# Welder Performance workbook (data/upload/quality/) - see
+# reader.py -> read_welder_performance() and
+# src/quality/welder_performance.py
+WELDER_PERFORMANCE = "welder_performance"
+WELDER_MONTH = "Month"
+WELDER_JOB_NO = "Job No"
+WELDER_ID = "Welder ID"
+WELDER_PROCESS = "Welding Process"
+WELDER_TOTAL_WELD_JOINT = "Total Weld Joint"
+WELDER_TOTAL_NDT_JOINT = "Total NDT Joint"
+WELDER_NDT_ACCEPT_JOINT = "NDT Accept Joint"
+WELDER_REJECTED_JOINT = "Rejected Joint"
+WELDER_TOTAL_NDT_LENGTH = "Total NDT Length"
+WELDER_NDT_ACCEPTED_LENGTH = "NDT Accepted Length"
+WELDER_NDT_REJECTED_LENGTH = "NDT Rejected Length"
+WELDER_DEFECT_TYPE = "Type of Defect"
 LH_LAST_WELDING_FRUN = "LH Last Welding FRun Date"
 
 SIOP_PLANNED_START = "SIOP Planned Start"

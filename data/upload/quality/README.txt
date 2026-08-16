@@ -18,8 +18,18 @@ config/settings.json -> input_files.rework) and:
   - `python3 quality_main.py` builds the Quality Assurance/Control
     dashboard (website/quality.html) from the same workbook - top
     rework types, rework rate by project, first-offer acceptance,
-    trend over time, and rework-cycle distribution. See
-    src/quality/.
+    trend over time, rework-cycle distribution, and (2026-08-16) the
+    "Download Production Rework Data" button's auto-filled monthly
+    summary. See src/quality/.
+
+This folder also holds the Welder Performance Record workbook (any
+filename containing "Welder" and "Performance", .xlsx - see
+config/settings.json -> input_files.welder_performance, "Welder
+Performance - Pipe" sheet), read by `python3 quality_main.py` for
+the dashboard's Welder Performance section and its own download
+button - see src/reader.py -> read_welder_performance() and
+src/quality/welder_performance.py. Missing/absent is fine; that
+section just stays hidden.
 
 Like data/upload/packing/, files here aren't checked into git
 (see .gitignore) - Google Drive sync (scripts/sync_drive.py,

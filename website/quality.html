@@ -107,6 +107,7 @@
     <section class="charts-grid charts-grid--single-row quality-overview-grid" aria-label="Rework type breakdown and first-offer outcome">
       <div class="charts-grid__head">
         <h3>Overview</h3>
+        <button type="button" class="btn-export" id="rework-export-btn" style="position:static" title="Download Production Rework data + auto-filled monthly summary">Download Production Rework Data</button>
       </div>
       <div class="chart-card chart-card--wide chart-card--tall">
         <div class="chart-card__head">
@@ -166,6 +167,49 @@
       </div>
     </section>
 
+    <!-- ============ WELDER PERFORMANCE ============ -->
+    <section class="charts-grid charts-grid--single-row" aria-label="Welder performance and NDT reject rates" id="welder-performance-section" hidden>
+      <div class="charts-grid__head">
+        <h3>Welder Performance</h3>
+        <button type="button" class="btn-export" id="welder-export-btn" style="position:static" title="Download the Welder Performance Record, with an auto-filled Weld Reject Rate summary">Download Welder Performance Record</button>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Month Wise Joint Reject Rate</h3>
+          <span class="chart-card__hint">NDT joints inspected vs. rejected, by month</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-welder-month-joint"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Month Wise NDT Length Reject %</h3>
+          <span class="chart-card__hint">% of NDT'd weld length (mm) rejected, by month</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-welder-month-length"></canvas></div>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Project Wise Reject %</h3>
+          <span class="chart-card__hint">NDT joint reject % per project, sorted worst first</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-welder-project"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Type of Defect</h3>
+          <span class="chart-card__hint">Share of rejected joints by defect code</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-welder-defect-type"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Rejected Joints by Welding Process</h3>
+          <span class="chart-card__hint">Among joints flagged with a defect</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-welder-process"></canvas></div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="app-footer">
@@ -185,6 +229,7 @@
 
 <script src="vendor/chart.umd.min.js"></script>
 <script src="vendor/chartjs-plugin-datalabels.min.js"></script>
+<script src="vendor/xlsx.core.min.js"></script>
 
 <script src="js/quality-config.js?v=20260807"></script>
 <script>

@@ -80,6 +80,8 @@ const QualityData = {
     firstOfferSplit: null,
     reworkTrend: { day: [], week: [], month: [] },
     reworkCycles: [],
+    reworkExport: null,
+    welderPerformance: null,
     generatedAt: null,
   },
 
@@ -184,6 +186,11 @@ const QualityData = {
     this.store.firstOfferSplit = bundle.first_offer_split || null;
     this.store.reworkTrend = bundle.rework_trend || { day: [], week: [], month: [] };
     this.store.reworkCycles = bundle.rework_cycles || [];
+    // Optional - null when the source workbook wasn't in this
+    // run's Drive sync. The website hides that section / disables
+    // its download button when null (see quality-app.js).
+    this.store.reworkExport = bundle.rework_export || null;
+    this.store.welderPerformance = bundle.welder_performance || null;
     this.store.generatedAt = bundle.generated_at || null;
 
     this.hasData = true;
