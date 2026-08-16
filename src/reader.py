@@ -30,10 +30,13 @@ from constants import (
     FABRICATION,
     LINE_HISTORY,
     MATERIAL_HANDOVER,
+    MH_CURRENT_STATUS,
     MH_EXPECTED_DATE,
+    MH_FIRST_STATUS,
     MH_HANDOVER_DATE,
     PLANNING,
     REWORK,
+    REWORK_FINAL_STATUS,
     REWORK_OFFER_DATE,
     SIOP_PLANNED,
     SIOP_PLANNED_START,
@@ -76,6 +79,8 @@ class ExcelReader:
         header: int,
         engine: str,
         source_label: str,
+        standardize_key: Optional[str] = None,
+        required_columns: Optional[list[str]] = None,
     ) -> Optional[pd.DataFrame]:
         """
         pd.read_excel(), but never raises - used by every OPTIONAL
@@ -85,43 +90,118 @@ class ExcelReader:
         configured sheet_name no longer exists once a source system
         re-exports the file under a new template) is exactly as
         recoverable as a missing file, per each of those methods'
-        own "OPTIONAL and best-effort" contract - but before this,
-        only the FILE-NOT-FOUND case was actually protected; a wrong
-        sheet name inside a file that WAS found crashed the read
-        uncaught, which crashed load_sources(), which crashed the
-        whole Production dashboard pipeline (2026-08-14 - confirmed
-        against the person's real GitHub Actions failure: a Line
-        History Sheet re-export renamed internally, sheet_name
-        "Sheet2" no longer present).
+        own "OPTIONAL and best-effort" contract.
 
-        On failure, logs the sheets ACTUALLY found in the file (a
-        direct, actionable diagnostic for exactly this scenario) and
-        returns None so the caller can skip just this one file,
-        rather than letting any bad file bring the whole run down.
+        UPDATED 2026-08-15 (given by the person, in their own words:
+        "why is the process searching for Sheet2 and why not just
+        consider the data in Line History sheet file? It can be
+        named to any sheet but I will ensure the file name is
+        correct"): the configured sheet_name is now only ever a
+        first guess, never a hard requirement, whenever the caller
+        passes standardize_key + required_columns. Every sheet in
+        the workbook is cheaply scanned (header row only, via
+        nrows=0 - no meaningful cost even on a huge sheet) and run
+        through standardize_columns(candidate, standardize_key) -
+        the EXACT same column_mapping.json-driven renaming the real
+        read uses later, so any already-known raw-header alias (e.g.
+        "Joint No." vs "Joint No") is handled automatically by the
+        SAME config that handles it everywhere else, nothing
+        duplicated here. The configured sheet_name is tried first
+        (so the common case - nothing changed - costs one extra
+        cheap scan, not a behaviour change); the first sheet (in
+        file order) whose standardized columns contain every name in
+        required_columns is then read in FULL and returned. A
+        source's internal sheet name is therefore free to change
+        entirely, as long as its actual columns are still
+        recognizable - whichever sheet ends up used is always
+        logged, so a rename is never silent even though it's no
+        longer fatal either.
+
+        Without standardize_key/required_columns (the original,
+        simpler contract - still used by callers that don't need
+        this), only the exact configured sheet_name is tried, and a
+        miss is a plain skip with a diagnostic of the sheets found.
         """
 
-        try:
-            return pd.read_excel(
-                file, sheet_name=sheet_name, header=header, engine=engine
-            )
-        except Exception as error:
-
-            available_sheets = None
+        if standardize_key is None or required_columns is None:
             try:
-                available_sheets = pd.ExcelFile(file, engine=engine).sheet_names
-            except Exception:
-                pass
+                return pd.read_excel(
+                    file, sheet_name=sheet_name, header=header, engine=engine
+                )
+            except Exception as error:
+                available_sheets = None
+                try:
+                    available_sheets = pd.ExcelFile(file, engine=engine).sheet_names
+                except Exception:
+                    pass
+                sheet_detail = (
+                    f" Sheets actually found in this file: {available_sheets}."
+                    if available_sheets is not None else ""
+                )
+                logger.warning(
+                    f"Could not read sheet '{sheet_name}' from {file.name} "
+                    f"for {source_label} ({error}).{sheet_detail} Skipping "
+                    "this file for this run."
+                )
+                return None
 
-            sheet_detail = (
-                f" Sheets actually found in this file: {available_sheets}."
-                if available_sheets is not None else ""
-            )
+        try:
+            all_sheet_names = pd.ExcelFile(file, engine=engine).sheet_names
+        except Exception as error:
             logger.warning(
-                f"Could not read sheet '{sheet_name}' from {file.name} "
-                f"for {source_label} ({error}).{sheet_detail} Skipping "
-                "this file for this run."
+                f"Could not open {file.name} at all for {source_label} "
+                f"({error}). Skipping this file for this run."
             )
             return None
+
+        ordered_candidates = [sheet_name] + [
+            name for name in all_sheet_names if name != sheet_name
+        ]
+
+        for candidate in ordered_candidates:
+            if candidate not in all_sheet_names:
+                continue
+            try:
+                header_only = pd.read_excel(
+                    file, sheet_name=candidate, header=header,
+                    engine=engine, nrows=0,
+                )
+            except Exception:
+                continue
+
+            standardized = standardize_columns(header_only, standardize_key)
+            if not all(col in standardized.columns for col in required_columns):
+                continue
+
+            try:
+                frame = pd.read_excel(
+                    file, sheet_name=candidate, header=header, engine=engine
+                )
+            except Exception as error:
+                logger.warning(
+                    f"{file.name}: sheet '{candidate}' had the expected "
+                    f"columns for {source_label} but failed to read in "
+                    f"full ({error}). Skipping this file for this run."
+                )
+                return None
+
+            if candidate != sheet_name:
+                logger.warning(
+                    f"{file.name}: configured sheet name '{sheet_name}' "
+                    f"for {source_label} didn't have the expected columns "
+                    f"- found them in sheet '{candidate}' instead, using "
+                    "that. No action needed, though config/settings.json "
+                    "can be updated to match if this sheet stays renamed."
+                )
+            return frame
+
+        logger.warning(
+            f"Could not find a sheet with the expected columns "
+            f"{required_columns} anywhere in {file.name} for "
+            f"{source_label} (checked sheets: {all_sheet_names}). "
+            "Skipping this file for this run."
+        )
+        return None
 
     def _matching_files_oldest_first(
         self, folder: Path, pattern: str
@@ -459,6 +539,16 @@ class ExcelReader:
                 header=config.get("header_row", 0),
                 engine="pyxlsb",
                 source_label="Line History Sheet",
+                standardize_key=LINE_HISTORY,
+                required_columns=[
+                    business_rules.get("joint_no_field", "Joint No"),
+                    business_rules.get(
+                        "fitup_date_field", "Weld FitUp Date"
+                    ),
+                    business_rules.get(
+                        "weld_run_date_field", "Welding FRun Date"
+                    ),
+                ],
             )
             if frame is None:
                 continue
@@ -558,6 +648,8 @@ class ExcelReader:
                 header=config.get("header_row", 0),
                 engine="pyxlsb",
                 source_label="SIOP Planned Spools workbook",
+                standardize_key=SIOP_PLANNED,
+                required_columns=[SIOP_PLANNED_START],
             )
             if frame is None:
                 continue
@@ -664,6 +756,8 @@ class ExcelReader:
                 header=config.get("header_row", 0),
                 engine="openpyxl",
                 source_label="Rework workbook",
+                standardize_key=REWORK,
+                required_columns=[REWORK_OFFER_DATE, REWORK_FINAL_STATUS],
             )
             if frame is None:
                 continue
@@ -777,6 +871,10 @@ class ExcelReader:
                 header=config.get("header_row", 0),
                 engine="openpyxl",
                 source_label="Material Handover workbook",
+                standardize_key=MATERIAL_HANDOVER,
+                required_columns=[
+                    MH_HANDOVER_DATE, MH_FIRST_STATUS, MH_CURRENT_STATUS,
+                ],
             )
             if frame is None:
                 continue

@@ -39,6 +39,39 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-08-16 - Sheet detection is now content-based, not name-based
+
+The Line History Sheet crash-resilience fix from 2026-08-15 stopped the
+pipeline from crashing when a workbook's internal sheet got renamed, but
+didn't actually fix the underlying problem - the sheet was still being
+silently skipped every run since, which (confirmed by inspecting the
+live published data directly) was quietly degrading `Welding Finish`
+for nearly the entire dataset, since its per-joint Line History data
+source was unavailable and it was falling through to a much cruder
+fallback rule for almost every spool.
+
+Asked: "why is the process searching for Sheet2 and why not just
+consider the data in Line History sheet file? It can be named to any
+sheet." Redesigned `ExcelReader._read_excel_sheet_or_none()`
+(`src/reader.py`) to stop trusting the configured sheet name as
+anything more than a first guess: when a caller passes
+`standardize_key` + `required_columns`, every sheet in the workbook is
+cheaply scanned (header row only, `nrows=0`) and run through the exact
+same `standardize_columns()` / `column_mapping.json` machinery the real
+read uses later - so a known raw-header alias is handled automatically,
+nothing duplicated. The first sheet whose standardized columns contain
+everything required is read in full and used, whatever it's actually
+named. Wired into all 4 optional readers (Line History, SIOP Planned
+Spools, Rework, Material Handover), each with its own distinctive
+required-columns marker. Verified against a synthetic file reproducing
+the real failure exactly (two decoy sheets + the real data under a
+completely different name) - correctly found and used the right sheet,
+and correctly still fails gracefully when truly nothing matches.
+
+The person no longer needs to keep `config/settings.json`'s configured
+sheet names in sync with whatever their export tool calls them this
+month - only the FILE name pattern still needs to stay recognizable.
+
 ### 2026-08-15 - Welding Finish unified across both dashboards; pipeline crash resilience; this file
 
 **Cross-dashboard number mismatch (the main fix this session).** The
