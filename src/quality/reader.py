@@ -53,8 +53,9 @@ def _build_project_name_lookup(fabrication: pd.DataFrame) -> dict[str, str]:
 def load_sources() -> QualitySources:
     """
     Read the Rework Data workbook (required) via the existing
-    ExcelReader, plus the Fabrication (DPR) workbook (optional,
-    Project Name lookup only).
+    ExcelReader, plus the Fabrication (DPR) workbook and the Project
+    Master workbook (both optional - Project Name lookup only, the
+    latter overriding the former per Project Code).
 
     Raises FileNotFoundError (from ExcelReader) if the Rework Data
     workbook isn't in data/upload/quality/ - it's the one required
@@ -83,6 +84,22 @@ def load_sources() -> QualitySources:
             f"Could not read Fabrication (DPR) workbook for Project "
             f"Name lookup ({error}). Charts will show bare Project "
             "Codes instead of names."
+        )
+
+    # The hand-maintained Project Master (data/upload/projects/,
+    # 2026-08-17) wins over the DPR-derived lookup above on any
+    # conflicting Project Code, since it's the one the person
+    # directly maintains and keeps current for projects that have
+    # aged out of the DPR export.
+    try:
+        logger.info("Reading Project Master workbook (Project Name lookup override, optional) ...")
+        project_master = excel_reader.read_project_master()
+        if project_master:
+            project_names = {**project_names, **project_master}
+    except Exception as error:
+        logger.warning(
+            f"Could not read Project Master workbook ({error}). "
+            "Falling back to the DPR-derived Project Name lookup alone."
         )
 
     welder_performance: pd.DataFrame | None = None

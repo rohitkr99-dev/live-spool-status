@@ -65,6 +65,11 @@ WELDER_TOTAL_NDT_LENGTH = "Total NDT Length"
 WELDER_NDT_ACCEPTED_LENGTH = "NDT Accepted Length"
 WELDER_NDT_REJECTED_LENGTH = "NDT Rejected Length"
 WELDER_DEFECT_TYPE = "Type of Defect"
+
+# Project Code -> Project Name master list (data/upload/projects/),
+# hand-maintained, updated from time to time - see
+# reader.py -> read_project_master()
+PROJECT_MASTER = "project_master"
 LH_LAST_WELDING_FRUN = "LH Last Welding FRun Date"
 
 SIOP_PLANNED_START = "SIOP Planned Start"

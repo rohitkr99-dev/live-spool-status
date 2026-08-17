@@ -123,5 +123,9 @@
     "NDT Rejected. Rejected. (Length mm)": "NDT Rejected Length",
     "% Rejected. ( By Length mm)": "Rejected Length Pct Raw",
     "Type of Defect": "Type of Defect"
+  },
+  "project_master": {
+    "Project Code": "Project Code",
+    "Project Name": "Project Name"
   }
 }

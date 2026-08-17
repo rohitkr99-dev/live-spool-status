@@ -466,12 +466,28 @@ const QualityCharts = {
     const pcts = rows.map((r) => r.reject_pct);
 
     this.instances.welderMonthJoint = new Chart(ctx, {
-      type: "bar",
       data: {
         labels,
         datasets: [
-          { label: "Total NDT Joints", data: rows.map((r) => r.total_joint), backgroundColor: QUALITY_CONFIG.welderAcceptColor },
-          { label: "Rejected Joints", data: rows.map((r) => r.reject_joint), backgroundColor: QUALITY_CONFIG.welderRejectColor },
+          {
+            type: "bar",
+            label: "Total NDT Joints",
+            data: rows.map((r) => r.total_joint),
+            backgroundColor: QUALITY_CONFIG.welderAcceptColor,
+            yAxisID: "y",
+            order: 2,
+          },
+          {
+            type: "line",
+            label: "Rejected Joints",
+            data: rows.map((r) => r.reject_joint),
+            borderColor: QUALITY_CONFIG.welderRejectColor,
+            backgroundColor: QUALITY_CONFIG.welderRejectColor,
+            yAxisID: "y1",
+            tension: 0.3,
+            pointRadius: 3,
+            order: 1,
+          },
         ],
       },
       options: {
@@ -489,7 +505,20 @@ const QualityCharts = {
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: this.chartFont } },
-          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+          y: {
+            beginAtZero: true,
+            position: "left",
+            title: { display: true, text: "Total NDT Joints", font: this.chartFont },
+            grid: { display: false },
+            ticks: { font: this.chartFont },
+          },
+          y1: {
+            beginAtZero: true,
+            position: "right",
+            title: { display: true, text: "Rejected Joints", font: this.chartFont },
+            grid: { display: false },
+            ticks: { font: this.chartFont },
+          },
         },
       },
     });
@@ -537,11 +566,59 @@ const QualityCharts = {
     });
   },
 
+  // Renders "Project Name" over "(Project Code)" on a chart's Y
+  // axis, same technique as the main dashboard's Project Progress
+  // chart (website/js/charts.js -> twoPartYLabelsPlugin) - Chart.js
+  // draws tick text in one font, so getting two font weights/sizes
+  // on one tick means hiding the built-in tick label and drawing it
+  // ourselves. Duplicated here (not shared) since the Quality
+  // dashboard doesn't load charts.js/config.js.
+  twoPartYLabelsPlugin: {
+    id: "twoPartYLabels",
+    afterDraw(chart) {
+      const opts = chart.options.plugins && chart.options.plugins.twoPartYLabels;
+      if (!opts || !opts.labels || !opts.labels.length) return;
+
+      const { ctx, scales } = chart;
+      const y = scales.y;
+      if (!y) return;
+
+      const xPos = y.right - 8;
+
+      ctx.save();
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      opts.labels.forEach((label, index) => {
+        if (!label) return;
+        const yPos = y.getPixelForTick(index);
+        if (yPos === undefined) return;
+
+        if (label.code && label.name) {
+          ctx.font = "700 11px Manrope, sans-serif";
+          ctx.fillStyle = QUALITY_CONFIG.chartTextColorStrong;
+          ctx.fillText(label.name, xPos, yPos - 6);
+
+          ctx.font = "500 9.5px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = QUALITY_CONFIG.chartTextColor;
+          ctx.fillText(`(${label.code})`, xPos, yPos + 7);
+        } else {
+          ctx.font = "600 10.5px 'IBM Plex Mono', monospace";
+          ctx.fillStyle = QUALITY_CONFIG.chartTextColorStrong;
+          ctx.fillText(label.code || label.name || "", xPos, yPos);
+        }
+      });
+
+      ctx.restore();
+    },
+  },
+
   renderWelderProject(rows) {
     const ctx = this._ctx("chart-welder-project");
     if (!ctx || !rows || !rows.length) return;
 
-    const labels = rows.map((r) => r.project);
+    const labels = rows.map((r) => r.project_code || r.project_name);
+    const twoPartLabels = rows.map((r) => ({ code: r.project_code, name: r.project_name }));
     const pcts = rows.map((r) => r.reject_pct);
 
     this.instances.welderProject = new Chart(ctx, {
@@ -550,14 +627,21 @@ const QualityCharts = {
         labels,
         datasets: [{ label: "Reject %", data: pcts, backgroundColor: QUALITY_CONFIG.welderProjectBarColor }],
       },
+      plugins: [this.twoPartYLabelsPlugin],
       options: {
         indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
+          twoPartYLabels: { labels: twoPartLabels },
           tooltip: {
             callbacks: {
+              title(items) {
+                const r = rows[items[0].dataIndex];
+                if (r.project_name && r.project_code) return `${r.project_name} (${r.project_code})`;
+                return r.project_name || r.project_code;
+              },
               afterBody(items) {
                 const r = rows[items[0].dataIndex];
                 return [`${r.reject_joint} rejected of ${r.total_joint} joint(s)`];
@@ -567,7 +651,14 @@ const QualityCharts = {
         },
         scales: {
           x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
-          y: { grid: { display: false }, ticks: { font: this.chartFont } },
+          y: {
+            grid: { display: false },
+            ticks: { display: false },
+            // Reserves fixed room for the two-line labels drawn by
+            // twoPartYLabelsPlugin above - hiding the built-in
+            // ticks would otherwise collapse this axis to ~0 width.
+            afterFit: (scale) => { scale.width = 168; },
+          },
         },
       },
     });
@@ -676,9 +767,9 @@ const QualityCharts = {
     rows.push([]);
     rows.push([]);
     rows.push(["Project Wise Summary"]);
-    rows.push(["Project", "Total Joint", "Accept Joint", "Reject Joint", "% Reject"]);
+    rows.push(["Project Code", "Project Name", "Total Joint", "Accept Joint", "Reject Joint", "% Reject"]);
     (welderPerf.project_wise || []).forEach((r) => {
-      rows.push([r.project, r.total_joint, r.accept_joint, r.reject_joint, `${r.reject_pct}%`]);
+      rows.push([r.project_code || "", r.project_name || "", r.total_joint, r.accept_joint, r.reject_joint, `${r.reject_pct}%`]);
     });
 
     rows.push([]);

@@ -35,6 +35,9 @@ from constants import (
     MH_FIRST_STATUS,
     MH_HANDOVER_DATE,
     PLANNING,
+    PROJECT_CODE,
+    PROJECT_MASTER,
+    PROJECT_NAME,
     REWORK,
     REWORK_FINAL_STATUS,
     REWORK_OFFER_DATE,
@@ -1050,3 +1053,80 @@ class ExcelReader:
             )
 
         return dataframe
+
+    def read_project_master(self) -> Optional[dict[str, str]]:
+        """
+        Read the hand-maintained Project Code -> Project Name master
+        list (data/upload/projects/*Project*Master*.xlsx). The
+        person updates this file "from time to time" in his own
+        words - unlike the DPR-derived lookup the Quality dashboard
+        already had, this one exists specifically so a Project Code
+        stays resolvable even for an older/completed project that's
+        aged out of the current DPR export.
+
+        Multiple files (e.g. a dated snapshot kept alongside a newer
+        one) are merged latest-file-wins per Project Code, same
+        contract as read_fabrication().
+
+        OPTIONAL: a missing file returns None so callers can fall
+        back to the DPR-derived lookup alone (see
+        src/quality/reader.py), same as before this source existed.
+        """
+
+        config = self.settings["input_files"].get("project_master", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get("upload_folder", "data/upload/projects")
+        )
+
+        files = self._matching_files_oldest_first(folder, config["file_pattern"])
+
+        if not files:
+            logger.warning(
+                "Project Master workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). Project "
+                "Code -> Name lookups will fall back to the DPR "
+                "workbook alone."
+            )
+            return None
+
+        frames = []
+
+        for file in files:
+            logger.info(f"Reading {file.name}")
+            frame = self._read_excel_sheet_or_none(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="openpyxl",
+                source_label="Project Master workbook",
+                standardize_key=PROJECT_MASTER,
+                required_columns=[PROJECT_CODE, PROJECT_NAME],
+            )
+            if frame is None:
+                continue
+            frame = standardize_columns(frame, PROJECT_MASTER)
+            frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "Project Master workbook: no matching file could be "
+                "read successfully this run. Project Code -> Name "
+                "lookups will fall back to the DPR workbook alone."
+            )
+            return None
+
+        dataframe = self._merge_latest_wins(frames, [PROJECT_CODE])
+
+        lookup: dict[str, str] = {}
+        for _, row in dataframe[[PROJECT_CODE, PROJECT_NAME]].dropna().iterrows():
+            code = str(row[PROJECT_CODE]).strip()
+            name = str(row[PROJECT_NAME]).strip()
+            if code and name:
+                lookup[code] = name
+
+        logger.info(f"Loaded {len(lookup)} Project Code -> Name entries from Project Master.")
+        return lookup

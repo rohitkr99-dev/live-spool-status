@@ -48,4 +48,11 @@ const QUALITY_CONFIG = {
   welderDefectPalette: [
     "#4333A5", "#A82E30", "#D9A22D", "#1E8F86", "#C9622B", "#8A8FA6", "#2B6CB0", "#7C3AED",
   ],
+
+  // Two-part Y-axis labels (Project Name over "(Project Code)") -
+  // same colours as website/js/config.js's SPOOL_STATUS_CONFIG,
+  // duplicated here since the Quality dashboard doesn't load that
+  // file/store.
+  chartTextColor: "#55566E",
+  chartTextColorStrong: "#1B1A2E",
 };

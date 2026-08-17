@@ -98,7 +98,7 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
         # hasn't been synced this run; the website hides that
         # section and disables its download button when null.
         "welder_performance": (
-            build_welder_performance_bundle(sources.welder_performance)
+            build_welder_performance_bundle(sources.welder_performance, sources.project_names)
             if sources.welder_performance is not None
             and not sources.welder_performance.empty
             else None

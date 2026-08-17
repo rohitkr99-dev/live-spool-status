@@ -19,6 +19,12 @@ filename patterns each one is matched against):
   - a Weekly Production Planning workbook (*Weekly*.xlsb)
   - a Line History Sheet workbook (*Line*History*.xlsb) - optional
   - a SIOP Planned Spools workbook (*SIOP*Planned*Spools*.xlsb) - optional fallback
+  - a Project Master workbook (*Project*Master*.xlsx) - optional, hand-
+    maintained Project Code -> Project Name list (2026-08-17), updated
+    from time to time. Feeds the Quality dashboard's project charts -
+    see config/settings.json -> input_files.project_master and
+    src/reader.py -> read_project_master(). Missing is fine; those
+    charts just fall back to the DPR-derived Project Name lookup alone.
 
 IMPORTANT if you're migrating from an earlier version of this repo:
 these files used to live directly in data/upload/ (one level up), and

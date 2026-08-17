@@ -66,6 +66,13 @@
 "sheet_name": "Welder Performance - Pipe",
 "header_row": 3,
 "comment": "Welder Performance Record workbook (one row per welder/job/process entry) - lives in paths.quality_upload_folder (data/upload/quality/), same folder as the Rework Data workbook, synced separately from Drive. Optional, best-effort source for the Welder Performance section of the Quality dashboard - see reader.py -> read_welder_performance() and src/quality/welder_performance.py. A missing file only skips that section; it never blocks the rest of the Quality dashboard. header_row is 3 (0-indexed) because the sheet has a merged title row plus two blank rows before its real header."
+},
+"project_master": {
+"enabled": true,
+"file_pattern": "*Project*Master*.xlsx",
+"sheet_name": "Sheet1",
+"header_row": 0,
+"comment": "Project Code -> Project Name master list (2026-08-17), hand-maintained by the person and updated from time to time - lives in paths.upload_folder (data/upload/projects/), same folder as the DPR/Weekly/Line History workbooks. Optional - see reader.py -> read_project_master() and src/quality/reader.py, which merges it on top of the DPR-derived Project Code -> Name lookup (this file wins on any conflict, since it's the one he directly maintains) for the Quality dashboard's rework-by-project and Welder Performance project charts. A missing file just falls back to the DPR-derived lookup alone, same as before this file existed. Multiple Project Codes can share the same Project Name (e.g. several PO line items under one named project) - this is normal, not a data error."
 }
 },
 

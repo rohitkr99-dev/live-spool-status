@@ -217,3 +217,122 @@ categories above should be reviewed against his real, larger Rework
 Data workbook (only tested against a ~1,800-row 1-month sample) -
 the "Other" bucket size there will show whether the categories need
 adjusting.
+
+### 2026-08-17 - Welder Performance: DPR-matched project labels + secondary-axis month chart
+
+Two fixes on the Welder Performance section added yesterday, both
+per his review of the live charts:
+
+1. "Project Wise Reject %" was grouping by the raw "Project Name"
+   column, which is really a hand-entered Project Code and
+   inconsistent (e.g. "NE-VB" vs "NE- VB" showed as two separate
+   bars). src/quality/welder_performance.py -> build_project_wise_
+   summary() now takes the same DPR (Fabrication workbook) Project
+   Code -> Project Name lookup the Rework charts already use
+   (sources.project_names), normalizes each raw value (whitespace/
+   hyphen-spacing/case only - verified "NE-VB" and "NE- VB" now
+   merge into one bar) and resolves the DPR Project Name for
+   display. Deliberately does NOT fuzzy-guess beyond that (e.g.
+   won't merge "NE-VE" into "NE-VB") since a wrong guess would
+   silently combine two different projects' reject rates - anything
+   that doesn't match a known DPR code keeps its own bar (code only)
+   and logs a warning so it can be fixed at the source. Chart label
+   now matches the Project Progress chart's "Name on top / (Code)
+   below" style - ported website/js/charts.js's twoPartYLabelsPlugin
+   into quality-charts.js (duplicated, not shared - the two
+   dashboards don't share a JS bundle).
+
+2. "Month Wise Joint Reject Rate" plotted Total NDT Joints and
+   Rejected Joints as two same-axis bars, which made the reject bar
+   nearly invisible next to the much larger total. Rejected Joints
+   is now a line on a secondary (right-hand) y-axis instead.
+
+Bumped quality.html's cache-busting query strings for quality-
+config.js and quality-charts.js (?v=20260817) - see the 2026-08-16
+entry above for why this matters.
+
+### 2026-08-17 (cont'd) - Project Master workbook (Code -> Name lookup) + corrected Welder Performance project matching
+
+Turned out the "Project Wise Reject %" fix earlier today matched the
+wrong direction: the Welder Performance file's raw "Project Name"
+column holds an informal NAME ("Vogt-CB", "NE-Legend"), not a
+Project Code as first assumed - confirmed once he shared his real
+Project Master workbook (Project Code + Project Name, 70 rows). Also
+caught that several Project Names in the master are shared by
+multiple Project Codes (e.g. "TNS Duplex 4" across 4 codes) - normal
+for multiple PO line items under one named project, not a data error.
+
+New source - Project Master workbook (data/upload/projects/
+*Project*Master*.xlsx, hand-maintained, updated "from time to time"
+per the person - config/settings.json -> input_files.project_master):
+src/reader.py -> read_project_master() (multi-file latest-wins per
+Project Code, same contract as read_fabrication()); wired into
+src/quality/reader.py, where it's merged on top of the existing
+DPR-derived Project Code -> Name lookup, Project Master winning any
+conflict (it's the one he directly maintains and keeps current for
+projects that have aged out of the DPR export) - this same merged
+lookup already feeds the Rework charts, so no separate change needed
+there.
+
+src/quality/welder_performance.py -> build_project_wise_summary()
+rewritten to match by NAME (normalize + look up against the master's
+Project Names) instead of by Code. Verified against his real files:
+6 of 13 raw project values now resolve cleanly (NE-Delta, NE-Legend,
+NE-Gregory, Tilenga, Vogt-CB, Vogt-FP); the other 7 (NE-VB/NE- VB,
+NE-FF, NE-VE, VO-BISION, Vogt-Bision, VPI-CB, VPI-FP) don't match
+anything in the master and are logged by name so he can confirm
+whether each is a typo to fix or a project to add - not auto-guessed,
+per the same "don't silently merge" reasoning as the Code-matching
+attempt this morning. Also handles the "one Name, several Codes"
+case (groups by Name, shows no single Code, logged separately from
+the "no match at all" case).
+
+Along the way, fixed a normalization bug from this morning's first
+attempt (_normalize_project_key kept hyphens as literal hyphens
+instead of treating them as word separators, so "NE-Legend" never
+matched "NE Legend") and a pandas quirk where an unmatched group's
+None values were coming out as float NaN instead of null in the JSON
+bundle.
+
+### 2026-08-17 (cont'd) - PDQC override: blank PDQC when not yet cleared by QC
+
+The Rework PDQC override (added 2026-08-10) always set a spool's
+PDQC to the later of (existing PDQC, latest Prod Offer Date in the
+Rework Data workbook) - regardless of what that latest offer event's
+Final Status actually said. The person flagged a gap in his own
+original rule: he'd meant for that override to only apply when the
+spool was actually cleared by QC, and forgot to say so at the time.
+
+src/merge.py -> apply_rework_pdqc_override() now branches on the
+Final Status of whichever row has the latest Prod Offer Date for a
+spool (same "always take the latest-dated row's status" rule as
+Rework Latest Status, confirmed 2026-08-10):
+
+  - Accept (cleared): unchanged behavior - PDQC becomes the later of
+    (existing, latest offer date), never moves backwards.
+  - Anything else (Rework, or an "Other" like "Project hold") - NOT
+    cleared: PDQC is forced BLANK, even overwriting an existing PDQC
+    value from DPR/Line History - a stale earlier PDQC would
+    otherwise overstate progress once the latest QC event says the
+    spool is back in rework.
+
+A spool not covered by the Rework Data workbook at all keeps its
+existing PDQC untouched, same as before - confirmed with the person
+this rule is only for spools the rework file has an opinion on. If
+the workbook is ever missing its Final Status column entirely (he
+confirmed he'll keep it populated, and will flag it if that ever
+changes), this falls back to the pre-2026-08-17 unconditional
+"later of the two" behavior rather than blanking every matched
+spool's PDQC on a missing-column edge case - logged clearly either
+way.
+
+Verified with synthetic cases covering every branch: bump-forward,
+protect-existing-later-date, set-from-blank, blank-on-not-cleared
+(even overwriting an existing PDQC), unmatched-spool-untouched, and
+the missing-Final-Status fallback - all behaved exactly as intended.
+
+Expected downstream effect (per the person, and consistent with how
+PDQC/RFP feed Ageing): average PDQC age will go up (spools that were
+wrongly counted as QC-cleared now correctly show as still pending)
+and average RFP age will go down, since fewer spools are wrongly
+past the PDQC gate.
