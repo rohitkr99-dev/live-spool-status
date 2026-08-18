@@ -26,7 +26,6 @@ quality/summary.py's rework functions do.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 import pandas as pd
@@ -50,23 +49,6 @@ def _sum(dataframe: pd.DataFrame, column: str) -> float:
     if column not in dataframe.columns:
         return 0.0
     return float(dataframe[column].fillna(0).sum())
-
-
-def _normalize_project_key(value: Any) -> str:
-    """
-    Whitespace/case normalization for matching a raw Welder
-    Performance "Project Name" value (informal, hyphenated -
-    "Vogt-CB") against a Project Master "Project Name" (formal,
-    space-separated - "VOGT CB"). Hyphens are treated the same as
-    whitespace here so the two styles line up; see
-    build_project_wise_summary().
-    """
-
-    if pd.isna(value):
-        return ""
-    text = str(value).strip().upper()
-    text = re.sub(r"[-\s]+", " ", text)
-    return text.strip()
 
 
 # -----------------------------------------------------
@@ -153,113 +135,59 @@ def build_project_wise_summary(
     Chart: "Project Wise Summary" - Total/Accept/Reject NDT joints
     per project.
 
-    UPDATED 2026-08-17 (per the person, after reviewing the first
-    version of this chart): the workbook's own "Project Name" column
-    actually holds an informal short NAME ("Vogt-CB", "NE-Legend"),
-    not a Project Code - confirmed against his Project Master
-    workbook (config/settings.json -> input_files.project_master),
-    which is the authoritative Project Code -> Project Name list.
-    So matching now goes the other way round from the first version:
-    each raw value is normalized (case/hyphen-spacing/whitespace)
-    and looked up against the master's NAMES, not its codes, to find
-    the Project Code to anchor the bar on. Chart label is Project
-    Name on top, "(Project Code)" below - same as the Project
-    Progress chart on the main dashboard.
+    REWRITTEN 2026-08-18 (third attempt at this chart, per the
+    person - the first two both guessed at the wrong source column).
+    The workbook has an actual Project Code column all along - it's
+    just labeled "Job No" in the raw header, holding values like
+    "TJ/25-26/170" that match the Project Master's Project Code
+    format exactly (confirmed against his real files: all 9 distinct
+    Job No values in his Welder Performance file matched a Project
+    Master entry with no typos at all - unlike the "Project Name"
+    column, which was hand-typed and inconsistent). Per his explicit
+    instruction, grouping is now by this Job No/Project Code column
+    ONLY, with an exact (no fuzzy, no normalization) lookup against
+    the Project Code -> Project Name master (project_names, already
+    merged from the Project Master workbook over the DPR-derived
+    lookup in src/quality/reader.py). The workbook's own "Project
+    Name" column is no longer read for this chart at all.
 
-    Three outcomes per raw value:
-      - Matches exactly ONE Project Code's name -> resolved, shown
-        as Name/(Code).
-      - Matches a name shared by MULTIPLE Project Codes (normal -
-        several PO line items can share one project name in the
-        master) -> can't tell which specific code this NDT data
-        belongs to, so the bar is grouped by NAME alone, shown
-        without a code. Logged as info, not an error.
-      - No match at all -> kept as its own bar under the raw text,
-        no name. Logged as a warning - likely a typo in the Welder
-        Performance file, or a project not yet in the master.
-
-    Deliberately does NOT fuzzy-guess close-but-not-exact spellings
-    (e.g. "VO-BISION" / "Vogt-Bision" are NOT auto-matched to
-    "VOGT Bison" even though they look like likely typos) - a wrong
-    guess would silently merge two different projects' reject rates.
-    Unmatched values are logged with their normalized form so those
-    can be confirmed and fixed by hand (either in the Welder
-    Performance file or the Project Master).
+    A Job No value with no matching Project Master entry keeps its
+    own bar (code only, no name) and is logged as a warning - so it
+    can be fixed at the source (added to the Project Master, or a
+    typo in the Welder Performance file) rather than silently
+    guessed at.
     """
 
     project_names = project_names or {}
 
-    name_to_codes: dict[str, list[str]] = {}
-    name_original: dict[str, str] = {}
-    for code, name in project_names.items():
-        key = _normalize_project_key(name)
-        name_to_codes.setdefault(key, []).append(code)
-        name_original.setdefault(key, name)
-
-    def resolve(raw_value: Any) -> tuple[str, str | None, str | None]:
-        """Returns (group_key, project_code_or_None, project_name_or_None)."""
-
-        key = _normalize_project_key(raw_value)
-        codes = name_to_codes.get(key)
-        if not codes:
-            # No match at all - group under the raw text as typed.
-            return (str(raw_value).strip(), None, None)
-        if len(codes) == 1:
-            return (codes[0], codes[0], name_original[key])
-        # Ambiguous - one name, several Project Codes in the master
-        # (normal - several PO line items can share a project name).
-        # Group by the name; no single code to anchor on.
-        return (key, None, name_original[key])
-
     df = dataframe.copy()
-    resolved = df["Project Name"].apply(resolve)
-    df["_group_key"] = resolved.apply(lambda t: t[0])
-    df["_code"] = resolved.apply(lambda t: t[1])
-    df["_name"] = resolved.apply(lambda t: t[2])
+    df["_code"] = df["Job No"].apply(
+        lambda v: str(v).strip() if pd.notna(v) and str(v).strip() else None
+    )
+    df = df.dropna(subset=["_code"])
 
-    grouped = df.groupby("_group_key").agg(
+    grouped = df.groupby("_code").agg(
         total_joint=("Total NDT Joint", "sum"),
         accept_joint=("NDT Accept Joint", "sum"),
         reject_joint=("Rejected Joint", "sum"),
-        code=("_code", lambda s: s.iloc[0]),
-        name=("_name", lambda s: s.iloc[0]),
     )
 
-    unmatched = sorted(
-        key for key, row in grouped.iterrows()
-        if pd.isna(row["code"]) and pd.isna(row["name"])
-    )
-    if unmatched:
+    unresolved = sorted(code for code in grouped.index if code not in project_names)
+    if unresolved:
         logger.warning(
             "Welder Performance: no Project Master entry found for "
-            f"{len(unmatched)} project name(s) (shown as typed in the "
-            f"file): {', '.join(unmatched)}. Their bars will show that "
-            "text only, no Project Code - check for a typo in the "
-            "Welder Performance file, or add the project to the "
-            "Project Master."
-        )
-
-    ambiguous = sorted(
-        row["name"] for key, row in grouped.iterrows()
-        if pd.isna(row["code"]) and not pd.isna(row["name"])
-    )
-    if ambiguous:
-        logger.info(
-            "Welder Performance: "
-            f"{len(ambiguous)} project name(s) match more than one "
-            f"Project Code in the master, so can't be anchored on a "
-            f"single code: {', '.join(ambiguous)}."
+            f"{len(unresolved)} project code(s) (from the file's Job "
+            f"No column): {', '.join(unresolved)}. Their bars will "
+            "show the code only - add these to the Project Master."
         )
 
     rows = []
-    for key, row in grouped.iterrows():
+    for code, row in grouped.iterrows():
         total = float(row["total_joint"] or 0)
         reject = float(row["reject_joint"] or 0)
-        code = None if pd.isna(row["code"]) else row["code"]
-        name = None if pd.isna(row["name"]) else row["name"]
         rows.append({
-            "project_code": code if code else (key if name is None else None),
-            "project_name": name,
+            "project_code": code,
+            "project_name": project_names.get(code),
             "total_joint": int(total),
             "accept_joint": int(row["accept_joint"] or 0),
             "reject_joint": int(reject),

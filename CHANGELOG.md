@@ -358,3 +358,27 @@ uncaught exception earlier in the render() sequence would have
 done), and an empty/missing-data case now logs a console.warn with
 the actual data received instead of failing silently. Asked him to
 check the browser console (F12) if this recurs after a hard refresh.
+
+### 2026-08-18 - Project Wise Reject %: use the real Project Code column, not name-matching
+
+Third attempt at this chart. Both earlier attempts guessed at the
+wrong source column - the workbook actually has a genuine Project
+Code column all along, just labeled "Job No" in the raw header
+(values like "TJ/25-26/170" - exactly the Project Master's format).
+Confirmed against his real file: all 9 distinct Job No values match
+a Project Master entry exactly, no typos at all - unlike the
+"Project Name" column, which was hand-typed and inconsistent (the
+source of both previous attempts' problems).
+
+src/quality/welder_performance.py -> build_project_wise_summary()
+rewritten again: groups by the Job No/Project Code column directly,
+exact lookup only against the Project Code -> Name master (no
+normalization, no fuzzy matching, no name-based reverse lookup -
+all of that machinery, including _normalize_project_key(), removed
+entirely as unnecessary). The workbook's "Project Name" column is no
+longer read for this chart at all, per his explicit instruction.
+Verified against his real files: all 9 projects now resolve cleanly
+with zero unmatched codes (NE Legend, NE Gregory, VOGT CB, NE
+Vicksburg, NE Delta, NE Franklin Farms, VOGT FP, Tilenga, VOGT
+Bison) - a big improvement over the previous name-matching attempt's
+6-of-13 resolved with several typo'd/unmatched bars.
