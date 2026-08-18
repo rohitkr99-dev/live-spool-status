@@ -336,3 +336,25 @@ PDQC/RFP feed Ageing): average PDQC age will go up (spools that were
 wrongly counted as QC-cleared now correctly show as still pending)
 and average RFP age will go down, since fewer spools are wrongly
 past the PDQC gate.
+
+### 2026-08-17 (cont'd) - "Project Wise Reject %" reported blank + defensive hardening
+
+Reported the "Project Wise Reject %" chart rendering completely
+blank (card title/subtitle visible, canvas empty). Extensively
+tested the exact chart config against his real pipeline-computed
+data (14 project rows, all valid) using the real vendored Chart.js
+4.5.1 build plus the site's full theme/datalabels/gradient-bar
+plugins - rendered correctly every time, no exceptions, no blank
+canvas. Couldn't reproduce locally, so this is most likely the same
+class of issue as the 2026-08-16 cache-busting bug (a stale
+JS/HTML/data-bundle mismatch on his end) rather than a code defect.
+
+Bumped quality-charts.js's cache-busting version again (?v=20260817c)
+regardless, and hardened website/js/quality-charts.js so this class
+of problem is diagnosable if it recurs: each of the 5 Welder
+Performance charts now renders inside its own try/catch (one
+throwing no longer silently blocks the rest from rendering, which an
+uncaught exception earlier in the render() sequence would have
+done), and an empty/missing-data case now logs a console.warn with
+the actual data received instead of failing silently. Asked him to
+check the browser console (F12) if this recurs after a hard refresh.

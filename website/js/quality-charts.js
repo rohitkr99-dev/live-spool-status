@@ -450,17 +450,33 @@ const QualityCharts = {
 
     section.hidden = false;
 
-    this.renderWelderMonthJoint(welderPerf.month_wise_joint);
-    this.renderWelderMonthLength(welderPerf.month_wise_length);
-    this.renderWelderProject(welderPerf.project_wise);
-    this.renderWelderDefectType(welderPerf.defect_type);
-    this.renderWelderProcess(welderPerf.process_wise);
+    // Each chart wrapped individually (2026-08-17, diagnosing a
+    // reported blank "Project Wise Reject %" chart that couldn't be
+    // reproduced locally against realistic data) - so if one chart's
+    // data ever hits an edge case Chart.js or a plugin doesn't like,
+    // it logs a clear error to the console instead of silently
+    // leaving that one canvas blank AND, worse, aborting every chart
+    // queued after it in this same list (an uncaught exception in
+    // one render call would otherwise stop the rest from running).
+    const safeRender = (label, fn) => {
+      try {
+        fn();
+      } catch (error) {
+        console.error(`Quality dashboard: "${label}" chart failed to render.`, error);
+      }
+    };
+
+    safeRender("Month Wise Joint Reject Rate", () => this.renderWelderMonthJoint(welderPerf.month_wise_joint));
+    safeRender("Month Wise NDT Length Reject %", () => this.renderWelderMonthLength(welderPerf.month_wise_length));
+    safeRender("Project Wise Reject %", () => this.renderWelderProject(welderPerf.project_wise));
+    safeRender("Type of Defect", () => this.renderWelderDefectType(welderPerf.defect_type));
+    safeRender("Rejected Joints by Welding Process", () => this.renderWelderProcess(welderPerf.process_wise));
     this.wireWelderExportButton(welderPerf);
   },
 
   renderWelderMonthJoint(rows) {
     const ctx = this._ctx("chart-welder-month-joint");
-    if (!ctx || !rows || !rows.length) return;
+    if (!ctx || !rows || !rows.length) { console.warn("Month Wise Joint Reject Rate: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
     const labels = rows.map((r) => r.month);
     const pcts = rows.map((r) => r.reject_pct);
@@ -526,7 +542,7 @@ const QualityCharts = {
 
   renderWelderMonthLength(rows) {
     const ctx = this._ctx("chart-welder-month-length");
-    if (!ctx || !rows || !rows.length) return;
+    if (!ctx || !rows || !rows.length) { console.warn("Month Wise NDT Length Reject %: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
     const labels = rows.map((r) => r.month);
     const pcts = rows.map((r) => r.reject_pct);
@@ -615,7 +631,7 @@ const QualityCharts = {
 
   renderWelderProject(rows) {
     const ctx = this._ctx("chart-welder-project");
-    if (!ctx || !rows || !rows.length) return;
+    if (!ctx || !rows || !rows.length) { console.warn("Project Wise Reject %: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
     const labels = rows.map((r) => r.project_code || r.project_name);
     const twoPartLabels = rows.map((r) => ({ code: r.project_code, name: r.project_name }));
@@ -666,7 +682,7 @@ const QualityCharts = {
 
   renderWelderDefectType(rows) {
     const ctx = this._ctx("chart-welder-defect-type");
-    if (!ctx || !rows || !rows.length) return;
+    if (!ctx || !rows || !rows.length) { console.warn("Type of Defect: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
     const labels = rows.map((r) => r.defect);
     const palette = QUALITY_CONFIG.welderDefectPalette;
@@ -698,7 +714,7 @@ const QualityCharts = {
 
   renderWelderProcess(rows) {
     const ctx = this._ctx("chart-welder-process");
-    if (!ctx || !rows || !rows.length) return;
+    if (!ctx || !rows || !rows.length) { console.warn("Rejected Joints by Welding Process: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
     const labels = rows.map((r) => r.process);
 
