@@ -382,3 +382,52 @@ with zero unmatched codes (NE Legend, NE Gregory, VOGT CB, NE
 Vicksburg, NE Delta, NE Franklin Farms, VOGT FP, Tilenga, VOGT
 Bison) - a big improvement over the previous name-matching attempt's
 6-of-13 resolved with several typo'd/unmatched bars.
+
+### 2026-08-18 - Absolute Rules doc + Rework PDQC rule now applies everywhere
+
+Diagnosed a real mismatch the person reported: Projects page showed
+~400 spools "Ready for Painting", Production page showed 500+ for
+what should be the same population. Root cause: the Rework PDQC rule
+(latest Rework Data offer event overrides PDQC; blanked entirely if
+not cleared - added 2026-08-10, corrected 2026-08-17) only ever
+existed in src/merge.py, used by the Projects pipeline (main.py).
+The Production pipeline (production_main.py -> src/production/
+reader.py) read PDQC straight off the raw DPR sheet with zero
+knowledge of the Rework Data workbook - so a spool still under
+rework could count as "PDQC done" there while correctly showing as
+not-yet-PDQC'd on Projects.
+
+Per the person, in his own words: "Rework rule is absolute primary
+... Same rule needs to be applied to everywhere." Two things done:
+
+1. New docs/absolute-rules.md - a permanent, cross-dashboard rules
+   document (distinct from docs/decision_log.md, which stays scoped
+   to single-pipeline decisions). Every future Claude session must
+   read this before touching PDQC or adding a new pipeline. Rule 1
+   is this PDQC rule, in full.
+
+2. Extracted the rule's entire implementation out of src/merge.py
+   into a new shared module, src/rework_pdqc_rule.py ->
+   apply_rework_pdqc_rule() - the single implementation every
+   pipeline must call. src/merge.py -> MergeEngine.apply_rework_
+   pdqc_override() is now a thin wrapper around it (verified
+   byte-for-byte identical behavior against the same test cases used
+   when the rule was first built - no regression). src/production/
+   reader.py now also reads the Rework Data workbook (optional,
+   same contract as Line History/SIOP), and src/production/
+   pipeline.py -> run() calls the shared function on sources.
+   fabrication's PDQC column immediately after load_sources(),
+   before any stage/backlog/ageing computation reads it - so
+   current_stage, the backlog charts, and ageing on the Production
+   dashboard all now agree with the Projects dashboard on which
+   spools are actually PDQC-cleared.
+
+Verified the shared function directly and via the merge.py wrapper
+against the full set of branch cases (bump-forward, protect-later-
+existing, set-from-blank, blank-on-not-cleared, unmatched-untouched,
+missing-Final-Status-column fallback) - all correct, matching the
+original 2026-08-17 test results exactly. Could not run production_
+main.py fully end-to-end in this environment (no real DPR/Weekly
+Planning sample file available here) - recommend running it for real
+after applying this and spot-checking a few spools that were
+previously miscounted.

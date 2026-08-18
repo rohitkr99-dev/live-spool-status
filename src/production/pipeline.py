@@ -21,6 +21,16 @@ main.py / packing_main.py. This module makes no changes to, and
 does not import from, src/pipeline.py, src/merge.py,
 src/business_rules.py or src/ageing.py - the Projects pipeline is
 untouched.
+
+Exception (2026-08-18): this pipeline DOES call
+src/rework_pdqc_rule.py -> apply_rework_pdqc_rule() on
+sources.fabrication right after load_sources() returns, below -
+the shared, single implementation of ABSOLUTE RULE #1
+(docs/absolute-rules.md): PDQC must reflect the Production Rework
+Data workbook's clearance status identically on every dashboard.
+That module is NOT src/merge.py (which itself now also just calls
+the same shared function) - importing it does not reintroduce a
+dependency on the Projects pipeline.
 """
 
 from __future__ import annotations
@@ -33,6 +43,7 @@ from typing import Any
 from production.logger import logger
 from production.reader import load_sources
 from production.ageing import build_spool_records, TRACKED_STAGES
+from rework_pdqc_rule import apply_rework_pdqc_rule
 from welding_finish import (
     build_line_history_lookup,
     build_welding_db_lookup,
@@ -84,6 +95,14 @@ def run(
 
     logger.info("Starting Production dashboard pipeline ...")
     sources = load_sources()
+
+    # ABSOLUTE RULE #1 (docs/absolute-rules.md) - must run before
+    # build_spool_records() below reads PDQC off sources.fabrication,
+    # so every downstream computation (current stage, backlog,
+    # ageing) sees the corrected value, never the raw DPR one.
+    sources.fabrication = apply_rework_pdqc_rule(
+        sources.fabrication, sources.rework
+    )
 
     fields = rules["welding_finish_fields"]
 

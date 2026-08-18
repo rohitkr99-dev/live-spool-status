@@ -36,6 +36,13 @@ Returns four dataframes:
                       No, Welding FRun Date. Primary source for
                       Welding Finish. None if the file isn't present
                       (optional, same as the Projects pipeline).
+  rework              Production Rework Data workbook - one row per
+                      offer-for-inspection event. Optional; used only
+                      to apply the ABSOLUTE RULE #1 PDQC rule (see
+                      src/rework_pdqc_rule.py and
+                      docs/absolute-rules.md) - src/production/
+                      pipeline.py applies it to `fabrication`'s PDQC
+                      column right after load_sources() returns.
 """
 
 from __future__ import annotations
@@ -56,6 +63,7 @@ class ProductionSources:
     line_history: pd.DataFrame | None
     siop_planned: pd.DataFrame | None
     material_handover: pd.DataFrame | None
+    rework: pd.DataFrame | None
 
 
 def load_sources() -> ProductionSources:
@@ -95,6 +103,24 @@ def load_sources() -> ProductionSources:
             "will be omitted for this run."
         )
 
+    # ABSOLUTE RULE #1 (docs/absolute-rules.md, 2026-08-18): PDQC
+    # must reflect the Production Rework Data workbook's clearance
+    # status everywhere, not just on the Projects dashboard - see
+    # src/rework_pdqc_rule.py. Optional/best-effort, same contract as
+    # the Quality dashboard's own read of this workbook: a missing
+    # file just means this rule has nothing to apply, not a pipeline
+    # failure.
+    rework = None
+    try:
+        logger.info("Reading Production Rework Data workbook (optional, PDQC rule) ...")
+        rework = excel_reader.read_rework()
+    except Exception as error:
+        logger.warning(
+            f"Could not read Production Rework Data workbook ({error}). "
+            "PDQC will be taken as-is from the DPR sheet for this run, "
+            "without the Rework Cleared/Not-Cleared rule applied."
+        )
+
     return ProductionSources(
         fabrication=fabrication,
         master_planning=planning_sheets["master_sheet"],
@@ -102,4 +128,5 @@ def load_sources() -> ProductionSources:
         line_history=line_history,
         siop_planned=siop_planned,
         material_handover=material_handover,
+        rework=rework,
     )

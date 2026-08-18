@@ -50,9 +50,6 @@ from constants import (
     PDQC,
     PLANNED_START,
     PROJECT_CODE,
-    REWORK_OFFER_DATE,
-    REWORK_FINAL_STATUS,
-    REWORK_LATEST_STATUS,
     SIOP_PLANNED_START,
     SPOOL_NO,
     WELDING_FINISH,
@@ -63,28 +60,8 @@ from welding_finish import (
     determine_welding_finish,
 )
 from logger import logger
+from rework_pdqc_rule import apply_rework_pdqc_rule
 from utils import create_composite_key, is_empty, parse_date, working_day_variance
-
-
-def _normalize_rework_status(raw) -> str:
-    """
-    Same normalization as src/quality/summary.py's _normalize_status
-    (kept as a separate small copy here rather than a shared import,
-    consistent with how the rest of this module is self-contained) -
-    "Final Status" is free text from the shop floor and varies in
-    case ("Accept" / "accept" / "ACCEPT") and occasionally means
-    something that's neither an accept nor a rework ("Project hold",
-    "SPOOL DELETED"), which normalizes to "Other".
-    """
-
-    if pd.isna(raw):
-        return "Other"
-    text = str(raw).strip().upper()
-    if text == "ACCEPT":
-        return "Accept"
-    if text == "REWORK":
-        return "Rework"
-    return "Other"
 
 
 class MergeEngine:
@@ -634,204 +611,20 @@ class MergeEngine:
         rework: Optional[pd.DataFrame],
     ) -> pd.DataFrame:
         """
-        QA/QC Rework Report PDQC override (as given by the person,
-        in their own words): the Production Rework Data workbook -
-        QC's own record of every offer-for-inspection event per
-        spool - becomes the primary source of truth for PDQC on any
-        spool it covers, replacing the existing DPR-date-field/Line-
-        History-derived PDQC. A spool can appear more than once in
-        that workbook (offered again after a rework); its PDQC is
-        driven by the LATEST "Prod offer" date across all of its
-        rows - but see the CLEARED/NOT CLEARED split below,
-        confirmed with the person 2026-08-17 as a rule he'd meant to
-        add originally but forgot: PDQC should only ever represent a
-        spool QC has actually accepted, not merely "most recently
-        offered".
-
-        For a spool this workbook covers, look at whichever row has
-        the LATEST Prod Offer Date (its "latest offer event"):
-
-          - If that row's Final Status is Accept (cleared) -
-            CLEARED: PDQC becomes the LATER of (existing PDQC, that
-            latest offer date) - PDQC must never move backwards,
-            even if the rework workbook's latest offer date happens
-            to be earlier than the existing one (e.g. a stale rework
-            file, or a spool that has since progressed further via
-            the normal DPR fields).
-
-          - If that row's Final Status is anything else (Rework,
-            or a normalized "Other" like "Project hold") - NOT
-            CLEARED: PDQC is forced BLANK, even overwriting an
-            existing PDQC value from DPR/Line History - the most
-            recent QC event says this spool hasn't actually passed
-            QC yet, so any earlier PDQC on record is now stale and
-            would overstate progress. This is a deliberate exception
-            to the "never move backwards" rule above: that rule
-            protects against a stale/earlier ACCEPT overriding a
-            genuine advance; it was never meant to protect a false
-            PDQC clearance.
-
-        A spool NOT found in the rework workbook at all (its
-        Composite Key isn't there) keeps its existing PDQC
-        unchanged - this rule only applies to spools the rework file
-        actually has an opinion on, confirmed with the person.
-
-        Also adds REWORK_LATEST_STATUS ("Rework Latest Status") -
-        the Final Status normalized to Accept/Rework/Other (same
-        normalization as src/quality/summary.py) from THAT SAME ROW,
-        i.e. whichever offer event has the latest Prod Offer Date
-        for that spool. This always stays paired with the latest
-        date, however many times a spool has been re-offered in the
-        workbook - confirmed with the project owner (2026-08-10):
-        always take the status from the latest-dated row, never an
-        earlier one, regardless of how many rows the spool has.
-
-        If the rework workbook has no usable Final Status column at
-        all this run (shouldn't normally happen - the person
-        confirmed 2026-08-17 he'll keep it populated, and will flag
-        it if that ever changes), clearance can't be determined for
-        anyone, so this falls back to the simpler pre-2026-08-17
-        "always take the later of the two dates" behavior for every
-        matched spool rather than blanking PDQC everywhere on a
-        missing-column edge case - logged clearly either way.
-
-        No-op (returns master unchanged) if the workbook wasn't
-        uploaded this run - see reader.py -> read_rework(), which
-        already treats a missing/unreadable file as optional, same
-        as the Line History Sheet and SIOP Planned Spools workbook.
+        ABSOLUTE RULE #1 (see docs/absolute-rules.md) - thin wrapper
+        around the single shared implementation in
+        src/rework_pdqc_rule.py, which src/production/pipeline.py
+        also calls for the Production dashboard. Extracted there
+        2026-08-18 after the two dashboards were found to compute
+        PDQC differently (Production read it straight off the raw
+        DPR sheet, with no knowledge of the Rework Data workbook at
+        all) - producing two different "PDQC done" counts for what
+        should be the same population of spools. See that module's
+        docstring for the full CLEARED/NOT-CLEARED rule; do not
+        re-implement this logic here or anywhere else.
         """
 
-        if rework is None or rework.empty:
-            return master
-
-        if REWORK_OFFER_DATE not in rework.columns:
-            logger.warning(
-                "Rework workbook has no usable Prod Offer Date "
-                "column; skipping the PDQC override for this run."
-            )
-            return master
-
-        rework = self.add_composite_key(rework)
-
-        latest_offer_field = "Rework Latest Offer Date"
-
-        rework_valid = rework.dropna(subset=[REWORK_OFFER_DATE])
-
-        if rework_valid.empty:
-            logger.warning(
-                "Rework workbook had no usable Prod Offer Date "
-                "values; skipping the PDQC override for this run."
-            )
-            return master
-
-        # idxmax (not a plain groupby().max()) so the row that wins
-        # for the date ALSO supplies the status for that same spool
-        # - the two must always come from the same offer event, not
-        # be independently maxed (a spool's highest-ever status
-        # could otherwise get paired with an unrelated later date).
-        latest_row_index = (
-            rework_valid.groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE].idxmax()
-        )
-        status_column = (
-            REWORK_FINAL_STATUS if REWORK_FINAL_STATUS in rework_valid.columns
-            else None
-        )
-        columns_to_take = [COMPOSITE_KEY, REWORK_OFFER_DATE]
-        if status_column:
-            columns_to_take.append(status_column)
-
-        latest_offer = rework_valid.loc[latest_row_index, columns_to_take].rename(
-            columns={REWORK_OFFER_DATE: latest_offer_field}
-        )
-
-        if status_column:
-            latest_offer[REWORK_LATEST_STATUS] = latest_offer[status_column].apply(
-                _normalize_rework_status
-            )
-            latest_offer = latest_offer.drop(columns=[status_column])
-        else:
-            latest_offer[REWORK_LATEST_STATUS] = None
-
-        master = master.merge(latest_offer, on=COMPOSITE_KEY, how="left")
-
-        if PDQC not in master.columns:
-            master[PDQC] = None
-
-        existing_pdqc = pd.to_datetime(master[PDQC], errors="coerce")
-        rework_date = pd.to_datetime(
-            master[latest_offer_field], errors="coerce"
-        )
-
-        def later_of(existing: pd.Timestamp, latest: pd.Timestamp):
-            if pd.isna(latest):
-                return existing
-            if pd.isna(existing):
-                return latest
-            return max(existing, latest)
-
-        matched = ~rework_date.isna()
-
-        if status_column:
-            # Normal path: gate the override on clearance. Only an
-            # Accept-status latest offer event is allowed to set/bump
-            # PDQC; anything else (Rework, Other) forces it blank -
-            # see the docstring above.
-            cleared = matched & (master[REWORK_LATEST_STATUS] == "Accept")
-            not_cleared = matched & ~cleared
-
-            new_pdqc = pd.Series(existing_pdqc, index=master.index).copy()
-            new_pdqc[cleared] = [
-                later_of(existing, latest)
-                for existing, latest in zip(
-                    existing_pdqc[cleared], rework_date[cleared]
-                )
-            ]
-            new_pdqc[not_cleared] = pd.NaT
-
-            bumped = cleared & (
-                existing_pdqc.isna() | (new_pdqc != existing_pdqc)
-            )
-            blanked = not_cleared & ~existing_pdqc.isna()
-
-            logger.info(
-                f"Rework PDQC override: {int(matched.sum())} spool(s) "
-                f"matched in the rework workbook - {int(bumped.sum())} "
-                f"PDQC date(s) set/bumped (latest offer event Accept), "
-                f"{int(blanked.sum())} PDQC date(s) blanked (latest "
-                "offer event not Accept, so not yet cleared by QC)."
-            )
-        else:
-            # Fallback: no Final Status column available this run,
-            # so clearance can't be determined for anyone - keep the
-            # pre-2026-08-17 unconditional "later of the two" rule
-            # rather than blanking PDQC for every matched spool.
-            logger.warning(
-                "Rework workbook has no usable Final Status column "
-                "this run; the Cleared/Not-Cleared PDQC rule can't be "
-                "applied. Falling back to the plain 'latest offer "
-                "date wins if later' override for every matched spool."
-            )
-
-            new_pdqc = pd.Series(
-                [
-                    later_of(existing, latest)
-                    for existing, latest in zip(existing_pdqc, rework_date)
-                ],
-                index=master.index,
-            )
-            changed = matched & (
-                existing_pdqc.isna() | (new_pdqc != existing_pdqc)
-            )
-            logger.info(
-                f"Rework PDQC override: {int(matched.sum())} spool(s) "
-                f"matched in the rework workbook, {int(changed.sum())} "
-                "PDQC date(s) updated."
-            )
-
-        master[PDQC] = new_pdqc
-        master = master.drop(columns=[latest_offer_field])
-
-        return master
+        return apply_rework_pdqc_rule(master, rework)
 
     # -----------------------------------------------------
 

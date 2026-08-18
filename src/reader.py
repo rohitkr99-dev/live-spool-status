@@ -709,9 +709,10 @@ class ExcelReader:
         offer-for-inspection event, so the same spool's Composite
         Key repeating is expected (a spool offered more than once
         after a rework is not a duplicate). Used as the primary
-        source of PDQC for any spool it covers - see merge.py ->
-        apply_rework_pdqc_override() - and as the source data for
-        the Quality Assurance/Control dashboard (src/quality/).
+        source of PDQC for any spool it covers everywhere PDQC is
+        computed - see src/rework_pdqc_rule.py (ABSOLUTE RULE #1,
+        docs/absolute-rules.md) - and as the source data for the
+        Quality Assurance/Control dashboard (src/quality/).
 
         Unlike Fabrication/Planning, this file lives in its own
         folder (config/settings.json -> paths.quality_upload_folder,
