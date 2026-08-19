@@ -431,3 +431,67 @@ main.py fully end-to-end in this environment (no real DPR/Weekly
 Planning sample file available here) - recommend running it for real
 after applying this and spot-checking a few spools that were
 previously miscounted.
+
+### 2026-08-19 - Absolute Rule #2: Hold is not Rework (PDQC/RFP anchoring)
+
+Following up on Rule #1 (2026-08-17/18: PDQC blanked for spools not
+cleared by QC), the person reported that this was inflating the
+PDQC-stuck count on both dashboards for spools that were only on
+administrative Hold, not genuine rework - "Production says a Hold
+should not affect their ageing, QC says Hold should not affect
+their ageing." Per his explicit instruction, added as Absolute Rule
+#2 in docs/absolute-rules.md, implemented in the same shared
+src/rework_pdqc_rule.py -> apply_rework_pdqc_rule() that implements
+Rule #1, so both Projects and Production pick it up automatically
+with no new call sites needed.
+
+The Rework Data workbook's Final Status column maps to exactly 3
+categories now (given by the person, his exact 6 raw text values):
+Accept -> Accept; Rework, Rework/same RW, Not found, SPOOL DELETED
+-> Rework; Project hold -> Hold (new). Any unrecognized value
+defaults conservatively to Rework and logs a warning, rather than
+being silently assumed Accept or Hold.
+
+For a Hold-classified spool: PDQC is anchored to the EARLIEST offer
+date it was ever seen on Hold (not the eventual Accept date,
+however long the hold lasted) - later of that anchor vs. existing
+DPR PDQC. RFP is set to the anchor + a standard 4-working-day gap
+(STANDARD_PDQC_TO_RFP_WORKING_DAYS, derived from config/production_
+rules.json's target_days table, confirmed uniform across all 6
+categories as of today - flagged in code as needing a manual update
+if that ever stops being true) rather than the true RFP date, which
+would otherwise still carry almost the entire hold-caused delay.
+Verified against the person's own worked example (offered 1 Aug,
+held, cleared 11 Aug) exactly: PDQC anchors to 1 Aug, not 11 Aug.
+
+Persistent memory: since a Hold row can be edited in place to Accept
+(no new row added), the fact a spool was ever on Hold can vanish
+from the workbook once resolved. Added state/hold_tracking.json,
+committed by every pipeline run (.github/workflows/drive-sync.yml's
+git add step updated to include state/) - loses this memory and
+silently breaks Rule #2 if that ever stops being committed. A spool
+that re-enters Hold after being previously resolved (an ambiguous
+pattern the person said shouldn't normally happen) is NOT
+auto-re-anchored - it's flagged via a new Exceptions tab entry
+(src/summary.py -> generate_exceptions(), type "rework_hold_reentry")
+per his explicit instruction to review and fix the source file by
+hand rather than have the system guess.
+
+Verified extensively with synthetic multi-run scenarios simulating
+real GitHub Actions runs across time: fresh Hold detected while
+still on hold (PDQC/RFP correctly anchored); resolution to Accept in
+a later run via the SAME row edited in place (anchor correctly
+preserved, not reset to the Accept date); full 6-value status
+mapping; re-entering Hold after resolution (correctly flagged as an
+exception, not silently re-anchored, verified it flows all the way
+through to generate_exceptions()'s output); and a full mixed-batch
+regression against every existing Rule #1 branch (bump-forward,
+protect-later-existing, set-from-blank, blank-on-not-cleared,
+unmatched-untouched) alongside the new Hold case in the same run,
+confirming zero regression.
+
+Could not run this against the person's real, larger Rework Data
+workbook in this environment (only synthetic test data available
+here) - recommended he run the real pipelines and spot-check a few
+Hold-affected spools, and watch the Exceptions tab for any
+rework_hold_reentry entries after the first run.

@@ -611,16 +611,14 @@ class MergeEngine:
         rework: Optional[pd.DataFrame],
     ) -> pd.DataFrame:
         """
-        ABSOLUTE RULE #1 (see docs/absolute-rules.md) - thin wrapper
-        around the single shared implementation in
+        ABSOLUTE RULES #1 AND #2 (see docs/absolute-rules.md) - thin
+        wrapper around the single shared implementation in
         src/rework_pdqc_rule.py, which src/production/pipeline.py
-        also calls for the Production dashboard. Extracted there
-        2026-08-18 after the two dashboards were found to compute
-        PDQC differently (Production read it straight off the raw
-        DPR sheet, with no knowledge of the Rework Data workbook at
-        all) - producing two different "PDQC done" counts for what
-        should be the same population of spools. See that module's
-        docstring for the full CLEARED/NOT-CLEARED rule; do not
+        also calls for the Production dashboard. Rule #1 extracted
+        there 2026-08-18 after the two dashboards were found to
+        compute PDQC differently; Rule #2 (Hold handling, also sets
+        RFP) added 2026-08-19. See that module's docstring for the
+        full rules; do not
         re-implement this logic here or anywhere else.
         """
 

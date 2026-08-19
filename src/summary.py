@@ -104,6 +104,7 @@ from constants import (
     WEEK,
 )
 from logger import logger
+from rework_pdqc_rule import REWORK_HOLD_EXCEPTION
 from utils import (
     dataframe_to_json_records,
     fiscal_week_info,
@@ -978,24 +979,49 @@ class SummaryEngine:
 
             out_of_order = self._out_of_order_stages(row)
 
-            if not out_of_order:
-                continue
+            if out_of_order:
+                exceptions.append({
+                    "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
+                    "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                    "project_name": to_json_safe(row.get(PROJECT_NAME)),
+                    "drawing_no": to_json_safe(row.get(DRAWING_NO)),
+                    "spool_no": to_json_safe(row.get(SPOOL_NO)),
+                    "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
+                    "type": "out_of_order_stage_dates",
+                    "detail": (
+                        f"Current Stage is '{row.get(CURRENT_STAGE)}' "
+                        "but later stage(s) already have dates: "
+                        + ", ".join(out_of_order)
+                    ),
+                    "affected_stages": out_of_order,
+                })
 
-            exceptions.append({
-                "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
-                "project_code": to_json_safe(row.get(PROJECT_CODE)),
-                "project_name": to_json_safe(row.get(PROJECT_NAME)),
-                "drawing_no": to_json_safe(row.get(DRAWING_NO)),
-                "spool_no": to_json_safe(row.get(SPOOL_NO)),
-                "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
-                "type": "out_of_order_stage_dates",
-                "detail": (
-                    f"Current Stage is '{row.get(CURRENT_STAGE)}' "
-                    "but later stage(s) already have dates: "
-                    + ", ".join(out_of_order)
-                ),
-                "affected_stages": out_of_order,
-            })
+            # ABSOLUTE RULE #2 (docs/absolute-rules.md, 2026-08-19):
+            # a spool the Rework Data workbook shows re-entering
+            # Hold after a previous resolution - ambiguous, per the
+            # person ("I don't think this situation should come...
+            # I will see and make changes in the actual file
+            # manually and reupload it"). See
+            # src/rework_pdqc_rule.py -> apply_rework_pdqc_rule().
+            if bool(row.get(REWORK_HOLD_EXCEPTION)):
+                exceptions.append({
+                    "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
+                    "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                    "project_name": to_json_safe(row.get(PROJECT_NAME)),
+                    "drawing_no": to_json_safe(row.get(DRAWING_NO)),
+                    "spool_no": to_json_safe(row.get(SPOOL_NO)),
+                    "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
+                    "type": "rework_hold_reentry",
+                    "detail": (
+                        "This spool was previously recorded as "
+                        "resolved from a Rework Data Hold, but the "
+                        "workbook now shows it on Hold again - the "
+                        "system won't guess which episode is correct. "
+                        "Please review and fix the Rework Data "
+                        "workbook, then re-upload."
+                    ),
+                    "affected_stages": [],
+                })
 
         return exceptions
 
