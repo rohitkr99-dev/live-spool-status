@@ -67,6 +67,52 @@ def build_category_distribution(
     ]
 
 
+def _trustworthy_actual_days(record, tracked_stages: list[str]) -> dict[str, int | None]:
+    """
+    A record's own stage_actual_days, but with any stage whose value
+    is LESS than an earlier tracked stage's value excluded (None) -
+    a raw date reversal (e.g. RFP dated before PDQC for the same
+    spool) makes that stage's "how long did this take" figure
+    untrustworthy, so it shouldn't be allowed to corrupt that
+    stage's average.
+
+    Added 2026-08-20 after the person reported "Stage-wise Ageing by
+    Category" showing PDQC's average actual days HIGHER than RFP's
+    in some categories - structurally impossible, since RFP requires
+    PDQC first. Confirmed via the Projects dashboard's new
+    reversed_stage_dates Exception check that real spools in his data
+    do have this kind of reversed date pair. Rather than guess at
+    what the "correct" date should have been (silently rewriting a
+    date this module has no way to actually know), the untrustworthy
+    stage is simply excluded from ITS OWN average - not from every
+    stage, and the underlying raw date is untouched everywhere else
+    (current_stage, ageing, exports all still see the real value).
+
+    Comparison uses the running maximum of RAW recorded values seen
+    so far (not previously-excluded ones), so one bad stage doesn't
+    cascade into flagging every stage after it as untrustworthy too.
+    """
+
+    result: dict[str, int | None] = {}
+    running_max: int | None = None
+
+    for stage in tracked_stages:
+        value = record.stage_actual_days.get(stage)
+
+        if value is None:
+            result[stage] = None
+            continue
+
+        if running_max is not None and value < running_max:
+            result[stage] = None
+        else:
+            result[stage] = value
+
+        running_max = value if running_max is None else max(running_max, value)
+
+    return result
+
+
 def build_stage_ageing(
     records: list[SpoolRecord],
     category_meta: dict[str, dict],
@@ -81,6 +127,11 @@ def build_stage_ageing(
     Also the count still short of that stage, and their average
     current age (Today - Planned Start), so a stalled backlog shows
     up even before any of them finish the stage.
+
+    A spool whose stage_actual_days aren't in non-decreasing order
+    (a raw date reversal - e.g. RFP dated before its own PDQC) is
+    excluded from the affected stage's average specifically - see
+    _trustworthy_actual_days() above.
     """
 
     by_category: dict[str, Any] = {}
@@ -90,12 +141,16 @@ def build_stage_ageing(
             r for r in records if r.category_key == key and r.planned_start
         ]
 
+        trustworthy_by_record = [
+            _trustworthy_actual_days(r, TRACKED_STAGES) for r in cat_records
+        ]
+
         stages_out = []
         for stage in TRACKED_STAGES:
             actual_days = [
-                r.stage_actual_days.get(stage)
-                for r in cat_records
-                if r.stage_actual_days.get(stage) is not None
+                trustworthy.get(stage)
+                for trustworthy in trustworthy_by_record
+                if trustworthy.get(stage) is not None
             ]
             pending_ages = [
                 r.current_age_days

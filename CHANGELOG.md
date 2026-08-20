@@ -544,3 +544,47 @@ Recommended the person run the pipeline and check the Exceptions
 tab for any reversed_stage_dates entries - if there are real ones,
 that will name the exact spools responsible for the chart anomaly he
 reported, which he can then trace back to the source DPR/Rework data.
+
+### 2026-08-20 (cont'd) - Fixed the actual chart: exclude untrustworthy spools from a stage's average
+
+Following up on the reversed_stage_dates Exceptions check added
+earlier today - the person's specific example (Under Painting
+2026-05-29 -> Packing 2025-06-02) turned out to be a real 11-month
+reversal, confirmed by him after re-reading the years (he'd initially
+misread it as a normal 4-day gap). So the check itself is correctly
+catching genuine data problems, not false-flagging normal backward-
+cycling.
+
+For the actual chart fix ("Stage-wise Ageing by Category" showing
+PDQC's average higher than RFP's) - considered and rejected silently
+"correcting" the bad dates (no way to know what the true date should
+have been). Instead, src/production/summary.py gains
+_trustworthy_actual_days(): for each spool, walks its own
+stage_actual_days in TRACKED_STAGES order: if a stage's value is
+LESS than an earlier tracked stage's own raw value (i.e. a date
+reversal, same underlying condition the new Exceptions check
+catches, computed independently here since Production doesn't use
+the Projects pipeline's exception logic), that stage's value is
+excluded from THAT STAGE'S average only - not from other stages, and
+the underlying raw stage_actual_days/dates are untouched everywhere
+else (current_stage, ageing, exports). build_stage_ageing() now
+builds each stage's average from this filtered/trustworthy view
+instead of the raw one.
+
+Verified with a synthetic mixed case (one normal spool, one with a
+genuine PDQC>RFP reversal): the reversal is correctly excluded from
+RFP's average specifically (reached_count drops from 2 to 1 for that
+stage), while PDQC's own average is untouched (nothing wrong with
+its own value relative to earlier stages).
+
+Important honest caveat, explained to the person: this guarantees
+the averages are built only from internally-consistent (possible)
+data - it does NOT mathematically guarantee PDQC's average will
+always compute lower than RFP's forever, since the two are now
+legitimately computed over slightly different trustworthy
+sub-populations (a spool excluded from RFP's average for being
+untrustworthy there may still validly count toward PDQC's). It
+should substantially shrink or eliminate the inversion to the extent
+it was driven by corrupted/reversed dates, which was the reported
+symptom - but any small residual gap after this fix reflects genuine
+sampling variance across real data, not a remaining calculation bug.
