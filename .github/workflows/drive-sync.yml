@@ -4,7 +4,7 @@ on:
   schedule:
     # Every 15 minutes. GitHub may delay scheduled runs by a few extra
     # minutes at busy times - use "Run workflow" below to test on demand.
-    - cron: "*/15 * * * *"
+    - cron: "0 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -66,6 +66,11 @@ jobs:
           git config user.name "drive-sync-bot"
           git config user.email "actions@users.noreply.github.com"
           git add website/data
+          # ABSOLUTE RULE #2 (docs/absolute-rules.md, 2026-08-19):
+          # state/hold_tracking.json must be committed every run or
+          # it loses its memory of which spools were ever seen on
+          # Hold - see src/rework_pdqc_rule.py.
+          git add state
           if git diff --cached --quiet; then
             echo "Pipeline ran but produced no tracked changes - nothing to commit."
           else
