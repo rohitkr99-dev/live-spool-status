@@ -655,28 +655,33 @@ class MergeEngine:
         packing_spools: Optional[list[dict]],
     ) -> pd.DataFrame:
         """
-        Packing & Dispatch backfill (as given by the person, in
-        their own words): the DPR/Weekly Production Planning
-        workbooks don't track PDI, Packing, or Dispatch dates at all
-        - those 3 columns come entirely from the separate Packing &
-        Dispatch workbooks (data/upload/packing/), matched to this
-        dataset by Composite Key (see _base_spool_no() for how the
-        packing workbook's spool number is matched against this
-        dataset's Spool No).
+        Packing & Dispatch backfill.
 
-        Rule: a spool's PDI / Packing / Dispatch date is overwritten
-        with the Packing & Dispatch workbook's value WHENEVER that
-        value is present (non-blank) - even if this dataset already
-        had a different value there, since the packing workbook is
-        the current, authoritative source for these 3 fields. If the
-        packing workbook's value for a field is blank, the existing
-        value in this dataset is left completely untouched (not
-        cleared) - a blank in a new upload must never erase data
-        that's already known.
+        UPDATED 2026-08-20 (per the person, in his own words: "In
+        case if any spool does not have PDI/Packing/Dispatch date in
+        DPR file, then only it looks at Packing folder file.
+        Otherwise do not look."): DPR's own PDI/Packing/Dispatch
+        columns (config/column_mapping.json -> fabrication - "8.
+        Painting"/"9. Packing"/"10. Dispatch") ARE now read and are
+        the primary source. The separate Packing & Dispatch workbook
+        (data/upload/packing/) is used ONLY to fill in a spool's
+        PDI/Packing/Dispatch date when DPR's own field for that spool
+        is blank - it never overwrites a value DPR already has,
+        however old that value might be.
+
+        This is a genuine priority flip from the original design
+        (pre-2026-08-20): the Packing & Dispatch workbook used to be
+        unconditionally authoritative, overwriting DPR whenever it
+        had a non-blank value, on the assumption DPR didn't track
+        these fields at all. That assumption turned out to be wrong
+        in practice, and caused real confusion - the person corrected
+        a Packing date in DPR expecting it to take effect, and it
+        silently didn't, because the Packing & Dispatch workbook's
+        (uncorrected) value kept overwriting his DPR fix every run.
 
         Config: see config/business_rules.json ->
         packing_dispatch_merge.field_mapping, which maps each
-        packing workbook field to the DPR master field it feeds -
+        packing workbook field to the DPR master field it backfills -
         not hardcoded here.
 
         No-op (returns master unchanged) if the feature is disabled,
@@ -752,21 +757,27 @@ class MergeEngine:
             if target_field not in master.columns:
                 master[target_field] = None
 
+            # UPDATED 2026-08-20: only fill in the target field when
+            # DPR's own value is blank - never overwrite a value DPR
+            # already has, no matter how old. See docstring above.
+            target_is_blank = master[target_field].apply(is_empty)
             has_packing_value = ~master[source_field].apply(is_empty)
-            master.loc[has_packing_value, target_field] = master.loc[
-                has_packing_value, source_field
+            should_fill = target_is_blank & has_packing_value
+
+            master.loc[should_fill, target_field] = master.loc[
+                should_fill, source_field
             ]
-            filled_counts[target_field] = int(has_packing_value.sum())
+            filled_counts[target_field] = int(should_fill.sum())
 
         master = master.drop(columns=source_fields)
 
         logger.info(
-            "Packing & Dispatch backfill: "
+            "Packing & Dispatch backfill (DPR wins when present): "
             + ", ".join(
                 f"{field}={count}" for field, count in filled_counts.items()
             )
-            + " spool(s) updated from the Packing & Dispatch "
-            "workbook(s)."
+            + " spool(s) had a blank DPR value filled in from the "
+            "Packing & Dispatch workbook(s)."
         )
 
         return master

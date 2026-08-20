@@ -588,3 +588,21 @@ should substantially shrink or eliminate the inversion to the extent
 it was driven by corrupted/reversed dates, which was the reported
 symptom - but any small residual gap after this fix reflects genuine
 sampling variance across real data, not a remaining calculation bug.
+
+### 2026-08-20 (cont'd) - Packing & Dispatch backfill: flipped to DPR-wins
+
+Root cause of the earlier "my DPR correction isn't showing up"
+report: PDI/Packing/Dispatch were being unconditionally overwritten
+by the separate Packing & Dispatch workbook (data/upload/packing/)
+whenever it had ANY value for a spool - even if DPR's own value had
+just been corrected. The person, in his own words: "In case if any
+spool does not have PDI/Packing/Dispatch date in DPR file, then only
+it looks at Packing folder file. Otherwise do not look."
+
+src/merge.py -> MergeEngine.apply_packing_dates() flipped: DPR's own
+PDI/Packing/Dispatch value now wins whenever present - the Packing &
+Dispatch workbook is only consulted to fill in a spool's date when
+DPR's own field is blank, never to overwrite an existing DPR value.
+Verified with 3 cases: DPR-has-value + packing-workbook-has-different-
+value -> DPR value kept unchanged; DPR-blank + packing-workbook-has-
+value -> filled in; both blank -> stays blank. All correct.
