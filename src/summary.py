@@ -969,6 +969,52 @@ class SummaryEngine:
 
         return out_of_order
 
+    def _reversed_stage_pairs(self, row: pd.Series) -> list[str]:
+        """
+        2026-08-20: a DIFFERENT anomaly from _out_of_order_stages()
+        above - that one only catches a LATER stage being filled
+        while an EARLIER one is still blank. It says nothing about
+        two stages that are BOTH filled but land in the wrong
+        chronological order relative to each other (e.g. RFP dated
+        earlier than PDQC for the same spool) - those sail through
+        completely undetected, because by the time both are filled,
+        Current Stage has already moved past both and
+        _out_of_order_stages() has nothing left to flag.
+
+        Added after the person reported "Stage-wise Ageing by
+        Category" showing a HIGHER average actual day-count for PDQC
+        than for RFP in some categories - structurally backwards,
+        since RFP requires PDQC first. Verified this couldn't be
+        caused by the Rework PDQC/RFP rule itself (src/rework_pdqc_
+        rule.py always sets RFP >= PDQC for any spool it touches) -
+        this check exists to surface the real, underlying data-entry
+        inconsistency (or a business scenario nobody's told the
+        pipeline about yet) instead of guessing at it.
+
+        Walks every CONSECUTIVE pair of stages in the ordered stage
+        list; if both dates are present and the later stage's date
+        is strictly earlier than the earlier stage's date, that pair
+        is flagged. Returns each flagged pair as
+        "<earlier stage> ({date}) -> <later stage> ({date})".
+        """
+
+        reversed_pairs = []
+
+        for earlier, later in zip(self.stages, self.stages[1:]):
+            earlier_date = parse_date(row.get(earlier.date_field))
+            later_date = parse_date(row.get(later.date_field))
+
+            if earlier_date is None or later_date is None:
+                continue
+
+            if later_date < earlier_date:
+                reversed_pairs.append(
+                    f"{earlier.display_name} ({earlier_date}) -> "
+                    f"{later.display_name} ({later_date})"
+                )
+
+        return reversed_pairs
+
     # -----------------------------------------------------
 
     def generate_exceptions(self, dataframe: pd.DataFrame) -> list[dict]:
@@ -994,6 +1040,25 @@ class SummaryEngine:
                         + ", ".join(out_of_order)
                     ),
                     "affected_stages": out_of_order,
+                })
+
+            reversed_pairs = self._reversed_stage_pairs(row)
+
+            if reversed_pairs:
+                exceptions.append({
+                    "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
+                    "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                    "project_name": to_json_safe(row.get(PROJECT_NAME)),
+                    "drawing_no": to_json_safe(row.get(DRAWING_NO)),
+                    "spool_no": to_json_safe(row.get(SPOOL_NO)),
+                    "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
+                    "type": "reversed_stage_dates",
+                    "detail": (
+                        "A later stage is dated BEFORE an earlier "
+                        "one, which shouldn't be possible: "
+                        + "; ".join(reversed_pairs)
+                    ),
+                    "affected_stages": reversed_pairs,
                 })
 
             # ABSOLUTE RULE #2 (docs/absolute-rules.md, 2026-08-19):

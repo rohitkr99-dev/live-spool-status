@@ -495,3 +495,52 @@ workbook in this environment (only synthetic test data available
 here) - recommended he run the real pipelines and spot-check a few
 Hold-affected spools, and watch the Exceptions tab for any
 rework_hold_reentry entries after the first run.
+
+### 2026-08-20 - Drive-sync interval back to hourly; new "reversed stage dates" exception check
+
+Changed .github/workflows/drive-sync.yml's cron schedule from every
+15 minutes back to hourly ("0 * * * *"), per the person's request.
+
+Separately, the person reported the Production dashboard's "Stage-
+wise Ageing by Category" chart showing a HIGHER average actual
+day-count for PDQC than for RFP in some categories - structurally
+backwards, since RFP requires PDQC to have happened first. Confirmed
+this could NOT be caused by the Rework PDQC/RFP rule
+(src/rework_pdqc_rule.py) - verified directly that rule always sets
+RFP to at least PDQC + 4 working days for any spool it touches, so
+it can't invert the two for an individual spool. Also confirmed
+Rule #1 (added 2026-08-17/18) has run successfully many times on the
+Production pipeline since - the person confirmed this directly - and
+verified separately that when it does run, it correctly wipes a
+stale PDQC date for a spool that's since bounced back into active
+rework, which would otherwise be the classic mechanism for exactly
+this kind of inversion (an old PDQC date counted in that stage's
+average while the spool never actually reached RFP for real).
+
+Found the actual gap instead: the existing Exceptions check
+(src/summary.py -> _out_of_order_stages()) only catches a LATER
+stage being unexpectedly filled while an EARLIER one is still blank
+- it says nothing about two stages that are BOTH filled but land in
+the wrong chronological order relative to each other (e.g. an RFP
+date earlier than the same spool's PDQC date). Those sail through
+completely undetected today, since by the time both are filled,
+Current Stage has already moved past both and there's nothing left
+for that check to flag.
+
+Added a new check, _reversed_stage_pairs(), covering every
+consecutive pair in the stage list (not just PDQC/RFP - Fit-Up/
+Welding, PDQC/RFP, RFP/PDI, etc.) - if both dates are present and
+the later stage's date is earlier than the earlier stage's, it's now
+surfaced on the Projects dashboard's Exceptions tab as a new
+"reversed_stage_dates" exception type, naming the exact stage pair
+and both dates. Verified it correctly fires on a synthetic PDQC-
+after-RFP spool and produces zero false positives on a normal,
+correctly-ordered one.
+
+This surfaces the underlying data rather than guessing at or
+silently "fixing" it - consistent with how Rework Type/Project
+Master mismatches have been handled throughout this project.
+Recommended the person run the pipeline and check the Exceptions
+tab for any reversed_stage_dates entries - if there are real ones,
+that will name the exact spools responsible for the chart anomaly he
+reported, which he can then trace back to the source DPR/Rework data.
