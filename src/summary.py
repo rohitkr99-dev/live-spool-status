@@ -104,7 +104,11 @@ from constants import (
     WEEK,
 )
 from logger import logger
-from rework_pdqc_rule import REWORK_HOLD_EXCEPTION, REWORK_LATEST_STATUS
+from rework_pdqc_rule import (
+    REWORK_HOLD_EXCEPTION,
+    REWORK_LATEST_STATUS,
+    REWORK_STALE_STATUS_EXCEPTION,
+)
 from utils import (
     dataframe_to_json_records,
     fiscal_week_info,
@@ -1103,6 +1107,34 @@ class SummaryEngine:
                         "workbook now shows it on Hold again - the "
                         "system won't guess which episode is correct. "
                         "Please review and fix the Rework Data "
+                        "workbook, then re-upload."
+                    ),
+                    "affected_stages": [],
+                })
+
+            # ABSOLUTE RULE #1 (docs/absolute-rules.md, 2026-08-20):
+            # a spool whose latest Rework Data status is Rework, but
+            # which already has a PDI Clearance or Packed date on
+            # record - per the person: "if the spool has already
+            # been PDI cleared, that means its rework has already
+            # been cleared". PDQC/RFP were deliberately NOT blanked
+            # for this spool; flagged here so the person can correct
+            # the stale entry in the Rework Data workbook itself.
+            if bool(row.get(REWORK_STALE_STATUS_EXCEPTION)):
+                exceptions.append({
+                    "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
+                    "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                    "project_name": to_json_safe(row.get(PROJECT_NAME)),
+                    "drawing_no": to_json_safe(row.get(DRAWING_NO)),
+                    "spool_no": to_json_safe(row.get(SPOOL_NO)),
+                    "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
+                    "type": "rework_status_stale",
+                    "detail": (
+                        "The Rework Data workbook shows this spool as "
+                        "Rework, but it already has a PDI Clearance "
+                        "or Packed date - likely a stale entry. PDQC/"
+                        "RFP were left untouched rather than blanked. "
+                        "Please review and correct the Rework Data "
                         "workbook, then re-upload."
                     ),
                     "affected_stages": [],

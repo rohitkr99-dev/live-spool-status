@@ -68,6 +68,20 @@ inflated the Production Backlog chart's overdue-day figures (the
 backlog calculation anchors to the spool's original, now very old,
 Welding Finish date).
 
+**Stale-status override (2026-08-20, same day):** blanking PDQC/RFP
+while leaving PDI/Packed untouched created a NEW problem the person
+caught immediately - since "current stage" is always the first blank
+stage in order, any spool with PDI/Packed already filled but a
+blanked PDQC would permanently show as "stuck at PDQC" no matter
+what. Fixed by turning the person's own reasoning into an actual
+override condition, not just a justification for what to leave
+alone: if a spool's latest Rework Data status is Rework, but it
+ALREADY has a PDI Clearance or Packed date on record, that fact IS
+the "already cleared" signal - PDQC/RFP are left completely
+untouched for it (not blanked at all), and it's flagged as a new
+Exceptions tab entry (type "rework_status_stale") so the person can
+find and correct the stale entry in the source workbook himself.
+
 **Single implementation:** `src/rework_pdqc_rule.py ->
 apply_rework_pdqc_rule()`. Every pipeline that has a PDQC field must
 call this exact function on it - never re-implement this logic

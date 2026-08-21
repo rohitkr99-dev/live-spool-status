@@ -68,6 +68,8 @@ import pandas as pd
 from constants import (
     COMPOSITE_KEY,
     DRAWING_NO,
+    PACKING,
+    PDI,
     PDQC,
     PROJECT_CODE,
     REWORK_FINAL_STATUS,
@@ -77,7 +79,7 @@ from constants import (
     SPOOL_NO,
 )
 from logger import logger
-from utils import add_working_days, create_composite_key
+from utils import add_working_days, create_composite_key, is_empty
 
 DEFAULT_HOLD_TRACKING_PATH = Path("state/hold_tracking.json")
 
@@ -90,6 +92,19 @@ DEFAULT_HOLD_TRACKING_PATH = Path("state/hold_tracking.json")
 # section... I will see and make changes in the actual file manually
 # and reupload it."
 REWORK_HOLD_EXCEPTION = "Rework Hold Exception"
+
+# Column added to the returned dataframe: True for a spool whose
+# latest Rework Data status is Rework, but which already has a PDI
+# Clearance or Packed date recorded - per the person (2026-08-20):
+# "if the spool has already been PDI cleared, that means its rework
+# has already been cleared". Treated as a stale Rework Data workbook
+# entry rather than a genuine active rework - PDQC/RFP are NOT
+# blanked for these spools (see apply_rework_pdqc_rule()). Read by
+# src/summary.py -> generate_exceptions() to surface these on the
+# Projects dashboard's Exceptions tab (type "rework_status_stale"),
+# so the person can find and correct the source workbook, per his
+# stated workflow ("I'll correct the Rework Excel file").
+REWORK_STALE_STATUS_EXCEPTION = "Rework Stale Status Exception"
 
 # Derived from config/production_rules.json -> target_days: the gap
 # between the "pdqc" and "release_for_painting" entries is exactly 4
@@ -341,6 +356,7 @@ def apply_rework_pdqc_rule(
     new_pdqc = pd.Series(existing_pdqc, index=master.index).copy()
     new_rfp = pd.Series(existing_rfp, index=master.index).copy()
     is_exception = pd.Series(False, index=master.index)
+    is_stale_status = pd.Series(False, index=master.index)
 
     if status_column:
         # ---- ABSOLUTE RULE #2: detect/track Hold spools ----
@@ -412,7 +428,31 @@ def apply_rework_pdqc_rule(
         held = matched & master[COMPOSITE_KEY].isin(held_keys)
         exception_mask = master[COMPOSITE_KEY].isin(exception_keys)
         cleared = matched & (master[REWORK_LATEST_STATUS] == "Accept") & ~held
-        not_cleared = matched & ~held & ~cleared
+
+        # UPDATED 2026-08-20 (per the person, in his own words: "if
+        # the spool has already been PDI cleared, that means its
+        # rework has already been cleared"): a spool whose latest
+        # Rework Data status is Rework but which ALREADY has a PDI
+        # Clearance or Packed date on record is treated as a stale
+        # workbook entry, not genuine active rework - PDQC/RFP are
+        # NOT blanked for it (left exactly as they already are).
+        # Without this, such a spool's PDQC gets blanked while PDI/
+        # Packed stay filled, and since "current stage" is always the
+        # FIRST blank stage in order, it would permanently show as
+        # "stuck at PDQC" - which is exactly the wrong/misleading
+        # spools the person reported still appearing in the
+        # Production dashboard's PDQC Backlog chart after the
+        # PDQC+RFP blanking change alone.
+        pdi_field = PDI if PDI in master.columns else None
+        packing_field = PACKING if PACKING in master.columns else None
+        already_progressed = pd.Series(False, index=master.index)
+        if pdi_field:
+            already_progressed |= ~master[pdi_field].apply(is_empty)
+        if packing_field:
+            already_progressed |= ~master[packing_field].apply(is_empty)
+
+        stale_status = matched & ~held & ~cleared & already_progressed
+        not_cleared = matched & ~held & ~cleared & ~already_progressed
 
         new_pdqc[cleared] = [
             _later_of(existing, latest)
@@ -457,6 +497,7 @@ def apply_rework_pdqc_rule(
             master.loc[held, REWORK_LATEST_STATUS] = "Hold"
 
         is_exception = exception_mask
+        is_stale_status = stale_status
 
         bumped = cleared & (existing_pdqc.isna() | (new_pdqc != existing_pdqc))
         blanked = not_cleared & ~existing_pdqc.isna()
@@ -471,7 +512,9 @@ def apply_rework_pdqc_rule(
             f"{int(held.sum())} Hold-anchored (PDQC treated as done "
             "at the original offer date, RFP set to the standard "
             f"target gap), {int(is_exception.sum())} held back as "
-            "Hold exceptions this run."
+            f"Hold exceptions, {int(is_stale_status.sum())} left "
+            "untouched as a stale Rework status (already PDI Cleared "
+            "or Packed) this run."
         )
     else:
         # Fallback: no Final Status column available this run, so
@@ -501,6 +544,7 @@ def apply_rework_pdqc_rule(
     master[PDQC] = new_pdqc
     master[RFP] = new_rfp
     master[REWORK_HOLD_EXCEPTION] = is_exception
+    master[REWORK_STALE_STATUS_EXCEPTION] = is_stale_status
     master = master.drop(columns=[latest_offer_field])
 
     return master

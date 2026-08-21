@@ -648,3 +648,33 @@ currently Rework or Hold), rendered by website/js/fabline.js as a
 small strip under the bottleneck note (hidden entirely when both
 counts are zero) - website/dashboard.html and website/css/styles.css
 updated to match.
+
+### 2026-08-20 (cont'd) - Stale Rework status now an override, not just a scoping choice
+
+The person reported still seeing PDI-cleared spools in the
+Production PDQC Backlog chart after the earlier RFP-blanking fix.
+Root cause: that fix used his "PDI cleared means rework is already
+cleared" reasoning only to decide what NOT to blank (PDI/Packed),
+not as an actual condition to skip blanking PDQC/RFP in the first
+place. Since "current stage" is always the first blank stage in
+order, a spool with PDQC freshly blanked but PDI/Packed still filled
+would permanently register as "stuck at PDQC" no matter what -
+exactly the spools he was still seeing.
+
+Fixed properly this time: src/rework_pdqc_rule.py -> apply_rework_
+pdqc_rule() now checks, for any spool whose latest status is Rework,
+whether it already has a PDI Clearance or Packed date on record - if
+so, PDQC/RFP are left completely untouched (not blanked at all), and
+the spool is flagged via a new REWORK_STALE_STATUS_EXCEPTION column,
+surfaced on the Projects dashboard's Exceptions tab as a new
+"rework_status_stale" type (src/summary.py -> generate_exceptions()),
+so the person can find and correct the stale Rework Data workbook
+entry directly, same workflow as the earlier rework_hold_reentry
+exception.
+
+Verified: a spool with PDI already cleared, and a separate one with
+Packed already filled, both correctly keep their existing PDQC/RFP
+untouched and get flagged; a genuine Rework spool with nothing
+downstream filled still gets blanked exactly as before. Full
+regression against every existing branch (Accept, Hold, plain
+Rework, Hold exceptions) re-run and confirmed unchanged.
