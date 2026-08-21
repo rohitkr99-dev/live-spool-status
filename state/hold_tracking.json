@@ -43,6 +43,10 @@
     "hold_offer_date": "2026-08-06T00:00:00",
     "still_on_hold": true
   },
+  "TJ/25-26/183|251137_2A_HP002_008|251137-2A-HP-008-01": {
+    "hold_offer_date": "2026-07-31T00:00:00",
+    "still_on_hold": true
+  },
   "TJ/25-26/189|251237_00_LP002_084|251237-00-LP-084-01": {
     "hold_offer_date": "2026-08-11T00:00:00",
     "still_on_hold": true
