@@ -203,10 +203,17 @@ def apply_rework_pdqc_rule(
         that latest offer date). PDQC never moves backwards on a
         genuine clearance.
 
-      - Rework (not cleared, genuine rework in progress): PDQC is
-        forced BLANK, even overwriting an existing PDQC value - the
-        most recent QC event says this spool hasn't actually passed
-        QC yet, so any earlier PDQC on record is stale.
+      - Rework (not cleared, genuine rework in progress): PDQC AND
+        RFP are both forced BLANK, even overwriting existing values
+        (updated 2026-08-20 - previously PDQC only). PDI Clearance
+        and Packed are deliberately left untouched: a spool that's
+        already been PDI-cleared is itself evidence its rework was
+        actually resolved, even if the Rework Data workbook hasn't
+        caught up to say so yet - per the person, he corrects those
+        stale workbook entries directly rather than have the
+        pipeline guess. (He's also said he wants a different overall
+        approach to Rework handling in a future session; this is the
+        interim rule.)
 
       - Hold (ABSOLUTE RULE #2, 2026-08-19): treated differently
         from Rework, because the delay is administrative, not a
@@ -413,6 +420,19 @@ def apply_rework_pdqc_rule(
         ]
         new_pdqc[not_cleared] = pd.NaT
 
+        # UPDATED 2026-08-20 (per the person, in his own words: "you
+        # blank only PDQC and RFP dates for Rework Spools" - PDI
+        # Clearance and Packed are deliberately left untouched, since
+        # a spool that's already been PDI-cleared is itself evidence
+        # its rework was actually resolved, even if the Rework Data
+        # workbook hasn't caught up to say so yet. Narrower than
+        # blanking every downstream stage, and the person plans to
+        # correct stale entries in the Rework Data workbook directly
+        # rather than have the pipeline guess at it. He's also said
+        # he wants a different overall approach to Rework handling
+        # in a future session - this is the interim fix for now.
+        new_rfp[not_cleared] = pd.NaT
+
         if held.any():
             anchor_dates = pd.to_datetime(
                 master.loc[held, COMPOSITE_KEY].map(hold_anchor)
@@ -440,11 +460,14 @@ def apply_rework_pdqc_rule(
 
         bumped = cleared & (existing_pdqc.isna() | (new_pdqc != existing_pdqc))
         blanked = not_cleared & ~existing_pdqc.isna()
+        rfp_blanked = not_cleared & ~existing_rfp.isna()
 
         logger.info(
             f"Rework PDQC/RFP rule: {int(matched.sum())} spool(s) "
             f"matched - {int(bumped.sum())} PDQC date(s) set/bumped "
-            f"(Accept), {int(blanked.sum())} blanked (not cleared), "
+            f"(Accept), {int(blanked.sum())} PDQC and "
+            f"{int(rfp_blanked.sum())} RFP date(s) blanked (not "
+            "cleared - PDI Clearance/Packed left untouched), "
             f"{int(held.sum())} Hold-anchored (PDQC treated as done "
             "at the original offer date, RFP set to the standard "
             f"target gap), {int(is_exception.sum())} held back as "

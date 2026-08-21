@@ -90,5 +90,37 @@ const SpoolFabline = {
     } else {
       bottleneckNote.textContent = "No spools currently in progress.";
     }
+
+    this.renderReworkQuantum(dashboardSummary.rework_quantum);
+  },
+
+  // "Holds & Reworks" reconciliation strip - see
+  // src/summary.py -> generate_dashboard_summary()'s
+  // "rework_quantum". Sits just under the bottleneck note; hidden
+  // entirely if the source data has neither.
+  renderReworkQuantum(reworkQuantum) {
+    const el = document.getElementById("fabline-rework-quantum");
+    if (!el) return;
+
+    const rework = (reworkQuantum && reworkQuantum.rework) || 0;
+    const hold = (reworkQuantum && reworkQuantum.hold) || 0;
+
+    if (!rework && !hold) {
+      el.hidden = true;
+      return;
+    }
+
+    const fmt = (n) => new Intl.NumberFormat("en-US").format(n);
+    el.hidden = false;
+    el.innerHTML = `
+      <span class="fabline-rework-quantum__item">
+        <span class="fabline-rework-quantum__dot" style="background: var(--status-danger, #C0392B);"></span>
+        <span class="fabline-rework-quantum__count">${fmt(rework)}</span> in Rework
+      </span>
+      <span class="fabline-rework-quantum__item">
+        <span class="fabline-rework-quantum__dot" style="background: var(--status-warning);"></span>
+        <span class="fabline-rework-quantum__count">${fmt(hold)}</span> on Hold
+      </span>
+    `;
   },
 };

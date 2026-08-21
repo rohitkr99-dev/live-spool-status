@@ -606,3 +606,45 @@ DPR's own field is blank, never to overwrite an existing DPR value.
 Verified with 3 cases: DPR-has-value + packing-workbook-has-different-
 value -> DPR value kept unchanged; DPR-blank + packing-workbook-has-
 value -> filled in; both blank -> stays blank. All correct.
+
+### 2026-08-20 (cont'd) - Rework rule now also blanks RFP; new "Holds & Reworks" strip
+
+The person shared a real Production Backlog export: 232 of 447 rows
+(52%) counted as "stuck at PDQC" actually had PDQC blank but a
+downstream date (RFP/PDI/Packed) already filled - spools that had
+genuinely completed the full journey once, then got sent back into
+rework, with only PDQC getting blanked (the original Rule 1 scope)
+while their stale downstream dates from the previous pass stayed in
+place. This both misrepresented "where" these spools actually are
+and badly inflated the Production Backlog chart's overdue-day
+figures, since the backlog calculation anchors to the spool's
+original (now very old) Welding Finish date.
+
+Proposed blanking every downstream stage (RFP/PDI/Packed) when a
+spool re-enters genuine Rework. The person's actual instruction was
+narrower: "if the spool has already been PDI cleared, that means its
+rework has already been cleared... blank only PDQC and RFP dates for
+Rework Spools" - he'll correct stale entries in the Rework Data
+workbook directly rather than have the pipeline guess at PDI/Packed.
+He's also flagged wanting a different overall approach to Rework
+handling in a future session - this is the interim fix.
+
+src/rework_pdqc_rule.py -> apply_rework_pdqc_rule(): the "not
+cleared" (Rework) branch now blanks RFP alongside PDQC (previously
+PDQC only); PDI Clearance and Packed are untouched by this rule, in
+any branch. Verified with the exact real-world shape from his export
+(PDQC blank, RFP/PDI already filled, Rework status) plus a full
+regression against every existing branch (Accept bump-forward,
+protect-later-existing, set-from-blank, Hold-anchoring) - all
+correct, matching prior test results exactly except for the new RFP-
+blanking behavior on Rework specifically.
+
+Also finally built the "Holds & Reworks" reconciliation strip on the
+Fabrication Line (Projects dashboard) that was requested earlier in
+this project and got sidetracked into the Rework/Hold rule work -
+src/summary.py -> generate_dashboard_summary() now includes a
+"rework_quantum" count (spools whose REWORK_LATEST_STATUS is
+currently Rework or Hold), rendered by website/js/fabline.js as a
+small strip under the bottleneck note (hidden entirely when both
+counts are zero) - website/dashboard.html and website/css/styles.css
+updated to match.

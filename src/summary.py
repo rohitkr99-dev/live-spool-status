@@ -104,7 +104,7 @@ from constants import (
     WEEK,
 )
 from logger import logger
-from rework_pdqc_rule import REWORK_HOLD_EXCEPTION
+from rework_pdqc_rule import REWORK_HOLD_EXCEPTION, REWORK_LATEST_STATUS
 from utils import (
     dataframe_to_json_records,
     fiscal_week_info,
@@ -403,6 +403,25 @@ class SummaryEngine:
             for name in ordered_stage_names
         }
 
+        # "Holds & Reworks" reconciliation strip (2026-08-20, per the
+        # person's earlier request - this got sidetracked into the
+        # Rework/Hold rule work and was never actually built until
+        # now): counts of spools the Rework Data workbook currently
+        # shows as Rework or Hold this run, per
+        # REWORK_LATEST_STATUS (set by
+        # src/rework_pdqc_rule.py -> apply_rework_pdqc_rule(), which
+        # already ran on this dataframe by the time it reaches here).
+        # Lets the Fabrication Line's PDQC-stuck count be visually
+        # reconciled against the QA/QC workbook's own numbers, rather
+        # than the two looking unrelated at a glance.
+        rework_quantum = {"rework": 0, "hold": 0}
+        if REWORK_LATEST_STATUS in dataframe.columns:
+            status_counts = dataframe[REWORK_LATEST_STATUS].value_counts()
+            rework_quantum = {
+                "rework": int(status_counts.get("Rework", 0)),
+                "hold": int(status_counts.get("Hold", 0)),
+            }
+
         return {
             "generated_at": datetime.now().isoformat(),
             "kpis": {
@@ -415,6 +434,7 @@ class SummaryEngine:
                 "planning_variance_days": planning_variance_days,
             },
             "current_stage_distribution": current_stage_distribution,
+            "rework_quantum": rework_quantum,
         }
 
     # -----------------------------------------------------

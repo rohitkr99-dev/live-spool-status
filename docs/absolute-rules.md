@@ -36,16 +36,37 @@ Sheet says - and specifically:
 - Latest offer event's Final Status is **Accept** (cleared): PDQC
   becomes the **later of** (existing PDQC, that latest offer date).
   PDQC never moves backwards on a clearance.
-- Latest offer event's Final Status is **anything else** (Rework, or
-  a normalized "Other" like "Project hold"): PDQC is **forced
-  blank**, even overwriting an existing PDQC value from DPR/Line
-  History. A spool the Rework workbook says is still under rework
-  has, by definition, not actually passed QC - any earlier PDQC on
-  record is stale and must not be shown as done.
+- Latest offer event's Final Status is **Rework** (per Rule 2's
+  3-way classification, added 2026-08-19): PDQC AND RFP are both
+  **forced blank**, even overwriting existing values (updated
+  2026-08-20 - originally PDQC only). A spool the Rework workbook
+  says is still under rework has, by definition, not actually passed
+  QC - any earlier PDQC/RFP on record is stale and must not be shown
+  as done. PDI Clearance and Packed are deliberately left untouched:
+  the person's reasoning, in his own words (2026-08-20) - "if the
+  spool has already been PDI cleared, that means its rework has
+  already been cleared... blank only PDQC and RFP dates for Rework
+  Spools" - a PDI-cleared spool is itself evidence the rework was
+  actually resolved even if the Rework Data workbook hasn't caught
+  up, and he corrects those stale workbook entries directly rather
+  than have the pipeline guess at clearing PDI/Packed too. He's also
+  said he wants a different overall approach to Rework handling in a
+  future session - this is the interim rule for now.
 
 A spool not covered by the Rework workbook at all keeps its existing
 PDQC unchanged - this rule only speaks for spools the rework file
 has an opinion on.
+
+**Why RFP was added to the blanking scope (2026-08-20):** the person
+shared a real Production Backlog export showing 232 of 447 "stuck at
+PDQC" spools (52%) had PDQC blank but a downstream date (RFP/PDI/
+Packed) already filled - spools that had completed the full journey
+once, then re-entered rework, with only PDQC getting blanked while
+stale downstream dates from the previous pass stayed in place. This
+both misrepresented where these spools actually are and badly
+inflated the Production Backlog chart's overdue-day figures (the
+backlog calculation anchors to the spool's original, now very old,
+Welding Finish date).
 
 **Single implementation:** `src/rework_pdqc_rule.py ->
 apply_rework_pdqc_rule()`. Every pipeline that has a PDQC field must
