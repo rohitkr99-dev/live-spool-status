@@ -1,54 +1,106 @@
 {
   "TJ/25-26/182|241535_1A_LP001_023|241535-1A-LP-023-01": {
-    "hold_offer_date": "2026-04-02T00:00:00",
-    "still_on_hold": false
+    "hold_periods": [
+      {
+        "hold_removed": "2026-04-02",
+        "hold_start": "2026-04-02"
+      }
+    ]
   },
   "TJ/25-26/182|241535_1A_LP001_054|241535-1A-LP-054-02": {
-    "hold_offer_date": "2026-04-03T00:00:00",
-    "still_on_hold": false
+    "hold_periods": [
+      {
+        "hold_removed": "2026-04-03",
+        "hold_start": "2026-04-03"
+      }
+    ]
   },
   "TJ/25-26/182|241535_1A_RP001_002|241535-1A-RP-002-01": {
-    "hold_offer_date": "2026-05-08T00:00:00",
-    "still_on_hold": false
+    "hold_periods": [
+      {
+        "hold_removed": "2026-05-08",
+        "hold_start": "2026-05-08"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_007|251137-1A-HP-007-09": {
-    "hold_offer_date": "2026-06-30T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-06-30"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_008|251137-1A-HP-008-01": {
-    "hold_offer_date": "2026-07-08T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-08"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_015|251137-1A-HP-015-04": {
-    "hold_offer_date": "2026-06-29T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-06-29"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_016|251137-1A-HP-016-04": {
-    "hold_offer_date": "2026-06-30T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-06-30"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_018|251137-1A-HP-018-04": {
-    "hold_offer_date": "2026-07-01T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-01"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_021|251137-1A-HP-021-04": {
-    "hold_offer_date": "2026-06-26T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-06-26"
+      }
+    ]
   },
   "TJ/25-26/183|251137_1A_HP002_022|251137-1A-HP-022-03": {
-    "hold_offer_date": "2026-06-29T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-06-29"
+      }
+    ]
   },
   "TJ/25-26/183|251137_2A_HP002_007|251137-2A-HP-007-09": {
-    "hold_offer_date": "2026-08-06T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-06"
+      }
+    ]
   },
   "TJ/25-26/183|251137_2A_HP002_008|251137-2A-HP-008-01": {
-    "hold_offer_date": "2026-07-31T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-31"
+      }
+    ]
   },
   "TJ/25-26/189|251237_00_LP002_084|251237-00-LP-084-01": {
-    "hold_offer_date": "2026-08-11T00:00:00",
-    "still_on_hold": true
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-11"
+      }
+    ]
   }
 }
