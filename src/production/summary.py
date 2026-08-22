@@ -244,6 +244,42 @@ def build_kpis(records: list[SpoolRecord], excluded_not_released: int = 0) -> di
     }
 
 
+def build_hold_by_project_stage(
+    records: list[SpoolRecord], stage_labels: dict[str, str]
+) -> dict[str, dict[str, int]]:
+    """
+    Given by the person (2026-08-21): "insert a separate chart for
+    only Hold spools, where we can show Project wise stage wise
+    current Hold quantity." A spool with an open Hold period
+    (currently_on_hold - see hold_ledger.py) is excluded from every
+    other backlog chart entirely (src/production/backlog.py), so
+    this is the only place they're counted - grouped by Project Name
+    and current_stage's display label (the stage the spool is stuck
+    at while the Hold is open).
+
+    Returns {project_name: {stage_label: count}} - every project
+    that has at least one currently-held spool, every stage label
+    that has at least one (no forced-zero entries, unlike the 4-
+    bucket backlog charts, since the set of held projects/stages is
+    inherently sparse and this is a simpler cross-tab, not a fixed-
+    shape chart).
+    """
+
+    result: dict[str, dict[str, int]] = {}
+    for record in records:
+        if not record.currently_on_hold:
+            continue
+
+        project = record.project_name or record.project_code or "(Unknown Project)"
+        stage_label = stage_labels.get(record.current_stage, record.current_stage) \
+            if record.current_stage else "(Stage Unknown)"
+
+        result.setdefault(project, {})
+        result[project][stage_label] = result[project].get(stage_label, 0) + 1
+
+    return result
+
+
 def _status_label(record: SpoolRecord, stage_labels: dict[str, str], category_stages: dict) -> str:
     if record.planned_start is None:
         return "No Planned Start"

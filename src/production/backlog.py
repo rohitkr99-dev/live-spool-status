@@ -229,6 +229,12 @@ def build_backlog_chart(
 
         if record.planned_start is None:
             continue
+        if record.currently_on_hold:
+            # Given by the person (2026-08-21): "The hold spools
+            # should not be visible as backlog at any stage" - these
+            # get their own dedicated chart instead (see
+            # src/production/summary.py -> build_hold_by_project_stage()).
+            continue
         if record.current_stage != stage:
             continue
 

@@ -216,6 +216,23 @@
 
     </section>
 
+    <!-- ============ CURRENTLY ON HOLD ============ -->
+    <section id="hold-section" aria-label="Currently on Hold">
+
+      <section class="charts-grid__head">
+        <h3>Currently on Hold</h3>
+        <span class="chart-card__hint">Spools with an open Hold right now, by Project and current stage - excluded from every backlog chart above while the Hold is open (see the Rework Data workbook's Final Status)</span>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row">
+        <div class="chart-card chart-card--full" id="chart-hold-by-project-stage-wrapper">
+          <div class="chart-card__body"><canvas id="chart-hold-by-project-stage"></canvas></div>
+        </div>
+        <p id="chart-hold-by-project-stage-empty" class="chart-card__hint" style="display:none;">No spools currently on Hold.</p>
+      </section>
+
+    </section>
+
     <!-- ============ MATERIAL HANDOVER ============ -->
     <section id="material-handover-section" hidden>
 

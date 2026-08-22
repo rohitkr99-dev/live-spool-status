@@ -1,42 +1,54 @@
 """
 src/rework_pdqc_rule.py
 ---------------------------------------------------------
-ABSOLUTE RULES #1 and #2 (see docs/absolute-rules.md) - apply
-identically across every dashboard, no exceptions. This is the
-single implementation of both; every pipeline that has PDQC/RFP
-fields must call apply_rework_pdqc_rule() on them.
+ABSOLUTE RULE #1 (see docs/absolute-rules.md) - apply identically
+across every dashboard, no exceptions. This is the single
+implementation; every pipeline that has PDQC/RFP fields must call
+apply_rework_pdqc_rule() on them.
 
 RULE #1 (2026-08-17/18): PDQC is never considered "done" for a spool
 the Production Rework Data workbook shows as not cleared by QC
-(status Rework), no matter what the DPR Detailed Sheet or Line
-History Sheet says - PDQC is forced blank in that case, even
-overwriting an existing PDQC value.
+(status Rework OR Hold - see below), no matter what the DPR Detailed
+Sheet or Line History Sheet says - PDQC is forced blank in that
+case, even overwriting an existing PDQC value.
 
-RULE #2 (2026-08-19, given by the person in their own words - "for
-this, Rework rule is absolute primary... If a spool is showing
-rework, PDQC goes blank... Production says a Hold should not affect
-their ageing, QC says Hold should not affect their ageing"): a THIRD
-Final Status category, Hold, is treated differently from Rework.
-Neither Production nor QC consider a Hold their own delay, so a
-Hold-affected spool's PDQC is treated as done almost immediately
-(anchored near the original offer date, not the eventual clearance
-date, however long the hold lasts) and RFP is given the standard
-target gap from that anchor rather than the true, hold-inflated gap.
-See apply_rework_pdqc_rule()'s docstring for the full rule and
-_STATUS_MAP for the exact Final Status text values this maps to
-Accept/Rework/Hold (given by the person 2026-08-19 - update this map,
-not ad-hoc keyword matching, if a new Final Status value shows up).
+REWORK-VS-HOLD DISTINCTION (2026-08-21 rewrite - see
+docs/absolute-rules.md for the full history of the rule this
+replaced): a Hold spool's PDQC/RFP are no longer faked to an
+artificial "done almost immediately" anchor date - they're left
+exactly as blank/real as a genuine Rework spool's, driven by the
+SAME latest-offer-event logic. What actually distinguishes Hold from
+Rework now:
+
+  1. REWORK_LATEST_STATUS still reports "Hold" (not "Rework") for
+     these spools, so the Exceptions tab / dashboards can still tell
+     the two apart.
+  2. Every Hold episode (open or closed) is recorded in the Hold
+     ledger (see hold_ledger.py, state/hold_tracking.json) with its
+     real start/removal dates. Ageing engines (src/ageing.py,
+     src/production/ageing.py) subtract the WORKING days a spool
+     spent on Hold from whatever age window they're computing -
+     Total Age, a single stage's age, or the current-vs-target-quota
+     comparison - wherever that window overlaps a Hold period,
+     including a Hold that happens after RFP (Under Painting).
+     That's what actually keeps Hold time from counting against
+     Production/QC's ageing now, instead of a fabricated date.
+  3. CURRENTLY_ON_HOLD (this module) flags any spool with an open
+     Hold period right now. Both backlog engines exclude these
+     entirely from their charts (per the person, 2026-08-21: "The
+     hold spools should not be visible as backlog at any stage") -
+     they get their own dedicated "currently on Hold, by Project and
+     stage" chart instead (src/summary.py /
+     src/production/summary.py -> *_hold_by_project_stage()).
 
 Because a spool's Final Status can literally be edited in place in
 the Rework Data workbook (a Hold row later hand-edited to Accept,
 with no new row added), a spool's Hold history can vanish from the
-workbook itself once resolved. Rule #2 therefore needs to remember,
-across pipeline runs, which spools were ever seen on Hold and what
-their original offer date was - see state/hold_tracking.json and
-_load_hold_tracking_store()/_save_hold_tracking_store() below. This
-file MUST be committed by every pipeline run (see
-.github/workflows/drive-sync.yml's git add step) or Rule #2 loses
-its memory between runs and silently stops working correctly.
+workbook itself once resolved - hold_ledger.py's persisted store is
+how that history survives across runs. This file MUST be committed
+by every pipeline run (see .github/workflows/drive-sync.yml's git
+add step) or Hold-day tracking loses its memory between runs and
+silently stops working correctly.
 
 History: Rule #1 originally lived only inside
 src/merge.py -> MergeEngine.apply_rework_pdqc_override(), written for
@@ -45,10 +57,11 @@ module 2026-08-18 after the Production dashboard was found to
 compute PDQC completely independently, with no awareness of the
 Rework Data workbook at all - producing two different "PDQC done"
 counts for what should be the same population of spools (Projects
-~400, Production 500+). Rule #2 (Hold handling) was added here
-directly 2026-08-19, after the same Rework blanking behavior was
-found to ALSO inflate the PDQC-stuck count on both dashboards for
-spools that were only on administrative Hold, not genuine rework.
+~400, Production 500+). A Hold-specific anchoring rule (RULE #2)
+lived here 2026-08-19 through 2026-08-20, replaced 2026-08-21 by the
+ledger-based day-subtraction approach described above, per the
+person's own request to track real Hold start/removal dates and
+subtract exact working days from ageing instead.
 
 Both src/merge.py -> MergeEngine.apply_rework_pdqc_override() (used
 by main.py) and src/production/pipeline.py (used by
@@ -59,12 +72,12 @@ PDQC/RFP, it must call this function too.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 
+import hold_ledger
 from constants import (
     COMPOSITE_KEY,
     DRAWING_NO,
@@ -79,18 +92,23 @@ from constants import (
     SPOOL_NO,
 )
 from logger import logger
-from utils import add_working_days, create_composite_key, is_empty
+from utils import create_composite_key, is_empty
 
-DEFAULT_HOLD_TRACKING_PATH = Path("state/hold_tracking.json")
+DEFAULT_HOLD_TRACKING_PATH = hold_ledger.DEFAULT_HOLD_LEDGER_PATH
+
+# Column added to the returned dataframe: True for a spool with an
+# open, unresolved Hold period at the end of this run. Read by both
+# backlog engines to exclude these spools from every backlog/overdue
+# chart, and by the new *_hold_by_project_stage() aggregations to
+# build the dedicated Hold chart.
+CURRENTLY_ON_HOLD = "Currently On Hold"
 
 # Column added to the returned dataframe: True for a spool whose
-# Hold history is ambiguous this run (re-entered Hold after a
-# previous resolution - see apply_rework_pdqc_rule()). Read by
+# open Hold period was followed by a "Rework" status with no Accept
+# in between - ambiguous (see hold_ledger.update_hold_periods()),
+# left untouched rather than guessed at. Read by
 # src/summary.py -> generate_exceptions() to surface these on the
-# Projects dashboard's Exceptions tab, per the person's explicit
-# instruction (2026-08-19): "You can flag this spool in Exceptions
-# section... I will see and make changes in the actual file manually
-# and reupload it."
+# Projects dashboard's Exceptions tab.
 REWORK_HOLD_EXCEPTION = "Rework Hold Exception"
 
 # Column added to the returned dataframe: True for a spool whose
@@ -118,8 +136,6 @@ REWORK_STALE_STATUS_EXCEPTION = "Rework Stale Status Exception"
 # CATEGORIES EVER STOP SHARING THIS SAME 4-DAY GAP, THIS CONSTANT
 # NEEDS A MANUAL UPDATE (or this module needs to become category-
 # aware) - it will not pick up a change to target_days on its own.
-STANDARD_PDQC_TO_RFP_WORKING_DAYS = 4
-
 # Exact Final Status text values, given by the person (2026-08-19),
 # case-insensitively matched after collapsing internal whitespace.
 # Any value NOT in this map is treated conservatively as "Rework"
@@ -165,30 +181,6 @@ def _ensure_composite_key(dataframe: pd.DataFrame) -> pd.DataFrame:
     )
     return dataframe
 
-
-def _load_hold_tracking_store(path: Path) -> dict:
-    if not Path(path).exists():
-        return {}
-    try:
-        with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (json.JSONDecodeError, OSError) as error:
-        logger.warning(
-            f"Could not read Hold tracking store at {path} ({error}) "
-            "- starting fresh this run. Any spool previously "
-            "recorded as Hold will need to be re-detected from the "
-            "current Rework workbook, if it's still there."
-        )
-        return {}
-
-
-def _save_hold_tracking_store(path: Path, store: dict) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as file:
-        json.dump(store, file, indent=2, sort_keys=True)
-
-
 def _later_of(existing: pd.Timestamp, latest: pd.Timestamp):
     if pd.isna(latest):
         return existing
@@ -230,51 +222,44 @@ def apply_rework_pdqc_rule(
         approach to Rework handling in a future session; this is the
         interim rule.)
 
-      - Hold (ABSOLUTE RULE #2, 2026-08-19): treated differently
-        from Rework, because the delay is administrative, not a
-        genuine fabrication/quality problem, and neither Production
-        nor QC consider it their own ageing to carry. PDQC is
-        treated as done almost immediately: anchored to the EARLIEST
-        offer date this spool was ever seen on Hold (not the
-        eventual Accept date, however long the hold lasted), then
-        set to the LATER of (existing PDQC, that anchor date) - same
-        "never moves backwards" protection as the Accept case. RFP
-        is set to the LATER of (existing RFP, anchor date +
-        STANDARD_PDQC_TO_RFP_WORKING_DAYS working days) rather than
-        the true RFP date, which would otherwise still carry almost
-        the entire hold-caused delay and unfairly inflate whichever
-        team's ageing metric depends on RFP.
+      - Hold (rewritten 2026-08-21 - see hold_ledger.py): treated the
+        SAME as Rework for PDQC/RFP purposes (both forced blank,
+        subject to the same PDI/Packed staleness exemption below) -
+        no more artificial "done almost immediately" anchor. What
+        actually protects Production/QC's ageing from a Hold delay
+        now happens downstream: hold_ledger.update_hold_periods()
+        records the real Hold start/removal dates for every spool
+        this run touches, and src/ageing.py /
+        src/production/ageing.py subtract those working days from
+        whatever age window they compute. REWORK_LATEST_STATUS still
+        reports "Hold" (not "Rework") for these spools so the two
+        remain distinguishable everywhere downstream.
+
+    A spool with an OPEN Hold period (CURRENTLY_ON_HOLD - see module
+    docstring) is excluded from both dashboards' backlog charts
+    entirely and shown instead on a dedicated "currently on Hold, by
+    Project and stage" chart (src/summary.py /
+    src/production/summary.py -> *_hold_by_project_stage()).
 
     Because a spool's status can change from Hold to Accept by
     editing the SAME row in place (no new row, same offer date) as
-    easily as by adding a new later row, the Hold anchor date can't
-    always be found by scanning the current file alone once resolved
-    - it's persisted in a small JSON store (hold_tracking_path,
-    state/hold_tracking.json by default) that survives across
-    pipeline runs. Once a spool is first seen on Hold, its anchor
-    date is remembered PERMANENTLY (even after it clears) - the
-    entire point of the rule is that the hold period never counts,
-    not just while the hold is ongoing.
-
-    If a spool that was previously resolved (recorded as no longer
-    on Hold) is later seen on Hold AGAIN, that's an ambiguous,
-    unexpected pattern - per the person, this should not normally
-    happen. Rather than silently re-anchoring or guessing which
-    episode matters, that spool is left on its ORIGINAL anchor
-    (Hold-anchor treatment is suspended for it this run - it falls
-    back to the plain Accept/Rework rule instead) and flagged via the
-    REWORK_HOLD_EXCEPTION column so src/summary.py ->
-    generate_exceptions() can surface it on the Projects dashboard's
-    Exceptions tab for manual review, per the person's explicit
-    instruction.
+    easily as by adding a new later row, Hold history can vanish
+    from the workbook itself once resolved - it's persisted in
+    hold_ledger.py's JSON store (hold_tracking_path, state/
+    hold_tracking.json by default) that survives across pipeline
+    runs. A spool can go through any number of Hold episodes; each
+    is recorded as its own period rather than needing a single
+    anchor, so re-entering Hold after a previous resolution is no
+    longer an ambiguous case (see hold_ledger.py's module docstring
+    for the one case that IS still flagged: Hold jumping straight to
+    Rework with no Accept in between - REWORK_HOLD_EXCEPTION).
 
     A spool NOT found in the rework workbook at all (its Composite
     Key isn't there) keeps its existing PDQC/RFP unchanged.
 
     Also sets/overwrites REWORK_LATEST_STATUS ("Rework Latest
-    Status") to Accept/Rework/Hold - Hold-anchored spools always
-    report "Hold" here even once their underlying row shows Accept,
-    since the anchor treatment still applies to them.
+    Status") to Accept/Rework/Hold, and CURRENTLY_ON_HOLD to whether
+    the spool has an open Hold period as of this run (see above).
 
     `master` needs Project Code, Drawing No, and Spool No columns
     (or an existing Composite Key column). Both dataframes get a
@@ -359,75 +344,52 @@ def apply_rework_pdqc_rule(
     is_stale_status = pd.Series(False, index=master.index)
 
     if status_column:
-        # ---- ABSOLUTE RULE #2: detect/track Hold spools ----
-        rework_valid = rework_valid.copy()
-        rework_valid["_status"] = rework_valid[status_column].apply(
-            _normalize_rework_status
-        )
-        earliest_hold_this_run = (
-            rework_valid[rework_valid["_status"] == "Hold"]
-            .groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE]
-            .min()
-        )
-        latest_status_lookup = dict(
-            zip(latest_offer[COMPOSITE_KEY], latest_offer[REWORK_LATEST_STATUS])
-        )
+        # ---- Advance the Hold ledger for every matched spool ----
+        # (see hold_ledger.py). Done first, independent of the
+        # cleared/not-cleared split below, so the ledger always
+        # reflects this run's latest offer event even for a spool
+        # whose Rework Data status is stale (see stale_status
+        # below) - the ledger cares about Hold<->Accept transitions
+        # only, which are unaffected by that separate concern.
+        store = hold_ledger.load_ledger(hold_tracking_path)
 
-        store = _load_hold_tracking_store(hold_tracking_path)
-
-        hold_anchor: dict[str, pd.Timestamp] = {}
+        opened = 0
+        closed = 0
         exception_keys: set[str] = set()
-        new_holds = 0
-        resolved_holds = 0
 
-        for key in latest_offer[COMPOSITE_KEY]:
-            has_hold_this_run = key in earliest_hold_this_run.index
-            stored = store.get(key)
-            latest_status_this_run = latest_status_lookup.get(key)
+        for key, offer_date, status in zip(
+            latest_offer[COMPOSITE_KEY],
+            latest_offer[latest_offer_field],
+            latest_offer[REWORK_LATEST_STATUS],
+        ):
+            outcome = hold_ledger.update_hold_periods(
+                store, key, status, offer_date
+            )
+            if outcome["opened"]:
+                opened += 1
+            if outcome["closed"]:
+                closed += 1
+            if outcome["ambiguous"]:
+                exception_keys.add(key)
 
-            if stored is None:
-                if has_hold_this_run:
-                    anchor = earliest_hold_this_run[key]
-                    store[key] = {
-                        "hold_offer_date": pd.Timestamp(anchor).isoformat(),
-                        "still_on_hold": bool(latest_status_this_run == "Hold"),
-                    }
-                    hold_anchor[key] = pd.Timestamp(anchor)
-                    new_holds += 1
-                continue
+        hold_ledger.save_ledger(store, hold_tracking_path)
 
-            stored_anchor = pd.Timestamp(stored["hold_offer_date"])
+        currently_on_hold = master[COMPOSITE_KEY].apply(
+            lambda key: hold_ledger.is_currently_on_hold(store, key)
+        )
 
-            if stored.get("still_on_hold", False):
-                if latest_status_this_run == "Accept":
-                    store[key]["still_on_hold"] = False
-                    resolved_holds += 1
-                hold_anchor[key] = stored_anchor
-            else:
-                if has_hold_this_run:
-                    # Resolved before, on Hold again - ambiguous per
-                    # the person: flag, don't silently re-anchor.
-                    exception_keys.add(key)
-                else:
-                    hold_anchor[key] = stored_anchor
-
-        _save_hold_tracking_store(hold_tracking_path, store)
-
-        if new_holds or resolved_holds or exception_keys:
+        if opened or closed or exception_keys:
             logger.info(
-                f"Rework Hold tracking ({hold_tracking_path}): "
-                f"{new_holds} new Hold spool(s) recorded, "
-                f"{resolved_holds} Hold spool(s) resolved (now "
-                f"Accept), {len(exception_keys)} spool(s) flagged as "
-                "a Hold exception (re-entered Hold after a previous "
-                "resolution - needs manual review in the Exceptions "
-                "tab)."
+                f"Hold ledger ({hold_tracking_path}): {opened} Hold "
+                f"period(s) opened, {closed} closed (working days "
+                f"held now recorded), {len(exception_keys)} spool(s) "
+                "flagged as a Hold exception (Hold jumped straight "
+                "to Rework with no Accept in between - needs manual "
+                "review in the Exceptions tab)."
             )
 
-        held_keys = {k for k in hold_anchor if k not in exception_keys}
-        held = matched & master[COMPOSITE_KEY].isin(held_keys)
         exception_mask = master[COMPOSITE_KEY].isin(exception_keys)
-        cleared = matched & (master[REWORK_LATEST_STATUS] == "Accept") & ~held
+        cleared = matched & (master[REWORK_LATEST_STATUS] == "Accept")
 
         # UPDATED 2026-08-20 (per the person, in his own words: "if
         # the spool has already been PDI cleared, that means its
@@ -451,8 +413,8 @@ def apply_rework_pdqc_rule(
         if packing_field:
             already_progressed |= ~master[packing_field].apply(is_empty)
 
-        stale_status = matched & ~held & ~cleared & already_progressed
-        not_cleared = matched & ~held & ~cleared & ~already_progressed
+        stale_status = matched & ~cleared & already_progressed
+        not_cleared = matched & ~cleared & ~already_progressed
 
         new_pdqc[cleared] = [
             _later_of(existing, latest)
@@ -473,35 +435,13 @@ def apply_rework_pdqc_rule(
         # in a future session - this is the interim fix for now.
         new_rfp[not_cleared] = pd.NaT
 
-        if held.any():
-            anchor_dates = pd.to_datetime(
-                master.loc[held, COMPOSITE_KEY].map(hold_anchor)
-            )
-            new_pdqc.loc[held] = [
-                _later_of(existing, anchor)
-                for existing, anchor in zip(existing_pdqc[held], anchor_dates)
-            ]
-
-            standard_rfp = pd.to_datetime(
-                new_pdqc.loc[held].apply(
-                    lambda d: add_working_days(
-                        d.date(), STANDARD_PDQC_TO_RFP_WORKING_DAYS
-                    ) if pd.notna(d) else pd.NaT
-                )
-            )
-            new_rfp.loc[held] = [
-                _later_of(existing, standard)
-                for existing, standard in zip(existing_rfp[held], standard_rfp)
-            ]
-
-            master.loc[held, REWORK_LATEST_STATUS] = "Hold"
-
         is_exception = exception_mask
         is_stale_status = stale_status
 
         bumped = cleared & (existing_pdqc.isna() | (new_pdqc != existing_pdqc))
         blanked = not_cleared & ~existing_pdqc.isna()
         rfp_blanked = not_cleared & ~existing_rfp.isna()
+        held_count = int((matched & currently_on_hold).sum())
 
         logger.info(
             f"Rework PDQC/RFP rule: {int(matched.sum())} spool(s) "
@@ -509,17 +449,21 @@ def apply_rework_pdqc_rule(
             f"(Accept), {int(blanked.sum())} PDQC and "
             f"{int(rfp_blanked.sum())} RFP date(s) blanked (not "
             "cleared - PDI Clearance/Packed left untouched), "
-            f"{int(held.sum())} Hold-anchored (PDQC treated as done "
-            "at the original offer date, RFP set to the standard "
-            f"target gap), {int(is_exception.sum())} held back as "
-            f"Hold exceptions, {int(is_stale_status.sum())} left "
-            "untouched as a stale Rework status (already PDI Cleared "
-            "or Packed) this run."
+            f"{held_count} currently on an open Hold (excluded from "
+            "backlog charts, working days held tracked in the Hold "
+            f"ledger), {int(is_exception.sum())} held back as Hold "
+            f"exceptions, {int(is_stale_status.sum())} left untouched "
+            "as a stale Rework status (already PDI Cleared or "
+            "Packed) this run."
         )
+        currently_on_hold_final = currently_on_hold
     else:
         # Fallback: no Final Status column available this run, so
         # clearance/Hold can't be determined for anyone - keep the
         # plain "later of the two" rule for PDQC only, no RFP change.
+        # The Hold ledger is left untouched (no status to advance it
+        # with), so CURRENTLY_ON_HOLD still reflects whatever the
+        # ledger already knew from a previous run.
         logger.warning(
             "Rework workbook has no usable Final Status column this "
             "run; the Cleared/Not-Cleared/Hold rules can't be "
@@ -541,10 +485,16 @@ def apply_rework_pdqc_rule(
             "date(s) updated."
         )
 
+        store = hold_ledger.load_ledger(hold_tracking_path)
+        currently_on_hold_final = master[COMPOSITE_KEY].apply(
+            lambda key: hold_ledger.is_currently_on_hold(store, key)
+        )
+
     master[PDQC] = new_pdqc
     master[RFP] = new_rfp
     master[REWORK_HOLD_EXCEPTION] = is_exception
     master[REWORK_STALE_STATUS_EXCEPTION] = is_stale_status
+    master[CURRENTLY_ON_HOLD] = currently_on_hold_final
     master = master.drop(columns=[latest_offer_field])
 
     return master

@@ -68,11 +68,13 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+import hold_ledger
 import line_history_ageing
 from config_loader import load_business_rules, load_stages
 from constants import (
     ACTUAL_START_DATE,
     COMPLETED_FLAG,
+    COMPOSITE_KEY,
     CURRENT_STAGE,
     LH_WELDING_AGE,
     STAGE_AGE,
@@ -101,7 +103,10 @@ class AgeingEngine:
     spool dataframe.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, hold_tracking_path=hold_ledger.DEFAULT_HOLD_LEDGER_PATH) -> None:
+
+        self.hold_tracking_path = hold_tracking_path
+        self._hold_store: dict = {}
 
         stages_config = load_stages()
         rules_config = load_business_rules()
@@ -158,6 +163,13 @@ class AgeingEngine:
         logger.info("Ageing Engine started.")
 
         dataframe = dataframe.copy()
+
+        # Loaded once per run (not per row) - see hold_ledger.py.
+        # Hold ledger tracking itself is advanced by
+        # rework_pdqc_rule.py, which always runs earlier in the
+        # pipeline (src/merge.py) than this engine - this is a
+        # read-only lookup.
+        self._hold_store = hold_ledger.load_ledger(self.hold_tracking_path)
 
         if self.calculate_total_age_enabled:
             # Store the anchor date itself (not just the resulting
@@ -236,7 +248,38 @@ class AgeingEngine:
         packed_date = parse_date(row.get(self.completion_field))
         end_date = packed_date if packed_date is not None else today()
 
-        return days_between(anchor, end_date)
+        raw_age = days_between(anchor, end_date)
+        return self._subtract_hold_days(row, anchor, end_date, raw_age)
+
+    # -----------------------------------------------------
+
+    def _subtract_hold_days(self, row: pd.Series, window_start, window_end, raw_days: int) -> int:
+        """
+        Given by the person (2026-08-21): Hold days - as tracked in
+        the Hold ledger (hold_ledger.py), real Hold start/removal
+        dates, working days only - should be subtracted from a
+        spool's ageing, wherever the age WINDOW being measured
+        overlaps a Hold period. This is deliberately a plain overlap
+        check (not "was this spool on Hold during THIS named stage")
+        so a Hold that happens after RFP, during Under Painting,
+        gets excluded from Stage Age there just as naturally as a
+        pre-RFP Hold gets excluded from Total Age or PDQC's window.
+        Floors at 0 - a raw age below the Hold day count (shouldn't
+        normally happen, but a stage-age window is narrower than
+        Total Age's) never goes negative.
+        """
+
+        if window_start is None or window_end is None:
+            return raw_days
+
+        composite_key = row.get(COMPOSITE_KEY)
+        if not composite_key:
+            return raw_days
+
+        held_days = hold_ledger.working_days_held_between(
+            self._hold_store, composite_key, window_start, window_end
+        )
+        return max(raw_days - held_days, 0)
 
     # -----------------------------------------------------
 
@@ -303,4 +346,5 @@ class AgeingEngine:
 
         stage_start = self.determine_stage_start_date(row)
 
-        return days_between(stage_start, today())
+        raw_age = days_between(stage_start, today())
+        return self._subtract_hold_days(row, stage_start, today(), raw_age)

@@ -678,3 +678,82 @@ untouched and get flagged; a genuine Rework spool with nothing
 downstream filled still gets blanked exactly as before. Full
 regression against every existing branch (Accept, Hold, plain
 Rework, Hold exceptions) re-run and confirmed unchanged.
+
+### 2026-08-21/22 - Hold ledger replaces Rule 2's anchoring; Hold excluded from every backlog chart
+
+The person's own idea, worked through with him step by step before
+building: since Hold spools were being anchored to a fake "done
+almost immediately" PDQC/RFP date (the 2026-08-19 Rule 2), a future
+run couldn't tell how many real WORKING days a spool had actually
+spent on Hold - and there was no way to handle a Hold that happened
+AFTER RFP (during Under Painting) at all, since the anchor approach
+only ever touched PDQC/RFP.
+
+Replaced with a persistent Hold ledger (new src/hold_ledger.py,
+still state/hold_tracking.json - only the schema changed, with a
+migration for the old single-anchor format): every spool's real Hold
+start/removal dates are recorded as a list of periods (any number of
+them - re-entering Hold after a previous resolution is no longer an
+ambiguous case, just another period). PDQC/RFP are no longer faked -
+a Hold spool gets the same blank-until-cleared treatment as a
+genuine Rework spool (src/rework_pdqc_rule.py rewritten accordingly,
+new CURRENTLY_ON_HOLD column). Every ageing calculation that has an
+age window overlapping a Hold period - Total Age and Stage Age on
+the Projects dashboard (src/ageing.py), current-age-vs-target and
+per-stage actual days on Production (src/production/ageing.py) -
+subtracts the WORKING days held from that window
+(hold_ledger.working_days_held_between(), same weekend/holiday
+calendar as everywhere else). This is a plain date-overlap check, so
+a post-RFP Hold correctly reduces Under Painting's stage age the
+same way a pre-RFP Hold reduces Total Age or PDQC's window - verified
+directly against a synthetic case matching his post-RFP scenario.
+
+Also per his explicit follow-up request: "The hold spools should not
+be visible as backlog at any stage" - a spool with an open Hold
+right now (CURRENTLY_ON_HOLD) is excluded entirely from
+src/production/backlog.py's charts and from src/summary.py's
+current_stage_distribution on the Projects dashboard. They get their
+own dedicated chart instead - "Project wise stage wise current Hold
+quantity", his words - new build_hold_by_project_stage() in both
+src/summary.py and src/production/summary.py, a {project: {stage:
+count}} cross-tab, rendered as a stacked bar on both dashboards
+(website/js/fabline.js for Projects, website/js/production-charts.js
+for Production - new HTML sections in website/dashboard.html and
+website/production.html).
+
+The old rework_hold_reentry exception type no longer applies (multiple
+Hold periods are handled natively now) - the narrower case still
+worth flagging (an open Hold jumping straight to Rework with no
+Accept in between, which the ledger genuinely can't resolve on its
+own) is now rework_hold_ambiguous, same Exceptions tab.
+
+Files changed: src/hold_ledger.py (new), src/rework_pdqc_rule.py
+(Hold anchoring removed, ledger wired in), src/ageing.py,
+src/production/ageing.py, src/production/backlog.py, src/summary.py,
+src/production/summary.py, src/production/pipeline.py,
+website/js/fabline.js, website/js/production-charts.js,
+website/js/production-data.js, website/dashboard.html,
+website/production.html, docs/absolute-rules.md (Rule 2 rewritten,
+old anchoring approach kept as collapsed history for context).
+
+Tests: new tests/test_hold_ledger.py (9), tests/test_rework_pdqc_
+rule.py (6, direct Hold-behavior coverage - old anchor-specific
+tests removed since that code path no longer exists),
+tests/test_ageing_hold.py (4), tests/test_production_ageing_hold.py
+(5, including the post-RFP/Under Painting case specifically),
+tests/test_production_hold_summary.py (4), tests/test_summary_hold.py
+(4) - 32 new tests, all passing. Full existing suite re-run
+(168 passing / 23 failing) and cross-checked against a completely
+untouched copy of the repo at the same "today" - the 23 failures are
+pre-existing, date-dependent flakiness unrelated to this change (a
+handful of tests hardcode "N calendar days ago = N working days",
+which only holds depending which weekday the suite happens to run
+on) - confirmed identical failure list on the pristine repo, so
+nothing in this session introduced a regression.
+
+Not verified against his real Excel data (none was available this
+session) - worth a careful first-run check, especially: (1) that
+state/hold_tracking.json's legacy entries migrate cleanly (a resolved
+legacy Hold gets zero retroactive day-credit, by design - see
+hold_ledger.py's docstring), and (2) the new Hold charts on both
+dashboards render sensibly against his actual current Hold spools.

@@ -69,6 +69,7 @@ const ProductionCharts = {
     this.renderStageCharts(stageAgeing, store.categories, metric);
     this.renderIdealVsActual(idealVsActual, metric);
     this.renderBacklogCharts(store.backlog, metric);
+    this.renderHoldByProjectStage(store.holdByProjectStage);
     this.renderMaterialHandover(store.materialHandover);
 
     document.getElementById("chart-spool-count-note").textContent =
@@ -513,6 +514,75 @@ const ProductionCharts = {
             grid: { display: false },
             ticks: { font: this.chartFont, precision: 0 },
             title: { display: true, text: metricLabel, font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
+
+  /**
+   * "Currently on Hold, by Project and stage" (2026-08-21, given by
+   * the person: "insert a separate chart for only Hold spools,
+   * where we can show Project wise stage wise current Hold
+   * quantity"). Source: store.holdByProjectStage, a
+   * {project: {stageLabel: count}} cross-tab
+   * (src/summary.py / src/production/summary.py ->
+   * build_hold_by_project_stage()) - the exact population every
+   * other backlog chart on this dashboard now excludes (see
+   * renderBacklogChart above / src/production/backlog.py).
+   * Stacked bar, one segment per stage, so a project with Holds at
+   * several stages at once is still readable at a glance.
+   */
+  renderHoldByProjectStage(holdByProjectStage) {
+    const ctx = this._ctx("chart-hold-by-project-stage");
+    const wrapper = document.getElementById("chart-hold-by-project-stage-wrapper");
+    const emptyNote = document.getElementById("chart-hold-by-project-stage-empty");
+    if (!ctx) return;
+
+    const projects = Object.keys(holdByProjectStage || {});
+    if (!projects.length) {
+      if (wrapper) wrapper.style.display = "none";
+      if (emptyNote) emptyNote.style.display = "block";
+      return;
+    }
+    if (wrapper) wrapper.style.display = "";
+    if (emptyNote) emptyNote.style.display = "none";
+
+    const stagePalette = Object.values(PRODUCTION_CONFIG.categoryColor);
+    const stageLabels = [...new Set(
+      projects.flatMap((project) => Object.keys(holdByProjectStage[project]))
+    )];
+
+    const datasets = stageLabels.map((stageLabel, index) => ({
+      label: stageLabel,
+      data: projects.map((project) => holdByProjectStage[project][stageLabel] || 0),
+      backgroundColor: stagePalette[index % stagePalette.length],
+      borderRadius: 2,
+    }));
+
+    this.instances.holdByProjectStage = new Chart(ctx, {
+      type: "bar",
+      data: { labels: projects, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: { display: false },
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          tooltip: { titleFont: this.chartFont, bodyFont: this.chartFont },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: { font: this.chartFont, precision: 0 },
+            grid: { display: false },
+            title: { display: true, text: "Spool count currently on Hold", font: this.chartFont },
           },
         },
       },

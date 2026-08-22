@@ -105,6 +105,7 @@ from constants import (
 )
 from logger import logger
 from rework_pdqc_rule import (
+    CURRENTLY_ON_HOLD,
     REWORK_HOLD_EXCEPTION,
     REWORK_LATEST_STATUS,
     REWORK_STALE_STATUS_EXCEPTION,
@@ -393,8 +394,18 @@ class SummaryEngine:
             round(variances.mean(), 1) if len(variances) else None
         )
 
+        # Given by the person (2026-08-21): "The hold spools should
+        # not be visible as backlog at any stage" - excluded from
+        # the per-stage distribution entirely (same principle as
+        # src/production/backlog.py's exclusion), shown instead on
+        # their own dedicated chart (hold_by_project_stage below).
+        on_hold_mask = (
+            dataframe[CURRENTLY_ON_HOLD]
+            if CURRENTLY_ON_HOLD in dataframe.columns
+            else pd.Series(False, index=dataframe.index)
+        )
         stage_counts = (
-            dataframe[CURRENT_STAGE]
+            dataframe.loc[~on_hold_mask, CURRENT_STAGE]
             .value_counts()
             .to_dict()
         )
@@ -426,6 +437,25 @@ class SummaryEngine:
                 "hold": int(status_counts.get("Hold", 0)),
             }
 
+        # "Currently on Hold, by Project and stage" (2026-08-21, per
+        # the person: "insert a separate chart for only Hold spools,
+        # where we can show Project wise stage wise current Hold
+        # quantity") - the population excluded from
+        # current_stage_distribution above, broken down instead of
+        # collapsed into rework_quantum's single "hold" total.
+        hold_by_project_stage: dict[str, dict[str, int]] = {}
+        if on_hold_mask.any():
+            held_rows = dataframe.loc[on_hold_mask, [PROJECT_NAME, CURRENT_STAGE]]
+            for project_name, stage_name in zip(
+                held_rows[PROJECT_NAME], held_rows[CURRENT_STAGE]
+            ):
+                project_label = str(project_name) if not is_empty(project_name) else "(Unknown Project)"
+                stage_label = str(stage_name) if not is_empty(stage_name) else "(Stage Unknown)"
+                hold_by_project_stage.setdefault(project_label, {})
+                hold_by_project_stage[project_label][stage_label] = (
+                    hold_by_project_stage[project_label].get(stage_label, 0) + 1
+                )
+
         return {
             "generated_at": datetime.now().isoformat(),
             "kpis": {
@@ -439,6 +469,7 @@ class SummaryEngine:
             },
             "current_stage_distribution": current_stage_distribution,
             "rework_quantum": rework_quantum,
+            "hold_by_project_stage": hold_by_project_stage,
         }
 
     # -----------------------------------------------------
@@ -1100,12 +1131,13 @@ class SummaryEngine:
                     "drawing_no": to_json_safe(row.get(DRAWING_NO)),
                     "spool_no": to_json_safe(row.get(SPOOL_NO)),
                     "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
-                    "type": "rework_hold_reentry",
+                    "type": "rework_hold_ambiguous",
                     "detail": (
-                        "This spool was previously recorded as "
-                        "resolved from a Rework Data Hold, but the "
-                        "workbook now shows it on Hold again - the "
-                        "system won't guess which episode is correct. "
+                        "This spool had an open Hold period that "
+                        "jumped straight to a Rework status in the "
+                        "Rework Data workbook, with no Accept event "
+                        "in between - the Hold ledger can't tell "
+                        "whether the Hold should count as resolved. "
                         "Please review and fix the Rework Data "
                         "workbook, then re-upload."
                     ),

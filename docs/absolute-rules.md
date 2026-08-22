@@ -126,18 +126,20 @@ gap and prevent it recurring for any future dashboard.
 
 ---
 
-## Rule 2 - Hold is not Rework: PDQC/RFP anchored, not blanked
+## Rule 2 - Hold is not Rework: PDQC/RFP real, but Hold days excluded from ageing
 
-**Given by the person, in their own words (2026-08-19), after
-reporting that Rule 1's blanking behavior was inflating the
-PDQC-stuck count on both dashboards for spools that were only on
-administrative Hold: "Production says a Hold should not affect their
-ageing, QC says Hold should not affect their ageing... For Hold
-spools, consider PDQC done and anchor it to higher of either 2 (DPR
-PDQC date of Production Rework Date)."**
+**Superseded 2026-08-21 (given by the person, in their own words):
+"we will keep a track of PDQC Date and RFP date and Hold Start/
+Removal dates as well. Then we will subtract those many days from
+actual ageing of the process. Also note, there might be a
+possibility of spool being Hold even after RFP. So, we need to
+remove those days from Under Painting as well." This replaces the
+2026-08-19 anchoring approach described further below (kept for
+history) - PDQC/RFP are no longer faked to an artificial near-
+immediate date. See `src/hold_ledger.py` for the full mechanism.**
 
-The Production Rework Data workbook's Final Status column maps to
-exactly THREE categories (given by the person, 2026-08-19 - the
+The Production Rework Data workbook's Final Status column still maps
+to exactly THREE categories (given by the person, 2026-08-19 - the
 literal values as they appear in his workbook, mapped in
 `src/rework_pdqc_rule.py -> _STATUS_MAP`):
 
@@ -153,60 +155,87 @@ literal values as they appear in his workbook, mapped in
 Any value not in this table is treated conservatively as Rework (not
 cleared) and logs a warning - never silently assumed Accept or Hold.
 
-For a spool whose latest-dated offer event (or any prior offer
-event) is Hold:
+**What actually happens now, for a spool whose latest offer event is
+Hold:**
 
-- **PDQC** is treated as done almost immediately: anchored to the
-  EARLIEST offer date this spool was ever seen on Hold - not the
-  eventual Accept date, however long the hold actually lasted - then
-  set to the LATER of (existing DPR PDQC date, that anchor date).
-  Worked example, given by the person: offered 1 Aug, held, cleared
-  11 Aug - PDQC is NOT 10 days, it's anchored back to (approximately)
-  1 Aug, so the hold period effectively doesn't count against PDQC
-  ageing at all. Contrast with genuine Rework (Rule 1): a spool that
-  was genuinely reworked for the same 10 days keeps the full 10-day
-  delay, since that IS a real fabrication/quality delay.
-- **RFP** is set to the LATER of (existing DPR RFP date, the PDQC
-  anchor date + the standard PDQC-to-RFP target gap - 4 working
-  days, `STANDARD_PDQC_TO_RFP_WORKING_DAYS` in
-  `src/rework_pdqc_rule.py`, derived from `config/production_rules.
-  json -> target_days`). The TRUE RFP date is not used for
-  Hold-affected spools, because it would still carry almost the
-  entire hold-caused delay and unfairly inflate whichever team's
-  ageing depends on RFP - "the main problem is RFP days, which is
-  incalculable due to HOLD... consider standard days difference
-  between PDQC & RFP" (the person, 2026-08-19).
+- PDQC and RFP are treated exactly like a genuine Rework spool's for
+  display purposes - blanked until a real Accept event clears them
+  (same PDI-Cleared/Packed staleness exemption as Rule 1). No more
+  fabricated anchor date.
+- Separately, `hold_ledger.py` records the spool's REAL Hold
+  start/removal dates as a period in `state/hold_tracking.json`
+  (still that filename - only the schema changed, see the file
+  itself for the migration from the old single-anchor format). A
+  spool can have any number of these periods over its life.
+- Every ageing calculation that has an age WINDOW overlapping a Hold
+  period - Total Age and Stage Age on the Projects dashboard
+  (`src/ageing.py`), current-age-vs-target and each stage's actual
+  days on the Production dashboard (`src/production/ageing.py`) -
+  subtracts however many WORKING days of that window were spent on
+  Hold (`hold_ledger.working_days_held_between()`, using the same
+  weekend/holiday calendar as everything else - `utils.
+  working_day_variance()`). This is a plain date-overlap check, not
+  "was this Hold during stage X specifically" - so a Hold that
+  happens AFTER RFP, during Under Painting, is excluded from Under
+  Painting's stage age exactly the same way a pre-RFP Hold is
+  excluded from Total Age or the PDQC window. Floors at 0 everywhere.
+- A spool with an OPEN (unresolved) Hold period right now
+  (`CURRENTLY_ON_HOLD` in `src/rework_pdqc_rule.py`) is excluded
+  from every backlog/delayed chart on both dashboards entirely -
+  given by the person (2026-08-21): "The hold spools should not be
+  visible as backlog at any stage." It shows instead on a dedicated
+  chart, grouped by Project and current stage
+  (`build_hold_by_project_stage()` in `src/summary.py` /
+  `src/production/summary.py`).
 
-**Persistent memory required:** a spool's status can change from
-Hold to Accept by editing the SAME row in the workbook in place (no
-new row added), so the fact it was ever on Hold, and the date it
-happened, can vanish from the workbook once resolved. This is
-tracked permanently in `state/hold_tracking.json`, committed to git
-by every pipeline run (`.github/workflows/drive-sync.yml`) - **this
-file must keep being committed, or Rule 2 silently stops working
-correctly the moment a Hold row gets edited to Accept in place.**
-Once a spool is first recorded as Hold, its anchor date is
-remembered forever, even long after it clears - the entire point of
-the rule is that the hold period never counts, not just while the
-hold is ongoing.
+**Persistent memory required, same as before:** a spool's status can
+change from Hold to Accept by editing the SAME row in the workbook
+in place (no new row added), so the fact it was ever on Hold, and
+the date it happened, can vanish from the workbook once resolved.
+`state/hold_tracking.json` is how that history survives across
+pipeline runs - committed to git by every pipeline run
+(`.github/workflows/drive-sync.yml`) - **this file must keep being
+committed, or Hold-day tracking silently stops working correctly the
+moment a Hold row gets edited to Accept in place.**
 
-**Ambiguous case - flag, don't guess:** if a spool that was
-previously resolved (no longer on Hold, per the stored record) is
-later seen on Hold AGAIN, that's an unexpected pattern the person
-said shouldn't normally happen ("I don't think this situation should
-come. You can flag this spool in Exceptions section... I will see
-and make changes in the actual file manually and reupload it."). That
-spool's Hold-anchor treatment is suspended (falls back to the plain
-Rework rule - PDQC blanked) and it's surfaced on the Projects
-dashboard's Exceptions tab (`src/summary.py -> generate_exceptions()`,
-exception type `rework_hold_reentry`) for manual review, rather than
-silently re-anchored to a possibly-wrong date.
+**Multiple Hold periods are now first-class, not an exception:**
+unlike the superseded anchoring approach, a spool going Hold ->
+Accept -> Hold -> Accept any number of times just accumulates
+periods in the ledger - no manual review needed for re-entry.
+**The one genuinely ambiguous case left:** a spool with an open Hold
+period whose latest workbook status jumps straight to Rework with no
+Accept in between - the ledger can't tell whether the Hold should
+count as resolved, so it's left untouched and flagged on the
+Projects dashboard's Exceptions tab (`src/summary.py ->
+generate_exceptions()`, exception type `rework_hold_ambiguous`) for
+manual review.
 
 **Single implementation, same as Rule 1:** `src/rework_pdqc_rule.py
--> apply_rework_pdqc_rule()` - the same function that implements
-Rule 1 implements Rule 2 too, and is called from the exact same
+-> apply_rework_pdqc_rule()` (blanking + ledger advancement) plus
+`src/hold_ledger.py` (the ledger itself, and the working-day overlap
+helper every ageing engine calls) - called from the exact same
 places (`src/merge.py` for Projects, `src/production/pipeline.py`
 for Production). No separate call site to maintain.
+
+<details>
+<summary>History: the 2026-08-19 anchoring approach this replaced</summary>
+
+Originally (given by the person, 2026-08-19: "Production says a Hold
+should not affect their ageing, QC says Hold should not affect their
+ageing... For Hold spools, consider PDQC done and anchor it to
+higher of either 2 (DPR PDQC date of Production Rework Date)"), a
+Hold spool's PDQC was anchored to the EARLIEST offer date it was
+ever seen on Hold (not the eventual Accept date), and RFP was set to
+that anchor plus a flat standard target gap (4 working days) rather
+than its true, hold-inflated date - because "the main problem is RFP
+days, which is incalculable due to HOLD... consider standard days
+difference between PDQC & RFP" (the person, 2026-08-19). This
+protected Production/QC's ageing from Hold delays, but at the cost
+of PDQC/RFP no longer being real dates, and it had no way to handle
+a Hold that happened after RFP (during Under Painting) at all - both
+of which the 2026-08-21 rewrite above fixes directly.
+
+</details>
 
 ---
 

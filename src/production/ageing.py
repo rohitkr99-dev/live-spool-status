@@ -37,6 +37,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from utils import create_composite_key, days_between, is_empty, parse_date, today
+import hold_ledger
 from production.classify import classify_category
 from welding_finish import determine_welding_finish
 
@@ -78,6 +79,7 @@ class SpoolRecord:
     current_age_days: int | None = None
     is_complete: bool = False
     is_delayed: bool = False
+    currently_on_hold: bool = False
     target_days: dict[str, int] = field(default_factory=dict)
     material: str = ""
     spool_size: float | None = None
@@ -95,13 +97,26 @@ def build_spool_records(
     welding_db_lookup,
     rules: dict,
     siop_planned_df=None,
+    hold_tracking_path=hold_ledger.DEFAULT_HOLD_LEDGER_PATH,
 ) -> tuple[list[SpoolRecord], int]:
     """
     Returns (records, excluded_not_released_count). See Rule 0 in
     the module docstring above - excluded_not_released_count is how
     many DPR rows were dropped for having no Prod Order Release
     date, purely for KPI transparency.
+
+    Hold handling (2026-08-21, given by the person - see
+    hold_ledger.py and src/rework_pdqc_rule.py): a spool with an
+    open Hold period is excluded from delayed/backlog status
+    (is_delayed forced False regardless of the target comparison -
+    src/production/backlog.py additionally excludes it from the
+    backlog chart entirely) and every stage/current age is reduced
+    by however many WORKING days it has genuinely spent on Hold, per
+    the Hold ledger - wherever that Hold period's dates overlap the
+    age window being measured, whether that's before or after RFP.
     """
+
+    hold_store = hold_ledger.load_ledger(hold_tracking_path)
 
     fields = rules["welding_finish_fields"]
 
@@ -197,6 +212,8 @@ def build_spool_records(
             week=str(row.get("Week") or ""),
         )
 
+        record.currently_on_hold = hold_ledger.is_currently_on_hold(hold_store, ck)
+
         # Which stages actually apply to this spool's category - the 5
         # standard ones for every category except an entry in
         # category_tracked_stages (currently just "loose", which skips
@@ -208,11 +225,14 @@ def build_spool_records(
         if planned_start is not None:
             for stage in tracked_stages:
                 stage_date = stage_dates.get(stage)
-                record.stage_actual_days[stage] = (
-                    days_between(planned_start, stage_date)
-                    if stage_date is not None
-                    else None
-                )
+                if stage_date is not None:
+                    raw = days_between(planned_start, stage_date)
+                    held = hold_ledger.working_days_held_between(
+                        hold_store, ck, planned_start, stage_date
+                    )
+                    record.stage_actual_days[stage] = max(raw - held, 0)
+                else:
+                    record.stage_actual_days[stage] = None
 
             record.is_complete = stage_dates.get(last_stage) is not None
 
@@ -230,11 +250,24 @@ def build_spool_records(
                 record.current_age_days = record.stage_actual_days.get(last_stage)
                 target_for_position = target_days.get(last_stage)
             else:
-                record.current_age_days = days_between(planned_start, today())
+                right_now = today()
+                raw_current_age = days_between(planned_start, right_now)
+                held_current = hold_ledger.working_days_held_between(
+                    hold_store, ck, planned_start, right_now
+                )
+                record.current_age_days = max(raw_current_age - held_current, 0)
                 target_for_position = target_days.get(current_stage)
 
             if target_for_position is not None and record.current_age_days is not None:
                 record.is_delayed = record.current_age_days > target_for_position
+
+            if record.currently_on_hold:
+                # Given by the person (2026-08-21): "The hold spools
+                # should not be visible as backlog at any stage" -
+                # never show as delayed while a Hold is open, no
+                # matter what the (already Hold-day-adjusted)
+                # current_age_days vs target comparison says.
+                record.is_delayed = False
 
         records.append(record)
 

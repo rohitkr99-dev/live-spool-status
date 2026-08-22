@@ -92,6 +92,7 @@ const SpoolFabline = {
     }
 
     this.renderReworkQuantum(dashboardSummary.rework_quantum);
+    this.renderHoldByProjectStage(dashboardSummary.hold_by_project_stage);
   },
 
   // "Holds & Reworks" reconciliation strip - see
@@ -122,5 +123,79 @@ const SpoolFabline = {
         <span class="fabline-rework-quantum__count">${fmt(hold)}</span> on Hold
       </span>
     `;
+  },
+
+  /**
+   * "Currently on Hold, by Project and stage" (2026-08-21, given by
+   * the person: "insert a separate chart for only Hold spools,
+   * where we can show Project wise stage wise current Hold
+   * quantity"). Source: dashboardSummary.hold_by_project_stage, a
+   * {project: {stageName: count}} cross-tab
+   * (src/summary.py -> generate_dashboard_summary()) - exactly the
+   * population current_stage_distribution above now excludes (see
+   * that same function). Stacked bar, reusing the same stage
+   * colours as the Fabrication Line itself
+   * (SPOOL_STATUS_CONFIG.stageColor) so a project's Hold breakdown
+   * visually matches the stage blocks above it.
+   */
+  renderHoldByProjectStage(holdByProjectStage) {
+    const ctx = document.getElementById("chart-hold-by-project-stage");
+    const wrapper = document.getElementById("hold-by-project-stage-wrapper");
+    const emptyNote = document.getElementById("hold-by-project-stage-empty");
+    if (!ctx) return;
+
+    if (this._holdChart) {
+      this._holdChart.destroy();
+      this._holdChart = null;
+    }
+
+    const projects = Object.keys(holdByProjectStage || {});
+    if (!projects.length) {
+      if (wrapper) wrapper.style.display = "none";
+      if (emptyNote) emptyNote.hidden = false;
+      return;
+    }
+    if (wrapper) wrapper.style.display = "";
+    if (emptyNote) emptyNote.hidden = true;
+
+    const cfg = SPOOL_STATUS_CONFIG;
+    const stageNames = cfg.stageOrder.filter(
+      (stage) => projects.some((project) => holdByProjectStage[project][stage])
+    );
+    // Any stage name the data has that isn't in the known stageOrder
+    // (shouldn't normally happen) is still shown, just appended last.
+    for (const project of projects) {
+      for (const stage of Object.keys(holdByProjectStage[project])) {
+        if (!stageNames.includes(stage)) stageNames.push(stage);
+      }
+    }
+
+    const datasets = stageNames.map((stage) => ({
+      label: stage,
+      data: projects.map((project) => holdByProjectStage[project][stage] || 0),
+      backgroundColor: cfg.stageColor[stage] || cfg.defaultStageColor,
+      borderRadius: 2,
+    }));
+
+    this._holdChart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: projects, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: { display: false },
+          legend: { position: "top", align: "end", labels: { boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } },
+          y: {
+            stacked: true, beginAtZero: true, grid: { display: false },
+            ticks: { precision: 0 },
+            title: { display: true, text: "Spool count currently on Hold" },
+          },
+        },
+      },
+    });
   },
 };
