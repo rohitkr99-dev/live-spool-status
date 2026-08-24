@@ -125,17 +125,23 @@ REWORK_HOLD_EXCEPTION = "Rework Hold Exception"
 REWORK_STALE_STATUS_EXCEPTION = "Rework Stale Status Exception"
 
 # Exact Final Status text values, given by the person (2026-08-19,
-# amended 2026-08-24 to add Query -> Hold), case-insensitively
-# matched after collapsing internal whitespace. Any value NOT in
-# this map is treated conservatively as "Rework" (not cleared)
-# rather than silently assumed Accept or Hold, and logs a warning so
-# a genuinely new status value gets noticed and added here
-# deliberately.
+# amended 2026-08-24 to add Query -> Hold, and again 2026-08-24 for
+# "Re insp due to RT" -> Rework - QC has started recording RT
+# (radiography) re-inspection needs directly in this column, per the
+# person's decision that this should count fully against PDQC
+# ageing and stay visible on backlog, same as any other unresolved
+# QC item - NOT excluded/day-subtracted the way Hold is), case-
+# insensitively matched after collapsing internal whitespace. Any
+# value NOT in this map is treated conservatively as "Rework" (not
+# cleared) rather than silently assumed Accept or Hold, and logs a
+# warning so a genuinely new status value gets noticed and added
+# here deliberately.
 _STATUS_MAP = {
     "ACCEPT": "Accept",
     "NOT FOUND": "Rework",
     "PROJECT HOLD": "Hold",
     "QUERY": "Hold",
+    "RE INSP DUE TO RT": "Rework",
     "REWORK": "Rework",
     "REWORK/SAME RW": "Rework",
     "SPOOL DELETED": "Rework",

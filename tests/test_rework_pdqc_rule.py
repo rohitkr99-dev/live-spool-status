@@ -142,6 +142,31 @@ def test_repeat_hold_after_resolution_is_no_longer_an_exception(tmp_path):
     assert bool(result.iloc[0][CURRENTLY_ON_HOLD]) is True
 
 
+def test_re_insp_due_to_rt_status_is_treated_as_rework(tmp_path):
+    """
+    Given by the person, 2026-08-24: QC will start recording RT
+    (radiography) re-inspection needs directly in Final Status as
+    "Re insp due to RT" - decided to count fully against PDQC ageing
+    like any other unresolved QC item (not excluded from backlog the
+    way Hold is). Functionally this already fell through to the
+    conservative "unrecognized -> Rework" default, so behavior is
+    unchanged - this test locks in that the explicit mapping (which
+    stops the "unrecognized status" warning from firing on it) keeps
+    producing the same result.
+    """
+
+    master = _master([_spool()])
+    rework = pd.DataFrame([_rework_row("Re insp due to RT", "2026-08-01")])
+
+    result = apply_rework_pdqc_rule(
+        master, rework, hold_tracking_path=tmp_path / "hold.json"
+    )
+
+    assert pd.isna(result.iloc[0]["PDQC"])
+    assert result.iloc[0]["Rework Latest Status"] == "Rework"
+    assert bool(result.iloc[0][CURRENTLY_ON_HOLD]) is False
+
+
 def test_stale_rework_status_with_pdi_cleared_leaves_hold_flag_false(tmp_path):
     master = _master([{
         "Project Code": "P001", "Drawing No": "D001", "Spool No": "S001",

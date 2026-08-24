@@ -833,3 +833,44 @@ Rework, 12 Hold (of 6,734 spools with any offer history). Delivered
 as Currently_Rework_and_Hold_Spools_2026-08-24.xlsx (not a code
 file - an analysis output, Project Name cross-referenced from the
 2026-08-22 DPR upload since no fresh DPR was supplied this turn).
+
+### 2026-08-24 (later still) - "Re insp due to RT" mapped to Rework
+
+Follow-up to comparing QC's separate project-wise report
+(Rework_Data_Project_Wise-24-08-2026.xlsx) against
+Production_Rework_Data.xlsx: found 49 spools QC has flagged "Re insp
+due to RT" (need radiography re-inspection) showing as Accept in the
+pipeline, because that status doesn't exist anywhere in the Rework
+Data workbook's Final Status column at all - QC tracks it in a
+separate report that never reaches the file the pipeline reads.
+
+Decided with the person: QC will start recording this directly in
+Production_Rework_Data.xlsx's Final Status column going forward
+("Re insp due to RT" - QC's own existing wording), and it should
+count fully against PDQC ageing and stay visible on backlog, same as
+any other unresolved QC item (NOT excluded from backlog / day-
+subtracted from ageing the way Hold is).
+
+Added "RE INSP DUE TO RT": "Rework" to _STATUS_MAP in
+src/rework_pdqc_rule.py. Note: this value already fell through to
+the conservative "unrecognized -> Rework" default, so this is mostly
+a documentation/warning-suppression change, not a behavior change -
+it makes the mapping explicit and stops the "unrecognized Final
+Status" warning from firing every run once QC starts using this
+value.
+
+Tests: tests/test_rework_pdqc_rule.py - new
+test_re_insp_due_to_rt_status_is_treated_as_rework. Full suite: 172
+passing (up from 171), same 23 pre-existing unrelated failures.
+
+Separately delivered (not a code file): QC_Report_vs_Pipeline_Gap_
+Analysis_2026-08-24.xlsx, comparing QC's 134-spool project-wise
+report against the pipeline's actual current-status logic - 54
+spools showing Accept/Hold-stale in the pipeline that QC's report
+says otherwise (49 RT-reinspection + 5 stale Hold), 1 spool entirely
+missing from Production_Rework_Data.xlsx (Drawing
+1-V17565-PIND-0093, Spool -02 - checked directly, not a matching
+issue), 79 already consistent. The person should get QC's Production
+Rework Data entry going forward to use "Re insp due to RT" literally
+so this fix picks it up; the 54-spool "Gap - Shows Accept" sheet is
+the list to have QC correct.
