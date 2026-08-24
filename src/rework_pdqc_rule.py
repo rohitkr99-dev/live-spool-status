@@ -299,11 +299,28 @@ def apply_rework_pdqc_rule(
         )
         return master
 
-    # idxmax (not a plain groupby().max()) so the row that wins for
-    # the date ALSO supplies the status for that same spool - the
-    # two must always come from the same offer event.
+    # Stable sort by offer date, then take the LAST row per composite
+    # key - not groupby().idxmax(), which silently keeps the FIRST
+    # row on a tie. Two offer events can legitimately share the exact
+    # same Prod Offer Date: QC sometimes appends a resolution row
+    # after review without back-dating it (given by the person,
+    # 2026-08-22 - Drawing 2-V17565-PIND-0092 / Spool
+    # V17565-PIND-0092-01 had a Rework row and an Accept row both
+    # dated 2026-06-25, identical QC Observation text; idxmax() was
+    # picking the Rework row purely because it happened to come first
+    # in the sheet, even though the Accept row further down was QC's
+    # actual final answer - 156 spools in his 2026-08-22 workbook
+    # were affected the same way, all in the harmful direction
+    # (wrongly classified Rework when the true latest entry was
+    # Accept)). kind="stable" preserves each tied group's original
+    # sheet order, so .tail(1) reliably keeps whichever row was
+    # entered LAST.
     latest_row_index = (
-        rework_valid.groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE].idxmax()
+        rework_valid
+        .sort_values(REWORK_OFFER_DATE, kind="stable")
+        .groupby(COMPOSITE_KEY)
+        .tail(1)
+        .index
     )
     status_column = (
         REWORK_FINAL_STATUS if REWORK_FINAL_STATUS in rework_valid.columns

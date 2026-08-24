@@ -156,3 +156,51 @@ def test_stale_rework_status_with_pdi_cleared_leaves_hold_flag_false(tmp_path):
 
     assert pd.Timestamp(result.iloc[0]["PDQC"]) == pd.Timestamp("2026-01-01")
     assert bool(result.iloc[0][CURRENTLY_ON_HOLD]) is False
+
+
+def test_same_date_tie_picks_the_later_sheet_row_not_the_first(tmp_path):
+    """
+    Given by the person, 2026-08-22 (real data): Drawing
+    2-V17565-PIND-0092 / Spool V17565-PIND-0092-01 had a Rework row
+    and an Accept row both dated the same day, identical QC
+    Observation text - QC appended the Accept row after review
+    without back-dating it. groupby().idxmax() used to silently keep
+    whichever row came FIRST in the sheet on a tie (here, the stale
+    Rework row) - fixed to keep whichever row was entered LAST
+    instead. 156 spools in his real workbook were misclassified this
+    way, all in the harmful direction (blocked from PDQC clearance
+    despite QC's real final answer being Accept).
+    """
+
+    master = _master([_spool()])
+    rework = pd.DataFrame([
+        _rework_row("Rework", "2026-06-25"),
+        _rework_row("Accept", "2026-06-25"),
+    ])
+
+    result = apply_rework_pdqc_rule(
+        master, rework, hold_tracking_path=tmp_path / "hold.json"
+    )
+
+    assert pd.Timestamp(result.iloc[0]["PDQC"]) == pd.Timestamp("2026-06-25")
+    assert result.iloc[0]["Rework Latest Status"] == "Accept"
+
+
+def test_same_date_tie_reverse_order_also_picks_the_later_sheet_row(tmp_path):
+    """Same as above, but the Accept row happens to come first in the
+    sheet and Rework second - the later ROW (not later status) must
+    still win, since a real re-Hold/re-Rework entered after an Accept
+    on the same date is exactly as real as the reverse."""
+
+    master = _master([_spool()])
+    rework = pd.DataFrame([
+        _rework_row("Accept", "2026-06-25"),
+        _rework_row("Rework", "2026-06-25"),
+    ])
+
+    result = apply_rework_pdqc_rule(
+        master, rework, hold_tracking_path=tmp_path / "hold.json"
+    )
+
+    assert pd.isna(result.iloc[0]["PDQC"])
+    assert result.iloc[0]["Rework Latest Status"] == "Rework"

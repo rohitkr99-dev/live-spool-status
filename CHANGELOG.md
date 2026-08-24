@@ -757,3 +757,50 @@ state/hold_tracking.json's legacy entries migrate cleanly (a resolved
 legacy Hold gets zero retroactive day-credit, by design - see
 hold_ledger.py's docstring), and (2) the new Hold charts on both
 dashboards render sensibly against his actual current Hold spools.
+
+### 2026-08-24 - Bug fix: same-date offer ties in the Rework Data workbook were keeping the wrong row
+
+Found while investigating a specific spool the person flagged (Drawing
+2-V17565-PIND-0092 / Spool V17565-PIND-0092-01, "this spool is already
+accepted, then why is it appearing" in PDQC Backlog): its Rework Data
+history had a Rework row and an Accept row both dated the exact same
+day (2026-06-25), identical QC Observation text - QC had appended the
+Accept row after review without back-dating it to a later date.
+
+src/rework_pdqc_rule.py's "latest offer event" selection used
+groupby(COMPOSITE_KEY)[REWORK_OFFER_DATE].idxmax() - on a tie, idxmax()
+silently keeps whichever row comes FIRST in the workbook, not whichever
+was entered LAST. Since QC's real final answer for a spool is always
+the later-entered row, this was blocking PDQC clearance for spools QC
+had genuinely accepted, whenever a Rework/Hold row and its eventual
+Accept happened to land on the same offer date.
+
+Fixed: stable sort by Prod Offer Date, then take the LAST row per
+composite key (kind="stable" preserves each tied group's original
+sheet order) - so ties now correctly resolve to whichever row was
+entered last, not whichever happened to be listed first.
+
+Scope in the person's 2026-08-22 Rework Data workbook: 156 spools
+across all projects were affected (153 wrongly blocked as Rework when
+the true latest entry was Accept; 3 the other direction, wrongly shown
+Accept when the true latest entry was a later Rework/Hold - also now
+fixed). Of the 197 spools in his original PDQC Backlog export
+specifically, 10 were misclassified this way (89 -> 79 genuine
+Rework, 7 -> 17 correctly Accept once re-checked with the fix).
+
+Files changed: src/rework_pdqc_rule.py (latest-offer-event selection
+only - the rest of the Accept/Rework/Hold logic is unchanged).
+
+Tests: tests/test_rework_pdqc_rule.py - two new tests
+(test_same_date_tie_picks_the_later_sheet_row_not_the_first,
+test_same_date_tie_reverse_order_also_picks_the_later_sheet_row,
+covering both tie directions) using the person's real example. Full
+suite re-run: 170 passing (up from 168 - the two new tests), same 23
+pre-existing date-dependent failures as every prior session, unrelated
+to this change.
+
+Not re-verified against a fresh pipeline run with real output files
+this session (no deployment access) - the person should re-run the
+pipeline with this fix and the Rework Data workbook he already
+supplied; the 17 "should now clear" spools in the corrected
+PDQC_Backlog_Analysis are the ones to spot-check first.
