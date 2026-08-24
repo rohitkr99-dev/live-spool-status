@@ -79,6 +79,14 @@
       }
     ]
   },
+  "TJ/25-26/183|251137_1A_LP002_042|251137-1A-LP-042-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-13"
+      }
+    ]
+  },
   "TJ/25-26/183|251137_2A_HP002_007|251137-2A-HP-007-09": {
     "hold_periods": [
       {
@@ -92,6 +100,14 @@
       {
         "hold_removed": null,
         "hold_start": "2026-07-31"
+      }
+    ]
+  },
+  "TJ/25-26/188|1-V17565-PIND-0144|V17565-PIND-0144-04": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-05"
       }
     ]
   },
