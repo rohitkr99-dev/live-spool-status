@@ -124,28 +124,18 @@ REWORK_HOLD_EXCEPTION = "Rework Hold Exception"
 # stated workflow ("I'll correct the Rework Excel file").
 REWORK_STALE_STATUS_EXCEPTION = "Rework Stale Status Exception"
 
-# Derived from config/production_rules.json -> target_days: the gap
-# between the "pdqc" and "release_for_painting" entries is exactly 4
-# working days for every one of the 6 categories in that table as of
-# 2026-08-19 (le8_cs_ss 6->10, gt8_cs_ss 11->15, le8_as 12->16,
-# gt8_as 16->20, sb 9->13, loose 4->8). Hardcoded here as a plain
-# constant rather than a live per-category lookup, since this
-# module (used by both the Projects and Production pipelines) has no
-# access to Production's category-classification logic and the
-# Projects pipeline has no equivalent concept at all. IF THE
-# CATEGORIES EVER STOP SHARING THIS SAME 4-DAY GAP, THIS CONSTANT
-# NEEDS A MANUAL UPDATE (or this module needs to become category-
-# aware) - it will not pick up a change to target_days on its own.
-# Exact Final Status text values, given by the person (2026-08-19),
-# case-insensitively matched after collapsing internal whitespace.
-# Any value NOT in this map is treated conservatively as "Rework"
-# (not cleared) rather than silently assumed Accept or Hold, and
-# logs a warning so a genuinely new status value gets noticed and
-# added here deliberately.
+# Exact Final Status text values, given by the person (2026-08-19,
+# amended 2026-08-24 to add Query -> Hold), case-insensitively
+# matched after collapsing internal whitespace. Any value NOT in
+# this map is treated conservatively as "Rework" (not cleared)
+# rather than silently assumed Accept or Hold, and logs a warning so
+# a genuinely new status value gets noticed and added here
+# deliberately.
 _STATUS_MAP = {
     "ACCEPT": "Accept",
     "NOT FOUND": "Rework",
     "PROJECT HOLD": "Hold",
+    "QUERY": "Hold",
     "REWORK": "Rework",
     "REWORK/SAME RW": "Rework",
     "SPOOL DELETED": "Rework",

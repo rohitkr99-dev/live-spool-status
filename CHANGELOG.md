@@ -804,3 +804,32 @@ this session (no deployment access) - the person should re-run the
 pipeline with this fix and the Rework Data workbook he already
 supplied; the 17 "should now clear" spools in the corrected
 PDQC_Backlog_Analysis are the ones to spot-check first.
+
+### 2026-08-24 (later same day) - Query now maps to Hold, not Rework
+
+Given by the person: "please note Query will also come under HOLD
+category, so please amend accordingly." Previously an unrecognized
+Final Status value (fell through to the conservative "treat as
+Rework" default, with a warning logged). Added "QUERY": "Hold" to
+_STATUS_MAP in src/rework_pdqc_rule.py - 2 spools in his current
+Rework Data workbook were affected (both re-classified Rework ->
+Hold; PDQC stays blank either way, only REWORK_LATEST_STATUS /
+CURRENTLY_ON_HOLD / Hold-ledger tracking change).
+
+Also cleaned up a dangling orphaned comment fragment left over from
+the 2026-08-21 Hold-ledger rewrite (a leftover sentence referencing
+the removed STANDARD_PDQC_TO_RFP_WORKING_DAYS constant, sitting
+directly above _STATUS_MAP - harmless but confusing to read).
+
+Tests: tests/test_rework_pdqc_rule.py - new
+test_query_status_is_treated_as_hold. Full suite: 171 passing (up
+from 170), same 23 pre-existing unrelated failures.
+
+Separately, used the corrected pipeline logic (this Query fix +
+2026-08-24's earlier same-date tie-break fix) to answer his direct
+question - which spools are CURRENTLY Rework vs CURRENTLY Hold, from
+his freshly-uploaded Production_Rework_Data.xlsx: 6,563 Accept, 159
+Rework, 12 Hold (of 6,734 spools with any offer history). Delivered
+as Currently_Rework_and_Hold_Spools_2026-08-24.xlsx (not a code
+file - an analysis output, Project Name cross-referenced from the
+2026-08-22 DPR upload since no fresh DPR was supplied this turn).

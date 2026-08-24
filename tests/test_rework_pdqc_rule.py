@@ -204,3 +204,25 @@ def test_same_date_tie_reverse_order_also_picks_the_later_sheet_row(tmp_path):
 
     assert pd.isna(result.iloc[0]["PDQC"])
     assert result.iloc[0]["Rework Latest Status"] == "Rework"
+
+
+def test_query_status_is_treated_as_hold(tmp_path):
+    """
+    Given by the person, 2026-08-24: "Query will also come under
+    HOLD category" - previously an unrecognized status, treated
+    conservatively as Rework (with a warning). Blank PDQC either way
+    (Hold and Rework are both "not cleared" for PDQC purposes), but
+    REWORK_LATEST_STATUS and CURRENTLY_ON_HOLD must now say Hold, not
+    Rework, and the spool's Hold ledger period should open.
+    """
+
+    master = _master([_spool()])
+    rework = pd.DataFrame([_rework_row(" Query", "2026-08-01")])
+
+    result = apply_rework_pdqc_rule(
+        master, rework, hold_tracking_path=tmp_path / "hold.json"
+    )
+
+    assert pd.isna(result.iloc[0]["PDQC"])
+    assert result.iloc[0]["Rework Latest Status"] == "Hold"
+    assert bool(result.iloc[0][CURRENTLY_ON_HOLD]) is True
