@@ -1139,3 +1139,53 @@ same delivery: this zip also contains everything from the earlier
 2026-08-26 ageing-reduction delivery (src/utils.py, src/merge.py,
 config/column_mapping.json, src/production/ageing.py and their
 tests) so this is a complete, standalone package.
+
+### 2026-08-26 (later still x5) - Quality dashboard: Rework Rate Over Time now starts at Week 1, fiscal week numbering
+
+Investigated a screenshot the person sent of this chart showing a
+long flat 0% stretch (Sept 2025 - mid March 2026) before jumping to
+16%+ - verified directly against his real Rework Data workbook that
+this is genuine, not a bug: every one of the 1,562 offer events in
+that period has Final Status Accept, zero Rework, full stop. Real
+reworks only start appearing mid-March 2026 onward.
+
+Separately found (not yet fixed - flagged to him, no decision yet):
+src/quality/summary.py's own status classifier (_normalize_status())
+is an independent, much simpler duplicate of rework_pdqc_rule.py's
+_STATUS_MAP - only recognizes exact "ACCEPT"/"REWORK" text, so every
+other real Final Status value in the workbook ("Project hold",
+"Query", "Re insp due to RT", "Not Found", "REWORK/SAME RW", "SPOOL
+DELETED") falls into a generic "Other" bucket that's counted in every
+rate's denominator but never the numerator - quietly diluting every
+rate on the Quality dashboard, not just this chart.
+
+What WAS changed, per his request ("Better to show chart from Week 1
+onwards", confirmed to mean the SAME fiscal week system already used
+for "Week Planned" elsewhere - utils.fiscal_week_info(), a 52-week
+cycle anchored 30th March each year): the chart's "week" granularity
+now only covers the CURRENT fiscal cycle (from its own Week 1
+onward, dropping the empty tail-end of the previous cycle entirely)
+and labels periods "Week 1", "Week 2", etc. instead of calendar
+dates. Deliberately NOT just a label rename - the old "Monday of that
+ISO calendar week" grouping is a different, unrelated week concept
+from the fiscal one used everywhere else "Week" appears in this app,
+and simply relabeling it would have made week numbers look like they
+reset partway through the chart the moment it crossed 30th March.
+"day" and "month" granularities are unchanged - full history,
+calendar dates, same as before.
+
+File changed: src/quality/summary.py (build_rework_trend(),
+_period_labels()) only - no frontend change needed, since
+website/js/quality-charts.js's chart already uses plain category
+labels (not date-parsed), so relabeling "period" values was
+sufficient.
+
+Tests: tests/test_quality_rework_trend.py (5, including one
+specifically checking week numbers sort numerically - "Week 10"
+after "Week 2" - not alphabetically). Full suite: 201 passing (up
+from 196), same ~23 pre-existing date-dependent failures.
+
+Open item for the person: whether to fix the Quality dashboard's
+separate, cruder status classifier (affects every rate on that
+dashboard, not just this chart) - not done this session, needs his
+go-ahead first.

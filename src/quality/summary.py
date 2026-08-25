@@ -35,6 +35,8 @@ from typing import Any
 
 import pandas as pd
 
+from utils import fiscal_week_info, today, week_number_to_start_date
+
 SPOOL_KEY_COLUMNS = ["Project Code", "Drawing No", "Spool No"]
 
 
@@ -250,9 +252,8 @@ def build_first_offer_split(dataframe: pd.DataFrame) -> dict[str, Any]:
 
 def _period_labels(dates: pd.Series) -> pd.DataFrame:
     day = dates.dt.date.astype(str)
-    week_start = (dates - pd.to_timedelta(dates.dt.weekday, unit="D")).dt.date.astype(str)
     month = dates.dt.strftime("%Y-%m")
-    return pd.DataFrame({"day": day, "week": week_start, "month": month})
+    return pd.DataFrame({"day": day, "month": month})
 
 
 def build_rework_trend(dataframe: pd.DataFrame) -> dict[str, list[dict[str, Any]]]:
@@ -262,6 +263,23 @@ def build_rework_trend(dataframe: pd.DataFrame) -> dict[str, list[dict[str, Any]
     total offer events within that period - a spool offered more
     than once (rework cycle) contributes one event per offer, same
     denominator logic as build_kpis()'s overall_rework_rate_pct.
+
+    "week" granularity (2026-08-26, given by the person - "Better to
+    show chart from Week 1 onwards", confirmed meaning the SAME
+    fiscal week system already used for "Week Planned" elsewhere -
+    utils.fiscal_week_info(), a 52-week cycle anchored 30th March
+    each year) is DIFFERENT from "day"/"month": it only covers the
+    CURRENT fiscal cycle (from its own Week 1 onward), not the whole
+    history, and labels periods "Week 1", "Week 2", etc. instead of
+    calendar dates. Deliberately not "Monday-of-that-ISO-week" (what
+    this used to do) - that's a different, unrelated week concept
+    from the one used everywhere else "Week" appears in this app,
+    and mixing calendar-week labels with the previous fiscal cycle's
+    Week 1-52 the moment the chart crosses 30th March would look like
+    the week numbers reset partway through, which is why this
+    genuinely needs its own cycle-scoped grouping rather than just a
+    label rename. "day" and "month" are unaffected - full history,
+    calendar dates, same as before.
     """
 
     df = _with_status(dataframe)
@@ -273,7 +291,7 @@ def build_rework_trend(dataframe: pd.DataFrame) -> dict[str, list[dict[str, Any]
     df = pd.concat([df.reset_index(drop=True), periods.reset_index(drop=True)], axis=1)
 
     out: dict[str, list[dict[str, Any]]] = {}
-    for granularity in ("day", "week", "month"):
+    for granularity in ("day", "month"):
         grouped = df.groupby(granularity).agg(
             total=("_status", "size"),
             rework=("_status", lambda s: int((s == "Rework").sum())),
@@ -284,6 +302,29 @@ def build_rework_trend(dataframe: pd.DataFrame) -> dict[str, list[dict[str, Any]
         out[granularity] = [
             {
                 "period": row["period"],
+                "total": int(row["total"]),
+                "rework": int(row["rework"]),
+                "pct": _pct(int(row["rework"]), int(row["total"])),
+            }
+            for _, row in grouped.iterrows()
+        ]
+
+    cycle_start = week_number_to_start_date(1, today())
+    week_df = df[df["Prod Offer Date"] >= pd.Timestamp(cycle_start)].copy()
+    if week_df.empty:
+        out["week"] = []
+    else:
+        week_df["week_number"] = week_df["Prod Offer Date"].apply(
+            lambda d: fiscal_week_info(d.date())["week_number"]
+        )
+        grouped = week_df.groupby("week_number").agg(
+            total=("_status", "size"),
+            rework=("_status", lambda s: int((s == "Rework").sum())),
+        ).reset_index().sort_values("week_number")
+
+        out["week"] = [
+            {
+                "period": f"Week {int(row['week_number'])}",
                 "total": int(row["total"]),
                 "rework": int(row["rework"]),
                 "pct": _pct(int(row["rework"]), int(row["total"])),
