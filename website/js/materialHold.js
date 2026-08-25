@@ -64,13 +64,21 @@ const SpoolMaterialHold = {
           {
             label: "Hold",
             data: sorted.map((row) => row.hold),
-            backgroundColor: "var(--status-critical, #dc3545)",
+            // Matches --status-critical / --status-warning from
+            // website/css/styles.css - Chart.js draws onto a canvas
+            // 2D context, whose fillStyle can't resolve a raw CSS
+            // var(...) string (it silently fails and canvas falls
+            // back to black) - unlike DOM/CSS properties, canvas
+            // needs the color pre-resolved to a literal value. Fixed
+            // 2026-08-26 after the person reported both bars
+            // rendering solid black.
+            backgroundColor: "#A82E30",
             borderRadius: 2,
           },
           {
             label: "MNA",
             data: sorted.map((row) => row.mna),
-            backgroundColor: "var(--status-warning, #f0ad4e)",
+            backgroundColor: "#B87A12",
             borderRadius: 2,
           },
         ],

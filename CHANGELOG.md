@@ -957,3 +957,29 @@ looking at most likely hasn't been regenerated with today's code yet
 material_hold_by_project data to show) - asked him to confirm he's
 redeployed AND re-run the pipeline since receiving today's earlier
 zip.
+
+### 2026-08-26 (later still) - Fixed: Hold & MNA chart bars rendering solid black
+
+The person sent a screenshot: both Hold and MNA bars on the new
+"Hold & MNA by Project" chart rendered solid black instead of
+red/amber (chart WAS otherwise working correctly - confirms the
+redeploy/rerun did happen and the underlying data was fine).
+
+Root cause: website/js/materialHold.js set Chart.js's
+backgroundColor to a raw CSS custom-property string
+("var(--status-critical, #dc3545)"). That works fine for normal DOM/
+CSS properties, but Chart.js draws onto an HTML5 Canvas 2D context,
+and canvas fillStyle can't resolve var(...) - the browser silently
+rejects the assignment and canvas keeps its default fillStyle
+(black). No other file in this codebase passes a raw CSS var()
+string to Chart.js for exactly this reason - every other chart uses
+a literal resolved color.
+
+Fixed: replaced with the literal hex values matching
+website/css/styles.css's actual --status-critical (#A82E30) /
+--status-warning (#B87A12) custom properties, so the chart now uses
+the same visual palette as the rest of the dashboard (age chips,
+KPI cards, the Fabrication Line bottleneck highlight) without
+relying on canvas resolving a CSS variable it can't.
+
+File changed: website/js/materialHold.js only.
