@@ -20,13 +20,39 @@ from typing import Any, Optional
 
 import pandas as pd
 
-# The production calendar's Week 1 always starts on 30th March
-# (e.g. Week 1 = 30 Mar - 5 Apr), running in 7-day blocks through
-# Week 52. Used to label daily activity data for the Fit-Up / Welding
-# / Painting activity charts on the dashboard.
-FISCAL_WEEK_ANCHOR_MONTH = 3
-FISCAL_WEEK_ANCHOR_DAY = 30
+# The production calendar's fiscal Week 1 always starts on a Monday,
+# anchored to 1st April each year (given by the person, 2026-08-27,
+# after correcting an earlier wrong assumption that it was always
+# 30th March): if 1st April falls on Monday/Tuesday/Wednesday, Week 1
+# starts on the Monday of THAT week (on or before 1st April); if it
+# falls on Thursday/Friday/Saturday/Sunday, that week stays the tail
+# end of the PREVIOUS fiscal year (Week 52/53) and Week 1 starts the
+# following Monday instead. His own two examples, both confirmed
+# correct against this rule: 1 Apr 2026 is a Wednesday -> Week 1 =
+# 30 Mar 2026; 1 Apr 2027 is a Thursday -> Week 1 = 5 Apr 2027 (the
+# Monday after, not the one before). See _fiscal_week1_start() below
+# - this replaces a fixed "always 30th March" constant that would
+# have silently been wrong starting FY28.
 FISCAL_WEEKS_PER_CYCLE = 52
+
+
+def _fiscal_week1_start(year: int) -> date:
+    """
+    Given by the person, 2026-08-27 - the exact rule behind which
+    Monday starts fiscal Week 1 for a given year, per his own two
+    worked examples (see the module-level comment above this
+    function). `year` is the calendar year 1st April falls in.
+    """
+
+    april_first = date(year, 4, 1)
+    days_after_monday = april_first.weekday()  # Monday=0 ... Sunday=6
+
+    if days_after_monday <= 2:  # Mon/Tue/Wed - use that week's Monday
+        return april_first - timedelta(days=days_after_monday)
+
+    # Thu/Fri/Sat/Sun - 1st April stays part of the PREVIOUS fiscal
+    # year; Week 1 starts the following Monday instead.
+    return april_first - timedelta(days=days_after_monday) + timedelta(days=7)
 
 
 # ---------------------------------------------------------------
@@ -164,24 +190,22 @@ def add_working_days(start_date: date, working_days: int) -> date:
 def fiscal_week_info(value: date) -> dict[str, Any]:
     """
     Return the fiscal week number (1-52) and week start/end dates
-    for a given calendar date, using the 30th March Week-1 anchor.
+    for a given calendar date, using the person's own Week-1 rule
+    (_fiscal_week1_start() above - anchored to which weekday 1st
+    April falls on, NOT a fixed calendar date, so this correctly
+    handles the anchor moving year to year - e.g. 30th March in
+    FY27, 5th April in FY28).
 
     Dates that fall in the 365th/366th day of the cycle (i.e. past
     Week 52) are folded into Week 52, per the 52-week cycle.
     """
 
-    anchor_this_cycle = date(
-        value.year, FISCAL_WEEK_ANCHOR_MONTH, FISCAL_WEEK_ANCHOR_DAY
-    )
+    anchor_this_cycle = _fiscal_week1_start(value.year)
 
     if value >= anchor_this_cycle:
         anchor = anchor_this_cycle
     else:
-        anchor = date(
-            value.year - 1,
-            FISCAL_WEEK_ANCHOR_MONTH,
-            FISCAL_WEEK_ANCHOR_DAY,
-        )
+        anchor = _fiscal_week1_start(value.year - 1)
 
     days_since_anchor = (value - anchor).days
     week_number = min(
@@ -204,31 +228,29 @@ def week_number_to_start_date(week_number: int, reference: Optional[date] = None
     Inverse of fiscal_week_info(): given a fiscal week number (1-52)
     and a reference date to pick which fiscal cycle it belongs to
     (defaults to today - see below), returns that week's start date
-    (same 30th March Week-1 anchor, same cycle-selection rule).
+    (same Week-1 rule as fiscal_week_info() - see
+    _fiscal_week1_start() - same cycle-selection rule).
 
     The reference date matters because "Week 12" alone is ambiguous
-    across fiscal cycles (each 30th March starts a new Week 1) - this
-    resolves it to whichever cycle the reference date falls in, which
-    is correct for the common case of converting a CURRENT planning
-    workbook's week numbers (both should belong to the same, current
-    cycle - see merge.py -> apply_material_hold_ageing_reduction(),
-    2026-08-26, given by the person: comparing his workbook's "Week
-    Planned" against "Initial Week Planned" to measure how many
-    weeks a spool's schedule slipped due to Hold/MNA).
+    across fiscal cycles (each Week-1 Monday starts a new cycle) -
+    this resolves it to whichever cycle the reference date falls in,
+    which is correct for the common case of converting a CURRENT
+    planning workbook's week numbers (both should belong to the
+    same, current cycle - see merge.py ->
+    apply_material_hold_ageing_reduction(), 2026-08-26, given by the
+    person: comparing his workbook's "Week Planned" against "Initial
+    Week Planned" to measure how many weeks a spool's schedule
+    slipped due to Hold/MNA).
     """
 
     if reference is None:
         reference = today()
 
-    anchor_this_cycle = date(
-        reference.year, FISCAL_WEEK_ANCHOR_MONTH, FISCAL_WEEK_ANCHOR_DAY
-    )
+    anchor_this_cycle = _fiscal_week1_start(reference.year)
     if reference >= anchor_this_cycle:
         anchor = anchor_this_cycle
     else:
-        anchor = date(
-            reference.year - 1, FISCAL_WEEK_ANCHOR_MONTH, FISCAL_WEEK_ANCHOR_DAY
-        )
+        anchor = _fiscal_week1_start(reference.year - 1)
 
     return anchor + timedelta(days=(week_number - 1) * 7)
 

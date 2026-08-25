@@ -1189,3 +1189,44 @@ Open item for the person: whether to fix the Quality dashboard's
 separate, cruder status classifier (affects every rate on that
 dashboard, not just this chart) - not done this session, needs his
 go-ahead first.
+
+### 2026-08-27 - Fixed: fiscal Week 1 anchor was hardcoded to 30th March every year - it actually moves
+
+The person corrected an assumption made throughout this week's
+Material/Hold Status work: "Week 1 is not anchored to 30th March
+every year. It will change every year." The real rule, in his own
+words: "it depends 1st April lies on which day in a week. In this
+year it was on Wednesday so we considered 30th March (Monday of
+that week) as Week 1. Next year 1st April will lie on Thursday so we
+want to keep it part of Week 53 only and new Week 1 (FY28) will
+start from next Monday i.e. 5th April." Confirmed with him precisely
+before building: if 1st April falls Mon/Tue/Wed, Week 1 starts the
+Monday of that same week; if it falls Thu/Fri/Sat/Sun, that week
+stays the tail of the PREVIOUS fiscal year and Week 1 starts the
+following Monday instead.
+
+src/utils.py previously had FISCAL_WEEK_ANCHOR_MONTH=3 / _DAY=30 as
+fixed constants, used by both fiscal_week_info() and week_number_
+to_start_date() - correct for FY26/27's current cycle (which
+genuinely starts 30 March 2026) but would have silently produced
+wrong week numbers starting FY28 (5 April 2027), affecting
+everywhere "Week" is used: the Material/Hold Status ageing reduction
+(src/merge.py, src/production/ageing.py), the two Projects "excl.
+Hold Period" columns (src/ageing.py), and the Quality dashboard's
+Rework Rate "week" granularity (src/quality/summary.py) added
+yesterday.
+
+Fixed: replaced the fixed constants with _fiscal_week1_start(year), a
+proper implementation of the person's rule (1st April's weekday
+determines whether that week's Monday or the following one is
+Week 1). fiscal_week_info() and week_number_to_start_date() now call
+this instead of a hardcoded date - no other file needed changes,
+since every consumer already goes through these two functions.
+
+Tests: tests/test_fiscal_week_anchor.py (7 - both his worked
+examples, both boundary cases of the rule - Monday and Saturday for
+1st April - and confirming week_number_to_start_date() picks the
+correct year's anchor). Full suite: 208 passing (up from 201), same
+23 pre-existing unrelated failures - confirmed today's real dates
+(FY26, anchored 30 March 2026) are completely unaffected by this
+fix, so nothing computed this week needs to be redone.
