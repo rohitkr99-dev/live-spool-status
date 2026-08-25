@@ -336,6 +336,10 @@
           <select id="filter-stage" multiple size="4"></select>
         </div>
         <div class="filter-field">
+          <label for="filter-material-hold-status">Material Hold Status <span class="filter-field__hint">(multi)</span></label>
+          <select id="filter-material-hold-status" multiple size="4"></select>
+        </div>
+        <div class="filter-field">
           <label for="filter-planning">Planning</label>
           <select id="filter-planning">
             <option value="">All</option>
@@ -377,13 +381,13 @@
             <option value="3">Spool No</option>
             <option value="7">Current Stage</option>
             <option value="9">Stage Age</option>
-            <option value="14">SIOP Planned Start Date</option>
-            <option value="15">Actual Start Date</option>
-            <option value="16">Completion Date</option>
-            <option value="17">Inch Dia</option>
-            <option value="18">Total Wt.</option>
-            <option value="19">Surface Area</option>
-            <option value="20">Line History Stage</option>
+            <option value="13">SIOP Planned Start Date</option>
+            <option value="14">Actual Start Date</option>
+            <option value="15">Completion Date</option>
+            <option value="16">Inch Dia</option>
+            <option value="17">Total Wt.</option>
+            <option value="18">Surface Area</option>
+            <option value="19">Line History Stage</option>
           </select>
         </div>
         <div class="filter-field">
@@ -418,7 +422,6 @@
               <th>Total Age (in Days)</th>
               <th>Planned</th>
               <th>Completed</th>
-              <th>Remarks</th>
               <th>SIOP Planned Start Date</th>
               <th title="The date fabrication ageing is actually counted from for this spool - the earliest of Planned Start/First Fit-Up/First Welding, falling back to PDQC/Prod Order Release if none of those are available yet.">Actual Start Date</th>
               <th>Completion Date</th>

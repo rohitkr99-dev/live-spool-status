@@ -219,7 +219,6 @@ const SpoolTables = {
         { data: "Total Age", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
         { data: "Planned", render: this.renderBoolCell() },
         { data: "Completed", render: this.renderBoolCell() },
-        { data: "Remarks", render: this.renderText() },
         { data: "Planned Start", className: "mono-cell", render: this.renderDate() },
         { data: "Actual Start Date", className: "mono-cell", render: this.renderDate() },
         { data: "Completion Date", className: "mono-cell", render: this.renderDate() },
@@ -231,7 +230,7 @@ const SpoolTables = {
       ],
       language: {
         search: "",
-        searchPlaceholder: "Search project, drawing, spool, material, group, remarks…",
+        searchPlaceholder: "Search project, drawing, spool, material, group…",
         info: "Showing _START_–_END_ of _TOTAL_ spools",
         infoEmpty: "No spools match these filters",
         infoFiltered: "(filtered from _MAX_ total)",
@@ -359,6 +358,7 @@ const SpoolTables = {
     this.populateFilterDropdown("filter-stage", SPOOL_STATUS_CONFIG.stageOrder.filter(
       (s) => SpoolData.distinctValues("Current Stage").includes(s)
     ));
+    this.populateFilterDropdown("filter-material-hold-status", SpoolData.distinctValues("Material Hold Status"));
 
     // Multi-select filters: each dropdown allows any number of
     // selected values, matched as an OR (regex alternation) against
@@ -370,6 +370,7 @@ const SpoolTables = {
       "filter-group": 5,
       "filter-material": 4,
       "filter-stage": 7,
+      "filter-material-hold-status": 20,
     };
 
     for (const [selectId, colIndex] of Object.entries(columnIndex)) {

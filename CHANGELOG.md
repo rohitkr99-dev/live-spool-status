@@ -923,3 +923,37 @@ Production's ageing calculations (src/production/ageing.py) - the
 person asked to be walked through the design options before this
 gets built; see the conversation for that discussion, nothing
 implemented yet.
+
+### 2026-08-26 (later same day) - Remarks column removed, Material Hold Status filter added
+
+Given by the person: "please add a filter option of Material Hold
+Status column in the List... You can also remove the column named
+Remarks from this list as it doesn't hold any importance."
+
+website/dashboard.html + website/js/tables.js:
+- Removed the "Remarks" column entirely from the All Spools table
+  (both the <th> header and its DataTables column definition) -
+  every column index after it shifted down by 1 accordingly (sort-by
+  dropdown options, Material Hold Status's filter column index).
+- Added a new "Material Hold Status" multi-select filter dropdown to
+  the filter bar (same pattern as the existing Group/Material/Stage
+  filters), wired to column index 20 (where Material Hold Status
+  landed after Remarks's removal).
+- Search placeholder text updated to drop the now-gone "remarks"
+  mention.
+
+Verified header count (21) matches column definition count (21)
+exactly via a real HTML parser + regex extraction, both before and
+after the edit - not just eyeballed.
+
+Separately investigated why the person reported the Material Hold
+Status column showing blank and the new chart not rendering: re-ran
+the actual merge code (apply_material_hold_status(), same code
+delivered earlier today) against his real uploaded Weekly Production
+Planning file end-to-end in isolation - it correctly normalizes
+flagged spools to Hold/MNA. Concluded the live dashboard he's
+looking at most likely hasn't been regenerated with today's code yet
+(the old bundle simply has no Material Hold Status / 
+material_hold_by_project data to show) - asked him to confirm he's
+redeployed AND re-run the pipeline since receiving today's earlier
+zip.
