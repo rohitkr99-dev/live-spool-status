@@ -1016,3 +1016,126 @@ already follows) - CHANGELOG entries for JS-file changes should
 call this out explicitly so it isn't missed.
 
 File changed: website/dashboard.html only (script tag query params).
+
+### 2026-08-26 (later still x3) - Material/Hold Status ageing reduction: Week Planned vs Initial Week Planned gap
+
+Given by the person, in his own words: "in the Weekly Production
+Planning file, there is a column CB 'Initial Week Planned' and there
+is a column BT 'Week Planned'. What I do is first I keep both the
+columns same when adding the spool for the first time... Now if a
+spool comes under MNA/Hold category and it gets cleared after some
+days/weeks, I change only column BT while keeping column CB
+unchanged... if initial week is Week 10 and changed week is Week 12,
+then there is a gap of 14 days (or 10 working days). You can reduce
+the ageing days using this method. In case if subtraction results in
+negative, make it zero."
+
+Verified his week numbering matches the fiscal week system already
+built into this repo (52-week cycle anchored 30th March -
+utils.fiscal_week_info()) with a 100% match rate cross-checked
+against his real uploaded Weekly Production Planning file's actual
+Planned Start dates - so week numbers convert to real calendar dates
+reliably, and from there to a working-day gap using the same
+holiday-aware calculator (utils.working_day_variance(), config/
+holidays.json) every other ageing figure in this app already uses -
+not a flat 5-days-per-week guess. Flagged to him that this makes his
+own hand-worked example (14 calendar days -> 10 working days)
+resolve to 9 in practice, since June 3rd 2026 is a configured
+company holiday inside that specific date range - more accurate, not
+a bug.
+
+Added:
+- src/utils.py: week_number_to_start_date() (inverse of
+  fiscal_week_info()) and material_hold_working_days_lost() - the
+  single shared implementation of the whole calculation, used by
+  BOTH dashboards so a given week gap means the same number of days
+  lost either way.
+- config/column_mapping.json: raw header "Initial Week Planned"
+  mapped explicitly (identity mapping, for resilience to minor
+  header text variation).
+- src/constants.py: INITIAL_WEEK_PLANNED, MATERIAL_HOLD_WORKING_
+  DAYS_LOST.
+- src/merge.py: apply_material_hold_ageing_reduction() (Projects
+  pipeline) - computes the per-spool figure, wired into
+  MergeEngine.merge() right after apply_material_hold_status().
+- src/production/ageing.py: build_spool_records() builds its own
+  material-hold-days-lost lookup directly from master_planning_df
+  (Production's pipeline never goes through MergeEngine.merge() at
+  all, so the Projects-side fix alone would not have reached
+  Production ageing) - subtracted from current_age_days only
+  (floored at 0, per his explicit instruction), NOT from individual
+  stage_actual_days entries, since this is a single flat number with
+  no real start/end dates behind it (unlike the Rework Hold ledger),
+  so it can't be attributed to one specific stage the way a real
+  dated Hold period can - flagged as a known limitation. New
+  material_hold_days_lost field added to SpoolRecord for visibility.
+
+Scope, per his own original wording ("reduce ageing days... from
+Production ageing"): Production dashboard only - Projects' Total Age
+is untouched by this feature.
+
+Tests: tests/test_material_hold_ageing_reduction.py (5, the merge.py
+side), tests/test_production_material_hold_ageing.py (4, the
+Production side, including the floor-at-zero case and a missing-
+columns safe no-op) - 9 new, all passing. Full suite: 190 passing (up
+from 181), same ~23 pre-existing date-dependent failures as every
+prior session - reconfirmed via a fresh side-by-side run against an
+untouched copy of the repo, which now happens to fail a different
+ROTATING subset of tests (test_ageing.py's Total Age/Stage Age tests
+this time, not the previous session's test_summary.py set) since
+real time has moved on since this repo was last touched - same
+underlying flakiness (hardcoded "N calendar days ago = N working
+days" assumptions), not a new issue.
+
+### 2026-08-26 (later still x4) - Two new columns on Projects list: Total/Stage Age (excl. Hold Period)
+
+Given by the person: "in the list in Projects page, lets add 2 more
+column showing Total Age (excl Hold Period) & Stage age (excl. Hold
+Period)... 1st will be Total Age (current existing column), 2nd will
+be Total age (excl. Hold Period), 3rd will be Stage age (current
+existing column), 4th will be Stage age (excl Hold Period)". When
+asked which Hold source these should subtract, he chose: only the
+Material/Hold Status Week-gap figure (Week Planned vs Initial Week
+Planned - 2026-08-26 earlier today), explicitly NOT the Rework Data
+workbook's Hold ledger.
+
+Since he wanted Total Age listed before Stage Age (they were the
+other way round before), this also REORDERED the two existing
+columns, not just inserted two new ones - every column index after
+that point on the All Spools table shifted, so every index-dependent
+reference needed updating: the default sort ([[10,"desc"]] ->
+[[9,"desc"]]), the Stage/Total Age numeric range filters
+(AGE_COLUMNS), the Planning/Status dropdown filters, the Material
+Hold Status filter added earlier today, and every "Sort by" dropdown
+option after Stage Age - plus two new sort options added for the new
+columns themselves. Verified the final 23-header/23-column table
+lines up exactly via a real HTML parser (not just eyeballed),
+matching the same verification method used for every column-index
+change this session.
+
+Added:
+- src/constants.py: TOTAL_AGE_EXCL_HOLD, STAGE_AGE_EXCL_HOLD
+- src/ageing.py: AgeingEngine._exclude_material_hold_days() -
+  subtracts MATERIAL_HOLD_WORKING_DAYS_LOST (the same per-spool
+  figure already computed by merge.py -> apply_material_hold_
+  ageing_reduction(), which already runs as part of the Projects
+  pipeline) from both Total Age and Stage Age, floored at 0. Same
+  known limitation as the Production-side version: a single flat
+  number, not attributable to one specific stage the way a real
+  dated Hold period is.
+- src/summary.py: both new fields added to generate_master_spools()'s
+  optional-field list (master_spools.json)
+- website/js/tables.js + website/dashboard.html: reordered/added
+  columns, updated every index-dependent reference listed above;
+  tables.js's cache-busting version bumped to ?v=20260826b
+
+Tests: tests/test_ageing_material_hold_exclusion.py (6, including
+the apply()-level end-to-end check). Full suite: 196 passing (up
+from 190), same ~23 pre-existing date-dependent failures as every
+prior session.
+
+Per his instruction to include the previous chat's change in this
+same delivery: this zip also contains everything from the earlier
+2026-08-26 ageing-reduction delivery (src/utils.py, src/merge.py,
+config/column_mapping.json, src/production/ageing.py and their
+tests) so this is a complete, standalone package.

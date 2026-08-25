@@ -374,20 +374,22 @@
         <div class="filter-field">
           <label for="sort-field">Sort by</label>
           <select id="sort-field">
-            <option value="10">Total Age</option>
+            <option value="9">Total Age</option>
+            <option value="10">Total Age (excl. Hold Period)</option>
             <option value="0">Project Name</option>
             <option value="1">Project Code</option>
             <option value="2">Drawing No</option>
             <option value="3">Spool No</option>
             <option value="7">Current Stage</option>
-            <option value="9">Stage Age</option>
-            <option value="13">SIOP Planned Start Date</option>
-            <option value="14">Actual Start Date</option>
-            <option value="15">Completion Date</option>
-            <option value="16">Inch Dia</option>
-            <option value="17">Total Wt.</option>
-            <option value="18">Surface Area</option>
-            <option value="19">Line History Stage</option>
+            <option value="11">Stage Age</option>
+            <option value="12">Stage Age (excl. Hold Period)</option>
+            <option value="15">SIOP Planned Start Date</option>
+            <option value="16">Actual Start Date</option>
+            <option value="17">Completion Date</option>
+            <option value="18">Inch Dia</option>
+            <option value="19">Total Wt.</option>
+            <option value="20">Surface Area</option>
+            <option value="21">Line History Stage</option>
           </select>
         </div>
         <div class="filter-field">
@@ -418,8 +420,10 @@
               <th>Week</th>
               <th>Current Stage</th>
               <th>Status Message</th>
-              <th>Stage Age (in Days)</th>
               <th>Total Age (in Days)</th>
+              <th title="Total Age minus the Material/Hold Status Week-gap figure (Week Planned vs Initial Week Planned on the Weekly Production Planning workbook) - see CHANGELOG.md for the full method.">Total Age (excl. Hold Period)</th>
+              <th>Stage Age (in Days)</th>
+              <th title="Stage Age minus the same Material/Hold Status Week-gap figure as Total Age (excl. Hold Period).">Stage Age (excl. Hold Period)</th>
               <th>Planned</th>
               <th>Completed</th>
               <th>SIOP Planned Start Date</th>
@@ -505,7 +509,7 @@
 <script src="js/materialHold.js?v=20260826"></script>
 <script src="js/stageThroughput.js?v=20260826"></script>
 <script src="js/stageAgeing.js?v=20260826"></script>
-<script src="js/tables.js?v=20260826"></script>
+<script src="js/tables.js?v=20260826b"></script>
 <script src="js/app.js?v=20260826"></script>
 <script src="js/pdfExport.js?v=20260826"></script>
 

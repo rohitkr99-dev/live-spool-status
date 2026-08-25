@@ -200,7 +200,7 @@ const SpoolTables = {
       deferRender: true,
       pageLength: 25,
       lengthMenu: [10, 25, 50, 100, 250],
-      order: [[10, "desc"]], // Total Age desc by default
+      order: [[9, "desc"]], // Total Age desc by default
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("All Spools"),
       scrollX: true,
@@ -215,8 +215,10 @@ const SpoolTables = {
         { data: "Week", render: this.renderText() },
         { data: "Current Stage", render: this.renderStage() },
         { data: "Status Message", render: this.renderText() },
-        { data: "Stage Age", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
         { data: "Total Age", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
+        { data: "Total Age (excl. Hold Period)", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
+        { data: "Stage Age", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
+        { data: "Stage Age (excl. Hold Period)", className: "mono-cell", render: (d, type) => (type === "display" ? this.renderAgeChip(d) : d) },
         { data: "Planned", render: this.renderBoolCell() },
         { data: "Completed", render: this.renderBoolCell() },
         { data: "Planned Start", className: "mono-cell", render: this.renderDate() },
@@ -370,7 +372,7 @@ const SpoolTables = {
       "filter-group": 5,
       "filter-material": 4,
       "filter-stage": 7,
-      "filter-material-hold-status": 20,
+      "filter-material-hold-status": 22,
     };
 
     for (const [selectId, colIndex] of Object.entries(columnIndex)) {
@@ -386,13 +388,13 @@ const SpoolTables = {
     document.getElementById("filter-planning").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Planned" ? "^Yes$" : "^No$");
-      this.dt.all.column(11).search(search, true, false).draw();
+      this.dt.all.column(13).search(search, true, false).draw();
     });
 
     document.getElementById("filter-status").addEventListener("change", (event) => {
       const value = event.target.value;
       const search = value === "" ? "" : (value === "Completed" ? "^Yes$" : "^No$");
-      this.dt.all.column(12).search(search, true, false).draw();
+      this.dt.all.column(14).search(search, true, false).draw();
     });
 
     // Numerical range filters for Stage Age / Total Age (both in
@@ -440,7 +442,7 @@ const SpoolTables = {
    */
   setupNumericRangeFilters() {
 
-    const AGE_COLUMNS = { stage: 9, total: 10 };
+    const AGE_COLUMNS = { stage: 11, total: 9 };
 
     $.fn.dataTable.ext.search.push((settings, searchData) => {
 

@@ -36,7 +36,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
-from utils import create_composite_key, days_between, is_empty, parse_date, today
+from utils import (
+    create_composite_key,
+    days_between,
+    is_empty,
+    material_hold_working_days_lost,
+    parse_date,
+    today,
+)
 import hold_ledger
 from production.classify import classify_category
 from welding_finish import determine_welding_finish
@@ -80,6 +87,14 @@ class SpoolRecord:
     is_complete: bool = False
     is_delayed: bool = False
     currently_on_hold: bool = False
+
+    # From the Weekly Production Planning workbook's "Week Planned"
+    # vs "Initial Week Planned" gap (2026-08-26, given by the
+    # person) - see utils.material_hold_working_days_lost(). Already
+    # subtracted from current_age_days/stage_actual_days below;
+    # exposed here too so it's visible on the record itself, same
+    # spirit as currently_on_hold.
+    material_hold_days_lost: int = 0
     target_days: dict[str, int] = field(default_factory=dict)
     material: str = ""
     spool_size: float | None = None
@@ -122,6 +137,8 @@ def build_spool_records(
 
     planned_start_lookup: dict[str, date] = {}
     planned_start_source: dict[str, str] = {}
+    material_hold_days_lost_lookup: dict[str, int] = {}
+    reference_today = today()
     for row_dict in master_planning_df.to_dict(orient="records"):
         ck = create_composite_key(
             row_dict.get("Project Code"),
@@ -132,6 +149,14 @@ def build_spool_records(
         if planned_start is not None:
             planned_start_lookup[ck] = planned_start
             planned_start_source[ck] = "weekly"
+
+        days_lost = material_hold_working_days_lost(
+            row_dict.get("Initial Week Planned"),
+            row_dict.get("Week"),
+            reference_today,
+        )
+        if days_lost:
+            material_hold_days_lost_lookup[ck] = days_lost
 
     # SIOP fallback: only fills a gap the Master Planning Sheet left
     # blank, never overrides it - see config/production_rules.json ->
@@ -213,6 +238,7 @@ def build_spool_records(
         )
 
         record.currently_on_hold = hold_ledger.is_currently_on_hold(hold_store, ck)
+        record.material_hold_days_lost = material_hold_days_lost_lookup.get(ck, 0)
 
         # Which stages actually apply to this spool's category - the 5
         # standard ones for every category except an entry in
@@ -257,6 +283,18 @@ def build_spool_records(
                 )
                 record.current_age_days = max(raw_current_age - held_current, 0)
                 target_for_position = target_days.get(current_stage)
+
+            # Material/Hold Status ageing reduction (2026-08-26, given
+            # by the person - see utils.material_hold_working_days_lost()).
+            # Unlike the Rework Hold ledger above, this is a single flat
+            # number with no real start/end dates behind it, so it can
+            # only reduce the overall current_age_days figure - it can't
+            # be attributed to one specific stage's stage_actual_days the
+            # way a real dated Hold period can.
+            if record.current_age_days is not None and record.material_hold_days_lost:
+                record.current_age_days = max(
+                    record.current_age_days - record.material_hold_days_lost, 0
+                )
 
             if target_for_position is not None and record.current_age_days is not None:
                 record.is_delayed = record.current_age_days > target_for_position

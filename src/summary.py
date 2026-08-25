@@ -99,8 +99,10 @@ from constants import (
     REMARKS,
     SPOOL_NO,
     STAGE_AGE,
+    STAGE_AGE_EXCL_HOLD,
     STATUS_MESSAGE,
     TOTAL_AGE,
+    TOTAL_AGE_EXCL_HOLD,
     TOTAL_JOINTS,
     WEEK,
 )
@@ -345,6 +347,7 @@ class SummaryEngine:
         for optional_field in (
             "Prod Order Release", "Inch Dia", "Total Wt.", "Surface Area Out",
             "Line History Stage", MATERIAL_HOLD_STATUS,
+            TOTAL_AGE_EXCL_HOLD, STAGE_AGE_EXCL_HOLD,
         ):
             if optional_field in dataframe.columns:
                 columns.append(optional_field)

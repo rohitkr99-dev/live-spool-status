@@ -47,8 +47,10 @@ from constants import (
     LH_LAST_WELDING_FRUN,
     LH_WELDING_AGE,
     LINE_HISTORY_STAGE,
+    INITIAL_WEEK_PLANNED,
     MATERIAL_HOLD_STATUS,
     MATERIAL_HOLD_STATUS_RAW,
+    MATERIAL_HOLD_WORKING_DAYS_LOST,
     PDQC,
     PLANNED_START,
     PROJECT_CODE,
@@ -63,7 +65,14 @@ from welding_finish import (
 )
 from logger import logger
 from rework_pdqc_rule import apply_rework_pdqc_rule
-from utils import create_composite_key, is_empty, parse_date, working_day_variance
+from utils import (
+    create_composite_key,
+    is_empty,
+    material_hold_working_days_lost,
+    parse_date,
+    today,
+    working_day_variance,
+)
 
 
 class MergeEngine:
@@ -515,6 +524,71 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def apply_material_hold_ageing_reduction(self, master: pd.DataFrame) -> pd.DataFrame:
+        """
+        Given by the person, 2026-08-26, in his own words: "in the
+        Weekly Production Planning file, there is a column CB
+        'Initial Week Planned' and there is a column BT 'Week
+        Planned'. What I do is first I keep both the columns same
+        when adding the spool for the first time... Now if a spool
+        comes under MNA/Hold category and it gets cleared after some
+        days/weeks, I change only column BT while keeping column CB
+        unchanged... Let us use this phenomena to reduce ageing...
+        if initial week is Week 10 and changed week is Week 12, then
+        there is a gap of 14 days (or 10 working days). You can
+        reduce the ageing days using this method. In case if
+        subtraction results in negative, make it zero."
+
+        Computes MATERIAL_HOLD_WORKING_DAYS_LOST per spool: the
+        working-day gap between the two week numbers, using the
+        SAME fiscal week system already used everywhere else in this
+        repo (utils.fiscal_week_info() / week_number_to_start_date())
+        and the SAME holiday-aware working-day calculator
+        (utils.working_day_variance()) - not a flat 5-days-per-week
+        estimate, so it can differ slightly from a hand-calculated
+        example if a company holiday (config/holidays.json) falls
+        inside that date range. Floors at 0 (a spool whose Week
+        Planned somehow precedes its Initial Week Planned - shouldn't
+        normally happen - never produces a negative/credit).
+
+        This number is NOT date-anchored the way the Rework Hold
+        ledger's periods are (hold_ledger.py) - it's a single total,
+        not a start/end pair - so consuming code (see
+        src/production/ageing.py) can only subtract it from a
+        spool's overall current age, not attribute it to one
+        specific stage's individual actual-days figure the way a
+        real Hold period can.
+
+        No-op (adds nothing) if WEEK or INITIAL_WEEK_PLANNED wasn't
+        present this run - e.g. an older Weekly Production Planning
+        workbook, or this spool's Composite Key wasn't found there.
+        """
+
+        if "Week" not in master.columns or INITIAL_WEEK_PLANNED not in master.columns:
+            return master
+
+        reference = today()
+        master[MATERIAL_HOLD_WORKING_DAYS_LOST] = master.apply(
+            lambda row: material_hold_working_days_lost(
+                row.get(INITIAL_WEEK_PLANNED), row.get("Week"), reference
+            ),
+            axis=1,
+        )
+
+        affected = int((master[MATERIAL_HOLD_WORKING_DAYS_LOST].fillna(0) > 0).sum())
+        if affected:
+            logger.info(
+                f"Material/Hold ageing reduction: {affected} spool(s) had "
+                "their Week Planned moved later than their Initial Week "
+                "Planned - working days lost computed for each, to be "
+                "subtracted from Production ageing "
+                "(src/production/ageing.py)."
+            )
+
+        return master
+
+    # -----------------------------------------------------
+
     def apply_siop_fallback(
         self,
         master: pd.DataFrame,
@@ -932,6 +1006,7 @@ class MergeEngine:
             "Planned Start",
             "Group",
             MATERIAL_HOLD_STATUS_RAW,
+            INITIAL_WEEK_PLANNED,
         ]
         planning_columns = [
             column for column in planning_columns
@@ -945,6 +1020,7 @@ class MergeEngine:
         )
 
         master = self.apply_material_hold_status(master)
+        master = self.apply_material_hold_ageing_reduction(master)
 
         master = self.apply_siop_fallback(master, siop_planned)
 

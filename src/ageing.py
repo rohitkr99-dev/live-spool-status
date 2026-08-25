@@ -65,6 +65,7 @@ everything comes from config/stages.json and config/business_rules.json.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 import pandas as pd
 
@@ -77,8 +78,11 @@ from constants import (
     COMPOSITE_KEY,
     CURRENT_STAGE,
     LH_WELDING_AGE,
+    MATERIAL_HOLD_WORKING_DAYS_LOST,
     STAGE_AGE,
+    STAGE_AGE_EXCL_HOLD,
     TOTAL_AGE,
+    TOTAL_AGE_EXCL_HOLD,
 )
 from logger import logger
 from utils import days_between, parse_date, today
@@ -191,9 +195,23 @@ class AgeingEngine:
                 axis=1,
             )
 
+            dataframe[TOTAL_AGE_EXCL_HOLD] = dataframe.apply(
+                lambda row: self._exclude_material_hold_days(
+                    row, row[TOTAL_AGE]
+                ),
+                axis=1,
+            )
+
         if self.calculate_stage_age_enabled:
             dataframe[STAGE_AGE] = dataframe.apply(
                 self.determine_stage_age,
+                axis=1,
+            )
+
+            dataframe[STAGE_AGE_EXCL_HOLD] = dataframe.apply(
+                lambda row: self._exclude_material_hold_days(
+                    row, row[STAGE_AGE]
+                ),
                 axis=1,
             )
 
@@ -280,6 +298,34 @@ class AgeingEngine:
             self._hold_store, composite_key, window_start, window_end
         )
         return max(raw_days - held_days, 0)
+
+    def _exclude_material_hold_days(self, row: pd.Series, raw_days) -> Optional[int]:
+        """
+        Given by the person, 2026-08-26 - his explicit choice when
+        asked which Hold source these two new columns should
+        reflect: ONLY the Material/Hold Status Week-gap figure
+        (MATERIAL_HOLD_WORKING_DAYS_LOST, from src/merge.py ->
+        apply_material_hold_ageing_reduction() - the Week Planned vs
+        Initial Week Planned gap on the Weekly Production Planning
+        workbook), NOT the Rework Data workbook's Hold ledger
+        (hold_ledger.py / _subtract_hold_days() above - that one
+        still only affects Production's ageing, unchanged by this).
+
+        A single flat number, not a dated window like the Hold
+        ledger - so it subtracts the same amount from Total Age and
+        Stage Age alike, floored at 0, rather than being attributed
+        to whichever stage the delay actually happened in (same
+        known limitation as the Production-side version of this).
+        """
+
+        if raw_days is None:
+            return None
+
+        days_lost = row.get(MATERIAL_HOLD_WORKING_DAYS_LOST)
+        if days_lost is None or (isinstance(days_lost, float) and pd.isna(days_lost)):
+            return raw_days
+
+        return max(raw_days - days_lost, 0)
 
     # -----------------------------------------------------
 

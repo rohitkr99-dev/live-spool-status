@@ -16,7 +16,7 @@ import json
 import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -197,6 +197,93 @@ def fiscal_week_info(value: date) -> dict[str, Any]:
         "week_start": week_start,
         "week_end": week_end,
     }
+
+
+def week_number_to_start_date(week_number: int, reference: Optional[date] = None) -> date:
+    """
+    Inverse of fiscal_week_info(): given a fiscal week number (1-52)
+    and a reference date to pick which fiscal cycle it belongs to
+    (defaults to today - see below), returns that week's start date
+    (same 30th March Week-1 anchor, same cycle-selection rule).
+
+    The reference date matters because "Week 12" alone is ambiguous
+    across fiscal cycles (each 30th March starts a new Week 1) - this
+    resolves it to whichever cycle the reference date falls in, which
+    is correct for the common case of converting a CURRENT planning
+    workbook's week numbers (both should belong to the same, current
+    cycle - see merge.py -> apply_material_hold_ageing_reduction(),
+    2026-08-26, given by the person: comparing his workbook's "Week
+    Planned" against "Initial Week Planned" to measure how many
+    weeks a spool's schedule slipped due to Hold/MNA).
+    """
+
+    if reference is None:
+        reference = today()
+
+    anchor_this_cycle = date(
+        reference.year, FISCAL_WEEK_ANCHOR_MONTH, FISCAL_WEEK_ANCHOR_DAY
+    )
+    if reference >= anchor_this_cycle:
+        anchor = anchor_this_cycle
+    else:
+        anchor = date(
+            reference.year - 1, FISCAL_WEEK_ANCHOR_MONTH, FISCAL_WEEK_ANCHOR_DAY
+        )
+
+    return anchor + timedelta(days=(week_number - 1) * 7)
+
+
+def material_hold_working_days_lost(
+    initial_week_raw: Any,
+    current_week_raw: Any,
+    reference: Optional[date] = None,
+) -> Optional[int]:
+    """
+    Given the Weekly Production Planning workbook's "Initial Week
+    Planned" and "Week Planned" text values (e.g. "Week 10",
+    "Week 12"), returns the working-day gap between them, floored at
+    0 - or None if either is missing/unparseable.
+
+    Given by the person, 2026-08-26, in his own words: "I keep both
+    the columns same when adding the spool for the first time...
+    Now if a spool comes under MNA/Hold category and it gets cleared
+    after some days/weeks, I change only column BT [Week Planned]
+    while keeping column CB [Initial Week Planned] unchanged... if
+    initial week is Week 10 and changed week is Week 12, then there
+    is a gap of 14 days (or 10 working days). You can reduce the
+    ageing days using this method. In case if subtraction results in
+    negative, make it zero."
+
+    Uses week_number_to_start_date() (same fiscal week system
+    already used everywhere in this repo) and working_day_variance()
+    (same holiday calendar as every other ageing figure) - not a
+    flat 5-days-per-week estimate, so the result can differ slightly
+    from a hand-calculated example if a company holiday
+    (config/holidays.json) falls inside that date range.
+
+    Single shared implementation for both dashboards - called from
+    src/merge.py (Projects, via MergeEngine.
+    apply_material_hold_ageing_reduction()) and
+    src/production/ageing.py (Production, via build_spool_records())
+    - so a "Week 10 -> Week 12" gap means the same number of days
+    lost on both.
+    """
+
+    def _week_number(raw) -> Optional[int]:
+        if is_empty(raw):
+            return None
+        match = re.search(r"\d+", str(raw))
+        return int(match.group()) if match else None
+
+    initial = _week_number(initial_week_raw)
+    current = _week_number(current_week_raw)
+    if initial is None or current is None:
+        return None
+
+    resolved_reference = reference if reference is not None else today()
+    initial_start = week_number_to_start_date(initial, resolved_reference)
+    current_start = week_number_to_start_date(current, resolved_reference)
+    return max(working_day_variance(initial_start, current_start) or 0, 0)
 
 
 def is_empty(value: Any) -> bool:

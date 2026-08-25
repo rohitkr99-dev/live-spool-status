@@ -38,6 +38,21 @@ TOTAL_JOINTS = "Total Joints"
 MATERIAL_HOLD_STATUS_RAW = "Material Hold Status Raw"
 MATERIAL_HOLD_STATUS = "Material Hold Status"
 
+# From the same Master Planning Sheet, columns BT "Week Planned"
+# (already WEEK below) and CB "Initial Week Planned" - his own
+# manual convention (given 2026-08-26, in his own words): "I keep
+# both the columns same when adding the spool for the first time...
+# if a spool comes under MNA/Hold category and it gets cleared after
+# some days/weeks, I change only column BT while keeping column CB
+# unchanged." The gap between them, converted from fiscal week
+# numbers to real calendar dates (utils.week_number_to_start_date())
+# and then to working days (utils.working_day_variance(), same
+# holiday calendar as every other ageing figure), is how many
+# working days a spool's schedule slipped due to Hold/MNA - see
+# merge.py -> apply_material_hold_ageing_reduction().
+INITIAL_WEEK_PLANNED = "Initial Week Planned"
+MATERIAL_HOLD_WORKING_DAYS_LOST = "Material Hold Working Days Lost"
+
 PLANNED_START = "Planned Start"
 ACTUAL_START_DATE = "Actual Start Date"
 FIRST_FITUP = "First Fit-Up"
@@ -111,6 +126,16 @@ NEXT_STAGE = "Next Stage"
 
 TOTAL_AGE = "Total Age"
 STAGE_AGE = "Stage Age"
+
+# Given by the person, 2026-08-26: two extra columns on the Projects
+# spool list, each of these minus the Material/Hold Status Week-gap
+# figure (MATERIAL_HOLD_WORKING_DAYS_LOST above) - the same flat
+# reduction already applied to Production ageing, now also on
+# Projects' Total Age and Stage Age. Deliberately excludes the
+# Rework Data workbook's Hold ledger (hold_ledger.py) - his explicit
+# choice when asked which Hold source these columns should reflect.
+TOTAL_AGE_EXCL_HOLD = "Total Age (excl. Hold Period)"
+STAGE_AGE_EXCL_HOLD = "Stage Age (excl. Hold Period)"
 
 STATUS_MESSAGE = "Status Message"
 
