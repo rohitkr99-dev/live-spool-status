@@ -46,6 +46,7 @@ const SpoolApp = {
     SpoolStageThroughput.render(store);
     SpoolStageAgeing.render(store);
     SpoolSCurve.render(store);
+    SpoolMaterialHold.render(store.dashboardSummary);
 
     if (isReload) {
       SpoolTables.destroyAll();

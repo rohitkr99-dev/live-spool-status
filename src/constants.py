@@ -21,6 +21,23 @@ COMPOSITE_KEY = "Composite Key"
 MATERIAL = "Material"
 TOTAL_JOINTS = "Total Joints"
 
+# From the Weekly Production Planning workbook's Master Planning
+# Sheet, column BJ "Material/Hold Status" (given by the person,
+# 2026-08-26 - found via his own question "Didn't you map Column BJ
+# 'Material/Hold Status'?", not previously read by the pipeline at
+# all). Raw values seen: "1. Confirm from Production" (the default/
+# normal state - not flagged), "2. MNA Spool" (Material Not
+# Available), "3. Hold Spool". MATERIAL_HOLD_STATUS_RAW is that text
+# as-is; MATERIAL_HOLD_STATUS is normalized to "MNA" / "Hold" / None
+# (see merge.py -> apply_material_hold_status()) for display and for
+# ageing-day subtraction. This is a SEPARATE signal from the Rework
+# Data workbook's Hold status (hold_ledger.py / REWORK_LATEST_STATUS)
+# - a spool can be MNA/Hold here without ever appearing in the
+# Rework workbook at all, since this reflects Production's own
+# material/scheduling status, not QC's inspection status.
+MATERIAL_HOLD_STATUS_RAW = "Material Hold Status Raw"
+MATERIAL_HOLD_STATUS = "Material Hold Status"
+
 PLANNED_START = "Planned Start"
 ACTUAL_START_DATE = "Actual Start Date"
 FIRST_FITUP = "First Fit-Up"

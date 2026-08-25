@@ -36,6 +36,29 @@ const SpoolTables = {
       : '<span class="bool-no">No</span>';
   },
 
+  /**
+   * Weekly Production Planning workbook's Master Planning Sheet
+   * column BJ, "Material/Hold Status" - normalized in
+   * src/merge.py -> apply_material_hold_status() to "Hold" / "MNA" /
+   * blank (2026-08-26, given by the person). Reuses the same
+   * warning/critical age-chip colors for visual consistency: Hold
+   * in the "critical" red (matches Rework/Hold treatment elsewhere
+   * on this dashboard), MNA in the "warn" amber (a different, less
+   * severe kind of blocked).
+   */
+  renderMaterialHoldStatusDisplay(value) {
+    if (value === "Hold") return '<span class="age-chip age-chip--critical">Hold</span>';
+    if (value === "MNA") return '<span class="age-chip age-chip--warn">MNA</span>';
+    return '<span class="bool-no">—</span>';
+  },
+
+  renderMaterialHoldStatus() {
+    return this.typeAware(
+      (d) => this.renderMaterialHoldStatusDisplay(d),
+      (d) => (d === null || d === undefined ? "" : d),
+    );
+  },
+
   renderTextDisplay(value) {
     if (value === null || value === undefined || value === "") {
       return '<span class="bool-no">—</span>';
@@ -204,6 +227,7 @@ const SpoolTables = {
         { data: "Total Wt.", className: "mono-cell", render: this.renderNumber() },
         { data: "Surface Area Out", className: "mono-cell", render: this.renderNumber(3) },
         { data: "Line History Stage", render: this.renderText() },
+        { data: "Material Hold Status", render: this.renderMaterialHoldStatus() },
       ],
       language: {
         search: "",

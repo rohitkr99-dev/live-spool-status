@@ -87,6 +87,7 @@ from constants import (
     FIRST_ACTIVITY_DATE,
     GROUP,
     LAST_ACTIVITY_DATE,
+    MATERIAL_HOLD_STATUS,
     NEXT_STAGE,
     PACKING,
     PDQC,
@@ -343,7 +344,7 @@ class SummaryEngine:
         # between Inch Dia and Surface Area Out.
         for optional_field in (
             "Prod Order Release", "Inch Dia", "Total Wt.", "Surface Area Out",
-            "Line History Stage",
+            "Line History Stage", MATERIAL_HOLD_STATUS,
         ):
             if optional_field in dataframe.columns:
                 columns.append(optional_field)
@@ -456,6 +457,31 @@ class SummaryEngine:
                     hold_by_project_stage[project_label].get(stage_label, 0) + 1
                 )
 
+        # "Hold & MNA data project wise" (2026-08-26, per the person:
+        # "add 1 chart in Projects page below S-curve chart showing
+        # this Hold & MNA data project wise") - from the Weekly
+        # Production Planning workbook's Material/Hold Status column
+        # (src/merge.py -> apply_material_hold_status()), a SEPARATE
+        # signal from the Rework Data workbook's Hold status above -
+        # a spool can be flagged here without ever being in the
+        # Rework workbook at all. Every project with at least one
+        # Hold or MNA spool is included, even ones with zero of the
+        # other category (the chart renders a 0-height segment for
+        # whichever's missing).
+        material_hold_by_project: dict[str, dict[str, int]] = {}
+        if MATERIAL_HOLD_STATUS in dataframe.columns:
+            flagged_mask = dataframe[MATERIAL_HOLD_STATUS].notna()
+            if flagged_mask.any():
+                flagged_rows = dataframe.loc[flagged_mask, [PROJECT_NAME, MATERIAL_HOLD_STATUS]]
+                for project_name, status in zip(
+                    flagged_rows[PROJECT_NAME], flagged_rows[MATERIAL_HOLD_STATUS]
+                ):
+                    project_label = str(project_name) if not is_empty(project_name) else "(Unknown Project)"
+                    material_hold_by_project.setdefault(project_label, {"Hold": 0, "MNA": 0})
+                    material_hold_by_project[project_label][status] = (
+                        material_hold_by_project[project_label].get(status, 0) + 1
+                    )
+
         return {
             "generated_at": datetime.now().isoformat(),
             "kpis": {
@@ -470,6 +496,7 @@ class SummaryEngine:
             "current_stage_distribution": current_stage_distribution,
             "rework_quantum": rework_quantum,
             "hold_by_project_stage": hold_by_project_stage,
+            "material_hold_by_project": material_hold_by_project,
         }
 
     # -----------------------------------------------------

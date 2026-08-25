@@ -47,6 +47,8 @@ from constants import (
     LH_LAST_WELDING_FRUN,
     LH_WELDING_AGE,
     LINE_HISTORY_STAGE,
+    MATERIAL_HOLD_STATUS,
+    MATERIAL_HOLD_STATUS_RAW,
     PDQC,
     PLANNED_START,
     PROJECT_CODE,
@@ -453,6 +455,63 @@ class MergeEngine:
         )
 
         return summary
+
+    # -----------------------------------------------------
+
+    def apply_material_hold_status(self, master: pd.DataFrame) -> pd.DataFrame:
+        """
+        Normalizes the Weekly Production Planning workbook's Master
+        Planning Sheet column BJ, "Material/Hold Status" (given by
+        the person, 2026-08-26), into a clean display value:
+
+            "1. Confirm from Production" -> None (the default/normal
+                                             state - not flagged)
+            "2. MNA Spool"                -> "MNA"
+            "3. Hold Spool"                -> "Hold"
+            anything else / blank          -> None (logged if it's a
+                                             genuinely new, unrecognized
+                                             value, same spirit as
+                                             rework_pdqc_rule.py's
+                                             _STATUS_MAP fallback)
+
+        No-op (adds nothing) if the raw column wasn't present this
+        run - e.g. an older Weekly Production Planning workbook, or
+        this spool's Composite Key wasn't found there at all.
+        """
+
+        if MATERIAL_HOLD_STATUS_RAW not in master.columns:
+            return master
+
+        def normalize(raw):
+            if is_empty(raw):
+                return None
+            text = str(raw).strip().upper()
+            if "MNA" in text:
+                return "MNA"
+            if "HOLD" in text:
+                return "Hold"
+            if text.startswith("1."):
+                return None
+            logger.warning(
+                f"Weekly Production Planning workbook: unrecognized "
+                f"Material/Hold Status value '{raw}' - leaving blank. "
+                "If this is a genuine new category, add it to "
+                "MergeEngine.apply_material_hold_status() in "
+                "src/merge.py."
+            )
+            return None
+
+        master[MATERIAL_HOLD_STATUS] = master[MATERIAL_HOLD_STATUS_RAW].apply(normalize)
+        flagged = int(master[MATERIAL_HOLD_STATUS].notna().sum())
+        if flagged:
+            logger.info(
+                f"Material/Hold Status: {flagged} spool(s) flagged "
+                f"({int((master[MATERIAL_HOLD_STATUS]=='Hold').sum())} Hold, "
+                f"{int((master[MATERIAL_HOLD_STATUS]=='MNA').sum())} MNA) "
+                "from the Weekly Production Planning workbook."
+            )
+
+        return master
 
     # -----------------------------------------------------
 
@@ -872,6 +931,7 @@ class MergeEngine:
             "Week",
             "Planned Start",
             "Group",
+            MATERIAL_HOLD_STATUS_RAW,
         ]
         planning_columns = [
             column for column in planning_columns
@@ -883,6 +943,8 @@ class MergeEngine:
             on=COMPOSITE_KEY,
             how="left",
         )
+
+        master = self.apply_material_hold_status(master)
 
         master = self.apply_siop_fallback(master, siop_planned)
 

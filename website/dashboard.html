@@ -294,6 +294,14 @@
           </div>
           <div class="chart-card__body scurve-chart-body"><canvas id="chart-scurve"></canvas></div>
         </div>
+        <div class="chart-card chart-card--full" id="material-hold-card">
+          <div class="chart-card__head">
+            <h3>Hold &amp; MNA by Project</h3>
+            <span class="chart-card__hint">From the Weekly Production Planning workbook's Material/Hold Status column - a separate signal from the Rework Data workbook's Hold status shown elsewhere on this dashboard</span>
+          </div>
+          <div class="chart-card__body"><canvas id="chart-material-hold"></canvas></div>
+        </div>
+        <p id="material-hold-empty" class="chart-card__hint" hidden>No spools currently flagged Hold or MNA.</p>
       </div>
     </section>
 
@@ -418,6 +426,7 @@
               <th>Total Wt.</th>
               <th>Surface Area</th>
               <th title="Joint-level Fit-Up/Welding/PDQC status from the uploaded Line History Sheet, if any. Blank means this spool wasn't in that sheet (or had no joint rows), so its Current Stage came from the regular date fields only.">Line History Stage</th>
+              <th title="From the Weekly Production Planning workbook's Material/Hold Status column - Hold or MNA (Material Not Available), or blank if neither applies.">Material Hold Status</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -490,6 +499,7 @@
 <script src="js/fabline.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/scurve.js"></script>
+<script src="js/materialHold.js"></script>
 <script src="js/stageThroughput.js"></script>
 <script src="js/stageAgeing.js"></script>
 <script src="js/tables.js"></script>

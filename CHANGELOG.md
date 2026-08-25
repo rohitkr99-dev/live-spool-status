@@ -874,3 +874,52 @@ issue), 79 already consistent. The person should get QC's Production
 Rework Data entry going forward to use "Re insp due to RT" literally
 so this fix picks it up; the 54-spool "Gap - Shows Accept" sheet is
 the list to have QC correct.
+
+### 2026-08-26 - Material/Hold Status (Weekly Production Planning column BJ) now tracked; new "Hold & MNA by Project" chart
+
+Given by the person, who spotted this himself ("Didn't you map Column
+BJ 'Material/Hold Status'?"): the Weekly Production Planning
+workbook's Master Planning Sheet has its own Hold/MNA (Material Not
+Available) flag column that the pipeline never read at all - a
+SEPARATE signal from the Rework Data workbook's Hold status, since a
+spool can be Production-flagged Hold/MNA here without ever appearing
+in the Rework workbook (this reflects material/scheduling status,
+not QC inspection status). Raw values: "1. Confirm from Production"
+(default/normal, 5,861 of 5,971 rows in his 2026-08-26 upload), "2.
+MNA Spool" (37), "3. Hold Spool" (73). Also noticed a second, mostly
+non-overlapping "Hold" Yes/No column (AT) in the same sheet (8 Yes) -
+flagged as an FYI only, not acted on.
+
+Added:
+- config/column_mapping.json: raw header "Material/Hold Status" ->
+  "Material Hold Status Raw"
+- src/constants.py: MATERIAL_HOLD_STATUS_RAW / MATERIAL_HOLD_STATUS
+- src/merge.py: apply_material_hold_status() normalizes the raw text
+  to "Hold" / "MNA" / None, wired into MergeEngine.merge() right
+  after the planning-sheet merge; new column added to the
+  planning_columns whitelist
+- src/summary.py: added to generate_master_spools()'s optional-field
+  list (master_spools.json), and a new material_hold_by_project
+  aggregation ({project: {"Hold": n, "MNA": n}}) in
+  generate_dashboard_summary()
+- website/js/tables.js + website/dashboard.html: new "Material Hold
+  Status" column on the All Spools table (Hold in the critical-red
+  age-chip style, MNA in warn-amber, matching existing color
+  conventions)
+- website/js/materialHold.js (new) + website/dashboard.html +
+  website/js/app.js: new "Hold & MNA by Project" stacked-bar chart,
+  placed directly below the Project S-Curve chart per the person's
+  request - Projects dashboard only (he didn't ask for this on
+  Production)
+
+Tests: tests/test_material_hold_status.py (6, the normalization
+logic), tests/test_material_hold_by_project.py (3, the chart
+aggregation) - 9 new, all passing. Full suite: 181 passing (up from
+172), same 23 pre-existing unrelated failures as every prior
+session.
+
+Not yet done: a mechanism to subtract MNA/Hold ageing days from
+Production's ageing calculations (src/production/ageing.py) - the
+person asked to be walked through the design options before this
+gets built; see the conversation for that discussion, nothing
+implemented yet.

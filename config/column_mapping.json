@@ -50,7 +50,8 @@
     "Activity Date": "Activity Date",
     "Inch Dia": "Inch Dia",
     "Inch Dia.": "Inch Dia",
-    "Inch  Dia": "Inch Dia"
+    "Inch  Dia": "Inch Dia",
+    "Material/Hold Status": "Material Hold Status Raw"
   },
   "line_history": {
     "Project": "Project Code",
