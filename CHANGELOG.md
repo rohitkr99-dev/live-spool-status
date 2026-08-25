@@ -983,3 +983,36 @@ KPI cards, the Fabrication Line bottleneck highlight) without
 relying on canvas resolving a CSS variable it can't.
 
 File changed: website/js/materialHold.js only.
+
+### 2026-08-26 (later still x2) - Projects dashboard JS files weren't cache-busted at all; likely why the color fix didn't show up
+
+The person reported still seeing black bars after uploading the
+previous fix. Re-checked materialHold.js itself - the hex-color fix
+was correct and consistent with how every other chart on the
+dashboard supplies colors (chartTheme.js's spoolGradientBars plugin
+turns a flat hex per dataset into a gradient automatically; nothing
+about the fix should have failed to render).
+
+Found the real explanation while comparing against production.html:
+that dashboard's <script> tags already carry a "?v=YYYYMMDD" cache-
+busting query param on every JS file (established some session
+before this one) - but website/dashboard.html (Projects) had NONE
+at all. A browser has no reason to re-fetch a same-URL <script src>
+after a page reload, so his browser most likely kept serving the
+OLD, cached materialHold.js (with the broken var(--...) color)
+indefinitely, regardless of how many times the file was replaced on
+GitHub - explaining why the fix "didn't take" even though nothing
+was actually wrong with it.
+
+Fixed: added "?v=20260826" to every JS <script> tag in
+website/dashboard.html (matching production.html's existing
+convention exactly - vendor/ scripts and user-menu.js left
+unversioned, same as Production). This should force every browser
+to fetch the current files immediately, for materialHold.js and
+every other Projects-dashboard JS file. Going forward, this date
+should be bumped on any Projects dashboard JS file's script tag
+whenever that file changes (same discipline Production's dashboard
+already follows) - CHANGELOG entries for JS-file changes should
+call this out explicitly so it isn't missed.
+
+File changed: website/dashboard.html only (script tag query params).
