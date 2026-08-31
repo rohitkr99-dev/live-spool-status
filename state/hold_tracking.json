@@ -82,7 +82,7 @@
   "TJ/25-26/183|251137_1A_LP002_042|251137-1A-LP-042-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-07-13",
         "hold_start": "2026-07-13"
       }
     ]
@@ -111,11 +111,99 @@
       }
     ]
   },
+  "TJ/25-26/188|1-V17565-PIND-0418|V17565-PIND-0418-03": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-23"
+      }
+    ]
+  },
+  "TJ/25-26/188|1-V17565-PIND-0463|V17565-PIND-0463-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-24"
+      }
+    ]
+  },
+  "TJ/25-26/188|1-V17565-PIND-0524|V17565-PIND-0524-03": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-17"
+      }
+    ]
+  },
+  "TJ/25-26/188|1-V17565-PIND-0525|V17565-PIND-0525-02": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-17"
+      }
+    ]
+  },
+  "TJ/25-26/189|251235_00_LP001_023|251235-00-LP-023-12": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-06"
+      }
+    ]
+  },
+  "TJ/25-26/189|251235_00_LP001_036|251235-00-LP-036-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-25"
+      }
+    ]
+  },
+  "TJ/25-26/189|251235_00_LP001_055|251235-00-LP-055-03": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-14"
+      }
+    ]
+  },
+  "TJ/25-26/189|251235_00_LP001_057|251235-00-LP-057-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-14"
+      }
+    ]
+  },
+  "TJ/25-26/189|251237_00_LP002_079|251237-00-LP-079-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-19"
+      }
+    ]
+  },
   "TJ/25-26/189|251237_00_LP002_084|251237-00-LP-084-01": {
     "hold_periods": [
       {
         "hold_removed": null,
         "hold_start": "2026-08-11"
+      }
+    ]
+  },
+  "TJ/25-26/189|251237_00_LP002_101|251237-00-LP-101-04": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-07-29"
+      }
+    ]
+  },
+  "TJ/25-26/206|V17566-PIND-0134|V17566-PIND-0134-07": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-08-28"
       }
     ]
   }
