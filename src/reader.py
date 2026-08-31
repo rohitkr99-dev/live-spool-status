@@ -39,8 +39,8 @@ from constants import (
     PROJECT_MASTER,
     PROJECT_NAME,
     REWORK,
-    REWORK_FINAL_STATUS,
     REWORK_OFFER_DATE,
+    REWORK_PACKING_STATUS,
     SIOP_PLANNED,
     SIOP_PLANNED_START,
     WELDER_MONTH,
@@ -766,7 +766,7 @@ class ExcelReader:
                 engine="openpyxl",
                 source_label="Rework workbook",
                 standardize_key=REWORK,
-                required_columns=[REWORK_OFFER_DATE, REWORK_FINAL_STATUS],
+                required_columns=[REWORK_OFFER_DATE, REWORK_PACKING_STATUS],
             )
             if frame is None:
                 continue

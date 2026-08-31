@@ -85,7 +85,8 @@
     "Prod Eng": "Prod Engineer",
     "QC observation": "QC Observation",
     "Final status": "Final Status",
-    "Type of Rework": "Rework Type"
+    "Type of Rework": "Rework Type",
+    "Packing Release Date": "Packing Release Date"
   },
   "material_handover": {
     "Project Code": "Project Code",

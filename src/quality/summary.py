@@ -9,20 +9,25 @@ so the website only has to display them.
 
 Status normalization
 ---------------------
-"Final Status" is free text from the shop floor and varies in case
-("Accept" / "accept" / "ACCEPT") and occasionally means something
-that's neither an accept nor a rework ("Project hold",
-"SPOOL DELETED"). Every function below normalizes it the same way:
+"Packing Release Date" (column K) is free text from QC recording the
+outcome of each offer event - despite the column name, it is not a
+date. It varies in case ("Packing Release" / "RFP" / "FQC Accept")
+and occasionally means something that's neither an accept nor a
+rework ("Project Hold", "Query", "Hold"). Every function below
+normalizes it the same way, reusing the single shared classification
+in src/rework_pdqc_rule.py (Accept/Hold/Rework) so this dashboard
+can never drift out of sync with the Projects/Production pipelines:
 
-    ACCEPT-family  -> "Accept"
-    REWORK-family  -> "Rework"
-    anything else  -> "Other" (held/deleted rows - excluded from the
-                       rework-rate charts, since they're not a QC
-                       accept/reject outcome)
+    Accept category  -> "Accept"
+    Rework category   -> "Rework"
+    anything else (QC Hold, or unrecognized) -> "Other" (excluded
+                       from the rework-rate charts, since it's not a
+                       QC accept/reject outcome - same role this
+                       bucket has always played here)
 
-"Type of Rework" is similarly free text (case/whitespace variants of
-the same defect - "C ID" vs " C ID", "Serration damage" vs
-"SERRATION DAMAGE"). Grouping uses a stripped+uppercased key, but
+"Type of Rework" (column J) is similarly free text (case/whitespace
+variants of the same defect - "C ID" vs " C ID", "Serration damage"
+vs "SERRATION DAMAGE"). Grouping uses a stripped+uppercased key, but
 the label shown on the chart is the most common ORIGINAL spelling
 for that key, so acronyms like "RT" don't get mangled by a blanket
 .title() call.
@@ -35,25 +40,28 @@ from typing import Any
 
 import pandas as pd
 
+from rework_pdqc_rule import normalize_rework_status
 from utils import fiscal_week_info, today, week_number_to_start_date
 
 SPOOL_KEY_COLUMNS = ["Project Code", "Drawing No", "Spool No"]
 
 
 def _normalize_status(raw: Any) -> str:
-    if pd.isna(raw):
-        return "Other"
-    text = str(raw).strip().upper()
-    if text == "ACCEPT":
+    status = normalize_rework_status(raw)
+    # Collapse the shared Accept/Hold/Rework classification down to
+    # this dashboard's existing Accept/Rework/Other shape - "Other"
+    # is the same bucket it always was here, unchanged in meaning or
+    # in every chart/field name built on top of it below.
+    if status == "Accept":
         return "Accept"
-    if text == "REWORK":
+    if status == "Rework":
         return "Rework"
     return "Other"
 
 
 def _with_status(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = dataframe.copy()
-    dataframe["_status"] = dataframe["Final Status"].apply(_normalize_status)
+    dataframe["_status"] = dataframe["Packing Release Date"].apply(_normalize_status)
     return dataframe
 
 

@@ -111,6 +111,15 @@ REWORK_FINAL_STATUS = "Final Status"
 REWORK_TYPE = "Rework Type"
 REWORK_LATEST_STATUS = "Rework Latest Status"
 
+# Column K of the Production Rework Data workbook, "Packing Release
+# Date". Despite the name, QC uses this column to record the actual
+# outcome of the offer event as free text ("Packing Release", "RFP",
+# "Project Hold", "Rework", etc.) - NOT a date. Per the person
+# (2026-08-31), this replaces the old "Final Status" (column I) as
+# the single source of truth for Accept/QC Hold/Rework - see
+# src/rework_pdqc_rule.py -> normalize_rework_status().
+REWORK_PACKING_STATUS = "Packing Release Date"
+
 MH_GROUP = "MH Group"
 MH_QTY = "MH Qty"
 MH_SPOOL_SIZE = "MH Spool Size"

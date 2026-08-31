@@ -41,7 +41,7 @@ Rework now:
      stage" chart instead (src/summary.py /
      src/production/summary.py -> *_hold_by_project_stage()).
 
-Because a spool's Final Status can literally be edited in place in
+Because a spool's Packing Release Date status can literally be edited in place in
 the Rework Data workbook (a Hold row later hand-edited to Accept,
 with no new row added), a spool's Hold history can vanish from the
 workbook itself once resolved - hold_ledger.py's persisted store is
@@ -85,9 +85,9 @@ from constants import (
     PDI,
     PDQC,
     PROJECT_CODE,
-    REWORK_FINAL_STATUS,
     REWORK_LATEST_STATUS,
     REWORK_OFFER_DATE,
+    REWORK_PACKING_STATUS,
     RFP,
     SPOOL_NO,
 )
@@ -124,45 +124,68 @@ REWORK_HOLD_EXCEPTION = "Rework Hold Exception"
 # stated workflow ("I'll correct the Rework Excel file").
 REWORK_STALE_STATUS_EXCEPTION = "Rework Stale Status Exception"
 
-# Exact Final Status text values, given by the person (2026-08-19,
-# amended 2026-08-24 to add Query -> Hold, and again 2026-08-24 for
-# "Re insp due to RT" -> Rework - QC has started recording RT
-# (radiography) re-inspection needs directly in this column, per the
-# person's decision that this should count fully against PDQC
-# ageing and stay visible on backlog, same as any other unresolved
-# QC item - NOT excluded/day-subtracted the way Hold is), case-
-# insensitively matched after collapsing internal whitespace. Any
-# value NOT in this map is treated conservatively as "Rework" (not
-# cleared) rather than silently assumed Accept or Hold, and logs a
-# warning so a genuinely new status value gets noticed and added
-# here deliberately.
+# Exact "Packing Release Date" (column K) text values, given by the
+# person (2026-08-31 - replaces the earlier Final Status/column-I
+# based map, whose history is preserved below for context), case-
+# insensitively matched after collapsing internal whitespace:
+#
+#   Accept category:  Packing Release, FQC Accept, RFP
+#   QC Hold category: Project Hold, Query, Hold (this is QC's own
+#                      hold, distinct from Production/Material Hold
+#                      - see MATERIAL_HOLD_STATUS in constants.py)
+#   Rework category:  Not Found, Rework
+#
+# Any value NOT in this map is treated conservatively as "Rework"
+# (not cleared) rather than silently assumed Accept or Hold, and
+# logs a warning so a genuinely new status value gets noticed and
+# added here deliberately.
+#
+# Prior (Final Status / column I) map, kept only as a historical
+# reference - amended 2026-08-24 to add Query -> Hold, and again
+# 2026-08-24 for "Re insp due to RT" -> Rework:
+#   ACCEPT -> Accept, NOT FOUND -> Rework, PROJECT HOLD -> Hold,
+#   QUERY -> Hold, RE INSP DUE TO RT -> Rework, REWORK -> Rework,
+#   REWORK/SAME RW -> Rework, SPOOL DELETED -> Rework.
 _STATUS_MAP = {
-    "ACCEPT": "Accept",
-    "NOT FOUND": "Rework",
+    "PACKING RELEASE": "Accept",
+    "FQC ACCEPT": "Accept",
+    "RFP": "Accept",
     "PROJECT HOLD": "Hold",
     "QUERY": "Hold",
-    "RE INSP DUE TO RT": "Rework",
+    "HOLD": "Hold",
+    "NOT FOUND": "Rework",
     "REWORK": "Rework",
-    "REWORK/SAME RW": "Rework",
-    "SPOOL DELETED": "Rework",
 }
 
 
-def _normalize_rework_status(raw) -> str:
+def normalize_rework_status(raw) -> str:
+    """
+    Normalize a single "Packing Release Date" (column K) cell to
+    "Accept" / "Hold" / "Rework" per _STATUS_MAP above. Public so
+    other modules that need the SAME classification (currently
+    src/quality/summary.py, for the Quality Assurance/Control
+    dashboard) reuse this single implementation rather than keeping
+    a second copy of the value map.
+    """
     if pd.isna(raw):
         return "Rework"
     text = " ".join(str(raw).strip().upper().split())
     mapped = _STATUS_MAP.get(text)
     if mapped is None:
         logger.warning(
-            f"Rework workbook: unrecognized Final Status value "
-            f"{raw!r} - treating conservatively as Rework (not "
-            "cleared), not Accept or Hold. If this is a genuine new "
-            "category, add it to _STATUS_MAP in "
+            "Rework workbook: unrecognized Packing Release Date "
+            f"status value {raw!r} - treating conservatively as "
+            "Rework (not cleared), not Accept or Hold. If this is a "
+            "genuine new category, add it to _STATUS_MAP in "
             "src/rework_pdqc_rule.py."
         )
         return "Rework"
     return mapped
+
+
+# Backward-compatible alias for any internal caller still using the
+# old private name.
+_normalize_rework_status = normalize_rework_status
 
 
 def _ensure_composite_key(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -199,8 +222,8 @@ def apply_rework_pdqc_rule(
 
     For a spool this workbook covers, look at whichever row has the
     LATEST Prod Offer Date (its "latest offer event") to determine
-    its current Final Status - Accept / Rework / Hold, per
-    _STATUS_MAP:
+    its current status - Accept / Rework / Hold, per its Packing
+    Release Date (column K) cell, mapped by _STATUS_MAP:
 
       - Accept (cleared): PDQC becomes the LATER of (existing PDQC,
         that latest offer date). PDQC never moves backwards on a
@@ -261,8 +284,8 @@ def apply_rework_pdqc_rule(
     (or an existing Composite Key column). Both dataframes get a
     Composite Key added if they don't already have one.
 
-    If the rework workbook has no usable Final Status column at all
-    this run, clearance/Hold can't be determined for anyone, so this
+    If the rework workbook has no usable Packing Release Date status
+    column at all this run, clearance/Hold can't be determined for anyone, so this
     falls back to the simpler "always take the later of the two
     dates" behavior for PDQC only (no RFP change) - logged clearly.
 
@@ -319,7 +342,7 @@ def apply_rework_pdqc_rule(
         .index
     )
     status_column = (
-        REWORK_FINAL_STATUS if REWORK_FINAL_STATUS in rework_valid.columns
+        REWORK_PACKING_STATUS if REWORK_PACKING_STATUS in rework_valid.columns
         else None
     )
     columns_to_take = [COMPOSITE_KEY, REWORK_OFFER_DATE]
@@ -471,17 +494,18 @@ def apply_rework_pdqc_rule(
         )
         currently_on_hold_final = currently_on_hold
     else:
-        # Fallback: no Final Status column available this run, so
-        # clearance/Hold can't be determined for anyone - keep the
-        # plain "later of the two" rule for PDQC only, no RFP change.
-        # The Hold ledger is left untouched (no status to advance it
-        # with), so CURRENTLY_ON_HOLD still reflects whatever the
-        # ledger already knew from a previous run.
+        # Fallback: no Packing Release Date status column available
+        # this run, so clearance/Hold can't be determined for anyone
+        # - keep the plain "later of the two" rule for PDQC only, no
+        # RFP change. The Hold ledger is left untouched (no status to
+        # advance it with), so CURRENTLY_ON_HOLD still reflects
+        # whatever the ledger already knew from a previous run.
         logger.warning(
-            "Rework workbook has no usable Final Status column this "
-            "run; the Cleared/Not-Cleared/Hold rules can't be "
-            "applied. Falling back to the plain 'latest offer date "
-            "wins if later' rule for PDQC only, every matched spool."
+            "Rework workbook has no usable Packing Release Date "
+            "status column this run; the Cleared/Not-Cleared/Hold "
+            "rules can't be applied. Falling back to the plain "
+            "'latest offer date wins if later' rule for PDQC only, "
+            "every matched spool."
         )
 
         new_pdqc = pd.Series(
