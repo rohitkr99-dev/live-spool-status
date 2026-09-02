@@ -15,8 +15,10 @@ summary.py.
 import pandas as pd
 import pytest
 
+from constants import INSPECTION_REOFFERED_BEFORE_ACCEPT
 from quality.summary import (
     _normalize_inspection_status,
+    _with_inspection_status,
     build_first_offer_split,
     build_kpis,
     build_rework_by_project,
@@ -103,6 +105,40 @@ def test_rework_by_project_counts_reworked_spools_and_events():
     assert row_183["reworked_spools"] == 1  # only SPOOL-02 ever hit Rework
     assert row_183["total_events"] == 4
     assert row_183["rework_events"] == 1
+
+
+def test_reoffered_before_accept_overrides_literal_accept_to_rework():
+    """
+    A row flagged INSPECTION_REOFFERED_BEFORE_ACCEPT counts as
+    Rework even though its literal Final Status is "Accept" - a plain
+    Accept row (no flag/column at all) is unaffected.
+    """
+
+    df = pd.DataFrame([
+        {**_row("TJ/25-26/183", "DRW-01", "SPOOL-01", "2026-08-17", "Accept"),
+         INSPECTION_REOFFERED_BEFORE_ACCEPT: True},
+        {**_row("TJ/25-26/183", "DRW-02", "SPOOL-02", "2026-08-01", "Accept"),
+         INSPECTION_REOFFERED_BEFORE_ACCEPT: False},
+    ])
+
+    result = _with_inspection_status(df)
+
+    assert result.loc[result["Spool No"] == "SPOOL-01", "_status"].iloc[0] == "Rework"
+    assert result.loc[result["Spool No"] == "SPOOL-02", "_status"].iloc[0] == "Accept"
+
+
+def test_with_inspection_status_works_without_the_flag_column():
+    """
+    A dataframe with no INSPECTION_REOFFERED_BEFORE_ACCEPT column at
+    all (e.g. pipeline.py's empty fallback frame) doesn't crash -
+    every row just uses the plain Final Status classification.
+    """
+
+    df = pd.DataFrame([_row("TJ/25-26/183", "DRW-01", "SPOOL-01", "2026-08-17", "Accept")])
+
+    result = _with_inspection_status(df)
+
+    assert result["_status"].iloc[0] == "Accept"
 
 
 def test_rework_cycles_buckets_repeat_offenders():

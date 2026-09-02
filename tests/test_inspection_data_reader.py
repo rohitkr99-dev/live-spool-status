@@ -17,7 +17,7 @@ import openpyxl
 import pandas as pd
 import pytest
 
-from constants import INSPECTION_DATA_COLUMNS
+from constants import INSPECTION_DATA_COLUMNS, INSPECTION_REOFFERED_BEFORE_ACCEPT
 from reader import ExcelReader
 
 
@@ -68,6 +68,13 @@ def _write_workbook(path: Path):
         "TJ/25-26/182", "DRW-003", "SPOOL-03", "P11", 1,
         "25-08-2026", "Project on hold", "Hold", "Ankit",
     ])
+    week1.append([
+        "TJ/25-26/182", "DRW-004", "SPOOL-04", "P11", 1,
+        # Multi-date offer but Final Status is literally Accept - the
+        # real-world pattern the person flagged (2026-09-02): counts
+        # as Rework, dated at the EARLIEST piece, not the latest.
+        "17-08-2026/20-08-2026/21-08-2026", "tag/punching balance", "Accept", "Ankit",
+    ])
 
     # A second, buried summary sheet - same idea as the real file's
     # stray "Sheet1", sitting between two data sheets rather than at
@@ -97,7 +104,7 @@ def _write_workbook(path: Path):
 def test_summary_sheets_excluded_only_data_sheets_combined(reader, tmp_path):
     """
     Neither the first sheet nor a buried second summary sheet ends up
-    in the combined dataframe - only the two real data sheets do (3
+    in the combined dataframe - only the two real data sheets do (4
     rows from the weekly sheet + 1 row from the old-format sheet).
     """
 
@@ -107,15 +114,18 @@ def test_summary_sheets_excluded_only_data_sheets_combined(reader, tmp_path):
     df = reader.read_inspection_data()
 
     assert df is not None
-    assert len(df) == 4
-    assert set(df["Spool No"]) == {"SPOOL-01", "SPOOL-02", "SPOOL-03", "SPOOL-OLD"}
+    assert len(df) == 5
+    assert set(df["Spool No"]) == {
+        "SPOOL-01", "SPOOL-02", "SPOOL-03", "SPOOL-04", "SPOOL-OLD",
+    }
 
 
 def test_columns_harmonized_to_standard_schema(reader, tmp_path):
     """
-    The combined dataframe always has exactly INSPECTION_DATA_COLUMNS
-    - the old-format sheet's extra "Inch Dia" is dropped, and its
-    missing "Prod Engineer" comes back blank rather than raising.
+    The combined dataframe always has INSPECTION_DATA_COLUMNS plus
+    the derived INSPECTION_REOFFERED_BEFORE_ACCEPT flag - the old-
+    format sheet's extra "Inch Dia" is dropped, and its missing
+    "Prod Engineer" comes back blank rather than raising.
     """
 
     _configure(reader, tmp_path)
@@ -123,7 +133,9 @@ def test_columns_harmonized_to_standard_schema(reader, tmp_path):
 
     df = reader.read_inspection_data()
 
-    assert list(df.columns) == INSPECTION_DATA_COLUMNS
+    assert list(df.columns) == INSPECTION_DATA_COLUMNS + [
+        INSPECTION_REOFFERED_BEFORE_ACCEPT
+    ]
 
     old_row = df[df["Spool No"] == "SPOOL-OLD"].iloc[0]
     assert pd.isna(old_row["Prod Engineer"])
@@ -143,6 +155,33 @@ def test_multi_date_offer_cell_resolves_to_latest(reader, tmp_path):
 
     row = df[df["Spool No"] == "SPOOL-02"].iloc[0]
     assert row["Prod Offer Date"] == pd.Timestamp("2026-08-26")
+
+
+def test_reoffered_before_accept_flagged_and_dated_earliest(reader, tmp_path):
+    """
+    A multi-date offer cell whose Final Status is literally "Accept"
+    (SPOOL-04) is flagged INSPECTION_REOFFERED_BEFORE_ACCEPT and
+    dated at its EARLIEST piece (17-08-2026) - the opposite rule from
+    every other multi-date cell (SPOOL-02, latest-wins, tested
+    above), since what matters here is when the deficiency was first
+    found. A row that's just a plain single-date Accept (SPOOL-01) is
+    never flagged.
+    """
+
+    _configure(reader, tmp_path)
+    _write_workbook(tmp_path / "INSPECTION DATA TEST.xlsx")
+
+    df = reader.read_inspection_data()
+
+    flagged_row = df[df["Spool No"] == "SPOOL-04"].iloc[0]
+    assert bool(flagged_row[INSPECTION_REOFFERED_BEFORE_ACCEPT]) is True
+    assert flagged_row["Prod Offer Date"] == pd.Timestamp("2026-08-17")
+
+    plain_accept_row = df[df["Spool No"] == "SPOOL-01"].iloc[0]
+    assert bool(plain_accept_row[INSPECTION_REOFFERED_BEFORE_ACCEPT]) is False
+
+    bend_row = df[df["Spool No"] == "SPOOL-02"].iloc[0]
+    assert bool(bend_row[INSPECTION_REOFFERED_BEFORE_ACCEPT]) is False
 
 
 def test_missing_workbook_returns_none_not_raise(reader, tmp_path):
