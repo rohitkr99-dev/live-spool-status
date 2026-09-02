@@ -41,6 +41,20 @@ defect-type reason itself (e.g. "Bend", "Degree", "Not Found",
     anything else (a specific defect-
     type reason, "Rework", blank, ...)  -> "Rework"
 
+One override on top of that rule (2026-09-02, given by the person
+after spotting a real example): a row whose Prod Offer cell held
+multiple "/"-separated dates (a re-offer) AND whose Final Status is
+literally "Accept" counts as Rework anyway - confirmed against the
+real file (956 multi-date cells total, 262 of them Accept, e.g. Insp
+Remark "tag/punching balance, SS tag required" recorded as Accept)
+that this combination almost always means a real deficiency was
+found and corrected before acceptance, which the single Final Status
+value alone doesn't capture. See reader.py -> read_inspection_data()
+(INSPECTION_REOFFERED_BEFORE_ACCEPT) and _with_inspection_status()
+below - these rows are also dated at their EARLIEST offer date
+(when the deficiency was first found), unlike every other multi-date
+cell, which keeps resolving to the latest date.
+
 Rework Data status normalization (unchanged)
 ----------------------------------------------
 "Packing Release Date" (column K) is free text from QC recording the
@@ -69,6 +83,7 @@ from typing import Any
 
 import pandas as pd
 
+from constants import INSPECTION_REOFFERED_BEFORE_ACCEPT
 from rework_pdqc_rule import normalize_rework_status
 from utils import fiscal_week_info, today, week_number_to_start_date
 
@@ -99,6 +114,19 @@ def _normalize_inspection_status(raw: Any) -> str:
 def _with_inspection_status(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = dataframe.copy()
     dataframe["_status"] = dataframe["Final Status"].apply(_normalize_inspection_status)
+
+    # 2026-09-02, given by the person: a row flagged
+    # INSPECTION_REOFFERED_BEFORE_ACCEPT (reader.py -
+    # read_inspection_data() - a multi-date Prod Offer cell whose
+    # Final Status is literally "Accept") counts as Rework here
+    # regardless of that literal status - confirmed against the real
+    # file that this combination almost always means a deficiency was
+    # found and corrected before acceptance, which "Accept" alone
+    # doesn't capture.
+    if INSPECTION_REOFFERED_BEFORE_ACCEPT in dataframe.columns:
+        reoffer_mask = dataframe[INSPECTION_REOFFERED_BEFORE_ACCEPT].fillna(False).astype(bool)
+        dataframe.loc[reoffer_mask, "_status"] = "Rework"
+
     return dataframe
 
 
