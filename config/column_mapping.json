@@ -130,5 +130,19 @@
   "project_master": {
     "Project Code": "Project Code",
     "Project Name": "Project Name"
+  },
+  "inspection_data": {
+    "Project Code": "Project Code",
+    "Drawing No.": "Drawing No",
+    "Drawing No": "Drawing No",
+    "Spool No": "Spool No",
+    "MAT": "Material",
+    "Inch Dia": "Inch Dia",
+    "Spool Size": "Spool Size",
+    "Prod. Offer": "Prod Offer Date",
+    "Insp. Remark": "Insp Remark",
+    "Final Status": "Final Status",
+    "Prod. Eng": "Prod Engineer",
+    "Type": "Type"
   }
 }

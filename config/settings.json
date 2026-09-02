@@ -73,6 +73,12 @@
 "sheet_name": "Sheet1",
 "header_row": 0,
 "comment": "Project Code -> Project Name master list (2026-08-17), hand-maintained by the person and updated from time to time - lives in paths.upload_folder (data/upload/projects/), same folder as the DPR/Weekly/Line History workbooks. Optional - see reader.py -> read_project_master() and src/quality/reader.py, which merges it on top of the DPR-derived Project Code -> Name lookup (this file wins on any conflict, since it's the one he directly maintains) for the Quality dashboard's rework-by-project and Welder Performance project charts. A missing file just falls back to the DPR-derived lookup alone, same as before this file existed. Multiple Project Codes can share the same Project Name (e.g. several PO line items under one named project) - this is normal, not a data error."
+},
+"inspection_data": {
+"enabled": true,
+"file_pattern": "*INSPECTION*DATA*.xlsx",
+"header_row": 0,
+"comment": "QC's continuous PDQC Inspection Data log (2026-09-02) - one row per offer-for-inspection event, first-time status only (Accept, or the specific rework/defect-type reason as free text), going back to 2023. Lives in paths.quality_upload_folder (data/upload/quality/), same folder as the Rework Data workbook. Filename varies but always starts with 'INSPECTION DATA'. Unlike every other source, this workbook has ~150 sheets: one per weekly window plus a couple of hand-built summary/tally sheets mixed in at arbitrary positions (not just the first sheet - see reader.py -> read_inspection_data()). Every sheet is scanned and any sheet whose columns match the expected shape is treated as data and combined; summary/tally sheets are skipped automatically because they don't have those columns, regardless of their name or position. Now the sole source for the Quality dashboard's Overview KPIs + 4 charts (kpis, first_offer_split, rework_by_project, rework_trend, rework_cycles in src/quality/summary.py) - replaces the Rework Data workbook for those specifically, per the person's explicit instruction. The Rework Data workbook is untouched everywhere else (PDQC/RFP Absolute Rules, top_rework_types, the Rework Data export/Welder Performance sections)."
 }
 },
 
