@@ -18,7 +18,11 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
+import numpy as np
 import pandas as pd
+from pandas.errors import OutOfBoundsDatetime
+
+from logger import logger
 
 # The production calendar's fiscal Week 1 always starts on a Monday,
 # anchored to 1st April each year (given by the person, 2026-08-27,
@@ -430,6 +434,26 @@ def convert_excel_serial_dates(
 
     Columns that are already datetime-like are parsed normally.
     Columns not present in the dataframe are skipped.
+
+    A single corrupted/out-of-range numeric cell (not a real date,
+    but something a source file happened to have in a date column)
+    can make pandas' normal vectorized conversion raise instead of
+    the graceful NaT errors="coerce" is meant to produce - confirmed
+    in production (2026-09-02): a DPR workbook's Fabrication date
+    column raised FloatingPointError deep inside numpy's internal
+    unit-conversion arithmetic, crashing the whole Production
+    dashboard pipeline for that run (continue-on-error: true kept it
+    from blocking anything else, but Production itself didn't
+    refresh). errors="coerce" only catches ordinary per-value parsing
+    failures - it can't catch an overflow trap raised from inside
+    numpy's C code, which is also platform-dependent (didn't
+    reproduce locally on Windows with the same pinned numpy/pandas
+    versions that crashed on the Linux GitHub Actions runner). When
+    the fast vectorized path raises, this falls back to converting
+    the column one value at a time (each wrapped in its own error
+    handling and a suppressed numpy error state), so only the
+    genuinely bad cell(s) become blank instead of the whole run
+    failing.
     """
 
     dataframe = dataframe.copy()
@@ -442,12 +466,22 @@ def convert_excel_serial_dates(
         series = dataframe[column]
 
         if pd.api.types.is_numeric_dtype(series):
-            dataframe[column] = pd.to_datetime(
-                series,
-                unit="D",
-                origin="1899-12-30",
-                errors="coerce"
-            )
+            try:
+                dataframe[column] = pd.to_datetime(
+                    series,
+                    unit="D",
+                    origin="1899-12-30",
+                    errors="coerce"
+                )
+            except (OverflowError, FloatingPointError, ValueError) as error:
+                logger.warning(
+                    f"convert_excel_serial_dates: column {column!r} "
+                    f"has a value the fast conversion can't handle "
+                    f"({error}) - falling back to a slower, per-value "
+                    "conversion so only the actual bad cell(s) become "
+                    "blank instead of the whole run failing."
+                )
+                dataframe[column] = series.apply(_safe_serial_to_datetime)
         else:
             dataframe[column] = pd.to_datetime(
                 series,
@@ -455,6 +489,25 @@ def convert_excel_serial_dates(
             )
 
     return dataframe
+
+
+def _safe_serial_to_datetime(value):
+    """
+    Converts a single Excel date-serial value to a Timestamp, never
+    raising - used by convert_excel_serial_dates()'s fallback path
+    once the fast vectorized conversion has already hit an
+    unrecoverable error on that column. np.errstate suppresses the
+    same kind of overflow trap that broke the vectorized path, so a
+    genuinely bad value here becomes NaT instead of crashing again.
+    """
+
+    if pd.isna(value):
+        return pd.NaT
+    try:
+        with np.errstate(all="ignore"):
+            return pd.to_datetime(value, unit="D", origin="1899-12-30")
+    except (OverflowError, FloatingPointError, ValueError, OutOfBoundsDatetime):
+        return pd.NaT
 
 
 def today() -> date:
