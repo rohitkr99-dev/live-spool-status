@@ -26,6 +26,14 @@ is a dashboard-display-only change. It does not touch, and must
 never be made to touch, src/rework_pdqc_rule.py or anything the
 PDQC/RFP Absolute Rules depend on.
 
+Date scope
+-----------
+The Inspection Data dataframe passed into every build_* function
+below has already been through scope_inspection_data_to_current_cycle()
+(called once in pipeline.py) - current fiscal cycle only, except the
+named projects in NAMED_PROJECT_CODES_WITH_FULL_HISTORY, which keep
+their full history. See that function's docstring.
+
 Inspection Data status normalization
 -------------------------------------
 "Final Status" is free text QC enters per offer event - almost
@@ -88,6 +96,46 @@ from rework_pdqc_rule import normalize_rework_status
 from utils import fiscal_week_info, today, week_number_to_start_date
 
 SPOOL_KEY_COLUMNS = ["Project Code", "Drawing No", "Spool No"]
+
+# 2026-09-02, given by the person: the Overview should only cover
+# the current fiscal cycle (30 March 2026 onward, same Week 1 anchor
+# fiscal_week_info()/week_number_to_start_date() already use
+# elsewhere - rolls forward on its own each year, e.g. 5 April 2027
+# for FY27/28) - EXCEPT these specific projects, which should keep
+# their full history regardless of date, since their own inspection
+# activity mostly happened before this cycle started. Caught and
+# corrected the same day: an earlier pass applied full history to
+# every project instead of just these - see CHANGELOG.md.
+NAMED_PROJECT_CODES_WITH_FULL_HISTORY = [
+    "TJ/25-26/172", "TJ/25-26/184", "TJ/25-26/182", "TJ/25-26/183",
+    "TJ/25-26/188", "TJ/25-26/189", "TJ/25-26/206", "TE/25-26/196",
+]
+
+
+def scope_inspection_data_to_current_cycle(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Restricts the Inspection Data dataframe to the current fiscal
+    cycle (Prod Offer Date on/after this cycle's Week 1) before it
+    reaches any Overview KPI/chart function - except rows belonging
+    to NAMED_PROJECT_CODES_WITH_FULL_HISTORY above, which pass
+    through untouched regardless of date. A row with an unparseable/
+    missing Prod Offer Date is excluded unless its project is on the
+    named list (same as any other out-of-cycle row).
+
+    Applied once here, in one place, rather than inside each of the
+    5 Overview functions - they all just receive an already-scoped
+    dataframe, same as before this existed.
+    """
+
+    if dataframe.empty or "Prod Offer Date" not in dataframe.columns:
+        return dataframe
+
+    cycle_start = pd.Timestamp(week_number_to_start_date(1, today()))
+    offer_dates = pd.to_datetime(dataframe["Prod Offer Date"], errors="coerce")
+    in_current_cycle = offer_dates >= cycle_start
+    named_project = dataframe["Project Code"].isin(NAMED_PROJECT_CODES_WITH_FULL_HISTORY)
+
+    return dataframe[in_current_cycle | named_project]
 
 
 def _normalize_inspection_status(raw: Any) -> str:

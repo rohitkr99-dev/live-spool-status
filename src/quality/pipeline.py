@@ -52,6 +52,7 @@ from quality.summary import (
     build_rework_trend,
     build_rework_type_monthly,
     build_top_rework_types,
+    scope_inspection_data_to_current_cycle,
 )
 from quality.welder_performance import build_bundle as build_welder_performance_bundle
 from utils import dataframe_to_json_records
@@ -97,6 +98,20 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
             "Inspection Data workbook not available this run - "
             "Overview KPIs and charts will show as empty until it's "
             "synced."
+        )
+
+    # Current fiscal cycle only, except the named projects that keep
+    # their full history - see summary.py's
+    # scope_inspection_data_to_current_cycle() docstring. Applied
+    # once here so every build_* function below already receives a
+    # correctly-scoped dataframe.
+    before_scope = len(inspection_data)
+    inspection_data = scope_inspection_data_to_current_cycle(inspection_data)
+    if before_scope:
+        logger.info(
+            f"Inspection Data: scoped to the current fiscal cycle "
+            f"(+ named-project full history) - {len(inspection_data)} "
+            f"of {before_scope} row(s) kept."
         )
 
     cycles = build_rework_cycles(inspection_data)
