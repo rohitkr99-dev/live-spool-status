@@ -16,6 +16,14 @@ missing/unreadable DPR file only means charts fall back to showing
 the bare Project Code instead of "Project Code - Project Name"; it
 never blocks the Quality dashboard, which has its own required
 input (the Rework Data workbook).
+
+Also reads the Inspection Data workbook (2026-09-02, optional) -
+QC's own continuous PDQC log, which src/quality/summary.py now uses
+as the sole source for the Overview KPIs + 4 charts (kpis,
+first_offer_split, rework_by_project, rework_trend, rework_cycles),
+replacing the Rework Data workbook for those specifically. The
+Rework Data workbook is untouched everywhere else on this dashboard
+(top_rework_types, the Rework Data export, Welder Performance).
 """
 
 from __future__ import annotations
@@ -33,6 +41,7 @@ class QualitySources:
     rework: pd.DataFrame
     project_names: dict[str, str]
     welder_performance: pd.DataFrame | None
+    inspection_data: pd.DataFrame | None
 
 
 def _build_project_name_lookup(fabrication: pd.DataFrame) -> dict[str, str]:
@@ -113,8 +122,20 @@ def load_sources() -> QualitySources:
             "no data to show for this run."
         )
 
+    inspection_data: pd.DataFrame | None = None
+    try:
+        logger.info("Reading Inspection Data workbook (optional) ...")
+        inspection_data = excel_reader.read_inspection_data()
+    except Exception as error:
+        logger.warning(
+            f"Could not read Inspection Data workbook ({error}). "
+            "The Quality dashboard's Overview section will have no "
+            "data to show for this run."
+        )
+
     return QualitySources(
         rework=rework,
         project_names=project_names,
         welder_performance=welder_performance,
+        inspection_data=inspection_data,
     )

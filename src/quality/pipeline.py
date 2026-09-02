@@ -4,9 +4,11 @@ src/quality/pipeline.py
 Orchestrates the Quality Assurance/Control dashboard pipeline:
 
   data/upload/quality/*Rework*.xlsx
+  data/upload/quality/*INSPECTION*DATA*.xlsx
         v  (reader.py, reusing the top-level ExcelReader)
-  rework dataframe (one row per offer-for-inspection event) +
-  Project Name lookup (from the DPR, optional)
+  rework dataframe + inspection_data dataframe (one row per offer-
+  for-inspection event each) + Project Name lookup (from the DPR,
+  optional)
         v  (summary.py)
   quality_data.json
         |
@@ -19,6 +21,14 @@ to, and does not import from, src/pipeline.py, src/merge.py,
 src/business_rules.py or src/ageing.py - the Projects pipeline
 (including its own separate use of the Rework Data workbook, for
 the PDQC override) is untouched.
+
+2026-09-02: the Overview KPIs + 4 charts (kpis, rework_by_project,
+first_offer_split, rework_trend, rework_cycles) now source from the
+Inspection Data workbook instead of the Rework Data workbook, per
+the person's explicit instruction - see src/quality/summary.py's
+module docstring. top_rework_types and the Rework Data export/
+Welder Performance sections are untouched, still sourced from
+sources.rework as before.
 """
 
 from __future__ import annotations
@@ -28,6 +38,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
+from constants import INSPECTION_DATA_COLUMNS
 from quality.logger import logger
 from quality.reader import load_sources
 from quality.summary import (
@@ -67,15 +80,34 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
 
     top_n = settings.get("top_rework_types_count", 10)
 
-    cycles = build_rework_cycles(sources.rework)
+    # Overview KPIs + 4 charts source from the Inspection Data
+    # workbook (2026-09-02) - see summary.py's module docstring. A
+    # missing/unsynced file (sources.inspection_data is None) falls
+    # back to an empty, correctly-shaped dataframe rather than
+    # crashing the pipeline - every build_* function below already
+    # handles an empty input by returning zeroed/empty results, same
+    # as any other optional source having nothing to show yet.
+    inspection_data = (
+        sources.inspection_data
+        if sources.inspection_data is not None
+        else pd.DataFrame(columns=INSPECTION_DATA_COLUMNS)
+    )
+    if sources.inspection_data is None:
+        logger.warning(
+            "Inspection Data workbook not available this run - "
+            "Overview KPIs and charts will show as empty until it's "
+            "synced."
+        )
+
+    cycles = build_rework_cycles(inspection_data)
 
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "kpis": build_kpis(sources.rework, cycles),
+        "kpis": build_kpis(inspection_data, cycles),
         "top_rework_types": build_top_rework_types(sources.rework, top_n=top_n),
-        "rework_by_project": build_rework_by_project(sources.rework, sources.project_names),
-        "first_offer_split": build_first_offer_split(sources.rework),
-        "rework_trend": build_rework_trend(sources.rework),
+        "rework_by_project": build_rework_by_project(inspection_data, sources.project_names),
+        "first_offer_split": build_first_offer_split(inspection_data),
+        "rework_trend": build_rework_trend(inspection_data),
         "rework_cycles": cycles,
         # Feeds the "Download Production Rework Data" button - raw
         # rows + the two auto-computed summary blocks, so the

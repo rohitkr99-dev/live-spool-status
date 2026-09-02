@@ -1,29 +1,58 @@
 """
 src/quality/summary.py
 ---------------------------------------------------------
-Aggregates the raw Rework Data workbook (one row per offer-for-
-inspection event) into the JSON structures the Quality Assurance/
-Control dashboard (website/quality.html) charts against. No chart/
-rendering logic lives here - only numbers, computed once in Python
-so the website only has to display them.
+Aggregates raw QC workbooks into the JSON structures the Quality
+Assurance/Control dashboard (website/quality.html) charts against.
+No chart/rendering logic lives here - only numbers, computed once in
+Python so the website only has to display them.
 
-Status normalization
----------------------
+Two independent data sources feed this file - deliberately never
+mixed:
+
+  Inspection Data workbook (2026-09-02) -> build_kpis(),
+  build_first_offer_split(), build_rework_by_project(),
+  build_rework_trend(), build_rework_cycles() - the Overview KPI
+  cards + 4 charts. See _normalize_inspection_status() below.
+
+  Rework Data workbook (unchanged) -> build_top_rework_types(),
+  build_rework_status_monthly(), build_rework_type_monthly() - still
+  uses src/rework_pdqc_rule.py's Accept/Hold/Rework classification,
+  same as the PDQC/RFP Absolute Rules. See _normalize_status() below.
+
+Per the person's explicit instruction (2026-09-02): the Overview
+section now reflects the Inspection Data workbook - QC's own
+continuous PDQC log - instead of the Rework Data workbook, but this
+is a dashboard-display-only change. It does not touch, and must
+never be made to touch, src/rework_pdqc_rule.py or anything the
+PDQC/RFP Absolute Rules depend on.
+
+Inspection Data status normalization
+-------------------------------------
+"Final Status" is free text QC enters per offer event - almost
+always either the literal word "Accept", or the specific rework/
+defect-type reason itself (e.g. "Bend", "Degree", "Not Found",
+"Punching") rather than a generic "Rework" label. Per the person:
+
+    "accept" (any case/whitespace)      -> "Accept"
+    "hold" (any case/whitespace)        -> "Other" (excluded from
+                                            the rework-rate charts,
+                                            same role this bucket has
+                                            always played here)
+    anything else (a specific defect-
+    type reason, "Rework", blank, ...)  -> "Rework"
+
+Rework Data status normalization (unchanged)
+----------------------------------------------
 "Packing Release Date" (column K) is free text from QC recording the
 outcome of each offer event - despite the column name, it is not a
 date. It varies in case ("Packing Release" / "RFP" / "FQC Accept")
 and occasionally means something that's neither an accept nor a
-rework ("Project Hold", "Query", "Hold"). Every function below
-normalizes it the same way, reusing the single shared classification
-in src/rework_pdqc_rule.py (Accept/Hold/Rework) so this dashboard
-can never drift out of sync with the Projects/Production pipelines:
-
-    Accept category  -> "Accept"
-    Rework category   -> "Rework"
-    anything else (QC Hold, or unrecognized) -> "Other" (excluded
-                       from the rework-rate charts, since it's not a
-                       QC accept/reject outcome - same role this
-                       bucket has always played here)
+rework ("Project Hold", "Query", "Hold"). build_top_rework_types()
+and the two monthly export functions normalize it the same way,
+reusing the single shared classification in src/rework_pdqc_rule.py
+(Accept/Hold/Rework) so they can never drift out of sync with the
+Projects/Production pipelines - "Other" plays the same excluded role
+as above.
 
 "Type of Rework" (column J) is similarly free text (case/whitespace
 variants of the same defect - "C ID" vs " C ID", "Serration damage"
@@ -46,12 +75,41 @@ from utils import fiscal_week_info, today, week_number_to_start_date
 SPOOL_KEY_COLUMNS = ["Project Code", "Drawing No", "Spool No"]
 
 
+def _normalize_inspection_status(raw: Any) -> str:
+    """
+    Classifies one Inspection Data "Final Status" cell into Accept /
+    Rework / Other - see the module docstring above. This is
+    deliberately separate from _normalize_status()/
+    normalize_rework_status() below: a different workbook, with a
+    free-text vocabulary of ~150 defect-type values rather than a
+    small controlled status list, so reusing the Rework Data
+    workbook's classifier here would misfire its "unrecognized
+    status" warning on nearly every rework row.
+    """
+    if pd.isna(raw) or not str(raw).strip():
+        return "Rework"
+    text = str(raw).strip().casefold()
+    if text == "accept":
+        return "Accept"
+    if text == "hold":
+        return "Other"
+    return "Rework"
+
+
+def _with_inspection_status(dataframe: pd.DataFrame) -> pd.DataFrame:
+    dataframe = dataframe.copy()
+    dataframe["_status"] = dataframe["Final Status"].apply(_normalize_inspection_status)
+    return dataframe
+
+
 def _normalize_status(raw: Any) -> str:
     status = normalize_rework_status(raw)
     # Collapse the shared Accept/Hold/Rework classification down to
     # this dashboard's existing Accept/Rework/Other shape - "Other"
     # is the same bucket it always was here, unchanged in meaning or
-    # in every chart/field name built on top of it below.
+    # in every chart/field name built on top of it below. Used only
+    # by build_top_rework_types()/the monthly export functions now -
+    # see module docstring.
     if status == "Accept":
         return "Accept"
     if status == "Rework":
@@ -77,8 +135,12 @@ def _pct(part: int, whole: int) -> float:
 
 
 def build_kpis(dataframe: pd.DataFrame, cycles: list[dict]) -> dict[str, Any]:
+    """
+    Overview KPI cards. `dataframe` is the Inspection Data workbook
+    (2026-09-02) - see module docstring.
+    """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
 
     total_spools = df[SPOOL_KEY_COLUMNS].drop_duplicates().shape[0]
     total_offer_events = len(df)
@@ -175,10 +237,11 @@ def build_rework_by_project(
     Chart 2: per project, how many distinct spools needed at least
     one rework, and what share of that project's inspected spools
     that is. rework_events / total_events (per-row, not per-spool)
-    is included alongside as the secondary figure.
+    is included alongside as the secondary figure. `dataframe` is
+    the Inspection Data workbook - see module docstring.
     """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
 
     spool_status = (
         df.groupby(SPOOL_KEY_COLUMNS)["_status"]
@@ -225,10 +288,11 @@ def build_first_offer_split(dataframe: pd.DataFrame) -> dict[str, Any]:
     """
     Chart 3: of every spool with at least one offer event, what
     share was accepted on its FIRST (earliest-dated) offer, vs.
-    needed at least one rework before acceptance.
+    needed at least one rework before acceptance. `dataframe` is the
+    Inspection Data workbook - see module docstring.
     """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
     df = df.dropna(subset=["Prod Offer Date"])
 
     first_rows = (
@@ -288,9 +352,12 @@ def build_rework_trend(dataframe: pd.DataFrame) -> dict[str, list[dict[str, Any]
     genuinely needs its own cycle-scoped grouping rather than just a
     label rename. "day" and "month" are unaffected - full history,
     calendar dates, same as before.
+
+    `dataframe` is the Inspection Data workbook - see module
+    docstring.
     """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
     df = df.dropna(subset=["Prod Offer Date"])
     df["Prod Offer Date"] = pd.to_datetime(df["Prod Offer Date"], errors="coerce")
     df = df.dropna(subset=["Prod Offer Date"])
@@ -352,10 +419,11 @@ def build_rework_cycles(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
     before acceptance - i.e. how many of its offer events were
     status "Rework". Surfaces repeat-offender spools that the other
     4 charts (which look at events or first-offer-only) don't show
-    on their own.
+    on their own. `dataframe` is the Inspection Data workbook - see
+    module docstring.
     """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
 
     rework_counts = (
         df[df["_status"] == "Rework"]
