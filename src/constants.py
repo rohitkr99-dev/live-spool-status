@@ -162,6 +162,20 @@ SIOP_PLANNED = "siop_planned"
 REWORK = "rework"
 MATERIAL_HANDOVER = "material_handover"
 
+# QC's continuous PDQC Inspection Data log (2026-09-02) - see
+# reader.py -> read_inspection_data() and src/quality/summary.py.
+# Its own "Final Status" column is unrelated to REWORK_FINAL_STATUS/
+# REWORK_PACKING_STATUS above - a different workbook, with a raw
+# free-text vocabulary of ~150 defect-type values (mostly the
+# specific rework reason itself, e.g. "Bend", "Not Found") rather
+# than the Rework Data workbook's small controlled status list.
+INSPECTION_DATA = "inspection_data"
+INSPECTION_DATA_COLUMNS = [
+    "Project Code", "Drawing No", "Spool No", "Material",
+    "Spool Size", "Prod Offer Date", "Insp Remark", "Final Status",
+    "Prod Engineer",
+]
+
 # ==================================================
 # Log Messages
 # ==================================================

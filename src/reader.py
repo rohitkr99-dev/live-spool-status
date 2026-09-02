@@ -28,6 +28,8 @@ from column_mapper import standardize_columns
 from logger import logger
 from constants import (
     FABRICATION,
+    INSPECTION_DATA,
+    INSPECTION_DATA_COLUMNS,
     LINE_HISTORY,
     MATERIAL_HANDOVER,
     MH_CURRENT_STATUS,
@@ -1131,3 +1133,180 @@ class ExcelReader:
 
         logger.info(f"Loaded {len(lookup)} Project Code -> Name entries from Project Master.")
         return lookup
+
+    def read_inspection_data(self) -> Optional[pd.DataFrame]:
+        """
+        Read QC's continuous PDQC Inspection Data log (2026-09-02) -
+        one row per offer-for-inspection event, first-time status
+        only (Accept, or the specific rework/defect-type reason as
+        free text), going back to 2023. Lives in
+        paths.quality_upload_folder (data/upload/quality/), same
+        folder as the Rework Data workbook. Sole source for the
+        Quality dashboard's Overview KPIs + 4 charts (see
+        src/quality/summary.py) - the Rework Data workbook is
+        untouched everywhere else, per the person's explicit
+        instruction that this has nothing to do with the PDQC/RFP
+        Absolute Rules or any other rework calculation.
+
+        Unlike every other source, this workbook has ~150 sheets:
+        one per weekly window, plus a couple of hand-built summary/
+        tally sheets (e.g. a "TYPE OF REWORK" totals sheet) mixed in
+        at ARBITRARY positions - not just the first sheet, and not
+        reliably named. So rather than picking one "best" sheet like
+        _read_excel_sheet_or_none() does, every sheet in the
+        workbook is scanned (header row only, cheap even at this
+        sheet count) and standardized the same column_mapping.json-
+        driven way; every sheet whose standardized columns contain
+        the full required set is read in full and combined into one
+        dataframe. A summary/tally sheet never has these columns, so
+        it's skipped automatically regardless of its name or
+        position - same content-based philosophy as
+        _read_excel_sheet_or_none() (2026-08-16), extended here to
+        combine ALL matching sheets instead of using only the first.
+
+        Columns present in only some sheets (e.g. "Inch Dia" / "Type"
+        on a handful of older 2023 sheets) are dropped; a sheet
+        missing "Prod Engineer" entirely just gets a blank column for
+        it - every sheet is reindexed to the same fixed shape
+        (INSPECTION_DATA_COLUMNS) before combining.
+
+        OPTIONAL and best-effort, same contract as the Rework Data
+        workbook: a missing file only logs a warning and returns
+        None - the Quality dashboard's Overview section then has no
+        data to show for this run, but nothing else is affected.
+        """
+
+        config = self.settings["input_files"].get("inspection_data", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get(
+                "quality_upload_folder", "data/upload/quality"
+            )
+        )
+
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
+
+        if not files:
+            logger.warning(
+                "Inspection Data workbook not found (looked for "
+                f"'{config['file_pattern']}' in {folder}). The "
+                "Quality dashboard's Overview section will have no "
+                "data to show for this run."
+            )
+            return None
+
+        header = config.get("header_row", 0)
+        required_columns = [
+            "Project Code", "Drawing No", "Spool No",
+            "Prod Offer Date", "Final Status",
+        ]
+        frames = []
+
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            # Opened ONCE per file and reused for every sheet below
+            # (both the header-only peek and the full read) - this
+            # workbook can have ~150 sheets, and re-opening/re-
+            # parsing the whole file via a fresh pd.read_excel() call
+            # per sheet (as a naive per-sheet loop would) is minutes
+            # slower than parsing an already-loaded ExcelFile.
+            try:
+                excel_file = pd.ExcelFile(file, engine="openpyxl")
+            except Exception as error:
+                logger.warning(
+                    f"Could not open {file.name} at all for "
+                    f"Inspection Data ({error}). Skipping this file "
+                    "for this run."
+                )
+                continue
+
+            sheets_used = 0
+            for sheet_name in excel_file.sheet_names:
+                try:
+                    header_only = excel_file.parse(
+                        sheet_name=sheet_name, header=header, nrows=0,
+                    )
+                except Exception:
+                    continue
+
+                standardized_header = standardize_columns(
+                    header_only, INSPECTION_DATA
+                )
+                if not all(
+                    col in standardized_header.columns
+                    for col in required_columns
+                ):
+                    continue
+
+                try:
+                    sheet_frame = excel_file.parse(
+                        sheet_name=sheet_name, header=header,
+                    )
+                except Exception as error:
+                    logger.warning(
+                        f"{file.name}: sheet '{sheet_name}' had the "
+                        "expected Inspection Data columns but failed "
+                        f"to read in full ({error}). Skipping this "
+                        "sheet."
+                    )
+                    continue
+
+                sheet_frame = standardize_columns(sheet_frame, INSPECTION_DATA)
+                sheet_frame = sheet_frame.reindex(columns=INSPECTION_DATA_COLUMNS)
+                frames.append(sheet_frame)
+                sheets_used += 1
+
+            logger.info(
+                f"{file.name}: {sheets_used} of {len(excel_file.sheet_names)} "
+                "sheet(s) matched the Inspection Data column shape "
+                "and were combined."
+            )
+
+        if not frames:
+            logger.warning(
+                "Inspection Data workbook: no sheet with the "
+                "expected columns could be found in any matching "
+                "file. The Quality dashboard's Overview section "
+                "will have no data to show for this run."
+            )
+            return None
+
+        dataframe = pd.concat(frames, ignore_index=True)
+
+        # Same data-entry pattern already handled for the Rework
+        # Data workbook (see resolve_multi_date_text_cells()'s own
+        # docstring): a re-offer typed into the SAME "Prod Offer"
+        # cell as the first offer, "/"-separated (confirmed against
+        # the real workbook: ~1,000 rows, e.g.
+        # "17-08-2026/20-08-2026/21-08-2026"). Left alone, dateutil's
+        # fuzzy parser mis-reads that text as a date with a bogus
+        # timezone offset instead of failing cleanly, which then
+        # breaks every sort/compare on this column ("can't compare
+        # offset-naive and offset-aware datetimes") - resolving the
+        # multi-date text FIRST avoids ever handing that text to the
+        # date parser at all.
+        dataframe = resolve_multi_date_text_cells(dataframe, "Prod Offer Date")
+        dataframe = convert_excel_serial_dates(dataframe, ["Prod Offer Date"])
+
+        before = len(dataframe)
+        dataframe = dataframe.drop_duplicates()
+        if len(dataframe) != before:
+            logger.info(
+                f"Inspection Data: dropped {before - len(dataframe)} "
+                "exact-duplicate row(s) (e.g. an overlapping sheet "
+                "re-synced across files)."
+            )
+
+        logger.info(
+            f"Loaded {len(dataframe)} Inspection Data row(s) from "
+            f"{len(files)} file(s) across all matching sheets."
+        )
+
+        return dataframe
