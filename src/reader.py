@@ -30,6 +30,7 @@ from constants import (
     FABRICATION,
     INSPECTION_DATA,
     INSPECTION_DATA_COLUMNS,
+    INSPECTION_REOFFERED_BEFORE_ACCEPT,
     LINE_HISTORY,
     MATERIAL_HANDOVER,
     MH_CURRENT_STATUS,
@@ -1280,6 +1281,52 @@ class ExcelReader:
 
         dataframe = pd.concat(frames, ignore_index=True)
 
+        # Given by the person (2026-09-02, asked directly about a
+        # real example): a multi-date "Prod Offer" cell (see below)
+        # whose Final Status is literally "Accept" almost always
+        # means the spool needed a real correction before being
+        # accepted - confirmed against the real file (e.g. Insp
+        # Remark "tag/punching balance, SS tag required" recorded as
+        # Accept, dates "17-08-2026/20-08-2026/21-08-2026") - the
+        # single Final Status value just doesn't capture that an
+        # earlier attempt existed. Flagged here, BEFORE the date gets
+        # collapsed below, so summary.py can count these as a genuine
+        # rework event rather than a clean first-offer accept. Unlike
+        # every other multi-date cell (which keeps resolving to the
+        # LATEST date, unchanged - see below), these resolve to the
+        # EARLIEST date instead, since what matters for this flag is
+        # when the deficiency was first found, not when it was
+        # finally cleared.
+        def _is_reoffered_before_accept(row) -> bool:
+            offer = row["Prod Offer Date"]
+            status = row["Final Status"]
+            if not isinstance(offer, str) or "/" not in offer:
+                return False
+            return pd.notna(status) and str(status).strip().casefold() == "accept"
+
+        reoffer_mask = dataframe.apply(_is_reoffered_before_accept, axis=1)
+        dataframe[INSPECTION_REOFFERED_BEFORE_ACCEPT] = reoffer_mask
+
+        def _earliest_of_multi_date(value):
+            pieces = [p.strip() for p in value.split("/") if p.strip()]
+            parsed = [
+                pd.to_datetime(p, dayfirst=True, errors="coerce") for p in pieces
+            ]
+            parsed = [p for p in parsed if pd.notna(p)]
+            return min(parsed) if parsed else pd.NaT
+
+        if reoffer_mask.any():
+            dataframe.loc[reoffer_mask, "Prod Offer Date"] = (
+                dataframe.loc[reoffer_mask, "Prod Offer Date"]
+                .apply(_earliest_of_multi_date)
+            )
+            logger.info(
+                f"Inspection Data: {int(reoffer_mask.sum())} row(s) "
+                f"flagged {INSPECTION_REOFFERED_BEFORE_ACCEPT!r} "
+                "(multi-date offer, Final Status Accept) - dated at "
+                "their earliest offer date."
+            )
+
         # Same data-entry pattern already handled for the Rework
         # Data workbook (see resolve_multi_date_text_cells()'s own
         # docstring): a re-offer typed into the SAME "Prod Offer"
@@ -1291,7 +1338,9 @@ class ExcelReader:
         # breaks every sort/compare on this column ("can't compare
         # offset-naive and offset-aware datetimes") - resolving the
         # multi-date text FIRST avoids ever handing that text to the
-        # date parser at all.
+        # date parser at all. Rows already resolved above (the
+        # reoffer_mask ones) are now a plain Timestamp, not text, so
+        # this leaves them untouched.
         dataframe = resolve_multi_date_text_cells(dataframe, "Prod Offer Date")
         dataframe = convert_excel_serial_dates(dataframe, ["Prod Offer Date"])
 

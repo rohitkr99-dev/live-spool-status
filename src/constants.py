@@ -176,6 +176,19 @@ INSPECTION_DATA_COLUMNS = [
     "Prod Engineer",
 ]
 
+# Derived (not read from any sheet - computed in
+# reader.py -> read_inspection_data()): True when a row's Prod Offer
+# cell held multiple "/"-separated dates (a re-offer) but its Final
+# Status is literally "Accept" - confirmed against the real file
+# (2026-09-02, given by the person) that this combination almost
+# always means a real deficiency was found and corrected before
+# acceptance (e.g. Insp Remark "tag/punching balance, SS tag
+# required" recorded as Accept), which the single Final Status value
+# alone doesn't capture. src/quality/summary.py's
+# _with_inspection_status() treats a True row as Rework regardless
+# of its literal "Accept" status.
+INSPECTION_REOFFERED_BEFORE_ACCEPT = "Reoffered Before Accept"
+
 # ==================================================
 # Log Messages
 # ==================================================
