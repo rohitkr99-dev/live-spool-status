@@ -15,6 +15,20 @@ had no existing coverage of even the Hold exclusion before this file),
 and build_rework_by_project_stage() (production/summary.py) shows the
 excluded population instead of just dropping it, mirroring
 build_hold_by_project_stage() exactly.
+
+Corrected same day (2026-09-03), after the person re-ran the real
+pipeline: the Rework exclusion must NOT apply to the PDQC stage's own
+backlog chart. Unlike Hold (an unrelated blocker that can hit a spool
+at any stage), being in Rework at PDQC IS the PDQC stage's own
+not-yet-resolved verdict - a spool offered to QC, rejected, and never
+re-offered for 83+ days is a genuine PDQC backlog entry, and excluding
+it there was hiding exactly the spools that chart most needs to show
+(confirmed against a real example that should have landed in PDQC's
+"Beyond 30 Days" bucket and didn't, because it was being excluded like
+every other stage). Rework is still excluded from every stage AFTER
+PDQC (Release for Painting, PDI Clearance, Packed, and welding_finish)
+- those genuinely aren't the spool's real bottleneck once it's stuck
+upstream at QC.
 """
 
 from datetime import date, timedelta
@@ -52,10 +66,43 @@ def _record(rework_latest_status=None, currently_on_hold=False, current_stage="w
 # ---------------------------------------------------------------
 
 def test_rework_spool_excluded_from_backlog():
+    """Every stage except PDQC (see the two tests below)."""
     records = [_record(rework_latest_status="Rework")]
     result = build_backlog_chart(records, "welding_finish", CATEGORY_META, CATEGORY_TRACKED_STAGES)
     assert result["rows"] == []
     assert all(b["spool_count"] == 0 for b in result["buckets"])
+
+
+def test_rework_spool_at_release_for_painting_still_excluded():
+    """The exclusion still applies downstream of PDQC - only PDQC itself is the exception."""
+    records = [_record(rework_latest_status="Rework", current_stage="release_for_painting")]
+    result = build_backlog_chart(records, "release_for_painting", CATEGORY_META, CATEGORY_TRACKED_STAGES)
+    assert result["rows"] == []
+
+
+def test_rework_spool_still_counted_in_pdqc_backlog():
+    """
+    The one exception, corrected 2026-09-03: PDQC's own chart must NOT
+    exclude Rework - a spool offered to QC and rejected 83+ days ago
+    with no re-offer since IS a genuine PDQC backlog entry, not a
+    Release-for-Painting-style false positive. See backlog.py's inline
+    comment on this exact branch.
+    """
+    records = [
+        SpoolRecord(
+            composite_key="P|D|S", project_code="P001", project_name="Project A",
+            drawing_no="D001", spool_no="S001", category_key="le8_cs_ss",
+            planned_start=date.today() - timedelta(days=90),
+            current_stage="pdqc",
+            stage_dates={"welding_finish": date.today() - timedelta(days=83)},
+            target_days={"welding_finish": 5, "pdqc": 8},
+            rework_latest_status="Rework",
+        ),
+    ]
+    result = build_backlog_chart(records, "pdqc", CATEGORY_META, CATEGORY_TRACKED_STAGES)
+    assert len(result["rows"]) == 1
+    beyond_30 = next(b for b in result["buckets"] if b["bucket"] == "Beyond 30 Days")
+    assert beyond_30["spool_count"] == 1
 
 
 def test_hold_spool_still_excluded_from_backlog():
