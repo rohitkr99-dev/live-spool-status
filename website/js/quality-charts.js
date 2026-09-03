@@ -90,6 +90,13 @@ const QualityCharts = {
         indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
+        // Right padding so the longest bar's "count (pct%)" label
+        // (longer than the plain count this chart showed before
+        // 2026-09-03) has room to draw past the bar's end instead of
+        // running off the canvas edge - the bar closest to the
+        // x-axis's own auto-computed max has the least room to
+        // spare, so it's the one this actually affects in practice.
+        layout: { padding: { right: 64 } },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -98,6 +105,21 @@ const QualityCharts = {
                 const pct = pctById[item.dataIndex];
                 return `${item.formattedValue} event(s) (${pct}%)`;
               },
+            },
+          },
+          // 2026-09-03, given by the person: show the % alongside
+          // the count directly on the bar (not just on hover) -
+          // e.g. "157 (20.8%)" for Dimension. Overrides only
+          // `formatter` here, so the rest of chartTheme.js's global
+          // bar-chart datalabels styling (color/font/anchor/align)
+          // still applies untouched - Chart.js merges per-chart
+          // plugin options into the type-level defaults rather than
+          // replacing them.
+          datalabels: {
+            formatter(value, context) {
+              if (value === null || value === undefined || value === 0) return "";
+              const pct = pctById[context.dataIndex];
+              return `${value.toLocaleString()} (${pct}%)`;
             },
           },
         },
