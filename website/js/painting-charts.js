@@ -18,7 +18,6 @@ const PaintingCharts = {
     size: 11,
   },
 
-  outputStage: "internal_blasting",
   outputMetric: "count",
   outputGranularity: "Week",
 
@@ -30,7 +29,7 @@ const PaintingCharts = {
     this.renderAging();
     this.renderTrend();
     this.setupOutputFilters();
-    this.renderOutputTrend();
+    this.renderAllOutputTrends();
     this.renderProjectInsight();
     this.renderMaterialInsight();
   },
@@ -332,35 +331,30 @@ const PaintingCharts = {
   },
 
   // ---------------------------------------------------------------
-  // Process Output Over Time - how many spools (or how much surface
-  // area) completed a given stage per day/week/month. Stage/metric/
-  // granularity are simple client-side selectors over pre-computed
-  // arrays (stage_output_trend in the bundle) - same filter pattern
-  // as website/js/packing-charts.js -> renderPackingTrend().
+  // Process Output Over Time - one chart per process, how many spools
+  // (or how much surface area) completed it per day/week/month.
+  // Metric/granularity are shared across all six charts - simple
+  // client-side selectors over pre-computed arrays (stage_output_trend
+  // in the bundle) - same filter pattern as
+  // website/js/packing-charts.js -> renderPackingTrend().
   // ---------------------------------------------------------------
-  stageLabel(stage) {
-    return {
-      internal_blasting: "Internal Blasting",
-      external_blasting: "External Blasting",
-      primer: "Primer",
-      pickling: "Pickling",
-      pdi_offer: "PDI Offer",
-      pdi_clearance: "PDI Clearance",
-    }[stage] || stage;
-  },
+  outputStages: [
+    ["internal_blasting", "Internal Blasting"],
+    ["external_blasting", "External Blasting"],
+    ["primer", "Primer"],
+    ["pickling", "Pickling"],
+    ["pdi_offer", "PDI Offer"],
+    ["pdi_clearance", "PDI Clearance"],
+  ],
 
   setupOutputFilters() {
-    this._wireFilterGroup("output-stage-filter", "stage", (value) => {
-      this.outputStage = value;
-      this.renderOutputTrend();
-    });
     this._wireFilterGroup("output-metric-filter", "metric", (value) => {
       this.outputMetric = value;
-      this.renderOutputTrend();
+      this.renderAllOutputTrends();
     });
     this._wireFilterGroup("output-period-filter", "granularity", (value) => {
       this.outputGranularity = value;
-      this.renderOutputTrend();
+      this.renderAllOutputTrends();
     });
   },
 
@@ -392,39 +386,42 @@ const PaintingCharts = {
     return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
   },
 
-  renderOutputTrend() {
-    this.destroy("output");
-    const ctx = document.getElementById("chart-output");
+  renderAllOutputTrends() {
+    this.outputStages.forEach(([stage]) => this.renderOutputTrend(stage));
+  },
+
+  renderOutputTrend(stage) {
+    const key = `output_${stage}`;
+    this.destroy(key);
+    const ctx = document.getElementById(`chart-output-${stage}`);
     if (!ctx) return;
 
-    const titleEl = document.getElementById("chart-output-title");
-    const hintEl = document.getElementById("chart-output-hint");
-    const label = this.stageLabel(this.outputStage);
+    const hintEl = document.getElementById(`chart-output-${stage}-hint`);
     const metricLabel = this.outputMetric === "surface_area" ? "Surface area (m²)" : "Spool count";
-    if (titleEl) titleEl.textContent = `${label} Output`;
     if (hintEl) hintEl.textContent = `${metricLabel}, by ${this.outputGranularity.toLowerCase()}`;
 
-    const stageData = (this.store.stageOutputTrend || {})[this.outputStage] || {};
+    const stageData = (this.store.stageOutputTrend || {})[stage] || {};
     const rows = stageData[this._granularityKey(this.outputGranularity)] || [];
     const rawKeys = rows.map((r) => r.period);
     const labels = rawKeys.map((raw) => this._formatPeriodLabel(raw, this.outputGranularity));
     const data = rows.map((r) => r[this.outputMetric] || 0);
 
-    this.instances.output = new Chart(ctx, {
+    this.instances[key] = new Chart(ctx, {
       type: "bar",
       data: {
         labels,
-        datasets: [{ label: metricLabel, data, backgroundColor: PAINTING_CONFIG.stageColor, borderRadius: 4, maxBarThickness: 34 }],
+        datasets: [{ label: metricLabel, data, backgroundColor: PAINTING_CONFIG.stageColor, borderRadius: 4, maxBarThickness: 28 }],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, autoSkip: true, maxRotation: 0 } },
+          x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 9.5 }, autoSkip: true, maxRotation: 0 } },
           y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: metricLabel, font: this.chartFont } },
         },
         plugins: {
           legend: { display: false },
+          datalabels: { display: false },
           tooltip: {
             titleFont: this.chartFont,
             bodyFont: this.chartFont,

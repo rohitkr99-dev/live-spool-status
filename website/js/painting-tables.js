@@ -131,6 +131,7 @@ const PaintingTables = {
     this.initNotInDprTable(store.anomalies.not_in_dpr || []);
     this.initExcludedTable(store.anomalies.excluded_already_packed || []);
     this.populateProjectFilter(spools);
+    this.setupPaintingFilters(spools);
   },
 
   initAllTable(spools) {
@@ -159,9 +160,19 @@ const PaintingTables = {
         { data: "pdi_clearance_date", className: "mono-cell", render: this.renderDate() },
         { data: "total_cycle_days", className: "mono-cell", render: this.renderDays() },
         { data: "painting_status", render: this.renderText() },
+        // Hidden - not shown to the reader, only here so the filter
+        // bar (setupPaintingFilters()) has a real DataTables column
+        // to run column().search() / the numeric-range ext.search
+        // plugin against, same technique as website/js/tables.js.
+        { data: "material", name: "material", visible: false },
+        { data: "item_category", name: "item_category", visible: false },
+        { data: "current_age_days", name: "current_age_days", visible: false },
+        { data: "is_complete", name: "is_complete", visible: false, render: this.renderBool() },
       ],
       language: { search: "", searchPlaceholder: "Search project, drawing, spool no…", info: "Showing _START_–_END_ of _TOTAL_ spools", emptyTable: "No spools loaded" },
     });
+
+    this.dt.all.on("draw.dt", () => this.updatePaintingSelectionSummary());
   },
 
   initMissingTable(rows) {
@@ -371,10 +382,206 @@ const PaintingTables = {
   applyProjectFilter(projectCode) {
     const escape = $.fn.dataTable.util.escapeRegex;
     const value = !projectCode || projectCode === "__all__" ? "" : `^${escape(projectCode)}$`;
-    ["all", "missing", "excluded", "stuck", "extreme", "dataquality", "pdimismatch"].forEach((key) => {
+    // "all" is deliberately excluded here - the All RFP-Done Spools
+    // tab has its own Project (multi-select) filter as part of
+    // painting-filter-bar (setupPaintingFilters()), matching the
+    // Projects dashboard's format; this toolbar dropdown only drives
+    // the simpler single-project filter on the other tabs.
+    ["missing", "excluded", "stuck", "extreme", "dataquality", "pdimismatch"].forEach((key) => {
       const table = this.dt[key];
       if (!table) return;
       table.column("project_code:name").search(value, true, false).draw();
     });
+  },
+
+  // ---------------------------------------------------------------
+  // "All RFP-Done Spools" filter bar - same format as the Projects
+  // dashboard's own filter bar (website/dashboard.html -> #filter-bar,
+  // wired in website/js/tables.js -> setupFilters()): multi-select
+  // dropdowns (OR-matched against one column each), single-select
+  // dropdowns, min/max numeric ranges, a sort-by/direction pair, and
+  // a Clear Filters button. Applies only to #table-all, matching how
+  // the Projects page's filter bar only governs its own main table.
+  // ---------------------------------------------------------------
+  populateMultiSelect(selectId, values, labelFn) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    select.innerHTML = "";
+    values.forEach((value) => {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = labelFn ? labelFn(value) : value;
+      select.appendChild(opt);
+    });
+  },
+
+  setupPaintingFilters(spools) {
+    if (!this.dt.all) return;
+
+    const distinct = (field) =>
+      [...new Set(spools.map((s) => s[field]).filter((v) => v !== null && v !== undefined && v !== ""))].sort();
+
+    this.populateMultiSelect(
+      "pfilter-project",
+      distinct("project_code"),
+      (code) => {
+        const row = spools.find((s) => s.project_code === code);
+        return row && row.project_name ? `${row.project_name} (${code})` : code;
+      },
+    );
+    this.populateMultiSelect("pfilter-material", distinct("material"));
+    this.populateMultiSelect("pfilter-category", distinct("item_category"));
+    this.populateMultiSelect("pfilter-status", distinct("painting_status"));
+
+    const escape = $.fn.dataTable.util.escapeRegex;
+    const multiSelectColumns = {
+      "pfilter-project": "project_code:name",
+      "pfilter-material": "material:name",
+      "pfilter-category": "item_category:name",
+      "pfilter-status": 13,
+    };
+    for (const [selectId, colRef] of Object.entries(multiSelectColumns)) {
+      const select = document.getElementById(selectId);
+      if (!select || select.dataset.wired) continue;
+      select.dataset.wired = "true";
+      select.addEventListener("change", () => {
+        const selected = [...select.selectedOptions].map((o) => o.value);
+        const search = selected.length ? `^(${selected.map((v) => escape(v)).join("|")})$` : "";
+        this.dt.all.column(colRef).search(search, true, false).draw();
+      });
+    }
+
+    const inPlanSelect = document.getElementById("pfilter-inplan");
+    if (inPlanSelect && !inPlanSelect.dataset.wired) {
+      inPlanSelect.dataset.wired = "true";
+      inPlanSelect.addEventListener("change", () => {
+        const value = inPlanSelect.value;
+        this.dt.all.column(4).search(value ? `^${value}$` : "", true, false).draw();
+      });
+    }
+
+    const completionSelect = document.getElementById("pfilter-completion");
+    if (completionSelect && !completionSelect.dataset.wired) {
+      completionSelect.dataset.wired = "true";
+      completionSelect.addEventListener("change", () => {
+        const value = completionSelect.value; // "" | "Completed" | "Open"
+        const search = value === "" ? "" : (value === "Completed" ? "^Yes$" : "^No$");
+        this.dt.all.column("is_complete:name").search(search, true, false).draw();
+      });
+    }
+
+    this.setupPaintingNumericRangeFilters();
+
+    const applySort = () => {
+      const colIndex = parseInt(document.getElementById("psort-field").value, 10);
+      const dir = document.getElementById("psort-direction").value;
+      this.dt.all.order([colIndex, dir]).draw();
+    };
+    const sortField = document.getElementById("psort-field");
+    const sortDirection = document.getElementById("psort-direction");
+    if (sortField && !sortField.dataset.wired) {
+      sortField.dataset.wired = "true";
+      sortField.addEventListener("change", applySort);
+    }
+    if (sortDirection && !sortDirection.dataset.wired) {
+      sortDirection.dataset.wired = "true";
+      sortDirection.addEventListener("change", applySort);
+    }
+
+    const clearBtn = document.getElementById("painting-clear-filters");
+    if (clearBtn && !clearBtn.dataset.wired) {
+      clearBtn.dataset.wired = "true";
+      clearBtn.addEventListener("click", () => {
+        document.querySelectorAll("#painting-filter-bar select[multiple]").forEach((select) => {
+          [...select.options].forEach((option) => (option.selected = false));
+        });
+        document.getElementById("pfilter-inplan").value = "";
+        document.getElementById("pfilter-completion").value = "";
+        document.getElementById("pfilter-cycle-min").value = "";
+        document.getElementById("pfilter-cycle-max").value = "";
+        document.getElementById("pfilter-age-min").value = "";
+        document.getElementById("pfilter-age-max").value = "";
+        document.getElementById("psort-field").value = "11";
+        document.getElementById("psort-direction").value = "desc";
+        this.dt.all.columns().search("").draw();
+        this.dt.all.search("").draw();
+        this.dt.all.order([11, "desc"]).draw();
+      });
+    }
+
+    this.updatePaintingSelectionSummary();
+  },
+
+  /**
+   * Excel-style numeric "between min and max" filtering for Cycle
+   * Days (column 12) and Current Age (column 16, open spools only) -
+   * same technique as website/js/tables.js ->
+   * setupNumericRangeFilters(): one shared DataTables search plugin,
+   * scoped to #table-all only, that combines with every dropdown/
+   * global-search filter above rather than replacing them.
+   */
+  setupPaintingNumericRangeFilters() {
+    if (this._paintingRangeFilterRegistered) return;
+    this._paintingRangeFilterRegistered = true;
+
+    const CYCLE_COL = 12;
+    const AGE_COL = 16;
+
+    $.fn.dataTable.ext.search.push((settings, searchData) => {
+      if (settings.nTable.id !== "table-all") return true;
+
+      const cycleMin = document.getElementById("pfilter-cycle-min").value;
+      const cycleMax = document.getElementById("pfilter-cycle-max").value;
+      const ageMin = document.getElementById("pfilter-age-min").value;
+      const ageMax = document.getElementById("pfilter-age-max").value;
+
+      const cycleDays = parseFloat(searchData[CYCLE_COL]);
+      const currentAge = parseFloat(searchData[AGE_COL]);
+
+      if (cycleMin !== "" && !(cycleDays >= parseFloat(cycleMin))) return false;
+      if (cycleMax !== "" && !(cycleDays <= parseFloat(cycleMax))) return false;
+      if (ageMin !== "" && !(currentAge >= parseFloat(ageMin))) return false;
+      if (ageMax !== "" && !(currentAge <= parseFloat(ageMax))) return false;
+
+      return true;
+    });
+
+    ["pfilter-cycle-min", "pfilter-cycle-max", "pfilter-age-min", "pfilter-age-max"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.wired) {
+        el.dataset.wired = "true";
+        el.addEventListener("input", () => this.dt.all.draw());
+      }
+    });
+  },
+
+  /**
+   * Sum of Surface Area / Weight / Quantity across whatever rows the
+   * current filters/search leave visible, plus the visible row count -
+   * same "Selection Summary" pattern as website/js/tables.js ->
+   * updateSelectionSummary(). Recomputed on every #table-all draw
+   * (wired in initAllTable()) so it always matches what's on screen.
+   */
+  updatePaintingSelectionSummary() {
+    if (!this.dt.all) return;
+    const rows = this.dt.all.rows({ search: "applied" }).data().toArray();
+
+    const countEl = document.getElementById("painting-selection-summary-count");
+    if (countEl) {
+      countEl.textContent = `${rows.length.toLocaleString("en-US")} spool${rows.length === 1 ? "" : "s"} selected`;
+    }
+
+    const totals = [
+      { field: "surface_area", label: "Surface Area (m²)", decimals: 3 },
+      { field: "weight", label: "Weight (kg)", decimals: 2 },
+      { field: "quantity", label: "Qty", decimals: 0 },
+    ].map(({ field, label, decimals }) => {
+      const sum = rows.reduce((acc, row) => acc + (Number(row[field]) || 0), 0);
+      const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals }).format(sum);
+      return `${label}: <strong>${formatted}</strong>`;
+    });
+
+    const totalsEl = document.getElementById("painting-selection-summary-totals");
+    if (totalsEl) totalsEl.innerHTML = totals.join(" &nbsp;·&nbsp; ");
   },
 };
