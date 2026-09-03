@@ -9,15 +9,16 @@ Python so the website only has to display them.
 Two independent data sources feed this file - deliberately never
 mixed:
 
-  Inspection Data workbook (2026-09-02) -> build_kpis(),
-  build_first_offer_split(), build_rework_by_project(),
-  build_rework_trend(), build_rework_cycles() - the Overview KPI
-  cards + 4 charts. See _normalize_inspection_status() below.
+  Inspection Data workbook (2026-09-02, extended 2026-09-03) ->
+  build_kpis(), build_first_offer_split(), build_rework_by_project(),
+  build_rework_trend(), build_rework_cycles(), build_top_rework_types()
+  - the Overview KPI cards + all 5 charts. See
+  _normalize_inspection_status() below.
 
-  Rework Data workbook (unchanged) -> build_top_rework_types(),
-  build_rework_status_monthly(), build_rework_type_monthly() - still
-  uses src/rework_pdqc_rule.py's Accept/Hold/Rework classification,
-  same as the PDQC/RFP Absolute Rules. See _normalize_status() below.
+  Rework Data workbook (unchanged) -> build_rework_status_monthly(),
+  build_rework_type_monthly() - still uses src/rework_pdqc_rule.py's
+  Accept/Hold/Rework classification, same as the PDQC/RFP Absolute
+  Rules. See _normalize_status() below.
 
 Per the person's explicit instruction (2026-09-02): the Overview
 section now reflects the Inspection Data workbook - QC's own
@@ -69,29 +70,21 @@ Rework Data status normalization (unchanged)
 outcome of each offer event - despite the column name, it is not a
 date. It varies in case ("Packing Release" / "RFP" / "FQC Accept")
 and occasionally means something that's neither an accept nor a
-rework ("Project Hold", "Query", "Hold"). build_top_rework_types()
-and the two monthly export functions normalize it the same way,
-reusing the single shared classification in src/rework_pdqc_rule.py
-(Accept/Hold/Rework) so they can never drift out of sync with the
-Projects/Production pipelines - "Other" plays the same excluded role
-as above.
-
-"Type of Rework" (column J) is similarly free text (case/whitespace
-variants of the same defect - "C ID" vs " C ID", "Serration damage"
-vs "SERRATION DAMAGE"). Grouping uses a stripped+uppercased key, but
-the label shown on the chart is the most common ORIGINAL spelling
-for that key, so acronyms like "RT" don't get mangled by a blanket
-.title() call.
+rework ("Project Hold", "Query", "Hold"). The two monthly export
+functions normalize it the same way, reusing the single shared
+classification in src/rework_pdqc_rule.py (Accept/Hold/Rework) so
+they can never drift out of sync with the Projects/Production
+pipelines - "Other" plays the same excluded role as above.
 """
 
 from __future__ import annotations
 
-from collections import Counter
 from typing import Any
 
 import pandas as pd
 
 from constants import INSPECTION_REOFFERED_BEFORE_ACCEPT
+from quality.logger import logger
 from rework_pdqc_rule import normalize_rework_status
 from utils import fiscal_week_info, today, week_number_to_start_date
 
@@ -244,42 +237,186 @@ def build_kpis(dataframe: pd.DataFrame, cycles: list[dict]) -> dict[str, Any]:
 # -----------------------------------------------------
 
 
+# Chart 1's categorization (2026-09-03, given by the person - "use
+# your knowledge to categorize them"). Maps a normalized (stripped,
+# uppercased) Inspection Data "Final Status" value to a defect-type
+# category, consolidating obvious spelling/wording variants of the
+# SAME defect (e.g. "MSN TAG BAL" / "TAG BALANCE" / "TAG WRONG" all
+# -> Tag; "PUNCH BAL" / "MSN PUNCHING BAL" / "PUNCH WRONG" all ->
+# Punching). "Degree" is kept separate from "Orientation" on
+# purpose: the shop's own Sheet2 tally in the Inspection Data
+# workbook already treats them as distinct categories, and nothing
+# here should second-guess that. Built and verified against the
+# person's real Aug-2026 file (105 distinct values, all mapped, 0
+# fell through to "Unclassified") - a genuinely new defect-type
+# wording in a future sync will fall through to "Unclassified"
+# (folded into "Others" on the chart) and gets logged so it can be
+# added here, same as REWORK_TYPE_CATEGORIES below.
+INSPECTION_DEFECT_TYPE_CATEGORIES: dict[str, str] = {
+    # Dimension
+    "DIM": "Dimension", "DIMENSION": "Dimension", "ELBOW HEIGHT LESS": "Dimension",
+    "THICKNESS LESS": "Dimension", "WELDING BOSS DIA LESS": "Dimension",
+    "HC DIA MORE THAN ID": "Dimension",
+    # Bend
+    "BEND": "Bend", "HANDWHEEL BEND": "Bend",
+    # Degree (kept separate from Orientation - see above)
+    "DEGREE": "Degree",
+    # Bevel
+    "BEVEL": "Bevel", "THICKNESS LESS ON BEVEL": "Bevel", "BEVEL DAMAGE": "Bevel",
+    "PIPE REQ. PLAIN END & FOUND BEVEL": "Bevel", "REQ BEVEL FOUND PLAIN END": "Bevel",
+    # Punching
+    "PUNCHING BAL": "Punching", "PUNCHING": "Punching", "PUNCH BAL": "Punching",
+    "MSN PUNCHING BAL": "Punching", "C.NO. PUNCH BAL": "Punching", "MSN PUNCH BAL": "Punching",
+    "HOLE DIRECTION PUNCH BAL": "Punching", "PUNCH WRONG": "Punching",
+    # Welding
+    "WELDING LESS": "Welding", "WELD SIZE LESS": "Welding",
+    "WELD REQ. 2 SIDE FOUND ALL AROUND": "Welding", "WELD LESS": "Welding",
+    "SUPPORT WELD INCOMPLETE": "Welding", "WELD INCOMPLETE": "Welding",
+    "WELD VISUAL NOT OKAY": "Welding", "WELD BAL": "Welding", "TACKING ON ELBOW": "Welding",
+    "TACKING BAL": "Welding", "ARC STRIKE": "Welding", "SPATTER": "Welding",
+    "TACK WELD GRINDING REQ.": "Welding",
+    # Tag
+    "TAG WRONG": "Tag", "MSN TAG BALANCE": "Tag", "MSN TAG WRONG": "Tag", "TAG": "Tag",
+    "TAG DAMAGE": "Tag", "TAG BALANCE": "Tag", "MSN TAG BAL": "Tag",
+    # Orientation
+    "ORIENTATION": "Orientation", "VALVE TILT": "Orientation", "ORIENTATION WRONG": "Orientation",
+    "VALVE HANDLE ORIENTATION": "Orientation", "WRONG ORIENTATION": "Orientation",
+    "PLATE ORIENTATION WRONG": "Orientation",
+    # Hold / Query - administrative, not a technical defect
+    "HOLD FOR SOCKOLET": "Hold / Query", "PROJECT HOLD": "Hold / Query", "FFW QUERY": "Hold / Query",
+    "PLATE QUERY": "Hold / Query", "DESIGN QUERY": "Hold / Query", "RT PLUG QUERY": "Hold / Query",
+    "ENGINEERING HOLD": "Hold / Query",
+    # Inside Cleaning
+    "INSIDE CLEANING": "Inside Cleaning", "INSIDE CLEANING BALANCE": "Inside Cleaning",
+    "INSIDE CLEANING BAL": "Inside Cleaning",
+    # Hardness
+    "HARDNESS HIGH": "Hardness", "HIGH HARDNESS": "Hardness",
+    # PWHT (Post Weld Heat Treatment)
+    "PWHT BAL": "PWHT", "RE-PWHT": "PWHT",
+    # Material / Grade Wrong
+    "PIPE GRADE REQ. C & FOUND B": "Material / Grade Wrong", "REQ. P11 FOUND CS": "Material / Grade Wrong",
+    "WELD REQ P22 FOUND CS": "Material / Grade Wrong", "SPOOL WRONG": "Material / Grade Wrong",
+    "WRONG SPOOL": "Material / Grade Wrong", "PIPE REQ. NPT & FOUND PLAIN END": "Material / Grade Wrong",
+    "REQ PLAIN FOUND THREAD END": "Material / Grade Wrong", "SCHEDULE WRONG": "Material / Grade Wrong",
+    # ID / Marking
+    "C ID": "ID / Marking", "ID": "ID / Marking",
+    "OVALITY": "Ovality",
+    "SERRATION DAMAGE": "Serration Damage",
+    "NOT FOUND": "Not Found",
+    # Thread
+    "THREAD BAL": "Thread", "THREAD DAMAGE": "Thread", "THREAD LENGTH REQ 14MM": "Thread",
+    "DENT": "Dent",
+    # Cut Mark
+    "CUT MARK": "Cut Mark", "GAS CUT MARK": "Cut Mark", "CHUCK MARK": "Cut Mark",
+    # Blasting
+    "BLAST DONE": "Blasting", "BLASTING DONE": "Blasting",
+    # Root Flush
+    "ROOT FLUSH BAL": "Root Flush", "ROOT FLUSH BAL FLANGE": "Root Flush",
+    "HC ROOT FLUSH BALANCE": "Root Flush",
+    # Burr / Deburring
+    "BURRS IN HOLE": "Burr / Deburring", "BURR": "Burr / Deburring", "HOLE DEBURRING BAL": "Burr / Deburring",
+    # Vent Hole
+    "VENT HOLE BAL": "Vent Hole", "WEEP HOLE BAL": "Vent Hole",
+    "ORIFICE ASSEMBLY": "Orifice Assembly",
+    # Support
+    "SUPPORT HOLE BALANCE": "Support", "SUPPORT HOLE NOT IN BOTTOM": "Support",
+    "WB FINISHING BAL": "WB Finishing",
+    # Incomplete Spool (the whole spool, distinct from a specific weld being incomplete)
+    "INCOMPLETE": "Incomplete Spool", "INCOMPLETE SPOOL": "Incomplete Spool",
+    # Handwheel / Valve misc (orientation-specific handwheel issues stay under Orientation)
+    "HANDWHEEL BALANCE": "Handwheel / Valve", "VALVE HANDLE DAMAGE": "Handwheel / Valve",
+    # True one-offs with nothing else to group under
+    "FACE OUT": "Unclassified", "SLOPE NOT MAINTAINED": "Unclassified", "TRIM BAL": "Unclassified",
+    "RT PLUG NOT TIGHT": "Unclassified", "FL HOLE OUT": "Unclassified",
+}
+
+# Fallback classification for rows flagged
+# INSPECTION_REOFFERED_BEFORE_ACCEPT (Final Status literally "Accept",
+# so there's no defect word to look up above) - keyword-matched
+# against the free-text Insp Remark instead, first match wins. Order
+# matters: "direction"/"orientation" is checked before the generic
+# "handwheel" keyword so a remark like "Handwheel in +X direction but
+# need +Y" lands under Orientation (the actual correction needed),
+# not a generic Handwheel/Valve bucket - while a bare "Handwheel not
+# available" (no direction/orientation wording) still falls through
+# to Handwheel/Valve correctly. Verified against all 15 real
+# 2026-09-02 examples before this was written.
+INSPECTION_REMARK_DEFECT_KEYWORDS: list[tuple[str, list[str]]] = [
+    ("Bevel", ["bevel"]),
+    ("Tag", ["tag"]),
+    ("Dimension", ["nozzle", "height required", "dimension"]),
+    ("Orientation", ["direction", "orientation"]),
+    ("Handwheel / Valve", ["handwheel", "valve handle"]),
+    ("Inside Cleaning", ["scal", "inside clean", "blast"]),
+]
+
+
+def _classify_inspection_defect_type(
+    final_status: Any,
+    insp_remark: Any,
+    reoffered_before_accept: bool,
+) -> str:
+    if reoffered_before_accept:
+        text = f" {str(insp_remark).strip().lower()} " if pd.notna(insp_remark) else ""
+        for label, keywords in INSPECTION_REMARK_DEFECT_KEYWORDS:
+            if any(keyword in text for keyword in keywords):
+                return label
+        return "Unclassified"
+
+    key = str(final_status).strip().upper() if pd.notna(final_status) else ""
+    return INSPECTION_DEFECT_TYPE_CATEGORIES.get(key, "Unclassified")
+
+
 def build_top_rework_types(dataframe: pd.DataFrame, top_n: int = 10) -> dict[str, Any]:
     """
-    Chart 1: top N "Type of Rework" values (by rework event count),
-    with everything else outside the top N collapsed into "Others".
-    Only rows whose Final Status normalizes to "Rework" are counted -
-    "Accept" rows (including any stray "Accept" value under Type of
-    Rework itself) never contribute here.
+    Chart 1: top N defect-type categories (by rework event count,
+    from the Inspection Data workbook - see
+    INSPECTION_DEFECT_TYPE_CATEGORIES/INSPECTION_REMARK_DEFECT_KEYWORDS
+    above), with everything else outside the top N collapsed into
+    "Others". Only rows whose status normalizes to "Rework" are
+    counted - "Accept"/"Other" (Hold) rows never contribute here.
+    `dataframe` is the Inspection Data workbook - see module
+    docstring.
     """
 
-    df = _with_status(dataframe)
+    df = _with_inspection_status(dataframe)
     rework_rows = df[df["_status"] == "Rework"].copy()
-
-    rework_rows["_type_key"] = rework_rows["Rework Type"].apply(
-        lambda v: None if pd.isna(v) or not str(v).strip() else str(v).strip().upper()
-    )
-    rework_rows = rework_rows.dropna(subset=["_type_key"])
-    # Guard: a row genuinely tagged Rework but with Type of Rework
-    # literally "Accept" is a data-entry inconsistency, not a real
-    # defect type - excluded from this chart either way.
-    rework_rows = rework_rows[rework_rows["_type_key"] != "ACCEPT"]
 
     total = len(rework_rows)
 
     if total == 0:
         return {"items": [], "total_rework_events": 0}
 
-    label_by_key: dict[str, str] = {}
-    for key, group in rework_rows.groupby("_type_key"):
-        originals = [str(v).strip() for v in group["Rework Type"] if str(v).strip()]
-        label_by_key[key] = Counter(originals).most_common(1)[0][0]
+    has_reoffer_column = INSPECTION_REOFFERED_BEFORE_ACCEPT in rework_rows.columns
 
-    counts = rework_rows["_type_key"].value_counts()
+    def _row_category(row) -> str:
+        reoffered = (
+            bool(row[INSPECTION_REOFFERED_BEFORE_ACCEPT])
+            if has_reoffer_column and pd.notna(row[INSPECTION_REOFFERED_BEFORE_ACCEPT])
+            else False
+        )
+        return _classify_inspection_defect_type(
+            row["Final Status"], row.get("Insp Remark"), reoffered
+        )
+
+    rework_rows["_defect_category"] = rework_rows.apply(_row_category, axis=1)
+
+    unclassified = rework_rows[rework_rows["_defect_category"] == "Unclassified"]
+    if not unclassified.empty:
+        sample = sorted(set(str(v).strip() for v in unclassified["Final Status"]))[:10]
+        logger.warning(
+            f"build_top_rework_types: {len(unclassified)} row(s) didn't "
+            "match any known defect-type category (folded into "
+            f"'Others') - sample unmapped Final Status value(s): {sample}. "
+            "Add these to INSPECTION_DEFECT_TYPE_CATEGORIES if they're "
+            "a genuine new defect type."
+        )
+
+    counts = rework_rows["_defect_category"].value_counts()
 
     ranked = [
-        {"label": label_by_key[key], "count": int(count)}
-        for key, count in counts.items()
+        {"label": label, "count": int(count)}
+        for label, count in counts.items()
     ]
     ranked.sort(key=lambda item: item["count"], reverse=True)
 

@@ -22,13 +22,13 @@ src/business_rules.py or src/ageing.py - the Projects pipeline
 (including its own separate use of the Rework Data workbook, for
 the PDQC override) is untouched.
 
-2026-09-02: the Overview KPIs + 4 charts (kpis, rework_by_project,
-first_offer_split, rework_trend, rework_cycles) now source from the
-Inspection Data workbook instead of the Rework Data workbook, per
-the person's explicit instruction - see src/quality/summary.py's
-module docstring. top_rework_types and the Rework Data export/
-Welder Performance sections are untouched, still sourced from
-sources.rework as before.
+2026-09-02/03: the Overview KPIs + all 5 charts (kpis,
+rework_by_project, first_offer_split, rework_trend, rework_cycles,
+top_rework_types) now source from the Inspection Data workbook
+instead of the Rework Data workbook, per the person's explicit
+instruction - see src/quality/summary.py's module docstring. The
+Rework Data export/Welder Performance sections are untouched, still
+sourced from sources.rework as before.
 """
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
     bundle = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "kpis": build_kpis(inspection_data, cycles),
-        "top_rework_types": build_top_rework_types(sources.rework, top_n=top_n),
+        "top_rework_types": build_top_rework_types(inspection_data, top_n=top_n),
         "rework_by_project": build_rework_by_project(inspection_data, sources.project_names),
         "first_offer_split": build_first_offer_split(inspection_data),
         "rework_trend": build_rework_trend(inspection_data),
