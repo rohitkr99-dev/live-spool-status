@@ -75,7 +75,16 @@ DEPARTMENTS: list[Department] = [
     # own dashboard bundle. The two are independent; a problem with
     # either never stops the other.
     Department("quality", "Quality Assurance / Control", "data/upload/quality", built=True),
-    Department("painting", "Painting", "data/upload/painting", built=False),
+    # "Painting" on the landing page (website/painting.html) is now LIVE
+    # (see src/painting/, painting_main.py) - RFP-done spools cross-
+    # referenced against the Painting Weekly Plan workbook: stage
+    # completion funnel, RFP-to-PDI-Clearance bottleneck analysis vs.
+    # the 4-working-day ideal, and an anomaly list (missing from the
+    # plan, out-of-order dates, flag mismatches, spools stuck open).
+    # Like Production and Quality, its bundle is refreshed by its own
+    # standalone entry point (painting_main.py), not from inside
+    # main.py.
+    Department("painting", "Painting", "data/upload/painting", built=True),
 ]
 
 
