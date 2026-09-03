@@ -17,11 +17,15 @@ const PaintingKPI = {
     const missingPct = kpis.total_rfp_done
       ? ((kpis.missing_from_plan_count / kpis.total_rfp_done) * 100).toFixed(0)
       : "0";
-    this.setText("kpi-missing-plan-pct", `${missingPct}% of RFP-done spools`);
+    this.setText("kpi-missing-plan-pct", `${missingPct}% of tracked spools`);
+
+    this.setText("kpi-excluded-packed", this.formatNumber(kpis.excluded_already_packed_count));
 
     this.setText("kpi-pdi-cleared", this.formatNumber(kpis.pdi_cleared_count));
     this.setText("kpi-open", this.formatNumber(kpis.open_count));
     this.setText("kpi-stuck", this.formatNumber(kpis.stuck_long_open_count));
+
+    this.setText("kpi-pickling", `${this.formatNumber(kpis.pickling_done_count)} / ${this.formatNumber(kpis.pickling_eligible_count)}`);
 
     this.setText("kpi-median-cycle", this.formatDays(kpis.median_total_cycle_days));
     this.setText("kpi-avg-cycle", this.formatDays(kpis.avg_total_cycle_days));

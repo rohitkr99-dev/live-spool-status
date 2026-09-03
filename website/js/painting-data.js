@@ -18,6 +18,9 @@ const PaintingData = {
     cycleTimeHistogram: [],
     agingBuckets: [],
     weeklyTrend: [],
+    stageOutputTrend: {},
+    projectInsight: [],
+    materialInsight: [],
     anomalies: {},
     spools: [],
     generatedAt: null,
@@ -74,6 +77,9 @@ const PaintingData = {
     this.store.cycleTimeHistogram = bundle.cycle_time_histogram || [];
     this.store.agingBuckets = bundle.aging_buckets || [];
     this.store.weeklyTrend = bundle.weekly_trend || [];
+    this.store.stageOutputTrend = bundle.stage_output_trend || {};
+    this.store.projectInsight = bundle.project_insight || [];
+    this.store.materialInsight = bundle.material_insight || [];
     this.store.anomalies = bundle.anomalies || {};
     this.store.spools = bundle.spools || [];
     this.store.generatedAt = bundle.generated_at || null;

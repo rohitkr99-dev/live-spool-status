@@ -124,9 +124,12 @@ const PaintingTables = {
       ...this.byFlag(spools, "out_of_order_dates").map((r) => ({ ...r, issue: "Out-of-order dates" })),
       ...this.byFlag(spools, "blasting_reqd_but_no_date").map((r) => ({ ...r, issue: "Blasting marked Required, but no date logged" })),
       ...this.byFlag(spools, "blasting_date_but_not_reqd").map((r) => ({ ...r, issue: "Blasting date logged, but marked Not Required" })),
+      ...this.byFlag(spools, "external_blasted_no_primer").map((r) => ({ ...r, issue: "External Blasting done, but no Primer date" })),
+      ...this.byFlag(spools, "coats_missing").map((r) => ({ ...r, issue: "No.of Coats not recorded" })),
     ]);
     this.initPdiMismatchTable(this.byFlag(spools, "dpr_painting_pdi_mismatch"));
     this.initNotInDprTable(store.anomalies.not_in_dpr || []);
+    this.initExcludedTable(store.anomalies.excluded_already_packed || []);
     this.populateProjectFilter(spools);
   },
 
@@ -136,7 +139,7 @@ const PaintingTables = {
       deferRender: true,
       pageLength: 25,
       lengthMenu: [10, 25, 50, 100, 250],
-      order: [[10, "desc"]],
+      order: [[11, "desc"]],
       dom: '<"dt-toolbar"B>frtip',
       buttons: this.exportButtons("All RFP-Done Spools"),
       scrollX: true,
@@ -151,6 +154,7 @@ const PaintingTables = {
         { data: "internal_blasting_date", className: "mono-cell", render: this.renderDate() },
         { data: "external_blasting_date", className: "mono-cell", render: this.renderDate() },
         { data: "primer_date", className: "mono-cell", render: this.renderDate() },
+        { data: "pickling_date", className: "mono-cell", render: this.renderDate() },
         { data: "pdi_offer_date", className: "mono-cell", render: this.renderDate() },
         { data: "pdi_clearance_date", className: "mono-cell", render: this.renderDate() },
         { data: "total_cycle_days", className: "mono-cell", render: this.renderDays() },
@@ -316,6 +320,29 @@ const PaintingTables = {
     });
   },
 
+  initExcludedTable(rows) {
+    this.dt.excluded = $("#table-excluded").DataTable({
+      data: rows,
+      deferRender: true,
+      pageLength: 25,
+      lengthMenu: [10, 25, 50, 100, 250],
+      order: [[3, "desc"]],
+      dom: '<"dt-toolbar"B>frtip',
+      buttons: this.exportButtons("Excluded - Already Packed"),
+      scrollX: true,
+      columns: [
+        { data: "project_name", render: this.renderProjectName() },
+        { data: "drawing_no", render: this.renderText() },
+        { data: "spool_no", render: this.renderText() },
+        { data: "rfp_date", className: "mono-cell", render: this.renderDate() },
+        { data: "packing_date", className: "mono-cell", render: this.renderDate() },
+        { data: "dispatch_date", className: "mono-cell", render: this.renderDate() },
+        { data: "project_code", name: "project_code", visible: false },
+      ],
+      language: { search: "", searchPlaceholder: "Search project, drawing, spool no…", info: "Showing _START_–_END_ of _TOTAL_ spools", emptyTable: "None found" },
+    });
+  },
+
   // ---------------------------------------------------------------
   // Shared project filter - applies to every table that carries a
   // project_code column (the "In Plan, Not RFP in DPR" table doesn't
@@ -344,7 +371,7 @@ const PaintingTables = {
   applyProjectFilter(projectCode) {
     const escape = $.fn.dataTable.util.escapeRegex;
     const value = !projectCode || projectCode === "__all__" ? "" : `^${escape(projectCode)}$`;
-    ["all", "missing", "stuck", "extreme", "dataquality", "pdimismatch"].forEach((key) => {
+    ["all", "missing", "excluded", "stuck", "extreme", "dataquality", "pdimismatch"].forEach((key) => {
       const table = this.dt[key];
       if (!table) return;
       table.column("project_code:name").search(value, true, false).draw();

@@ -18,6 +18,10 @@ const PaintingCharts = {
     size: 11,
   },
 
+  outputStage: "internal_blasting",
+  outputMetric: "count",
+  outputGranularity: "Week",
+
   render(store) {
     this.store = store;
     this.renderFunnel();
@@ -25,6 +29,10 @@ const PaintingCharts = {
     this.renderHistogram();
     this.renderAging();
     this.renderTrend();
+    this.setupOutputFilters();
+    this.renderOutputTrend();
+    this.renderProjectInsight();
+    this.renderMaterialInsight();
   },
 
   destroy(key) {
@@ -35,8 +43,11 @@ const PaintingCharts = {
   },
 
   // ---------------------------------------------------------------
-  // Stage Completion Funnel - horizontal bar, one bar per stage,
-  // count of RFP-done spools that have reached it.
+  // Stage Completion Funnel - horizontal bar, one bar per stage, %
+  // done OF THE SPOOLS THAT STAGE ACTUALLY APPLIES TO (applicable_
+  // count) - not every spool needs internal blasting, external
+  // blasting/primer, or pickling, so a raw count/pct-of-all-RFP-done
+  // would understate how caught-up each stage really is.
   // ---------------------------------------------------------------
   renderFunnel() {
     this.destroy("funnel");
@@ -50,8 +61,8 @@ const PaintingCharts = {
       data: {
         labels: rows.map((r) => r.stage),
         datasets: [{
-          label: "Spools",
-          data: rows.map((r) => r.count),
+          label: "% done",
+          data: rows.map((r) => r.pct_of_applicable),
           backgroundColor: PAINTING_CONFIG.stageColor,
           maxBarThickness: 34,
         }],
@@ -66,7 +77,7 @@ const PaintingCharts = {
             display: "auto",
             formatter: (value, ctx) => {
               const row = rows[ctx.dataIndex];
-              return `${value.toLocaleString("en-US")} (${row.pct_of_rfp_done}%)`;
+              return value === null ? "n/a" : `${value}% (${row.done_count.toLocaleString("en-US")}/${row.applicable_count.toLocaleString("en-US")})`;
             },
           },
           tooltip: {
@@ -75,13 +86,14 @@ const PaintingCharts = {
             callbacks: {
               label(item) {
                 const row = rows[item.dataIndex];
-                return ` ${row.count.toLocaleString("en-US")} spools (${row.pct_of_rfp_done}% of RFP-done)`;
+                if (row.pct_of_applicable === null) return " No spools this stage applies to";
+                return ` ${row.done_count.toLocaleString("en-US")} of ${row.applicable_count.toLocaleString("en-US")} applicable spools (${row.pct_of_applicable}%)`;
               },
             },
           },
         },
         scales: {
-          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Spool count", font: this.chartFont } },
+          x: { beginAtZero: true, max: 100, grid: { display: false }, ticks: { font: this.chartFont, callback: (v) => `${v}%` }, title: { display: true, text: "% done, of applicable spools", font: this.chartFont } },
           y: { grid: { display: false }, ticks: { font: { ...this.chartFont, size: 12 } } },
         },
       },
@@ -314,6 +326,216 @@ const PaintingCharts = {
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, autoSkip: true, maxRotation: 0 } },
           y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Working days", font: this.chartFont } },
+        },
+      },
+    });
+  },
+
+  // ---------------------------------------------------------------
+  // Process Output Over Time - how many spools (or how much surface
+  // area) completed a given stage per day/week/month. Stage/metric/
+  // granularity are simple client-side selectors over pre-computed
+  // arrays (stage_output_trend in the bundle) - same filter pattern
+  // as website/js/packing-charts.js -> renderPackingTrend().
+  // ---------------------------------------------------------------
+  stageLabel(stage) {
+    return {
+      internal_blasting: "Internal Blasting",
+      external_blasting: "External Blasting",
+      primer: "Primer",
+      pickling: "Pickling",
+      pdi_offer: "PDI Offer",
+      pdi_clearance: "PDI Clearance",
+    }[stage] || stage;
+  },
+
+  setupOutputFilters() {
+    this._wireFilterGroup("output-stage-filter", "stage", (value) => {
+      this.outputStage = value;
+      this.renderOutputTrend();
+    });
+    this._wireFilterGroup("output-metric-filter", "metric", (value) => {
+      this.outputMetric = value;
+      this.renderOutputTrend();
+    });
+    this._wireFilterGroup("output-period-filter", "granularity", (value) => {
+      this.outputGranularity = value;
+      this.renderOutputTrend();
+    });
+  },
+
+  _wireFilterGroup(containerId, dataAttr, onChange) {
+    const container = document.getElementById(containerId);
+    if (!container || container.dataset.wired) return;
+    container.dataset.wired = "true";
+    container.querySelectorAll(".activity-filter__btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        container.querySelectorAll(".activity-filter__btn").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        onChange(btn.dataset[dataAttr]);
+      });
+    });
+  },
+
+  _granularityKey(g) {
+    return g === "Day" ? "daily" : g === "Month" ? "monthly" : "weekly";
+  },
+
+  _formatPeriodLabel(raw, granularity) {
+    if (granularity === "Month") {
+      const [y, m] = raw.split("-").map(Number);
+      return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    }
+    if (granularity === "Week") return raw; // "2026-W14" reads fine as-is
+    const date = new Date(`${raw}T00:00:00`);
+    if (isNaN(date.getTime())) return raw;
+    return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  },
+
+  renderOutputTrend() {
+    this.destroy("output");
+    const ctx = document.getElementById("chart-output");
+    if (!ctx) return;
+
+    const titleEl = document.getElementById("chart-output-title");
+    const hintEl = document.getElementById("chart-output-hint");
+    const label = this.stageLabel(this.outputStage);
+    const metricLabel = this.outputMetric === "surface_area" ? "Surface area (m²)" : "Spool count";
+    if (titleEl) titleEl.textContent = `${label} Output`;
+    if (hintEl) hintEl.textContent = `${metricLabel}, by ${this.outputGranularity.toLowerCase()}`;
+
+    const stageData = (this.store.stageOutputTrend || {})[this.outputStage] || {};
+    const rows = stageData[this._granularityKey(this.outputGranularity)] || [];
+    const rawKeys = rows.map((r) => r.period);
+    const labels = rawKeys.map((raw) => this._formatPeriodLabel(raw, this.outputGranularity));
+    const data = rows.map((r) => r[this.outputMetric] || 0);
+
+    this.instances.output = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: metricLabel, data, backgroundColor: PAINTING_CONFIG.stageColor, borderRadius: 4, maxBarThickness: 34 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, autoSkip: true, maxRotation: 0 } },
+          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: metricLabel, font: this.chartFont } },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: {
+              title(items) {
+                const raw = rawKeys[items[0].dataIndex];
+                return raw;
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
+  // ---------------------------------------------------------------
+  // More insights - median cycle time by project / by material, so a
+  // slow project or material doesn't get averaged away in the single
+  // site-wide median.
+  // ---------------------------------------------------------------
+  renderProjectInsight() {
+    this.destroy("projectInsight");
+    const ctx = document.getElementById("chart-project-insight");
+    if (!ctx) return;
+
+    const rows = (this.store.projectInsight || []).filter((r) => r.median_cycle_days !== null);
+
+    this.instances.projectInsight = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: rows.map((r) => r.project_code),
+        datasets: [{
+          label: "Median cycle days",
+          data: rows.map((r) => r.median_cycle_days),
+          backgroundColor: rows.map((r) => (r.median_cycle_days > PAINTING_CONFIG.idealCycleDays ? PAINTING_CONFIG.overIdealColor : PAINTING_CONFIG.idealLineColor)),
+          maxBarThickness: 34,
+        }],
+      },
+      plugins: [this.idealLinePlugin],
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          idealLine: { value: PAINTING_CONFIG.idealCycleDays },
+          datalabels: { display: "auto", formatter: (v) => `${v}d` },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: {
+              title(items) {
+                const row = rows[items[0].dataIndex];
+                return row.project_name ? `${row.project_name} (${row.project_code})` : row.project_code;
+              },
+              label(item) {
+                const row = rows[item.dataIndex];
+                return ` Median ${row.median_cycle_days}d · ${row.pdi_cleared_count} cleared · ${row.stuck_long_open_count} stuck open`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Working days", font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: { ...this.chartFont, size: 11 } } },
+        },
+      },
+    });
+  },
+
+  renderMaterialInsight() {
+    this.destroy("materialInsight");
+    const ctx = document.getElementById("chart-material-insight");
+    if (!ctx) return;
+
+    const rows = (this.store.materialInsight || []).filter((r) => r.median_cycle_days !== null);
+
+    this.instances.materialInsight = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: rows.map((r) => r.material),
+        datasets: [{
+          label: "Median cycle days",
+          data: rows.map((r) => r.median_cycle_days),
+          backgroundColor: rows.map((r) => (r.median_cycle_days > PAINTING_CONFIG.idealCycleDays ? PAINTING_CONFIG.overIdealColor : PAINTING_CONFIG.idealLineColor)),
+          maxBarThickness: 34,
+        }],
+      },
+      plugins: [this.idealLinePlugin],
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          idealLine: { value: PAINTING_CONFIG.idealCycleDays },
+          datalabels: { display: "auto", formatter: (v) => `${v}d` },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: {
+              label(item) {
+                const row = rows[item.dataIndex];
+                return ` Median ${row.median_cycle_days}d · ${row.spool_count} spool(s) · ${row.pdi_cleared_count} cleared`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Working days", font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: { ...this.chartFont, size: 12 } } },
         },
       },
     });
