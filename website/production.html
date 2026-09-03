@@ -233,6 +233,23 @@
 
     </section>
 
+    <!-- ============ CURRENTLY IN REWORK ============ -->
+    <section id="rework-section" aria-label="Currently in Rework">
+
+      <section class="charts-grid__head">
+        <h3>Currently in Rework</h3>
+        <span class="chart-card__hint">Spools the Rework Data workbook's latest offer event shows as Rework right now, by Project and current stage - excluded from every backlog chart above the same way Hold spools are (a Rework spool's PDQC/RFP are forced blank, so it isn't a genuine stage delay)</span>
+      </section>
+
+      <section class="charts-grid charts-grid--single-row">
+        <div class="chart-card chart-card--full" id="chart-rework-by-project-stage-wrapper">
+          <div class="chart-card__body"><canvas id="chart-rework-by-project-stage"></canvas></div>
+        </div>
+        <p id="chart-rework-by-project-stage-empty" class="chart-card__hint" style="display:none;">No spools currently in Rework.</p>
+      </section>
+
+    </section>
+
     <!-- ============ MATERIAL HANDOVER ============ -->
     <section id="material-handover-section" hidden>
 
@@ -456,10 +473,10 @@
   };
 </script>
 <script src="js/chartTheme.js"></script>
-<script src="js/production-data.js?v=20260812c"></script>
+<script src="js/production-data.js?v=20260903"></script>
 <script src="js/production-kpi.js?v=20260731"></script>
 <script src="js/production-filters.js?v=20260731"></script>
-<script src="js/production-charts.js?v=20260814"></script>
+<script src="js/production-charts.js?v=20260903"></script>
 <script src="js/production-table.js?v=20260731"></script>
 <script src="js/production-app.js?v=20260731"></script>
 
