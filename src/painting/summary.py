@@ -17,10 +17,27 @@ would make the on-page "4-day ideal" comparison read wrong.
 Stage order this whole module keys off:
   RFP -> Internal Blasting -> External Blasting -> Primer ->
   (next coat, if any, else PDI Offer) -> PDI Offer -> PDI Clearance
-"do you have to blast" and "internal vs external" aren't mutually
-exclusive - a spool can have either, both, or neither logged; each
-transition is only counted for spools where both its endpoint dates
-are actually present ("applicable").
+
+Applicability (2026-09-03, given by the person against real data):
+  - Internal Blasting applies only where the workbook's own "Internal
+    Blasting Reqd (Yes/No)" flag says Yes - independent of whether the
+    spool needs paint at all (confirmed against real data: 192 spools
+    need internal blasting with zero paint coats - it's surface prep,
+    not part of the paint system).
+  - External Blasting and Primer apply only where "No.of Coats" >= 1
+    (0 coats -> the workbook's own date cells read literal "NA" for
+    both, confirmed 100% correlated on every row of the real file -
+    see build_stage_funnel()). A spool with 0 coats gets neither.
+  - Pickling has no Reqd flag and no NA convention of its own - it's
+    the alternative route for the same "0 coats" (no-paint) group
+    (confirmed: every Pickling Date in the real file belongs to a
+    Paint System = "NA" row) - so it's reported as an insight
+    (is_pickling_route), not gated as strictly applicable/not.
+  - PDI Offer/Clearance always apply to every RFP-done spool
+    regardless of paint - it's the terminal gate before Packing.
+A spool not in the Painting Plan at all has no "No.of Coats"/Reqd
+flag to read, so every applicability field is None (unknown) for it,
+not True/False - see _build_record().
 """
 
 from __future__ import annotations
@@ -44,6 +61,17 @@ CYCLE_BUCKETS = [
     (20, 24, "20–24 days"),
     (25, 29, "25–29 days"),
     (30, None, "30+ days"),
+]
+
+# (record field holding the date, output key, display label) - the
+# stages build_stage_output_trend() reports per day/week/month.
+OUTPUT_TREND_STAGES = [
+    ("internal_blasting_date", "internal_blasting", "Internal Blasting"),
+    ("external_blasting_date", "external_blasting", "External Blasting"),
+    ("primer_date", "primer", "Primer"),
+    ("pickling_date", "pickling", "Pickling"),
+    ("pdi_offer_date", "pdi_offer", "PDI Offer"),
+    ("pdi_clearance_date", "pdi_clearance", "PDI Clearance"),
 ]
 
 
@@ -72,11 +100,16 @@ def _round1(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
 
+def _iso_week_key(d: date) -> str:
+    iso_year, iso_week, _ = d.isocalendar()
+    return f"{iso_year}-W{iso_week:02d}"
+
+
 # ---------------------------------------------------------------
 # Merge
 # ---------------------------------------------------------------
 
-def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> list[dict]:
+def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> tuple[list[dict], list[dict]]:
     """
     One record per RFP-done DPR spool, joined to its Painting Weekly
     Plan row by Composite Key where one exists. dpr_rows is the
@@ -86,24 +119,60 @@ def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> list[dict]:
     instruction to take the former from the DPR and not re-derive it
     from the Painting sheet.
 
+    Returns (merged, excluded_already_packed):
+      - merged: every RFP-done spool worth analysing for painting
+        cycle time.
+      - excluded_already_packed: RFP-done spools that never made it
+        into the Painting Plan AND already have a Packing or Dispatch
+        date on the DPR - given by the person (2026-09-03): a spool
+        already packed/dispatched clearly didn't need painting
+        tracked here, so it's dropped from every calculation rather
+        than counted as a "missing from plan" gap. Still reported as
+        its own list (not silently discarded) so it's auditable.
+
     A painting_rows entry whose Composite Key has no matching dpr_rows
     entry (RFP not recorded against it in the DPR) is NOT included
-    here - see build_not_in_dpr() below, which reports that set
-    separately since it's a data-quality signal, not a spool this
+    in `merged` either - see build_not_in_dpr(), which reports that
+    set separately since it's a data-quality signal, not a spool this
     dashboard should analyse RFP-to-PDI cycle time for.
     """
     painting_by_key = {p["composite_key"]: p for p in painting_rows}
 
     merged: list[dict] = []
+    excluded_already_packed: list[dict] = []
     for d in dpr_rows:
         p = painting_by_key.get(d["composite_key"])
+        if p is None and (d.get("packing_date") or d.get("dispatch_date")):
+            excluded_already_packed.append({
+                "composite_key": d["composite_key"],
+                "project_code": d["project_code"],
+                "project_name": d.get("project_name"),
+                "drawing_no": d["drawing_no"],
+                "spool_no": d["spool_no"],
+                "rfp_date": d["rfp_date"],
+                "packing_date": d.get("packing_date"),
+                "dispatch_date": d.get("dispatch_date"),
+            })
+            continue
         merged.append(_build_record(d, p))
-    return merged
+    return merged, excluded_already_packed
+
+
+def _yes_no_flag(raw: str | None) -> bool | None:
+    if raw is None:
+        return None
+    text = raw.strip().lower()
+    if text == "yes":
+        return True
+    if text == "no":
+        return False
+    return None
 
 
 def _build_record(d: dict, p: dict | None) -> dict:
     rfp = d["rfp_date"]
     pdi_clearance = d["pdi_clearance_date"]
+    no_of_coats = (p or {}).get("no_of_coats")
 
     record: dict[str, Any] = {
         "composite_key": d["composite_key"],
@@ -122,6 +191,7 @@ def _build_record(d: dict, p: dict | None) -> dict:
         "in_painting_plan": p is not None,
         "painting_status": (p or {}).get("status"),
         "paint_system": (p or {}).get("paint_system"),
+        "no_of_coats": no_of_coats,
         "internal_blasting_reqd": (p or {}).get("internal_blasting_reqd"),
         "internal_blasting_date": (p or {}).get("internal_blasting_date"),
         "external_blasting_date": (p or {}).get("external_blasting_date"),
@@ -133,6 +203,13 @@ def _build_record(d: dict, p: dict | None) -> dict:
         "pdi_offer_date": (p or {}).get("pdi_offer_date"),
         "pdi_status_acceptance_date": (p or {}).get("pdi_status_acceptance_date"),
     }
+
+    # --- applicability (see module docstring) - None when unknown
+    # (not in the Painting Plan, so there's no Reqd flag / No.of Coats
+    # to read for this spool at all).
+    record["internal_blasting_applicable"] = _yes_no_flag(record["internal_blasting_reqd"])
+    record["paint_applicable"] = None if no_of_coats is None else bool(no_of_coats >= 1)
+    record["is_pickling_route"] = record["paint_applicable"] is False
 
     # --- next coat: first of Mid Coat 1 / Mid Coat 2 / Top Coat that's
     # filled in; falls back to PDI Offer (per the person's own
@@ -156,10 +233,22 @@ def _build_record(d: dict, p: dict | None) -> dict:
     record["next_coat_date"] = next_coat_date
     record["next_coat_source"] = next_coat_source
 
-    # --- stage transitions (signed working days; negative = out of order) ---
-    record["rfp_to_internal_blasting_days"] = _diff(rfp, record["internal_blasting_date"])
-    record["rfp_to_external_blasting_days"] = _diff(rfp, record["external_blasting_date"])
-    record["primer_to_next_days"] = _diff(record["primer_date"], next_coat_date)
+    # --- stage transitions (signed working days; negative = out of
+    # order). Explicitly nulled when the stage doesn't apply to this
+    # spool at all, on top of the date fields themselves already being
+    # None for a not-applicable stage (see reader.py: the workbook's
+    # own literal "NA" text already parses to None) - belt and braces,
+    # so a stray/mis-keyed date can never sneak into an average for a
+    # process this spool never needed (points 2 and 5).
+    record["rfp_to_internal_blasting_days"] = (
+        _diff(rfp, record["internal_blasting_date"]) if record["internal_blasting_applicable"] is not False else None
+    )
+    record["rfp_to_external_blasting_days"] = (
+        _diff(rfp, record["external_blasting_date"]) if record["paint_applicable"] is not False else None
+    )
+    record["primer_to_next_days"] = (
+        _diff(record["primer_date"], next_coat_date) if record["paint_applicable"] is not False else None
+    )
     record["pdi_offer_to_clearance_days"] = _diff(record["pdi_offer_date"], pdi_clearance)
 
     is_complete = pdi_clearance is not None
@@ -182,12 +271,21 @@ def _spool_anomalies(r: dict) -> list[str]:
         flags.append("missing_from_plan")
         return flags  # nothing else below is checkable without a plan row
 
+    if r["no_of_coats"] is None:
+        flags.append("coats_missing")
+
     reqd = (r["internal_blasting_reqd"] or "").strip().lower()
     has_date = r["internal_blasting_date"] is not None
     if reqd == "yes" and not has_date:
         flags.append("blasting_reqd_but_no_date")
     elif reqd == "no" and has_date:
         flags.append("blasting_date_but_not_reqd")
+
+    # Point 7: external blasting implies priming. Currently 0 rows in
+    # the real file violate this (External Blasting and Primer are
+    # 100% correlated) - kept as a live check for future data.
+    if r["external_blasting_date"] is not None and r["primer_date"] is None:
+        flags.append("external_blasted_no_primer")
 
     for field in ("rfp_to_internal_blasting_days", "rfp_to_external_blasting_days",
                   "primer_to_next_days", "pdi_offer_to_clearance_days"):
@@ -231,46 +329,62 @@ def build_not_in_dpr(dpr_rows: list[dict], painting_rows: list[dict]) -> list[di
 # KPIs + stage funnel
 # ---------------------------------------------------------------
 
+# (key, label, applicable predicate, done predicate) - applicable_count
+# is the real denominator for that stage (points 2, 5, 6, 7 - never
+# the full RFP-done population), done_count/applicable_count is the
+# percentage actually shown.
 STAGE_FUNNEL_DEFS = [
-    ("rfp_done", "RFP Done", lambda r: True),
-    ("in_plan", "In Painting Plan", lambda r: r["in_painting_plan"]),
-    ("internal_blasting_done", "Internal Blasting Done", lambda r: r["internal_blasting_date"] is not None),
-    ("external_blasting_done", "External Blasting Done", lambda r: r["external_blasting_date"] is not None),
-    ("primer_done", "Primer Done", lambda r: r["primer_date"] is not None),
-    ("pdi_offered", "PDI Offered", lambda r: r["pdi_offer_date"] is not None),
-    ("pdi_cleared", "PDI Cleared", lambda r: r["pdi_clearance_date"] is not None),
+    ("rfp_done", "RFP Done", lambda r: True, lambda r: True),
+    ("in_plan", "In Painting Plan", lambda r: True, lambda r: r["in_painting_plan"]),
+    ("internal_blasting_done", "Internal Blasting",
+     lambda r: r["internal_blasting_applicable"] is True, lambda r: r["internal_blasting_date"] is not None),
+    ("external_blasting_done", "External Blasting",
+     lambda r: r["paint_applicable"] is True, lambda r: r["external_blasting_date"] is not None),
+    ("primer_done", "Primer",
+     lambda r: r["paint_applicable"] is True, lambda r: r["primer_date"] is not None),
+    ("pickling_done", "Pickling (no-paint route)",
+     lambda r: r["is_pickling_route"], lambda r: r["pickling_date"] is not None),
+    ("pdi_offered", "PDI Offered",
+     lambda r: r["in_painting_plan"], lambda r: r["pdi_offer_date"] is not None),
+    ("pdi_cleared", "PDI Cleared", lambda r: True, lambda r: r["pdi_clearance_date"] is not None),
 ]
 
 
 def build_stage_funnel(merged: list[dict]) -> list[dict]:
-    total = len(merged)
     out = []
-    for key, label, predicate in STAGE_FUNNEL_DEFS:
-        count = sum(1 for r in merged if predicate(r))
+    for key, label, applicable_fn, done_fn in STAGE_FUNNEL_DEFS:
+        applicable = [r for r in merged if applicable_fn(r)]
+        done = sum(1 for r in applicable if done_fn(r))
         out.append({
             "key": key,
             "stage": label,
-            "count": count,
-            "pct_of_rfp_done": _round1(100 * count / total) if total else 0.0,
+            "applicable_count": len(applicable),
+            "done_count": done,
+            "pct_of_applicable": _round1(100 * done / len(applicable)) if applicable else None,
         })
     return out
 
 
-def build_kpi_summary(merged: list[dict], not_in_dpr: list[dict]) -> dict:
+def build_kpi_summary(merged: list[dict], not_in_dpr: list[dict], excluded_already_packed: list[dict]) -> dict:
     total = len(merged)
     completed = [r for r in merged if r["is_complete"]]
     open_spools = [r for r in merged if not r["is_complete"]]
     cycle_days = [r["total_cycle_days"] for r in completed if r["total_cycle_days"] is not None]
     stuck = [r for r in open_spools if "stuck_long_open" in r["anomalies"]]
+    pickling_eligible = [r for r in merged if r["is_pickling_route"]]
+    pickling_done = [r for r in pickling_eligible if r["pickling_date"] is not None]
 
     return {
         "total_rfp_done": total,
         "in_plan_count": sum(1 for r in merged if r["in_painting_plan"]),
         "missing_from_plan_count": sum(1 for r in merged if not r["in_painting_plan"]),
+        "excluded_already_packed_count": len(excluded_already_packed),
         "not_in_dpr_count": len(not_in_dpr),
         "pdi_cleared_count": len(completed),
         "open_count": len(open_spools),
         "stuck_long_open_count": len(stuck),
+        "pickling_eligible_count": len(pickling_eligible),
+        "pickling_done_count": len(pickling_done),
         "ideal_cycle_days": IDEAL_CYCLE_DAYS,
         "median_total_cycle_days": _round1(median(cycle_days)) if cycle_days else None,
         "avg_total_cycle_days": _round1(mean(cycle_days)) if cycle_days else None,
@@ -326,9 +440,7 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
     for r in merged:
         if r["total_cycle_days"] is None or r["total_cycle_days"] < 0 or not r["rfp_date"]:
             continue
-        d = _d(r["rfp_date"])
-        iso_year, iso_week, _ = d.isocalendar()
-        key = f"{iso_year}-W{iso_week:02d}"
+        key = _iso_week_key(_d(r["rfp_date"]))
         by_week.setdefault(key, []).append(r["total_cycle_days"])
 
     return [
@@ -338,21 +450,105 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
 
 
 # ---------------------------------------------------------------
-# Anomalies - spool-level lists for cleanup
+# Process output over time (point 3) - how many spools completed each
+# stage per day/week/month, plus the surface area that represents -
+# volume of WORK, not cycle time. Every stage groups on its own date
+# field; a spool with no date for that stage just isn't counted for
+# it, same as every other aggregate in this module.
 # ---------------------------------------------------------------
 
-def build_anomalies(not_in_dpr: list[dict]) -> dict:
+def _period_keys(d: date) -> tuple[str, str, str]:
+    return d.isoformat(), _iso_week_key(d), f"{d.year}-{d.month:02d}"
+
+
+def _group_output(merged: list[dict], date_field: str) -> dict:
+    daily: dict[str, dict] = {}
+    weekly: dict[str, dict] = {}
+    monthly: dict[str, dict] = {}
+
+    for r in merged:
+        iso = r.get(date_field)
+        if not iso:
+            continue
+        d = _d(iso)
+        day_key, week_key, month_key = _period_keys(d)
+        for bucket, key in ((daily, day_key), (weekly, week_key), (monthly, month_key)):
+            entry = bucket.setdefault(key, {"count": 0, "surface_area": 0.0})
+            entry["count"] += 1
+            entry["surface_area"] += r.get("surface_area") or 0.0
+
+    def to_list(bucket: dict) -> list[dict]:
+        return [
+            {"period": key, "count": v["count"], "surface_area": round(v["surface_area"], 2)}
+            for key, v in sorted(bucket.items())
+        ]
+
+    return {"daily": to_list(daily), "weekly": to_list(weekly), "monthly": to_list(monthly)}
+
+
+def build_stage_output_trend(merged: list[dict]) -> dict:
+    return {key: _group_output(merged, field) for field, key, _label in OUTPUT_TREND_STAGES}
+
+
+# ---------------------------------------------------------------
+# More insights (point 8) - where cycle time differs by project or by
+# material/paint category, so a slow project or a slow paint system
+# doesn't get averaged away in the single site-wide median.
+# ---------------------------------------------------------------
+
+def _cycle_stats_for(rows: list[dict]) -> dict:
+    completed = [r for r in rows if r["total_cycle_days"] is not None and r["total_cycle_days"] >= 0]
+    days = [r["total_cycle_days"] for r in completed]
+    stuck = sum(1 for r in rows if "stuck_long_open" in r["anomalies"])
+    return {
+        "spool_count": len(rows),
+        "pdi_cleared_count": len(completed),
+        "stuck_long_open_count": stuck,
+        "median_cycle_days": _round1(median(days)) if days else None,
+        "pct_within_ideal": _round1(100 * sum(1 for d in days if d <= IDEAL_CYCLE_DAYS) / len(days)) if days else None,
+    }
+
+
+def build_project_insight(merged: list[dict]) -> list[dict]:
+    by_project: dict[str, list[dict]] = {}
+    names: dict[str, str | None] = {}
+    for r in merged:
+        by_project.setdefault(r["project_code"], []).append(r)
+        names.setdefault(r["project_code"], r.get("project_name"))
+
+    out = [
+        {"project_code": code, "project_name": names.get(code), **_cycle_stats_for(rows)}
+        for code, rows in by_project.items()
+    ]
+    return sorted(out, key=lambda x: -(x["median_cycle_days"] or 0))
+
+
+def build_anomalies(not_in_dpr: list[dict], excluded_already_packed: list[dict]) -> dict:
     """
-    Only "not_in_dpr" needs its own list - it's Painting Plan rows that
-    never made it into `merged` at all (see merge_spools()), so there's
-    nowhere else for them to live. Every other anomaly category
-    (missing_from_plan, blasting_reqd_but_no_date/blasting_date_but_
-    not_reqd, out_of_order_dates, dpr_painting_pdi_mismatch,
-    stuck_long_open, extreme_cycle_time) is a spool with that flag set
-    in its own "anomalies" list inside `spools` - re-emitting a second,
-    denormalized copy of those spools here would just double the
-    bundle size (this doubled it from ~8.5MB to ~12MB before this
-    change) for data the frontend already has; it filters `spools` by
-    flag client-side instead (website/js/painting-tables.js).
+    Only "not_in_dpr" and "excluded_already_packed" need their own
+    lists here - both are spools that never made it into `merged` at
+    all (see merge_spools()), so there's nowhere else for them to
+    live. Every other anomaly category (missing_from_plan,
+    coats_missing, blasting_reqd_but_no_date/blasting_date_but_not_
+    reqd, external_blasted_no_primer, out_of_order_dates,
+    dpr_painting_pdi_mismatch, stuck_long_open, extreme_cycle_time) is
+    a spool with that flag set in its own "anomalies" list inside
+    `spools` - re-emitting a second, denormalized copy of those spools
+    here would double the bundle size for data the frontend already
+    has; it filters `spools` by flag client-side instead
+    (website/js/painting-tables.js).
     """
-    return {"not_in_dpr": not_in_dpr}
+    return {
+        "not_in_dpr": not_in_dpr,
+        "excluded_already_packed": excluded_already_packed,
+    }
+
+
+def build_material_insight(merged: list[dict]) -> list[dict]:
+    by_material: dict[str, list[dict]] = {}
+    for r in merged:
+        key = r.get("material") or "Unknown"
+        by_material.setdefault(key, []).append(r)
+
+    out = [{"material": material, **_cycle_stats_for(rows)} for material, rows in by_material.items()]
+    return sorted(out, key=lambda x: -(x["median_cycle_days"] or 0))

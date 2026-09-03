@@ -153,7 +153,7 @@ def read_all_workbooks(upload_folder: Path, file_pattern: str = "*.xlsx") -> lis
 DPR_FIELDS = [
     "Project Code", "Project Name", "Drawing No", "Spool No",
     "Material", "Item Category Code", "Total Qty", "Total Wt.",
-    "Inch Dia", "Surface Area Out", "RFP", "PDI",
+    "Inch Dia", "Surface Area Out", "RFP", "PDI", "Packing", "Dispatch",
 ]
 
 
@@ -221,6 +221,8 @@ def read_dpr_rfp_spools() -> list[dict[str, Any]]:
             "surface_area": to_json_safe(row.get("Surface Area Out")),
             "rfp_date": rfp,
             "pdi_clearance_date": to_json_safe(row.get("PDI")),
+            "packing_date": to_json_safe(row.get("Packing")),
+            "dispatch_date": to_json_safe(row.get("Dispatch")),
         })
 
     logger.info(f"Fabrication (DPR): {len(rows)} spool(s) with RFP done.")

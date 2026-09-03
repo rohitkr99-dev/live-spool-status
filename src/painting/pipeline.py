@@ -27,9 +27,12 @@ from painting.summary import (
     build_aging_buckets,
     build_cycle_time_histogram,
     build_kpi_summary,
+    build_material_insight,
     build_not_in_dpr,
+    build_project_insight,
     build_stage_duration_stats,
     build_stage_funnel,
+    build_stage_output_trend,
     build_weekly_trend,
     merge_spools,
 )
@@ -89,7 +92,7 @@ def run(config: dict[str, Any] | None = None, dpr_rows: list[dict] | None = None
             "workbook - the bundle will show zero RFP-done spools this run."
         )
 
-    merged = merge_spools(dpr_rows, painting_rows)
+    merged, excluded_already_packed = merge_spools(dpr_rows, painting_rows)
     not_in_dpr = build_not_in_dpr(dpr_rows, painting_rows)
 
     bundle = {
@@ -98,13 +101,16 @@ def run(config: dict[str, Any] | None = None, dpr_rows: list[dict] | None = None
             "painting_workbooks": sorted({r["source_file"] for r in painting_rows}),
             "dpr_rfp_spool_count": len(dpr_rows),
         },
-        "kpi_summary": build_kpi_summary(merged, not_in_dpr),
+        "kpi_summary": build_kpi_summary(merged, not_in_dpr, excluded_already_packed),
         "stage_funnel": build_stage_funnel(merged),
         "stage_duration_stats": build_stage_duration_stats(merged),
         "cycle_time_histogram": build_cycle_time_histogram(merged),
         "aging_buckets": build_aging_buckets(merged),
         "weekly_trend": build_weekly_trend(merged),
-        "anomalies": build_anomalies(not_in_dpr),
+        "stage_output_trend": build_stage_output_trend(merged),
+        "project_insight": build_project_insight(merged),
+        "material_insight": build_material_insight(merged),
+        "anomalies": build_anomalies(not_in_dpr, excluded_already_packed),
         "spools": merged,
     }
 
