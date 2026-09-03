@@ -167,14 +167,6 @@
       <div class="charts-grid__head">
         <h3>Process Output Over Time</h3>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
-          <div class="activity-filter" id="output-stage-filter" role="group" aria-label="Process">
-            <button type="button" class="activity-filter__btn is-active" data-stage="internal_blasting">Internal Blasting</button>
-            <button type="button" class="activity-filter__btn" data-stage="external_blasting">External Blasting</button>
-            <button type="button" class="activity-filter__btn" data-stage="primer">Primer</button>
-            <button type="button" class="activity-filter__btn" data-stage="pickling">Pickling</button>
-            <button type="button" class="activity-filter__btn" data-stage="pdi_offer">PDI Offer</button>
-            <button type="button" class="activity-filter__btn" data-stage="pdi_clearance">PDI Clearance</button>
-          </div>
           <div class="activity-filter" id="output-metric-filter" role="group" aria-label="Metric to plot">
             <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
@@ -186,12 +178,47 @@
           </div>
         </div>
       </div>
-      <div class="chart-card chart-card--full">
+      <div class="chart-card">
         <div class="chart-card__head">
-          <h3 id="chart-output-title">Internal Blasting Output</h3>
-          <span class="chart-card__hint" id="chart-output-hint">Spool count, by week</span>
+          <h3>Internal Blasting</h3>
+          <span class="chart-card__hint" id="chart-output-internal_blasting-hint">Spool count, by week</span>
         </div>
-        <div class="chart-card__body"><canvas id="chart-output"></canvas></div>
+        <div class="chart-card__body"><canvas id="chart-output-internal_blasting"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>External Blasting</h3>
+          <span class="chart-card__hint" id="chart-output-external_blasting-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output-external_blasting"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Primer</h3>
+          <span class="chart-card__hint" id="chart-output-primer-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output-primer"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Pickling</h3>
+          <span class="chart-card__hint" id="chart-output-pickling-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output-pickling"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>PDI Offer</h3>
+          <span class="chart-card__hint" id="chart-output-pdi_offer-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output-pdi_offer"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>PDI Clearance</h3>
+          <span class="chart-card__hint" id="chart-output-pdi_clearance-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output-pdi_clearance"></canvas></div>
       </div>
     </section>
 
@@ -239,6 +266,83 @@
       </div>
 
       <div class="table-pane is-active" id="pane-all">
+
+        <div class="filter-bar" id="painting-filter-bar">
+          <div class="filter-field">
+            <label for="pfilter-project">Project <span class="filter-field__hint">(multi)</span></label>
+            <select id="pfilter-project" multiple size="4"></select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-material">Material <span class="filter-field__hint">(multi)</span></label>
+            <select id="pfilter-material" multiple size="4"></select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-category">Item Category <span class="filter-field__hint">(multi)</span></label>
+            <select id="pfilter-category" multiple size="4"></select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-status">Painting Status <span class="filter-field__hint">(multi)</span></label>
+            <select id="pfilter-status" multiple size="4"></select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-inplan">In Painting Plan</label>
+            <select id="pfilter-inplan">
+              <option value="">All</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-completion">Completion</label>
+            <select id="pfilter-completion">
+              <option value="">All</option>
+              <option value="Completed">Completed</option>
+              <option value="Open">Open</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-cycle-min">Cycle Days <span class="filter-field__hint">(completed)</span></label>
+            <div class="filter-field__range">
+              <input type="number" id="pfilter-cycle-min" placeholder="Min" min="0" inputmode="numeric">
+              <span class="filter-field__range-sep" aria-hidden="true">–</span>
+              <input type="number" id="pfilter-cycle-max" placeholder="Max" min="0" inputmode="numeric">
+            </div>
+          </div>
+          <div class="filter-field">
+            <label for="pfilter-age-min">Current Age <span class="filter-field__hint">(open, days)</span></label>
+            <div class="filter-field__range">
+              <input type="number" id="pfilter-age-min" placeholder="Min" min="0" inputmode="numeric">
+              <span class="filter-field__range-sep" aria-hidden="true">–</span>
+              <input type="number" id="pfilter-age-max" placeholder="Max" min="0" inputmode="numeric">
+            </div>
+          </div>
+          <div class="filter-field">
+            <label for="psort-field">Sort by</label>
+            <select id="psort-field">
+              <option value="11">PDI Clearance Date</option>
+              <option value="12">Cycle Days</option>
+              <option value="10">PDI Offer Date</option>
+              <option value="5">RFP Date</option>
+              <option value="0">Project Name</option>
+              <option value="2">Drawing No.</option>
+              <option value="3">Spool No.</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="psort-direction">Direction</label>
+            <select id="psort-direction">
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+          <button class="btn btn--ghost" id="painting-clear-filters" type="button">Clear filters</button>
+        </div>
+
+        <div class="selection-summary" id="painting-selection-summary" aria-live="polite">
+          <span class="selection-summary__count" id="painting-selection-summary-count">— spools selected</span>
+          <span class="selection-summary__totals" id="painting-selection-summary-totals"></span>
+        </div>
+
         <table id="table-all" class="spool-table" style="width:100%">
           <thead>
             <tr>
