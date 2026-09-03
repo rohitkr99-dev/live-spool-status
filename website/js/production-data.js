@@ -91,6 +91,7 @@ const ProductionData = {
     materialHandover: null,
     backlog: null,
     holdByProjectStage: {},
+    reworkByProjectStage: {},
   },
 
   hasData: false,
@@ -204,6 +205,7 @@ const ProductionData = {
     this.store.materialHandover = bundle.material_handover || null;
     this.store.backlog = bundle.backlog || null;
     this.store.holdByProjectStage = bundle.hold_by_project_stage || {};
+    this.store.reworkByProjectStage = bundle.rework_by_project_stage || {};
 
     this.hasData = true;
 

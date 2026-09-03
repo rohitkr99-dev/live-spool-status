@@ -70,6 +70,7 @@ const ProductionCharts = {
     this.renderIdealVsActual(idealVsActual, metric);
     this.renderBacklogCharts(store.backlog, metric);
     this.renderHoldByProjectStage(store.holdByProjectStage);
+    this.renderReworkByProjectStage(store.reworkByProjectStage);
     this.renderMaterialHandover(store.materialHandover);
 
     document.getElementById("chart-spool-count-note").textContent =
@@ -583,6 +584,72 @@ const ProductionCharts = {
             ticks: { font: this.chartFont, precision: 0 },
             grid: { display: false },
             title: { display: true, text: "Spool count currently on Hold", font: this.chartFont },
+          },
+        },
+      },
+    });
+  },
+
+  /**
+   * "Currently in Rework, by Project and stage" (2026-09-03) - same
+   * shape and same reasoning as renderHoldByProjectStage() above, for
+   * the population src/production/backlog.py now ALSO excludes from
+   * every backlog chart (rework_latest_status === "Rework"). Kept as
+   * its own chart rather than merged into the Hold one - Hold and
+   * Rework are deliberately kept distinguishable everywhere else in
+   * this codebase (REWORK_LATEST_STATUS), and this is exactly where
+   * a person would want to know which one a spool is blocked by.
+   */
+  renderReworkByProjectStage(reworkByProjectStage) {
+    const ctx = this._ctx("chart-rework-by-project-stage");
+    const wrapper = document.getElementById("chart-rework-by-project-stage-wrapper");
+    const emptyNote = document.getElementById("chart-rework-by-project-stage-empty");
+    if (!ctx) return;
+
+    const projects = Object.keys(reworkByProjectStage || {});
+    if (!projects.length) {
+      if (wrapper) wrapper.style.display = "none";
+      if (emptyNote) emptyNote.style.display = "block";
+      return;
+    }
+    if (wrapper) wrapper.style.display = "";
+    if (emptyNote) emptyNote.style.display = "none";
+
+    const stagePalette = Object.values(PRODUCTION_CONFIG.categoryColor);
+    const stageLabels = [...new Set(
+      projects.flatMap((project) => Object.keys(reworkByProjectStage[project]))
+    )];
+
+    const datasets = stageLabels.map((stageLabel, index) => ({
+      label: stageLabel,
+      data: projects.map((project) => reworkByProjectStage[project][stageLabel] || 0),
+      backgroundColor: stagePalette[index % stagePalette.length],
+      borderRadius: 2,
+    }));
+
+    this.instances.reworkByProjectStage = new Chart(ctx, {
+      type: "bar",
+      data: { labels: projects, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: { display: false },
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          tooltip: { titleFont: this.chartFont, bodyFont: this.chartFont },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, maxRotation: 0, autoSkip: true },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: { font: this.chartFont, precision: 0 },
+            grid: { display: false },
+            title: { display: true, text: "Spool count currently in Rework", font: this.chartFont },
           },
         },
       },
