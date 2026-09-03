@@ -1,5 +1,9 @@
-# Working data - pulled from Drive each sync, never committed
-data/upload/*
+# Working data - pulled from Drive each sync, never committed.
+# "data/upload/*" alone only matches direct children (the department
+# folders themselves) - a single "*" doesn't cross "/", so a workbook
+# dropped into e.g. data/upload/painting/ was NOT actually excluded by
+# it (confirmed via `git check-ignore`). "**" matches at every depth.
+data/upload/**
 !data/upload/*/
 !data/upload/*/README.txt
 !data/upload/*/.gitkeep
