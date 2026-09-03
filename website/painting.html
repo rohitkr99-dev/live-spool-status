@@ -71,6 +71,11 @@
         <span class="kpi-card__value" id="kpi-missing-plan">—</span>
         <span class="kpi-card__sub" id="kpi-missing-plan-pct">spools</span>
       </div>
+      <div class="kpi-card" data-kpi="excluded-packed" title="RFP-done, not in the Painting Plan, but already Packed/Dispatched per the DPR - excluded from every calculation on this page, not counted as a gap.">
+        <span class="kpi-card__label">Excluded (Already Packed)</span>
+        <span class="kpi-card__value" id="kpi-excluded-packed">—</span>
+        <span class="kpi-card__sub">spools, not counted below</span>
+      </div>
       <div class="kpi-card kpi-card--complete" data-kpi="pdi-cleared">
         <span class="kpi-card__label">PDI Cleared</span>
         <span class="kpi-card__value" id="kpi-pdi-cleared">—</span>
@@ -85,6 +90,11 @@
         <span class="kpi-card__label">Stuck &gt; 8 working days</span>
         <span class="kpi-card__value" id="kpi-stuck">—</span>
         <span class="kpi-card__sub">open spools</span>
+      </div>
+      <div class="kpi-card" data-kpi="pickling" title="No.of Coats = 0 (no paint) spools that are eligible for pickling instead - mostly SS/P91.">
+        <span class="kpi-card__label">Pickling Done / Eligible</span>
+        <span class="kpi-card__value" id="kpi-pickling">—</span>
+        <span class="kpi-card__sub">no-paint route spools</span>
       </div>
       <div class="kpi-card" data-kpi="median-cycle">
         <span class="kpi-card__label">Median RFP → PDI Clearance</span>
@@ -111,7 +121,7 @@
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
           <h3>Stage Completion Funnel</h3>
-          <span class="chart-card__hint">Count of RFP-done spools reaching each painting stage</span>
+          <span class="chart-card__hint">% done, of spools the stage actually applies to - not every spool needs every process</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-funnel"></canvas></div>
       </div>
@@ -152,6 +162,60 @@
       </div>
     </section>
 
+    <!-- ============ PROCESS OUTPUT OVER TIME ============ -->
+    <section class="activity-charts-grid" aria-label="Process output over time">
+      <div class="charts-grid__head">
+        <h3>Process Output Over Time</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div class="activity-filter" id="output-stage-filter" role="group" aria-label="Process">
+            <button type="button" class="activity-filter__btn is-active" data-stage="internal_blasting">Internal Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="external_blasting">External Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="primer">Primer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pickling">Pickling</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_offer">PDI Offer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_clearance">PDI Clearance</button>
+          </div>
+          <div class="activity-filter" id="output-metric-filter" role="group" aria-label="Metric to plot">
+            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
+          </div>
+          <div class="activity-filter" id="output-period-filter" role="group" aria-label="Group by period">
+            <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
+            <button type="button" class="activity-filter__btn is-active" data-granularity="Week">Week</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Month">Month</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__head">
+          <h3 id="chart-output-title">Internal Blasting Output</h3>
+          <span class="chart-card__hint" id="chart-output-hint">Spool count, by week</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-output"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ INSIGHTS ============ -->
+    <section class="charts-grid" aria-label="More insights">
+      <div class="charts-grid__head">
+        <h3>More Insights</h3>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Median Cycle Time by Project</h3>
+          <span class="chart-card__hint">RFP → PDI Clearance, completed spools only · red = past the ideal</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-project-insight"></canvas></div>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Median Cycle Time by Material</h3>
+          <span class="chart-card__hint">Stainless (pickling route) vs. carbon/alloy steel (blasted &amp; painted)</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-material-insight"></canvas></div>
+      </div>
+    </section>
+
     <!-- ============ TABLES ============ -->
     <section class="tables-section" aria-label="Painting data tables">
 
@@ -159,6 +223,7 @@
         <div class="tabs" role="tablist">
           <button class="tab is-active" role="tab" aria-selected="true" data-tab="all">All RFP-Done Spools</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="missing">Missing from Plan</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="excluded">Excluded (Already Packed)</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="stuck">Stuck / Long Open</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="extreme">Extreme Cycle Time</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="dataquality">Data Quality Issues</button>
@@ -185,6 +250,7 @@
               <th>Internal Blasting</th>
               <th>External Blasting</th>
               <th>Primer</th>
+              <th>Pickling</th>
               <th>PDI Offer</th>
               <th>PDI Clearance (DPR)</th>
               <th>Cycle Days</th>
@@ -196,9 +262,17 @@
       </div>
 
       <div class="table-pane" id="pane-missing">
-        <p class="table-note">RFP is marked done in the DPR, but this spool doesn't appear anywhere in the Painting Weekly Plan workbook — it needs to be added so it can be tracked.</p>
+        <p class="table-note">RFP is marked done in the DPR, this spool isn't Packed or Dispatched yet either, but it doesn't appear anywhere in the Painting Weekly Plan workbook — a real gap that needs to be added so it can be tracked.</p>
         <table id="table-missing" class="spool-table" style="width:100%">
           <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>RFP Date</th><th>Days Since RFP</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-excluded">
+        <p class="table-note">RFP done in the DPR, not in the Painting Plan, but already Packed or Dispatched — painting clearly happened somewhere, just not tracked in this workbook. Excluded from every chart and KPI on this page rather than counted as a gap.</p>
+        <table id="table-excluded" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>RFP Date</th><th>Packing Date</th><th>Dispatch Date</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -220,7 +294,7 @@
       </div>
 
       <div class="table-pane" id="pane-dataquality">
-        <p class="table-note">Dates that are out of the expected order (a later stage dated before an earlier one), or an Internal Blasting Reqd flag that doesn't match whether a blasting date was actually logged.</p>
+        <p class="table-note">Dates out of the expected order, an Internal Blasting Reqd flag that doesn't match whether a blasting date was logged, a spool with External Blasting done but no Primer date, or a Painting Plan row with no No.of Coats recorded at all.</p>
         <table id="table-dataquality" class="spool-table" style="width:100%">
           <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Issue</th><th>Detail</th></tr></thead>
           <tbody></tbody>
