@@ -1,0 +1,26 @@
+{
+  "application": {
+    "name": "Painting Dashboard",
+    "version": "1.0.0"
+  },
+
+  "paths": {
+    "upload_folder": "data/upload/painting",
+    "processed_folder": "processed",
+    "website_data_folder": "website/data"
+  },
+
+  "input_files": {
+    "comment": "The Painting Weekly Plan workbook(s) dropped into paths.upload_folder - one 'Spool List' sheet per file, one row per spool. The filename itself varies run to run (e.g. 'Painting Weekly Plan-2-Sep-26.xlsx') - only the substring 'Painting Weekly Plan' is stable, per the project owner - hence the wildcard file_pattern below rather than an exact name. Cross-referenced against the Fabrication (DPR) workbook's RFP-done spools (config/settings.json -> input_files.fabrication, read via src/reader.py -> ExcelReader().read_fabrication(), same as every other department) - see src/painting/reader.py -> read_dpr_rfp_spools().",
+    "file_pattern": "*Painting Weekly Plan*.xlsx"
+  },
+
+  "output_files": {
+    "bundle": "b3f7e6a1d4.json"
+  },
+
+  "publishing": {
+    "publish_to_website": true,
+    "comment": "When true, every run also copies the painting bundle into paths.website_data_folder - the file website/painting.html auto-loads for every visitor, same pattern as config/packing_settings.json."
+  }
+}
