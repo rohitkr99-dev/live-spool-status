@@ -280,6 +280,44 @@ def build_hold_by_project_stage(
     return result
 
 
+def build_rework_by_project_stage(
+    records: list[SpoolRecord], stage_labels: dict[str, str]
+) -> dict[str, dict[str, int]]:
+    """
+    Same shape and same reasoning as build_hold_by_project_stage()
+    above, for spools currently in Rework instead of Hold - added
+    2026-09-03 after confirming against the real Production Rework
+    Data workbook that 49 of the 73 spools in the Release for
+    Painting "Beyond 30 Days" backlog bucket were actually in Rework,
+    not a genuine backlog (see src/production/backlog.py, which now
+    excludes both). Kept as its own separate chart/function rather
+    than merged into the Hold one - REWORK_LATEST_STATUS
+    (rework_pdqc_rule.py) deliberately keeps Hold and Rework
+    distinguishable everywhere else in this codebase, and merging
+    them here would lose that distinction right where a person is
+    most likely to want it (are these spools QC-blocked because of a
+    genuine defect, or because of an administrative/material Hold?).
+
+    Returns {project_name: {stage_label: count}} - every project with
+    at least one spool whose Rework Latest Status is "Rework" right
+    now, cross-tabbed by current_stage's display label.
+    """
+
+    result: dict[str, dict[str, int]] = {}
+    for record in records:
+        if record.rework_latest_status != "Rework":
+            continue
+
+        project = record.project_name or record.project_code or "(Unknown Project)"
+        stage_label = stage_labels.get(record.current_stage, record.current_stage) \
+            if record.current_stage else "(Stage Unknown)"
+
+        result.setdefault(project, {})
+        result[project][stage_label] = result[project].get(stage_label, 0) + 1
+
+    return result
+
+
 def _status_label(record: SpoolRecord, stage_labels: dict[str, str], category_stages: dict) -> str:
     if record.planned_start is None:
         return "No Planned Start"

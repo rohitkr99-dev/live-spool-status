@@ -53,6 +53,7 @@ from production.summary import (
     build_category_meta,
     build_category_stages,
     build_hold_by_project_stage,
+    build_rework_by_project_stage,
     build_ideal_vs_actual,
     build_kpis,
     build_projects_list,
@@ -187,6 +188,7 @@ def run(
             records, category_meta, rules.get("category_tracked_stages", {})
         ),
         "hold_by_project_stage": build_hold_by_project_stage(records, rules["stage_labels"]),
+        "rework_by_project_stage": build_rework_by_project_stage(records, rules["stage_labels"]),
     }
 
     processed_folder = Path(settings["paths"]["processed_folder"])

@@ -46,6 +46,7 @@ from utils import (
 )
 import hold_ledger
 from production.classify import classify_category
+from rework_pdqc_rule import REWORK_LATEST_STATUS
 from welding_finish import determine_welding_finish
 
 # Stages (after Planned Start) walked in order to find each spool's
@@ -87,6 +88,20 @@ class SpoolRecord:
     is_complete: bool = False
     is_delayed: bool = False
     currently_on_hold: bool = False
+
+    # "Accept" / "Rework" / "Hold" / None, straight off the
+    # Fabrication dataframe's "Rework Latest Status" column - set by
+    # rework_pdqc_rule.apply_rework_pdqc_rule() (called in
+    # production/pipeline.py before build_spool_records() runs) from
+    # the Production Rework Data workbook's latest offer event for
+    # this spool. None means the workbook didn't cover this spool at
+    # all (its PDQC/RFP are untouched by that rule). See backlog.py -
+    # a spool with "Rework" here is excluded from every backlog chart
+    # the exact same way currently_on_hold spools already are (both
+    # mean "blocked by QC, not a genuine stage delay") - confirmed
+    # 2026-09-03: 49 of 73 spools in the Release for Painting "Beyond
+    # 30 Days" bucket were actually in Rework, not a real backlog.
+    rework_latest_status: str | None = None
 
     # From the Weekly Production Planning workbook's "Week Planned"
     # vs "Initial Week Planned" gap (2026-08-26, given by the
@@ -239,6 +254,7 @@ def build_spool_records(
 
         record.currently_on_hold = hold_ledger.is_currently_on_hold(hold_store, ck)
         record.material_hold_days_lost = material_hold_days_lost_lookup.get(ck, 0)
+        record.rework_latest_status = row.get(REWORK_LATEST_STATUS) or None
 
         # Which stages actually apply to this spool's category - the 5
         # standard ones for every category except an entry in

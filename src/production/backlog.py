@@ -235,6 +235,22 @@ def build_backlog_chart(
             # get their own dedicated chart instead (see
             # src/production/summary.py -> build_hold_by_project_stage()).
             continue
+        if record.rework_latest_status == "Rework":
+            # Fixed 2026-09-03: a spool currently in Rework has its
+            # PDQC/RFP forced blank by the SAME rule that drives
+            # currently_on_hold (rework_pdqc_rule.py treats Rework
+            # and Hold identically for that purpose) - so it looks
+            # exactly like a genuine "stuck at this stage" backlog
+            # entry when it's actually blocked by unresolved QC
+            # rework, not a real Production/Painting delay. Hold was
+            # already excluded above; Rework wasn't, which is why the
+            # Release for Painting "Beyond 30 Days" bucket showed 73
+            # spools when only 24 were a real backlog (49 were in
+            # Rework, confirmed against the real Production Rework
+            # Data workbook). Excluded here the same way; see
+            # src/production/summary.py -> build_rework_by_project_stage()
+            # for where these are shown instead.
+            continue
         if record.current_stage != stage:
             continue
 
