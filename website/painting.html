@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#F3F4F9">
-<title>Painting — DEE Piping Systems Thailand</title>
+<title>DEE Piping Systems — Painting</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="assets/dee-mark.png">
 
-<!-- Page stays hidden until auth-guard.js confirms a valid login and
-     calls revealPage() - see website/auth-guard.js. This must load
-     before any real content so nothing flashes on screen for a
-     visitor who isn't logged in. -->
 <style>html.auth-pending body { visibility: hidden; }</style>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
@@ -21,10 +17,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="vendor/css/dataTables.dataTables.min.css">
+<link rel="stylesheet" href="vendor/css/buttons.dataTables.min.css">
+
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/hub.css">
+<link rel="stylesheet" href="css/painting.css?v=20260903">
 </head>
-<body class="hub">
+<body>
 
 <div class="ambient" aria-hidden="true">
   <span class="ambient__orb ambient__orb--ember"></span>
@@ -33,42 +33,254 @@
   <div class="ambient__grid"></div>
 </div>
 
-<header class="hub-header">
-  <div class="hub-header__inner">
-    <div class="hub-header__brand">
-      <img src="assets/dee-mark.png" alt="DEE Piping Systems">
-      <div>
-        <span class="hub-header__name">DEE Piping Systems</span>
-        <span class="hub-header__region">Thailand — Operations Hub</span>
+<div class="app-shell">
+
+  <header class="topbar">
+    <a class="topbar__brand" href="index.html" aria-label="DEE Piping Systems — back to site home">
+      <img class="topbar__logo" src="assets/dee-mark.png" alt="DEE Piping Systems logo">
+      <div class="topbar__divider" aria-hidden="true"></div>
+      <div class="topbar__title">
+        <span class="topbar__eyebrow">DEE Piping Systems — Painting</span>
+        <h1>Painting</h1>
       </div>
-    </div>
-    <div class="hub-header__actions">
-      <a class="hub-header__back" href="index.html">
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 8H4m0 0l3.5-4M4 8l3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <div class="topbar__meta">
+      <a class="btn btn--ghost" href="index.html">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 10 10 4l6 6M6 8.5V16h8V8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         All Departments
       </a>
+      <div class="topbar__updated">
+        <span class="topbar__updated-label">Data as of</span>
+        <span class="topbar__updated-value" id="last-updated">—</span>
+      </div>
       <div class="user-menu" id="user-menu"></div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main>
-  <section class="coming-soon">
-    <div class="coming-soon__mark"><img src="assets/icons/icon-painting.png" alt=""></div>
-    <span class="coming-soon__badge">Coming Soon</span>
-    <h1>Painting</h1>
-    <p>Surface preparation, coating application, and DFT compliance tracking across all painted assemblies. This dashboard is being built — check back soon.</p>
-    <a class="btn btn--primary" href="index.html">Back to Departments</a>
-  </section>
-</main>
+  <main>
 
-<footer class="hub-footer">
-  <span>DEE Piping Systems — Thailand · Internal Operations Portal</span>
-  <span id="footer-year"></span>
-</footer>
+    <!-- ============ KPI STRIP ============ -->
+    <section class="kpi-strip" id="kpi-strip" aria-label="Key metrics">
+      <div class="kpi-card" data-kpi="rfp-done">
+        <span class="kpi-card__label">RFP Done (DPR)</span>
+        <span class="kpi-card__value" id="kpi-rfp-done">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+      <div class="kpi-card kpi-card--warning" data-kpi="missing-plan">
+        <span class="kpi-card__label">Missing from Painting Plan</span>
+        <span class="kpi-card__value" id="kpi-missing-plan">—</span>
+        <span class="kpi-card__sub" id="kpi-missing-plan-pct">spools</span>
+      </div>
+      <div class="kpi-card kpi-card--complete" data-kpi="pdi-cleared">
+        <span class="kpi-card__label">PDI Cleared</span>
+        <span class="kpi-card__value" id="kpi-pdi-cleared">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+      <div class="kpi-card" data-kpi="open">
+        <span class="kpi-card__label">Still Open</span>
+        <span class="kpi-card__value" id="kpi-open">—</span>
+        <span class="kpi-card__sub">spools</span>
+      </div>
+      <div class="kpi-card kpi-card--warning" data-kpi="stuck">
+        <span class="kpi-card__label">Stuck &gt; 8 working days</span>
+        <span class="kpi-card__value" id="kpi-stuck">—</span>
+        <span class="kpi-card__sub">open spools</span>
+      </div>
+      <div class="kpi-card" data-kpi="median-cycle">
+        <span class="kpi-card__label">Median RFP → PDI Clearance</span>
+        <span class="kpi-card__value" id="kpi-median-cycle">—</span>
+        <span class="kpi-card__sub">working days · ideal is 4</span>
+      </div>
+      <div class="kpi-card" data-kpi="avg-cycle">
+        <span class="kpi-card__label">Average RFP → PDI Clearance</span>
+        <span class="kpi-card__value" id="kpi-avg-cycle">—</span>
+        <span class="kpi-card__sub">working days</span>
+      </div>
+      <div class="kpi-card kpi-card--warning" data-kpi="within-ideal">
+        <span class="kpi-card__label">Within the 4-day Ideal</span>
+        <span class="kpi-card__value" id="kpi-within-ideal">—</span>
+        <span class="kpi-card__sub">of cleared spools</span>
+      </div>
+    </section>
+
+    <!-- ============ STAGE FUNNEL + BOTTLENECK ============ -->
+    <section class="charts-grid" aria-label="Stage progress and bottleneck">
+      <div class="charts-grid__head">
+        <h3>Where Spools Are Getting Stuck</h3>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Stage Completion Funnel</h3>
+          <span class="chart-card__hint">Count of RFP-done spools reaching each painting stage</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-funnel"></canvas></div>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__head">
+          <h3>Median Days per Stage Transition</h3>
+          <span class="chart-card__hint">Which segment eats the most time · dashed line = 4-day total ideal</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-bottleneck"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ CYCLE TIME DEEP DIVE ============ -->
+    <section class="charts-grid" aria-label="Cycle time analysis">
+      <div class="charts-grid__head">
+        <h3>Cycle Time: Ideal vs. Actual</h3>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Completed Spools by Total Cycle Time</h3>
+          <span class="chart-card__hint">RFP → PDI Clearance, bucketed · ideal is 0–4 days</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-histogram"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <h3>Open Spools by Age Since RFP</h3>
+          <span class="chart-card__hint">Today's backlog shape · not yet PDI-cleared</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-aging"></canvas></div>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__head">
+          <h3>Median Cycle Time by RFP Week</h3>
+          <span class="chart-card__hint">Completed spools, grouped by the week their RFP fell in — is it getting better or worse?</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-trend"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ TABLES ============ -->
+    <section class="tables-section" aria-label="Painting data tables">
+
+      <div class="tables-toolbar">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" role="tab" aria-selected="true" data-tab="all">All RFP-Done Spools</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="missing">Missing from Plan</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="stuck">Stuck / Long Open</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="extreme">Extreme Cycle Time</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="dataquality">Data Quality Issues</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="pdimismatch">DPR / Painting PDI Mismatch</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="notindpr">In Plan, Not RFP in DPR</button>
+        </div>
+        <div class="filter-field tables-toolbar__filter">
+          <label for="table-project-filter">Project</label>
+          <select id="table-project-filter">
+            <option value="__all__">All Projects</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-pane is-active" id="pane-all">
+        <table id="table-all" class="spool-table" style="width:100%">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Drawing No.</th>
+              <th>Spool No.</th>
+              <th>In Plan?</th>
+              <th>RFP Date</th>
+              <th>Internal Blasting</th>
+              <th>External Blasting</th>
+              <th>Primer</th>
+              <th>PDI Offer</th>
+              <th>PDI Clearance (DPR)</th>
+              <th>Cycle Days</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-missing">
+        <p class="table-note">RFP is marked done in the DPR, but this spool doesn't appear anywhere in the Painting Weekly Plan workbook — it needs to be added so it can be tracked.</p>
+        <table id="table-missing" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>RFP Date</th><th>Days Since RFP</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-stuck">
+        <p class="table-note">Not yet PDI-cleared, and already more than 8 working days past RFP (2× the 4-day ideal) — these need attention now.</p>
+        <table id="table-stuck" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>RFP Date</th><th>Days Open</th><th>Internal Blasting</th><th>External Blasting</th><th>Primer</th><th>PDI Offer</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-extreme">
+        <p class="table-note">PDI-cleared, but the total cycle took more than 15 working days — worth a root-cause look at which segment (blasting, priming, or the PDI-offer-to-clearance wait) ate the time.</p>
+        <table id="table-extreme" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Total Cycle Days</th><th>RFP→Int. Blast</th><th>RFP→Ext. Blast</th><th>Primer→Next</th><th>PDI Offer→Clearance</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-dataquality">
+        <p class="table-note">Dates that are out of the expected order (a later stage dated before an earlier one), or an Internal Blasting Reqd flag that doesn't match whether a blasting date was actually logged.</p>
+        <table id="table-dataquality" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Issue</th><th>Detail</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-pdimismatch">
+        <p class="table-note">The DPR's own PDI Clearance date and the Painting sheet's own "PDI Status Acceptance Date" disagree for this spool — the two records were updated on different dates.</p>
+        <table id="table-pdimismatch" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>PDI Clearance (DPR)</th><th>PDI Acceptance (Painting)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="table-pane" id="pane-notindpr">
+        <p class="table-note">This spool is in the Painting Weekly Plan, but the DPR doesn't show its RFP as done — either a timing gap or a data entry issue worth checking.</p>
+        <table id="table-notindpr" class="spool-table" style="width:100%">
+          <thead><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Painting Status</th><th>Painting's own QC_RFP Date</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span>Data is pre-calculated in Python (src/painting/) — this page only displays it.</span>
+    <span id="footer-generated"></span>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/user-menu.js"></script>
 
-<script type="module" src="js/hub.js"></script>
+<script src="vendor/jquery.min.js"></script>
+<script src="vendor/dataTables.min.js"></script>
+<script src="vendor/dataTables.buttons.min.js"></script>
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/buttons.html5.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/chartjs-plugin-datalabels.min.js"></script>
+
+<script src="js/painting-config.js?v=20260903"></script>
+<script>
+  const SPOOL_STATUS_CONFIG = {
+    chartGridColor: "rgba(23, 21, 43, 0.08)",
+    chartTextColor: "#55566E",
+    chartTextColorStrong: "#1B1A2E",
+    chartWellColor: "#FFFFFF",
+  };
+</script>
+<script src="js/chartTheme.js"></script>
+<script src="js/painting-data.js?v=20260903"></script>
+<script src="js/painting-kpi.js?v=20260903"></script>
+<script src="js/painting-charts.js?v=20260903"></script>
+<script src="js/painting-tables.js?v=20260903"></script>
+<script src="js/painting-app.js?v=20260903"></script>
+
 </body>
 </html>
