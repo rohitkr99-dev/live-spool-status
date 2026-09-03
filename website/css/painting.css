@@ -1,0 +1,50 @@
+/**
+ * painting.css
+ * ---------------------------------------------------------
+ * A handful of layout rules specific to painting.html that aren't
+ * covered by the shared css/styles.css. Kept in its own tiny file
+ * rather than edited into styles.css, so nothing here can affect any
+ * other dashboard - same pattern as css/packing.css.
+ */
+
+.charts-grid .chart-card--full {
+  grid-column: 1 / -1;
+}
+.charts-grid .chart-card--full .chart-card__body {
+  min-height: 360px;
+}
+
+.tables-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(23, 21, 43, 0.025);
+}
+.tables-toolbar .tabs {
+  border-bottom: none;
+  background: transparent;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+.tables-toolbar__filter {
+  padding: 8px 16px;
+}
+
+/* Short explanatory line above a table pane, e.g. "these need
+   attention now" - plain, not another card, so it doesn't compete
+   visually with the KPI/chart cards above it. */
+.table-note {
+  margin: 14px 16px 0;
+  font-size: 12.5px;
+  color: var(--text-muted, #6A6B85);
+}
+
+/* Day-count cells in the tables - green when at/under the 4-day
+   ideal, amber-red when over it, and flagged red when negative (an
+   out-of-order date pair). */
+.days-ok { color: var(--status-complete); font-weight: 600; }
+.days-over { color: var(--status-critical); font-weight: 700; }
+.days-negative { color: var(--status-critical); font-weight: 700; text-decoration: underline wavy; }
