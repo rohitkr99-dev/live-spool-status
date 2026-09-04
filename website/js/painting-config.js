@@ -25,14 +25,20 @@ const PAINTING_CONFIG = {
   idealLineColor: "#1F8A55",
   overIdealColor: "#A82E30",
 
-  // Internal vs External Blasting butterfly chart (2026-09-04) - two
-  // distinct, non-alarming colours (neither is idealLineColor/
-  // overIdealColor, both of which already read as "good"/"bad"
-  // elsewhere on this page) plus a neutral dark pill for the combined-
-  // total label drawn at the zero line.
+  // Internal vs External Blasting butterfly chart (2026-09-04,
+  // corrected same day to the DEE logo's own two brand colours per
+  // the person - "use the color code of DEE logo and some
+  // complementing color for the opposite side"): --ice (DEE blue) for
+  // Internal, the left wing; --ember (DEE red) for External, the
+  // right wing - see css/styles.css's own "DEE red and DEE blue as
+  // the two brand [colours]" comment. overIdealColor below happens to
+  // be the same DEE-red hex - unrelated reuse, not a shared token,
+  // since that one means "over the ideal" everywhere else on this
+  // page and this one doesn't carry that meaning here. Plus a neutral
+  // dark pill for the combined-total label drawn at the row's center.
   blastingColors: {
     internal: "#4333A5",
-    external: "#1E8F86",
+    external: "#A82E30",
     sumLabelBg: "#1B1A2E",
   },
 

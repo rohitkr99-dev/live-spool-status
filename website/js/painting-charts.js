@@ -463,16 +463,25 @@ const PaintingCharts = {
   // Internal vs External Blasting - combined into a single diverging
   // ("butterfly") chart per the person (2026-09-04): "Internal &
   // External blasting are both done at same machines, I want to show
-  // some chart showing those together." Internal renders as a
-  // positive bar (up), External as a negative bar (down) from a
-  // shared zero line - both stacked on the same x category so they
-  // sit directly opposite each other, plus a combined-total label
-  // drawn at the zero line by sumLabelPlugin below. Shows the most
-  // recent ~20 periods by default; the From/To range selects
-  // (blasting-range-from/-to) let the person widen or narrow that
-  // window, same UI pattern as dashboard.html's Weekly Progress
-  // chart's own from/to week-range control (website/js/charts.js ->
-  // setupWeeklyRangeFilter()).
+  // some chart showing those together." Corrected the same day, twice:
+  // first to a true left/right-wing butterfly (indexAxis: 'y' -
+  // horizontal bars, not vertical up/down bars, which the person
+  // clarified is what "vertical" meant - the chart tall enough for
+  // ~20 rows, not the BARS drawn vertically), then to put Internal on
+  // the left / External on the right with the DEE logo's own two
+  // brand colours (--ice #4333A5 / --ember #A82E30, see css/styles.css
+  // -> "DEE red and DEE blue as the two brand" accents) instead of the
+  // original teal. Internal renders as a negative-valued bar (so it
+  // extends left), External as positive (extends right) - both
+  // stacked on the same y category so they sit directly opposite each
+  // other, plus a combined-total label drawn at the center (x=0) of
+  // each row by sumLabelPlugin below. Shows the most recent ~20
+  // periods by default (tall enough to read all of them - see
+  // renderBlastingOutputTrend()'s dynamic canvas height below); the
+  // From/To range selects (blasting-range-from/-to) let the person
+  // widen or narrow that window, same UI pattern as dashboard.html's
+  // Weekly Progress chart's own from/to week-range control
+  // (website/js/charts.js -> setupWeeklyRangeFilter()).
   // ---------------------------------------------------------------
   sumLabelPlugin: {
     id: "sumLabels",
@@ -482,21 +491,21 @@ const PaintingCharts = {
       const { ctx, scales } = chart;
       const xScale = scales.x, yScale = scales.y;
       if (!xScale || !yScale) return;
-      const zeroY = yScale.getPixelForValue(0);
+      const zeroX = xScale.getPixelForValue(0);
       ctx.save();
       ctx.font = "700 10px 'IBM Plex Mono', monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       opts.totals.forEach((total, i) => {
         if (!total) return;
-        const x = xScale.getPixelForValue(i);
+        const y = yScale.getPixelForValue(i);
         const text = total.toLocaleString("en-US");
         const boxW = ctx.measureText(text).width + 10;
         const boxH = 15;
         ctx.fillStyle = PAINTING_CONFIG.blastingColors.sumLabelBg;
-        ctx.fillRect(x - boxW / 2, zeroY - boxH / 2, boxW, boxH);
+        ctx.fillRect(zeroX - boxW / 2, y - boxH / 2, boxW, boxH);
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(text, x, zeroY + 1);
+        ctx.fillText(text, zeroX, y + 1);
       });
       ctx.restore();
     },
@@ -581,9 +590,23 @@ const PaintingCharts = {
 
     const rawKeys = rows.map((r) => r.period);
     const labels = rawKeys.map((raw) => this._formatPeriodLabel(raw, this.outputGranularity));
-    const internalData = rows.map((r) => r.internal_blasting[this.outputMetric] || 0);
-    const externalData = rows.map((r) => -(r.external_blasting[this.outputMetric] || 0));
+    const internalData = rows.map((r) => -(r.internal_blasting[this.outputMetric] || 0));
+    const externalData = rows.map((r) => r.external_blasting[this.outputMetric] || 0);
     const totals = rows.map((r) => r.total[this.outputMetric] || 0);
+
+    // A true butterfly needs real height to breathe - one row per
+    // period, not a fixed box. .chart-card__body is `flex: 1` (see
+    // css/styles.css), which resolves to flex-basis: 0% - a plain
+    // `height` on a 0-basis flex child is ignored outright, only
+    // `min-height` actually grows it (confirmed: setting .style.height
+    // here left the card stuck at its static min-height:380px CSS
+    // fallback, verified via clientHeight in the browser). min-height
+    // is what the static CSS fallback itself relies on too, so this
+    // just overrides that same property with the row-count-driven
+    // value, same "chart.js horizontal-bar sizing" math as every
+    // other horizontal chart on this site.
+    const bodyEl = ctx.parentElement;
+    if (bodyEl) bodyEl.style.minHeight = `${Math.max(340, rows.length * 34 + 90)}px`;
 
     this.instances.blasting = new Chart(ctx, {
       type: "bar",
@@ -595,42 +618,46 @@ const PaintingCharts = {
             data: internalData,
             backgroundColor: PAINTING_CONFIG.blastingColors.internal,
             borderRadius: 4,
-            maxBarThickness: 26,
+            maxBarThickness: 22,
+            datalabels: {
+              formatter: (v) => (v === 0 ? "" : this._formatMetricValue(Math.abs(v), this.outputMetric)),
+            },
           },
           {
             label: "External Blasting",
             data: externalData,
             backgroundColor: PAINTING_CONFIG.blastingColors.external,
             borderRadius: 4,
-            maxBarThickness: 26,
+            maxBarThickness: 22,
             datalabels: {
-              formatter: (v) => (v === 0 ? "" : this._formatMetricValue(Math.abs(v), this.outputMetric)),
+              formatter: (v) => (v === 0 ? "" : this._formatMetricValue(v, this.outputMetric)),
             },
           },
         ],
       },
       plugins: [this.sumLabelPlugin],
       options: {
+        indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { top: 24, bottom: 10 } },
+        layout: { padding: { left: 30, right: 30 } },
         scales: {
           x: {
             stacked: true,
-            grid: { display: false },
-            ticks: { font: { family: "IBM Plex Mono, monospace", size: 9.5 }, autoSkip: false, maxRotation: rows.length > 12 ? 60 : 0, minRotation: rows.length > 12 ? 60 : 0 },
+            grid: { color: "rgba(23, 21, 43, 0.06)" },
+            ticks: { font: this.chartFont, callback: (v) => this._formatMetricValue(Math.abs(v), this.outputMetric) },
+            title: { display: true, text: metricLabel, font: this.chartFont },
           },
           y: {
             stacked: true,
             grid: { display: false },
-            ticks: { font: this.chartFont, callback: (v) => this._formatMetricValue(Math.abs(v), this.outputMetric) },
-            title: { display: true, text: metricLabel, font: this.chartFont },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 } },
           },
         },
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
           datalabels: {
-            formatter: (v) => (v === 0 ? "" : this._formatMetricValue(v, this.outputMetric)),
+            formatter: (v) => (v === 0 ? "" : this._formatMetricValue(Math.abs(v), this.outputMetric)),
           },
           sumLabels: { totals },
           tooltip: {
