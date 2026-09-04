@@ -21,6 +21,10 @@ const PaintingCharts = {
   outputMetric: "count",
   outputGranularity: "Week",
 
+  bayOutputStage: "internal_blasting",
+  bayOutputMetric: "count",
+  bayOutputGranularity: "Week",
+
   render(store) {
     this.store = store;
     this.renderFunnel();
@@ -30,6 +34,8 @@ const PaintingCharts = {
     this.renderTrend();
     this.setupOutputFilters();
     this.renderAllOutputTrends();
+    this.setupBayOutputFilters();
+    this.renderBayOutputTrend();
     this.renderProjectInsight();
     this.renderMaterialInsight();
   },
@@ -429,6 +435,81 @@ const PaintingCharts = {
               title(items) {
                 const raw = rawKeys[items[0].dataIndex];
                 return raw;
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
+  // ---------------------------------------------------------------
+  // Output by Bay - which bay (Bay-4 / Bay-6 / Bay-6 Auto) produced how
+  // much, per day/week/month, one process at a time. A standalone
+  // chart (own process/metric/period selectors, independent of the six
+  // Process Output Over Time charts above) built directly from
+  // bay_output_trend in the bundle - one Chart.js dataset per bay so
+  // they're visually compared side by side rather than summed.
+  // ---------------------------------------------------------------
+  setupBayOutputFilters() {
+    this._wireFilterGroup("bay-output-stage-filter", "stage", (value) => {
+      this.bayOutputStage = value;
+      this.renderBayOutputTrend();
+    });
+    this._wireFilterGroup("bay-output-metric-filter", "metric", (value) => {
+      this.bayOutputMetric = value;
+      this.renderBayOutputTrend();
+    });
+    this._wireFilterGroup("bay-output-period-filter", "granularity", (value) => {
+      this.bayOutputGranularity = value;
+      this.renderBayOutputTrend();
+    });
+  },
+
+  renderBayOutputTrend() {
+    this.destroy("bayOutput");
+    const ctx = document.getElementById("chart-bay-output");
+    if (!ctx) return;
+
+    const bayData = this.store.bayOutputTrend || {};
+    const bays = bayData.bays || [];
+    const metricLabel = this.bayOutputMetric === "surface_area" ? "Surface area (m²)" : "Spool count";
+
+    const hintEl = document.getElementById("chart-bay-output-hint");
+    if (hintEl) hintEl.textContent = `${metricLabel}, by ${this.bayOutputGranularity.toLowerCase()}`;
+
+    const stageData = (bayData.stages || {})[this.bayOutputStage] || {};
+    const rows = stageData[this._granularityKey(this.bayOutputGranularity)] || [];
+    const rawKeys = rows.map((r) => r.period);
+    const labels = rawKeys.map((raw) => this._formatPeriodLabel(raw, this.bayOutputGranularity));
+
+    const datasets = bays.map((bay, i) => ({
+      label: bay,
+      data: rows.map((r) => (r[bay] ? r[bay][this.bayOutputMetric] || 0 : 0)),
+      backgroundColor: PAINTING_CONFIG.projectPalette[i % PAINTING_CONFIG.projectPalette.length],
+      borderRadius: 4,
+      maxBarThickness: 28,
+    }));
+
+    this.instances.bayOutput = new Chart(ctx, {
+      type: "bar",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 9.5 }, autoSkip: true, maxRotation: 0 } },
+          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: metricLabel, font: this.chartFont } },
+        },
+        plugins: {
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          datalabels: { display: false },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: {
+              title(items) {
+                return rawKeys[items[0].dataIndex];
               },
             },
           },
