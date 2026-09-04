@@ -39,6 +39,74 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Root cause found: Painting was never wired into "Sync from Google Drive" at all
+
+The person ran "Sync from Google Drive" themselves and reported the
+Blasting/Bay charts (and the whole page) still showed stale Sep-3 data
+afterward: "You do the sync please. I synced the data already still it
+is not showing here." Checked the live bundle directly
+(`fetch('data/b3f7e6a1d4.json')` in the browser console against the
+person's own already-open tab) - still `generated_at:
+2026-09-03T09:22:51`, no `blasting_output_trend`/`bay_output_trend`
+keys, confirming the sync genuinely hadn't touched Painting's data,
+not a caching illusion.
+
+Checked GitHub Actions: the person's manual "Sync from Google Drive"
+run (#722) had completed successfully. So the workflow ran fine - it
+just never had anything to do for Painting. Root cause, in
+`.github/workflows/drive-sync.yml` and `scripts/sync_drive.py`:
+
+1. `drive-sync.yml` runs `main.py` (Projects), `production_main.py`,
+   and `quality_main.py` after every sync - but never
+   `painting_main.py`. It was simply never added when the Painting
+   dashboard was built earlier this session.
+2. Even fixing (1) wouldn't have been enough: `sync_drive.py`'s own
+   `DEPARTMENT_DRIVE_SUBFOLDERS` dict (which Drive subfolder mirrors
+   into which `data/upload/` folder) only had `projects` / `packing` /
+   `quality` - no `painting` entry, so the Painting Weekly Plan
+   workbook was never even downloaded from Drive into
+   `data/upload/painting/` in the first place. The script's own
+   docstring had flagged this as a known gap ("When a currently-
+   unbuilt department (production / painting) gets its pipeline wired
+   into main.py later, add a matching line...") but it was never
+   circled back to.
+
+Fixed both:
+- `.github/workflows/drive-sync.yml`: added a "Run the Painting
+  dashboard pipeline" step (`python3 painting_main.py`), same
+  `continue-on-error: true` pattern as the Production/Quality steps -
+  a temporarily-missing Painting workbook should never block the
+  Projects dashboard's own commit/push.
+- `scripts/sync_drive.py`: added `"painting":
+  Path("data/upload/painting")` to `DEPARTMENT_DRIVE_SUBFOLDERS`.
+  Rewrote the module docstring's Drive-layout example and the
+  now-stale "currently-unbuilt department (production / painting)"
+  sentence - both Production and Painting are built now; Production
+  still deliberately has no subfolder of its own since its real
+  inputs (DPR/Weekly/Line History/SIOP, Rework Data/Material
+  Handover) already arrive via the `projects`/`quality` subfolders,
+  so that's not a gap, just Painting's own separate workbook was.
+
+**Still needed from the person** (can't be done from here - no Drive
+access): create a `painting` subfolder under the same shared Drive
+root folder as the existing `projects`/`packing`/`quality`
+subfolders, and put the Painting Weekly Plan workbook in it. Until
+that subfolder exists, `sync_drive.py` logs "Drive subfolder
+'painting' not found... skipping" and Painting's data stays exactly
+as stale as it's been all along - the code fix alone isn't sufficient
+without the matching Drive folder.
+
+**Immediate unblock, not waiting on the Drive folder**: regenerated
+the Painting bundle locally (same technique used earlier this session -
+the real Painting Weekly Plan workbook plus a DPR stand-in built from
+the previously-published bundle's own `spools`, since the real DPR
+workbook isn't available outside the Drive-synced CI environment) and
+republished `website/data/b3f7e6a1d4.json` directly - `generated_at`
+now `2026-09-04T02:08:48`, both new trend fields present and
+populated. This is a one-time manual bridge; the code fix above is
+what makes it self-sustaining from the next real Drive sync once the
+subfolder exists.
+
 ### 2026-09-04 - Painting: Blasting chart corrected to a real left/right butterfly, DEE brand colours
 
 The chart shipped earlier the same day (next entry down) got "butterfly"

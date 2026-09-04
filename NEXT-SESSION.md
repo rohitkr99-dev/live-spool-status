@@ -6,17 +6,21 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
-## Where things stand (as of 2026-09-04)
+## Action needed from me (blocking, can't be done from the assistant side)
 
-Three things landed this session and are waiting on verification:
+The Painting dashboard's data has **never** flowed through the automated "Sync from Google Drive" workflow — not a bug introduced this session, a gap that's existed since the Painting dashboard was built. Root cause (full story in `CHANGELOG.md` → "Root cause found" entry, 2026-09-04): the Google Drive sync script (`scripts/sync_drive.py`) only mirrors `projects`/`packing`/`quality` subfolders from Drive — there was never a `painting` one, so the Painting Weekly Plan workbook never made it into the repo for the pipeline to read, no matter how many times the workflow ran.
 
-1. **Production backlog fix** (shipped 2026-09-03, corrected same day): "Release for Painting"/PDQC backlog charts no longer wrongly count spools that are actually in Rework as backlog — except PDQC's own chart, which correctly still shows them (that IS PDQC's own unresolved verdict). See `CHANGELOG.md` → 2026-09-03 entry for the full story, including the real example spool that caught the first version's bug (`1-V17565-PIND-0079` / `V17565-PIND-0079-02`). Already confirmed sync'd — commit history shows 3 "Auto-update: sync from Google Drive" runs on 2026-09-04, after this fix landed.
-2. **Painting "Output by Bay" chart** (shipped 2026-09-04): compares Bay-4 / Bay-6 / Bay-6 Auto output per day/week/month, one process at a time. Confirmed showing blank on the live site as of this session — expected, needs the next sync (see below), not a bug.
-3. **Painting: Internal vs External Blasting combined into one butterfly chart** (shipped 2026-09-04): replaces the two separate single-process charts with one diverging chart (Internal up / External down from zero, plus a combined-total label at the zero line), a From/To range filter defaulting to the last 20 periods, and data labels added to the other 4 Process Output Over Time charts (Primer/Pickling/PDI Offer/PDI Clearance).
+**Fixed the code side already** (`scripts/sync_drive.py` + `.github/workflows/drive-sync.yml` now both know about a `painting` Drive subfolder and run `painting_main.py`). **Still need to, in Google Drive itself:**
+1. Create a subfolder named exactly `painting` under the same shared root folder that already has `projects`/`packing`/`quality` in it.
+2. Put the Painting Weekly Plan workbook (filename containing "Painting Weekly Plan", same convention as always) into that new `painting` subfolder.
+3. Re-run "Sync from Google Drive" (or wait for the next scheduled run, every 15 min) — it should now actually pull the workbook in and regenerate Painting's data going forward, same as every other department.
 
-**#2 and #3 require the "Sync from Google Drive" GitHub Action to be re-run** before they show real data on the live site — the code is published, but the last syncs predate both. Run it, then check the Painting page:
-- "Output by Bay" chart (below "Process Output Over Time") shows real bars instead of being empty.
-- "Internal vs External Blasting" (top of "Process Output Over Time", full-width) shows a diverging chart with real weekly bars, per-bar labels, and the dark combined-total pill at the zero line — not empty.
+Until step 1–2 happen, Painting's data will only ever update via a manual local-run-and-upload bridge (like the one done today), not the automated sync.
+
+## Where things stand otherwise (as of 2026-09-04)
+
+1. **Production backlog fix** (shipped 2026-09-03, corrected same day): "Release for Painting"/PDQC backlog charts no longer wrongly count Rework spools as backlog, except PDQC's own chart (correctly still shows them). Confirmed synced and live.
+2. **Painting "Output by Bay" chart** + **3. Internal vs External Blasting butterfly chart** (both shipped 2026-09-04): both are live and working — verified directly against the person's own open browser tab, real data, correct colors (DEE blue `#4333A5` left / DEE red `#A82E30` right), correct left/right orientation, dynamic row height. As of this handoff the published bundle was manually regenerated and republished (`website/data/b3f7e6a1d4.json`, `generated_at: 2026-09-04T02:08:48`) using the real Painting Weekly Plan workbook plus a DPR stand-in built from the previously-published bundle's own `spools` (no direct DPR access outside the Drive-synced CI environment) — so both charts should show real data right now, but that data is a one-time manual snapshot, not self-refreshing, until the Drive folder step above happens.
 
 ## Known open item
 
@@ -24,4 +28,4 @@ The user said (2026-09-03) "I have some more things to add in Painting" before p
 
 ## Housekeeping note (not urgent)
 
-Local git push doesn't work in this environment (no stored credentials) — all publishing this session was done via GitHub's web "Upload files" UI. The local git branch has also drifted from `origin/main`'s real history (confirmed to be encoding/line-ending noise, not real content differences, the one time it was checked). Don't try to reconcile it unless a task specifically needs local git history — work directly against files and publish via web-upload as this session did.
+Local git push doesn't work in this environment (no stored credentials) — all publishing this session was done via GitHub's web "Upload files" UI. The local git branch has also drifted from `origin/main`'s real history (confirmed to be encoding/line-ending noise, not real content differences, the one time it was checked). Don't try to reconcile it unless a task specifically needs local git history — work directly against files and publish via web-upload as this session did. Local `.github/workflows/` and `scripts/` directories didn't exist at all before this session (same drift) — they were pulled fresh from GitHub's raw content this session to make the sync fix.
