@@ -29,6 +29,31 @@
   min-height: 380px;
 }
 
+/* Per-chart "Export to Excel" buttons (2026-09-05) - same rule as
+   css/production.css and css/quality.css, just not previously needed
+   on this page. Pinned to the chart-card__head's top-right corner
+   (that div is already position:relative - see styles.css), except
+   the Blasting chart's own copy, which overrides back to a normal
+   flow position inline so it sits next to the From/To range selects
+   instead of overlapping them (see painting.html). */
+.btn-export {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-export:hover { background: var(--ice-soft); }
+.btn-export:disabled { opacity: 0.5; cursor: default; }
+
 .tables-toolbar {
   display: flex;
   align-items: center;
