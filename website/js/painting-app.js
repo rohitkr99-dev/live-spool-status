@@ -22,6 +22,7 @@ const PaintingApp = {
     PaintingKPI.render(store.kpiSummary);
     PaintingCharts.render(store);
     PaintingTables.renderAll(store);
+    PaintingChartExport.wireStatic(store);
 
     document.getElementById("last-updated").textContent = PaintingKPI.formatTimestamp(store.generatedAt);
     const footer = document.getElementById("footer-generated");

@@ -254,16 +254,19 @@ const CombinedPdfExport = {
     // iframe needed. The other 4 are fetched one at a time below.
     renderDepartment("Projects", this.collectSections(document));
 
-    for (const page of this.otherPages) {
+    for (const [i, page] of this.otherPages.entries()) {
       // A short settling gap before spinning up the next iframe -
       // confirmed live that starting one immediately after the last
       // was torn down made its own load noticeably less reliable
       // (the browser was still winding down the previous iframe's
       // background work) than giving it a beat first.
+      this.setProgress(`Loading ${page.title}… (${i + 1}/${this.otherPages.length})`);
       await new Promise((r) => setTimeout(r, 250));
       const sections = await this.loadPageSections(page.url);
       renderDepartment(page.title, sections);
     }
+
+    this.setProgress("Finishing up…");
 
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
@@ -279,19 +282,43 @@ const CombinedPdfExport = {
     doc.save(`dee-piping-all-departments-charts-${stamp}.pdf`);
   },
 
+  /** Updates the button's own label while the export runs - NOT the
+   * page's shared toast, which auto-hides after ~2.6s (see app.js ->
+   * showToast()) and would go silent for most of a run that can take
+   * 20-90+ seconds (4 other department pages, each with its own
+   * up-to-20-second load budget - see loadPageSections()). Confirmed
+   * live this was the likely cause of the export LOOKING dead even
+   * while it was still working: nothing on screen changed for the
+   * whole run except a subtle button-loading style. The label now
+   * names which department is currently loading, so there's always
+   * something visibly changing for as long as this is genuinely
+   * still running. */
+  setProgress(text) {
+    const label = document.getElementById("export-all-pdf-btn-label");
+    if (label) label.textContent = text;
+  },
+
   init() {
     const btn = document.getElementById("export-all-pdf-btn");
-    if (!btn) return;
+    const label = document.getElementById("export-all-pdf-btn-label");
+    if (!btn || !label) return;
+    const defaultLabel = label.textContent;
+
     btn.addEventListener("click", async () => {
+      if (btn.classList.contains("is-loading")) return; // already running - ignore a second click
       btn.classList.add("is-loading");
-      SpoolApp.showToast("Building the combined PDF - loading every department page, this can take a moment…");
+      btn.disabled = true;
+      this.setProgress("Starting…");
       try {
         await this.export();
+        SpoolApp.showToast("Combined PDF downloaded");
       } catch (error) {
         console.error(error);
         SpoolApp.showToast("Couldn't build the combined PDF - see console for details", true);
       } finally {
         btn.classList.remove("is-loading");
+        btn.disabled = false;
+        this.setProgress(defaultLabel);
       }
     });
   },

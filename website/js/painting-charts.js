@@ -366,6 +366,18 @@ const PaintingCharts = {
     ["pdi_clearance", "PDI Clearance"],
   ],
 
+  // stage key -> [spool record date field, display label] - used by
+  // renderBayOutputTrend() to tell PaintingChartExport which date
+  // field the currently-selected bay-output stage corresponds to.
+  STAGE_DATE_FIELDS: {
+    internal_blasting: ["internal_blasting_date", "Internal Blasting"],
+    external_blasting: ["external_blasting_date", "External Blasting"],
+    primer: ["primer_date", "Primer"],
+    pickling: ["pickling_date", "Pickling"],
+    pdi_offer: ["pdi_offer_date", "PDI Offer"],
+    pdi_clearance: ["pdi_clearance_date", "PDI Clearance"],
+  },
+
   setupOutputFilters() {
     this._wireFilterGroup("output-metric-filter", "metric", (value) => {
       this.outputMetric = value;
@@ -824,6 +836,11 @@ const PaintingCharts = {
         },
       },
     });
+
+    if (typeof PaintingChartExport !== "undefined") {
+      const [dateField, stageLabel] = this.STAGE_DATE_FIELDS[this.bayOutputStage] || [];
+      if (dateField) PaintingChartExport.wireBayOutput(this.store, this.bayOutputStage, dateField, stageLabel);
+    }
   },
 
   // ---------------------------------------------------------------
