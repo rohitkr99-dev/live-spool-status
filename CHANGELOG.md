@@ -39,6 +39,72 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Projects: "Export All Departments PDF" (part 4, final part of the same multi-part request)
+
+Completes the request from the two entries below this one: "Also, I
+want an extra export to pdf button in projects tab that will download
+all charts from all tabs combined." Confirmed via `AskUserQuestion`:
+all 5 department pages (Projects, Production, Quality, Painting,
+Packing & Dispatch).
+
+**New `website/js/combinedPdfExport.js`.** New "Export All Departments
+PDF" button next to the existing "Export PDF" button in
+`dashboard.html`'s header. There's no server here to pre-render the
+other 4 pages, so each is loaded in a hidden, off-screen iframe
+(same-origin, so no CORS issue reading its canvases) - one at a time,
+not all 5 at once - waits for that page's own data-fetch + Chart.js
+render to finish (every `{Dept}App.js` already adds `is-ready` to
+`<body>` once rendered, real data or empty state alike - reused that
+existing signal rather than inventing a new one), harvests its chart
+canvases the same way `pdfExport.js -> collectSections()` already does
+on the Projects page itself, and appends everything into ONE shared
+jsPDF document with a department banner between each page's charts.
+Projects' own charts are read straight from the live DOM (no iframe
+needed, it's the page the button is on); the other 4 go through the
+iframe path. Charts-only, matching every existing per-page export on
+this site - Packing & Dispatch's own richer `packing-pdfExport.js`
+(KPI/table sections beyond charts) is for ITS OWN single-page export
+only, not replicated here.
+
+**Two real bugs found and fixed while verifying in-browser** (local
+scratch preview, `jsPDF.save`/`XLSX`-style monkey-patch to capture the
+built PDF instead of downloading it, plus instrumented logging of
+each department's load time and section/chart counts):
+1. `iframe.onload` can fire once for the interim `about:blank`
+   document before the real navigation lands. The first version
+   captured `iframe.contentDocument` once, inside that first `onload`
+   firing, and polled that single captured reference for `is-ready` -
+   if that firing happened to be the `about:blank` one, the poll was
+   watching a document that would never get `is-ready` and always
+   burned the full timeout. Confirmed live: Production and Quality
+   (both local-upload/IndexedDB-backed pages, no published bundle
+   fetched instantly like Painting/Packing) reliably came back with 0
+   charts every time before the fix, real charts every time after -
+   fixed by re-reading `iframe.contentDocument` fresh on every poll
+   tick instead of a cached snapshot.
+2. The post-`is-ready` "let Chart.js finish painting" pause originally
+   used a double `requestAnimationFrame` - confirmed live that rAF is
+   unreliable (throttled or doesn't fire at all) for an iframe parked
+   off-screen (`left: -10000px`), since browsers treat that similarly
+   to a backgrounded tab for paint-timing purposes. Switched to a
+   plain 400ms `setTimeout`, which doesn't have that failure mode.
+   Also added a 250ms settling gap before spinning up each next
+   iframe - starting one immediately after the previous was torn down
+   made its load measurably less reliable than giving it a beat.
+
+Verified end-to-end in-browser after both fixes, on a genuinely fresh
+page load: all 5 departments came back with real chart content
+(Projects + Production 25 charts + Quality 10 charts + Painting 13
+charts + Packing & Dispatch 5 charts), assembled into one 39-page PDF,
+no console errors. Per-department load time was consistently fast for
+Production/Quality/Packing (~2s) but variable for Painting in this
+particular sandboxed test environment (2s to ~16s across runs,
+plausibly background-tab timer throttling specific to the automated
+test harness rather than the app itself) - bounded in every case by
+the existing 20-second per-department timeout, so the export can
+never hang indefinitely; a department that can't be reached in time
+shows "No charts available" instead of blocking the rest.
+
 ### 2026-09-04 - Painting: Export Excel button (part 2 of the same multi-part request)
 
 Continuing the same request as the entry directly below this one -
