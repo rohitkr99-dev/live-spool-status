@@ -699,7 +699,56 @@ const PaintingCharts = {
   // Process Output Over Time charts above) built directly from
   // bay_output_trend in the bundle - one Chart.js dataset per bay so
   // they're visually compared side by side rather than summed.
+  //
+  // Data labels (2026-09-04, per the person): unlike the Blasting
+  // butterfly chart, these bars are GROUPED side by side per period,
+  // not stacked - so there's no single "top of stack" pixel to draw a
+  // combined-total label at. groupTotalPlugin below finds the tallest
+  // bar in each period's group and draws the total just above IT
+  // instead, same dark-pill visual language as the Blasting chart's
+  // own sum badge (PAINTING_CONFIG.blastingColors.sumLabelBg) so a
+  // "combined total" reads the same way wherever it appears on this
+  // page.
   // ---------------------------------------------------------------
+  groupTotalPlugin: {
+    id: "groupTotals",
+    afterDatasetsDraw(chart) {
+      const opts = chart.options.plugins && chart.options.plugins.groupTotals;
+      if (!opts || !opts.totals) return;
+      const { ctx, scales } = chart;
+      ctx.save();
+      ctx.font = "700 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      opts.totals.forEach((total, i) => {
+        if (!total) return;
+        let topY = Infinity;
+        chart.data.datasets.forEach((ds, di) => {
+          const meta = chart.getDatasetMeta(di);
+          if (meta.hidden) return;
+          const bar = meta.data[i];
+          if (bar && bar.y < topY) topY = bar.y;
+        });
+        if (!isFinite(topY)) return;
+        const x = scales.x.getPixelForValue(i);
+        // 28px, not a smaller gap - confirmed live in the browser
+        // (same lesson as the Blasting chart's sum badge): the tallest
+        // bar's OWN datalabel already occupies roughly topY-16 to
+        // topY-4 (global bar default: offset 4 + the label's own text
+        // height), so anything closer than ~28px collides with it.
+        const y = topY - 28;
+        const text = total.toLocaleString("en-US");
+        const boxW = ctx.measureText(text).width + 10;
+        const boxH = 15;
+        ctx.fillStyle = PAINTING_CONFIG.blastingColors.sumLabelBg;
+        ctx.fillRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, x, y + 1);
+      });
+      ctx.restore();
+    },
+  },
+
   setupBayOutputFilters() {
     this._wireFilterGroup("bay-output-stage-filter", "stage", (value) => {
       this.bayOutputStage = value;
@@ -738,27 +787,37 @@ const PaintingCharts = {
       backgroundColor: PAINTING_CONFIG.projectPalette[i % PAINTING_CONFIG.projectPalette.length],
       borderRadius: 4,
       maxBarThickness: 28,
+      datalabels: {
+        formatter: (v) => (v === 0 ? "" : this._formatMetricValue(v, this.bayOutputMetric)),
+      },
     }));
+
+    const totals = rows.map((r) => bays.reduce((sum, bay) => sum + ((r[bay] && r[bay][this.bayOutputMetric]) || 0), 0));
 
     this.instances.bayOutput = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets },
+      plugins: [this.groupTotalPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { top: 42 } },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 9.5 }, autoSkip: true, maxRotation: 0 } },
           y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: metricLabel, font: this.chartFont } },
         },
         plugins: {
           legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
-          datalabels: { display: false },
+          groupTotals: { totals },
           tooltip: {
             titleFont: this.chartFont,
             bodyFont: this.chartFont,
             callbacks: {
               title(items) {
                 return rawKeys[items[0].dataIndex];
+              },
+              afterBody(items) {
+                return `Combined total: ${totals[items[0].dataIndex].toLocaleString("en-US")}`;
               },
             },
           },
