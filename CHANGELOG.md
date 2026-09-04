@@ -39,6 +39,83 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Painting: Internal/External Blasting combined into a butterfly chart, data labels added to Process Output Over Time
+
+Asked: "since Internal & External blasting are both done at same
+machines, I want to show some chart showing those together itself in
+a single chart... Use Butterfly chart for better view, make it
+vertical, add data labels both side but also add a data label of
+showing sum together. Show around 20 lines by default and add range
+filter to select as per wish... Also, please add data labels to all
+these charts."
+
+- `src/painting/summary.py`: added `build_blasting_output_trend()` -
+  reuses `_group_output()` (same grouping `build_stage_output_trend()`
+  already does for `internal_blasting_date`/`external_blasting_date`)
+  and merges the two fields' period lists via new `_merge_period_rows()`
+  helper, so a period with activity on only one side still gets a zero
+  entry for the other and both series line up on the same x-axis
+  categories. Each row carries both sides' own count/surface-area plus
+  a combined `total`.
+- `src/painting/pipeline.py`: bundle gained `blasting_output_trend`.
+- `website/js/painting-charts.js`: `renderBlastingOutputTrend()` - a
+  vertical diverging ("butterfly") Chart.js bar chart: Internal
+  Blasting renders as a positive (upward) bar, External Blasting as a
+  negative (downward) bar, both `stacked: true` on the same x category
+  so they sit directly opposite each other from a shared zero line.
+  Each bar gets its own value label (the plugin-wide bar-chart default
+  from `chartTheme.js`, with a per-dataset `formatter` override on the
+  External side so it shows the magnitude, not the negative number
+  used internally for rendering). A new `sumLabelPlugin` (same
+  chart-local-plugin technique as the existing `idealLinePlugin`) draws
+  a small dark pill with the period's combined total directly at the
+  zero line - a label that isn't tied to either dataset. Removed
+  `internal_blasting`/`external_blasting` from `outputStages` (the
+  loop that renders the section's single-series charts) - they're
+  covered by this one chart now instead of two separate ones.
+- Range filter: added `blasting-range-from`/`-to` `<select>`s - same
+  UI pattern and wiring as `dashboard.html`'s existing Weekly Progress
+  chart range control (`website/js/charts.js` ->
+  `setupWeeklyRangeFilter()`/`refreshWeeklyRangeOptions()`), replicated
+  here as `setupBlastingRangeFilter()`/`refreshBlastingRangeOptions()`.
+  Defaults to the most recent 20 periods; an explicit choice survives
+  metric/granularity toggles as long as both ends are still present in
+  the new period list, otherwise resets to the last 20 of whatever's
+  available (exactly the existing Weekly Progress chart's own
+  last-N-then-preserve behavior, just N=20 instead of N=8).
+- `website/painting.html`: the two single-process Blasting cards
+  replaced with one `chart-card--full` card (spans the section's full
+  3-column width) carrying the new chart + range control; Primer/
+  Pickling/PDI Offer/PDI Clearance's remaining 4 cards reflow after it
+  unchanged. `website/css/painting.css` gained an
+  `.activity-charts-grid .chart-card--full` rule - the existing
+  `--full` rule only covered `.charts-grid`, a different grid class
+  this section doesn't use.
+- Data labels on the other 4 Process Output Over Time charts
+  (`renderOutputTrend()`): previously explicitly set
+  `datalabels: { display: false }`. `chartTheme.js` already turns
+  datalabels ON by default for every bar chart
+  (`Chart.overrides.bar.plugins.datalabels`) - these four were opting
+  out individually, so simply not opting out any more was enough
+  (kept a `formatter` that hides the zero-value case, matching the
+  global default's own convention).
+- `tests/test_painting_blasting_output.py` (new, 7 cases) - covers
+  `build_blasting_output_trend()`'s period-union merge, the total sum,
+  and that a period present on only one side still appears with a
+  zero entry for the other.
+- Verified against the real workbook (same DPR stand-in technique as
+  the Bay chart above): real weekly totals for both bars, the combined
+  total, and the default 20-of-24-week window all confirmed correct;
+  the From/To selects confirmed re-narrowing the chart live, and both
+  the metric (Spools/Surface Area) and granularity (Day/Week/Month)
+  toggles confirmed correctly resetting the range to the new period
+  list's last 20 - via the same scratch-only auth-guard-stripped local
+  copy as before, never the real `website/` files.
+- `bay_output_trend` and `blasting_output_trend` both still need the
+  next "Sync from Google Drive" run to appear with real data on the
+  live site - the person noted the Bay chart was showing blank, which
+  is expected until that next sync (no code issue).
+
 ### 2026-09-04 - Painting: "Output by Bay" chart
 
 Asked: "Did you see something related to Bay No. in the painting
