@@ -100,7 +100,7 @@ def _round1(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
 
-def _fiscal_week_key(d: date) -> str:
+def _fiscal_week_sort_key(d: date) -> str:
     """
     Every "by week" chart on this dashboard was grouping by Python's
     isocalendar() week (Monday-anchored, ISO 8601) - caught by the
@@ -112,13 +112,50 @@ def _fiscal_week_key(d: date) -> str:
     (e.g. dashboard.html's Weekly Progress chart, via the master
     dataset's own "Week" column) - this was the one place in the
     Painting pipeline still using calendar ISO weeks instead.
-    Zero-padded so the plain-string sort every caller here already
-    does keeps working unchanged (every real RFP-done spool this
-    dashboard tracks falls inside FY26's single Week 1-52 cycle, so
-    the bare week number - no fiscal-year prefix - is unambiguous,
-    same as how the rest of the site's "Week N" labels work).
+
+    Corrected again the same day: a bare "Week N" label sorts wrong
+    once real data crosses a fiscal-year boundary - confirmed against
+    the real data, 147/127/162 real spools RFP'd 9-26 March 2026 (the
+    tail end of FY25-26, project codes literally "TJ/25-26/...") land
+    in Week 50/51/52, which as a plain string sorts AFTER this year's
+    Week 01-23 instead of before them, where they chronologically
+    belong. This function is no longer what gets shown to anyone - it's
+    the SORT key every "by week" bucket groups on internally (that
+    week's own fiscal Monday, in ISO YYYY-MM-DD form, which sorts
+    correctly across any number of fiscal-year boundaries, the same
+    way the daily/monthly keys already do). _fiscal_week_label() below
+    is the human "Week N" text; _relabel_weekly() swaps one for the
+    other right before a "weekly" list leaves this module - see its
+    own docstring for why the swap has to happen that late, not here.
     """
-    return f"Week {fiscal_week_info(d)['week_number']:02d}"
+    return fiscal_week_info(d)["week_start"].isoformat()
+
+
+def _fiscal_week_label(d: date) -> str:
+    """The human label for fiscal_week_info(d) - "Week N", the same convention the rest of this site already uses (e.g. dashboard.html's Weekly Progress chart). See _fiscal_week_sort_key() above for why this is a separate function from the sort key."""
+    return f"Week {fiscal_week_info(d)['week_number']}"
+
+
+def _relabel_weekly(rows: list[dict], field: str = "period") -> list[dict]:
+    """
+    Every "weekly" list up to this point still carries the internal
+    SORT key (_fiscal_week_sort_key() - that week's own fiscal Monday,
+    ISO date form) in `field`, not something fit to show anyone - but
+    the list is already correctly ORDERED by whichever sorted() call
+    produced it, unlike a bare "Week N" label would be across a
+    fiscal-year boundary (see _fiscal_week_sort_key()'s own docstring).
+    This is the one place that key gets swapped for the human
+    "Week N" label, right before a "weekly" list leaves this module -
+    list ORDER (not the field's own string value) carries the
+    chronological sequence from here on, so every caller downstream
+    (the JSON bundle, the frontend) only ever sees the pretty label,
+    already in the right order, and never needs to re-sort by it.
+    """
+    out = []
+    for row in rows:
+        label = _fiscal_week_label(date.fromisoformat(row[field]))
+        out.append({**row, field: label})
+    return out
 
 
 # ---------------------------------------------------------------
@@ -477,13 +514,14 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
     for r in merged:
         if r["total_cycle_days"] is None or r["total_cycle_days"] < 0 or not r["rfp_date"]:
             continue
-        key = _fiscal_week_key(_d(r["rfp_date"]))
+        key = _fiscal_week_sort_key(_d(r["rfp_date"]))
         by_week.setdefault(key, []).append(r["total_cycle_days"])
 
-    return [
+    rows = [
         {"week": week, "median_days": _round1(median(days)), "count": len(days)}
         for week, days in sorted(by_week.items())
     ]
+    return _relabel_weekly(rows, field="week")
 
 
 # ---------------------------------------------------------------
@@ -495,7 +533,8 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------
 
 def _period_keys(d: date) -> tuple[str, str, str]:
-    return d.isoformat(), _fiscal_week_key(d), f"{d.year}-{d.month:02d}"
+    """The weekly slot is a SORT key here, not yet a display label - see _fiscal_week_sort_key()."""
+    return d.isoformat(), _fiscal_week_sort_key(d), f"{d.year}-{d.month:02d}"
 
 
 def _group_output(merged: list[dict], date_field: str) -> dict:
@@ -524,7 +563,12 @@ def _group_output(merged: list[dict], date_field: str) -> dict:
 
 
 def build_stage_output_trend(merged: list[dict]) -> dict:
-    return {key: _group_output(merged, field) for field, key, _label in OUTPUT_TREND_STAGES}
+    result = {}
+    for field, key, _label in OUTPUT_TREND_STAGES:
+        grouped = _group_output(merged, field)
+        grouped["weekly"] = _relabel_weekly(grouped["weekly"])
+        result[key] = grouped
+    return result
 
 
 def _merge_period_rows(a_rows: list[dict], b_rows: list[dict]) -> list[dict]:
@@ -560,7 +604,11 @@ def build_blasting_output_trend(merged: list[dict]) -> dict:
     external = _group_output(merged, "external_blasting_date")
     return {
         "daily": _merge_period_rows(internal["daily"], external["daily"]),
-        "weekly": _merge_period_rows(internal["weekly"], external["weekly"]),
+        # Merged (and sorted) on the two sides' raw SORT keys first,
+        # relabeled to "Week N" only after - relabeling before the
+        # merge would lose the fiscal-year-boundary-safe ordering
+        # _merge_period_rows() depends on (see _fiscal_week_sort_key()).
+        "weekly": _relabel_weekly(_merge_period_rows(internal["weekly"], external["weekly"])),
         "monthly": _merge_period_rows(internal["monthly"], external["monthly"]),
     }
 
@@ -606,10 +654,12 @@ def build_bay_output_trend(merged: list[dict]) -> dict:
     the frontend can build one dataset per bay without hardcoding names.
     """
     bays = sorted({r["bay_no"] for r in merged if r.get("bay_no")})
-    return {
-        "bays": bays,
-        "stages": {key: _group_output_by_bay(merged, field, bays) for field, key, _label in OUTPUT_TREND_STAGES},
-    }
+    stages = {}
+    for field, key, _label in OUTPUT_TREND_STAGES:
+        grouped = _group_output_by_bay(merged, field, bays)
+        grouped["weekly"] = _relabel_weekly(grouped["weekly"])
+        stages[key] = grouped
+    return {"bays": bays, "stages": stages}
 
 
 # ---------------------------------------------------------------
