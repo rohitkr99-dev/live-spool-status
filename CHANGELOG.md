@@ -39,6 +39,124 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Painting: "Output by Bay" chart
+
+Asked: "Did you see something related to Bay No. in the painting
+file? I also want to show output based on Bay No. per day/week/month.
+Better to show as a comparison." The Painting Weekly Plan's BAY NO
+column was already being read into every spool record
+(`src/painting/reader.py`/`normalize.py` - `bay_no`) but nothing
+downstream ever consumed it. Confirmed against the real file
+(2026-09-04): values are `BAY-4`, `Bay-4`, `BAY-6`, `BAY-6 ` (trailing
+space), `Bay-6 `, `BAY-6 AUTO`, and `NA` (no bay assigned) - case and
+whitespace variants of the same 3 real bays, only whitespace-trimmed
+before this, not case-normalized.
+
+Asked which layout to build (one new standalone chart vs. splitting
+the existing 6 process charts vs. both) - chose the standalone option.
+
+- `src/painting/summary.py`: added `_canonical_bay()` (upper-cases and
+  trims, maps `NA`/blank to `None`) and stamped `bay_no` onto every
+  merged record. Added `build_bay_output_trend()` - same per-
+  day/week/month grouping as the existing `build_stage_output_trend()`,
+  across the same 6 processes, just split by bay instead of totalled;
+  a spool with no bay assigned is left out, same convention as every
+  other not-applicable field in this module.
+- `src/painting/pipeline.py`: bundle gained `bay_output_trend`.
+- `website/painting.html` / `painting-data.js` / `painting-charts.js`:
+  new "Output by Bay" section - its own process/metric/day-week-month
+  selectors, one Chart.js dataset per bay so they compare side by side
+  rather than sum.
+- `tests/test_painting_bay_output.py` (new, 13 cases) - covers
+  `_canonical_bay()`'s case/whitespace/NA handling and
+  `build_bay_output_trend()`'s per-bay, per-period grouping.
+- Verified against the real workbook (no DPR access locally, so a
+  Fabrication-shaped stand-in was built from the already-published
+  bundle's own `spools` for the merge step): canonical bays come out
+  as `BAY-4` (1920), `BAY-6` (1847), `BAY-6 AUTO` (685), 578
+  unassigned - matches the raw value counts exactly once case/
+  whitespace variants are collapsed. Chart verified rendering with
+  real weekly totals per bay across all 6 processes, and the process/
+  metric/period toggles all confirmed switching correctly, via a
+  scratch-only copy of the site with `auth-guard.js` stripped (never
+  committed) served on localhost - the real `website/` files are
+  untouched by that.
+- Not yet reflected on the live site: `bay_output_trend` only appears
+  once the next "Sync from Google Drive" run regenerates the Painting
+  bundle, same as the Production fix below.
+
+### 2026-09-03 - Painting department dashboard built; Production "Release for Painting"/PDQC backlog Rework-exclusion fix
+
+**Painting dashboard, built from scratch.** Last remaining department
+without a dashboard. Cross-references DPR RFP-done spools against the
+Painting Weekly Plan workbook (`config/painting_settings.json` ->
+`file_pattern: "*Painting Weekly Plan*.xlsx"`, since the exact filename
+varies run to run), computing RFP -> Internal Blasting / External
+Blasting / Primer -> next coat (or PDI Offer fallback) / PDI Offer ->
+PDI Clearance stage gaps, against a 4-day ideal cycle. New package
+`src/painting/` (`reader.py`, `normalize.py`, `summary.py`,
+`pipeline.py`), `painting_main.py`, `website/painting.html` +
+`painting-{config,data,kpi,charts,tables,app}.js`. Then an 8-point
+correction round from the person, against real data:
+1. A spool not found in the Painting Plan but already packed/
+   dispatched per the DPR is excluded from "missing from plan" -
+   `merge_spools()`'s `excluded_already_packed`.
+2. Respect the workbook's own "NA" per-process applicability (Internal
+   Blasting Reqd flag; External Blasting/Primer gated on `No.of Coats
+   >= 1`) rather than averaging every spool into every process.
+3. Process Output Over Time - spools/surface-area completed per
+   day/week/month, per process (`build_stage_output_trend()`).
+4. Pickling info surfaced (the alternative route for the 0-coats/no-
+   paint group).
+5/6/7. No.of Coats drives primer applicability (0 = no primer); a
+   spool with External Blasting implies Primer should exist too
+   (flagged as an anomaly if not, `external_blasted_no_primer`).
+8. More insights: median cycle time by project and by material
+   (`build_project_insight()` / `build_material_insight()`).
+Later split the single Process Output chart (with a stage dropdown)
+into 6 separate charts, one per process, and added a Projects-style
+filter bar (multi-select/numeric-range/sort/Selection-Summary) to the
+"All RFP-Done Spools" table.
+
+**Production: "Release for Painting" backlog was 3x too high because
+Rework spools weren't excluded.** Asked: "The Ready for Painting
+Backlog has 73 spools beyond 30 days, but QC says some are Rework or
+Hold. Check why and fix it." Cross-referenced the real
+`Production Rework Data.xlsx` workbook (the ABSOLUTE-RULE-#1
+authority for PDQC/RFP status, `src/rework_pdqc_rule.py`) against the
+published backlog: 49 of the 73 "Beyond 30 Days" spools were actually
+in Rework (real backlog = 24). Root cause: Rework forces PDQC/RFP
+blank the same way an open Hold does, but only Hold spools were ever
+excluded from the backlog charts (`src/production/backlog.py`) - a
+Rework spool looked exactly like a genuine stuck-at-this-stage entry
+at every downstream stage.
+- `src/production/ageing.py`: `SpoolRecord` gained
+  `rework_latest_status`, populated from `rework_pdqc_rule.py`'s
+  `REWORK_LATEST_STATUS` alongside the existing `currently_on_hold`.
+- `src/production/backlog.py`: exclude a record from a stage's backlog
+  chart when `rework_latest_status == "Rework"` - **except at PDQC
+  itself.** First shipped as a uniform exclusion across every stage;
+  the person caught it: "why is PDQC beyond 30 zero now?" then gave a
+  real example (offered ~83 days ago, still in Rework) that should
+  have shown up there and didn't. Corrected same day: PDQC's own chart
+  IS that spool's not-yet-resolved verdict, not an unrelated blocker
+  the way Hold is - excluding it there was hiding exactly the spools
+  the chart most needs to surface. The exclusion now only applies
+  downstream of PDQC (Release for Painting, PDI Clearance, Packed) and
+  to Welding Finish.
+- `src/production/summary.py` / `pipeline.py`: added
+  `build_rework_by_project_stage()`, mirroring the existing
+  `build_hold_by_project_stage()`, so the excluded population is shown
+  in its own chart rather than silently dropped.
+- `website/production.html` / `production-{data,charts}.js`: new
+  "Currently in Rework" section, same layout as the existing Hold one.
+- `tests/test_production_rework_exclusion.py` (new, 10 cases) -
+  includes the specific PDQC-exception regression case.
+- Verified: the person re-ran the real pipeline after the fix and
+  confirmed the RFP-side backlog was corrected; the PDQC-exception
+  correction landed the same session, still awaiting the person's next
+  "Sync from Google Drive" run to confirm on real data.
+
 ### 2026-08-16 - Sheet detection is now content-based, not name-based
 
 The Line History Sheet crash-resilience fix from 2026-08-15 stopped the
