@@ -39,6 +39,60 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Painting: Export Excel button (part 2 of the same multi-part request)
+
+Continuing the same request as the entry directly below this one -
+Part 4 (a combined "export all tabs" PDF button on Projects) is still
+outstanding after this. Asked: "I want you to add excel download
+button with all charts possible in this painting page. If the data
+volume seems big, then you may add filter options as well."
+
+**New `website/js/painting-excelExport.js`.** One "Export Excel"
+button next to the new Export PDF button, builds a single multi-sheet
+workbook (`XLSX.utils.json_to_sheet` / `book_new` / `book_append_sheet`
+/ `writeFile` - the same vendored SheetJS core build,
+`vendor/xlsx.core.min.js`, that `production-charts.js` and
+`quality-charts.js` already use for their own per-chart exports) with
+19 sheets built straight from `PaintingData.store` /
+`PaintingCharts`'s own already-computed state, so nothing is
+recomputed and the export always matches what's on screen:
+- Summary (12 KPIs), Stage Completion Funnel, Median Days per Stage
+  (bottleneck), Cycle Time Histogram, Aging Buckets, Median Cycle Time
+  by Week
+- Output - Blasting (Int vs Ext) + one sheet each for Primer,
+  Pickling, PDI Offer, PDI Clearance
+- Bay - one sheet per process (Internal Blasting, External Blasting,
+  Primer, Pickling, PDI Offer, PDI Clearance), dynamic Bay-4/Bay-6/
+  Bay-6 Auto columns
+- Insight - By Project, Insight - By Material
+
+"Filter options" per the request: rather than a second filter UI just
+for the export, the time-series sheets (Output-*, Bay-*) honour
+whichever Day/Week/Month granularity is currently selected in that
+section's own on-page toggle (`PaintingCharts.outputGranularity` /
+`.bayOutputGranularity`) - switch the on-page toggle before exporting
+to change the grain. Every time-series sheet always includes BOTH
+Spool Count and Surface Area columns regardless of which metric is
+selected on screen (a spreadsheet has no clutter cost a chart does).
+The Blasting/Bay charts' own on-screen "last 20 periods" range picker
+is deliberately NOT applied to the export - verified in-browser
+(local preview, `XLSX.writeFile` monkey-patched to capture the
+workbook instead of downloading it) that the export returns the FULL
+24-week range while the on-screen chart was still showing its
+windowed slice; that windowing was only ever a chart-legibility
+affordance.
+
+`website/painting.html`: added the `#export-excel-btn` button (same
+markup pattern as `#export-pdf-btn`, placed just before it), added
+`vendor/xlsx.core.min.js` and `js/painting-excelExport.js?v=20260904`
+script tags.
+
+Verified in-browser end-to-end (local scratch preview): all 19 sheets
+built with correct headers and real values (spot-checked Summary,
+Stage Completion Funnel, the Blasting sheet, one Bay sheet, and
+Project Insight against the live KPI strip and charts on the same
+page).
+
 ### 2026-09-04 - New thumb rule (F11=P11) + Export PDF on Production/Quality/Painting
 
 Asked, alongside a bigger multi-part request (Excel export and a
