@@ -620,6 +620,18 @@ const PaintingCharts = {
             borderRadius: 4,
             maxBarThickness: 22,
             datalabels: {
+              // The global bar-chart default (anchor:"end", align:"end"
+              // - see chartTheme.js) means "the far/outer tip" for a
+              // POSITIVE stacked segment, but for this NEGATIVE one
+              // (Internal renders left of zero) Chart.js's own "end"
+              // resolves to the NEAR tip, right at the zero line -
+              // confirmed live in the browser: with the default, the
+              // label sat directly under the sum-total pill, and the
+              // real per-bar value was only ever visible as a sliver
+              // peeking out from behind it. "start"/"start" is what
+              // actually lands at the far/outer (left) tip here.
+              anchor: "start",
+              align: "start",
               formatter: (v) => (v === 0 ? "" : this._formatMetricValue(Math.abs(v), this.outputMetric)),
             },
           },
