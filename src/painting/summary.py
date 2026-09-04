@@ -511,6 +511,44 @@ def build_stage_output_trend(merged: list[dict]) -> dict:
     return {key: _group_output(merged, field) for field, key, _label in OUTPUT_TREND_STAGES}
 
 
+def _merge_period_rows(a_rows: list[dict], b_rows: list[dict]) -> list[dict]:
+    """Union two _group_output() period lists into one row per period - a period present in only one side gets a zero entry for the other, so both series line up on the same x-axis categories."""
+    a_by = {r["period"]: r for r in a_rows}
+    b_by = {r["period"]: r for r in b_rows}
+    zero = {"count": 0, "surface_area": 0.0}
+    out = []
+    for period in sorted(set(a_by) | set(b_by)):
+        a = a_by.get(period, zero)
+        b = b_by.get(period, zero)
+        out.append({
+            "period": period,
+            "internal_blasting": {"count": a["count"], "surface_area": a["surface_area"]},
+            "external_blasting": {"count": b["count"], "surface_area": b["surface_area"]},
+            "total": {"count": a["count"] + b["count"], "surface_area": round(a["surface_area"] + b["surface_area"], 2)},
+        })
+    return out
+
+
+def build_blasting_output_trend(merged: list[dict]) -> dict:
+    """
+    Point (2026-09-04): Internal and External Blasting happen at the
+    same machines, so the person wants them shown together instead of
+    as two separate charts in Process Output Over Time - a single
+    diverging ("butterfly") chart on the frontend, Internal up /
+    External down from a shared zero line, plus each period's combined
+    total. Reuses _group_output() (the same per-day/week/month grouping
+    build_stage_output_trend() already does for these two date fields)
+    and merges the two fields' period lists via _merge_period_rows().
+    """
+    internal = _group_output(merged, "internal_blasting_date")
+    external = _group_output(merged, "external_blasting_date")
+    return {
+        "daily": _merge_period_rows(internal["daily"], external["daily"]),
+        "weekly": _merge_period_rows(internal["weekly"], external["weekly"]),
+        "monthly": _merge_period_rows(internal["monthly"], external["monthly"]),
+    }
+
+
 def _group_output_by_bay(merged: list[dict], date_field: str, bays: list[str]) -> dict:
     """Same grouping as _group_output(), plus a per-bay split within each period - a spool with no bay assigned (see _canonical_bay()) is simply left out, same as a spool with no date for that stage."""
     daily: dict[str, dict] = {}
