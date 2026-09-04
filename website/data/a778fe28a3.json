@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T01:54:55.882414",
+  "generated_at": "2026-09-04T03:44:39.197232",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -131413,7 +131413,7 @@
       "Actual Start Date": "2026-03-19",
       "Completion Date": "2026-07-10",
       "Total Joints": 9,
-      "Material": "F11",
+      "Material": "P11",
       "First Fit-Up": "2026-03-19",
       "Welding Finish": "2026-06-04",
       "PDQC": "2026-06-12",
@@ -500203,7 +500203,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-09-04T01:54:51.220448",
+    "generated_at": "2026-09-04T03:44:32.431213",
     "kpis": {
       "total_spools": 12505,
       "planned": 9202,
