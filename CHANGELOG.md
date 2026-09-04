@@ -39,6 +39,36 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Output by Bay: data labels + a combined-total badge
+
+Asked: "In Output by Bay chart, can you add data labels to each bar
+and a combined total at the top?"
+
+- `website/js/painting-charts.js` -> `renderBayOutputTrend()`: per-bar
+  labels just needed the pre-existing `datalabels: { display: false }`
+  removed (same one-line fix as every other chart on this page that
+  got labels earlier today) - a formatter that hides the zero case was
+  added alongside it for consistency with the rest of the page's
+  convention, since the global bar-chart default alone would print a
+  bare "0" instead of leaving it blank.
+- Combined total: unlike the Blasting butterfly chart, these bars are
+  GROUPED side by side per period (not stacked), so there's no single
+  "top of stack" pixel to hang a total label off. New `groupTotalPlugin`
+  finds the tallest bar in each period's group and draws the total
+  just above it - same dark-pill visual language as the Blasting
+  chart's own sum badge (`PAINTING_CONFIG.blastingColors.sumLabelBg`),
+  so "combined total" reads the same way everywhere it appears on this
+  page.
+  - Caught the exact same bug as the Blasting chart while verifying
+    live in the browser: the first offset chosen (14px above the
+    tallest bar) collided with THAT bar's own per-bar label - visually
+    identical symptom, a number peeking out from behind the pill.
+    Fixed by pushing the pill further out (28px) and increasing the
+    chart's own top layout padding (26px -> 42px) so the tallest
+    pill still has room and isn't clipped by the canvas edge. Verified
+    the fix directly (zoomed screenshot, both numbers fully legible,
+    no overlap) before publishing, not just re-read the code.
+
 ### 2026-09-04 - Painting's "by week" charts were using calendar ISO weeks, not DEE's fiscal week
 
 Asked: "I think the week number showing here are wrong. You remember
