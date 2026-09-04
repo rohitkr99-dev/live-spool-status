@@ -39,6 +39,61 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Painting: Blasting chart corrected to a real left/right butterfly, DEE brand colours
+
+The chart shipped earlier the same day (next entry down) got "butterfly"
+wrong - it drew Internal/External as vertical bars going up/down from a
+zero line, not two horizontal wings. Caught by the person: "I think you
+got wrong idea, please make the chart in butterfly format, left and
+right wings. By vertical I meant make it long enough to accommodate
+about 20 rows." (i.e. "vertical" meant the CHART's shape - tall enough
+for ~20 rows - not the bars' own orientation.) Confirmed the corrected
+direction against a quick chat sketch first, then asked to flip sides
+and use "the color code of DEE logo and some complementing color for
+the opposite side": Internal on the left, External on the right, using
+the DEE logo's own two brand colours (`--ice` #4333A5 / `--ember`
+#A82E30 - see css/styles.css's "DEE red and DEE blue as the two brand"
+comment) instead of the original teal.
+
+- `website/js/painting-charts.js` -> `renderBlastingOutputTrend()`:
+  `indexAxis: "y"` (horizontal bars); Internal now renders as a
+  negative value (extends left), External as positive (extends
+  right) - the exact opposite sign convention from the version this
+  replaces. `sumLabelPlugin` reworked to draw the combined-total pill
+  at each row's center (x=0) instead of each column's zero line - same
+  technique, x/y roles swapped. Canvas wrapper height is now set
+  per-render from the row count
+  (`Math.max(340, rows.length * 34 + 90)` px) so a 20-row default (or
+  a widened From/To range) actually gets the vertical room to read,
+  instead of being squeezed into a fixed box.
+  - Bug caught while verifying this in the browser: setting
+    `.style.height` on `.chart-card__body` did nothing (confirmed via
+    `clientHeight` staying at 380 regardless of what height was set) -
+    that element is `flex: 1` (css/styles.css), which resolves to
+    `flex-basis: 0%`, and a 0-basis flex child ignores a plain
+    `height` outright. Only `min-height` actually grows it (the same
+    property the static CSS fallback was already relying on for its
+    own 380px default) - fixed by setting `.style.minHeight` instead.
+- `website/js/painting-config.js`: `blastingColors.external` changed
+  from the teal placeholder to `#A82E30` (DEE red/`--ember`) -
+  `internal` was already `#4333A5` (DEE blue/`--ice`) from the start,
+  so only External needed to change once the palette became "the DEE
+  logo's two colours" instead of a generic non-alarming pair. Noted
+  in-line that this happens to be the exact same hex as
+  `overIdealColor` elsewhere on the page - deliberate reuse of the
+  brand colour, not a shared meaning; this one doesn't mean "over the
+  ideal" here.
+- Verified in the browser (not just re-read the code): dataset sign
+  confirmed Internal bars render left of x=0 and External right of it;
+  `dataset.__spoolBaseColor` (the pre-gradient hex chartTheme.js's
+  spoolGradientBars plugin stores before converting to a canvas
+  gradient) confirmed `#4333A5`/`#A82E30` exactly; canvas wrapper
+  height confirmed 770px for the default 20-row view after the
+  min-height fix (770 before the fix too, but that number was the
+  inline `.style.height` being silently ignored - `clientHeight` was
+  actually still 380 until the min-height fix, which is what caught
+  the bug above).
+
 ### 2026-09-04 - Painting: Internal/External Blasting combined into a butterfly chart, data labels added to Process Output Over Time
 
 Asked: "since Internal & External blasting are both done at same
