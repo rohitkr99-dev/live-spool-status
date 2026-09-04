@@ -39,6 +39,65 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Every "by week" chart: fixed sort order across a fiscal-year boundary
+
+Asked (after the person traced through the Week 50/51/52 example
+themselves): "Yes, please fix the sort order, please see this should
+be fixed for every chart of that page."
+
+The earlier same-day fix (`_fiscal_week_key()` -> bare `"Week NN"`)
+correctly matched DEE's fiscal calendar, but a plain string sort
+still can't tell that Week 52 of last cycle needs to land BEFORE
+Week 1 of this one - "Week 52" > "Week 01" alphabetically, same as
+it would `> "Week 23"`, `> "Week 01"`, etc. Confirmed against real
+data (147/127/162 spools RFP'd 9-26 March 2026, `TJ/25-26/...`
+project codes) landing in Week 50/51/52 and sorting after Week 21
+instead of before Week 1, where they belong.
+
+Fix, in `src/painting/summary.py` - split the one function into two,
+and added a third to bridge them:
+- `_fiscal_week_key()` renamed `_fiscal_week_sort_key()` - now returns
+  that week's own fiscal Monday as an ISO date string (e.g.
+  `"2026-03-30"` for Week 1), not a label. An ISO date sorts correctly
+  across any number of fiscal-year boundaries, the same way the
+  existing daily/monthly keys already do - this is what every
+  "weekly" bucket now actually groups AND sorts on internally.
+- `_fiscal_week_label()` (new) - the human `"Week N"` text, now
+  **not** zero-padded (was `"Week 01"`, now `"Week 1"`) - sorting no
+  longer depends on this string's own characters, so there's no
+  reason left to pad it; it also now matches the rest of the site's
+  own "Week N" convention exactly, a small side benefit of the fix.
+- `_relabel_weekly()` (new) - swaps the sort key for the display label
+  in a `"period"`/`"week"` field, called as the LAST step before each
+  of the four producers (`build_weekly_trend()`,
+  `build_stage_output_trend()`, `build_blasting_output_trend()`,
+  `build_bay_output_trend()`) hands its weekly list back - critically,
+  `build_blasting_output_trend()` relabels only AFTER
+  `_merge_period_rows()` has already merged and sorted both sides on
+  their raw sort keys; relabeling any earlier would have thrown away
+  the very ordering the fix depends on.
+- No frontend changes needed - the "period"/"week" field the JSON
+  bundle sends was always just echoed directly onto the chart's axis;
+  fixing the VALUE and ORDER on the Python side was sufficient.
+- `tests/test_painting_fiscal_week.py` rewritten (13 cases, up from 7) -
+  the four new ones reproduce the exact reported scenario (a
+  prior-cycle Week 50/52 record alongside a current-cycle Week 1/23
+  one) for `build_weekly_trend()`, `build_stage_output_trend()`,
+  `build_blasting_output_trend()`, and `build_bay_output_trend()` each,
+  asserting the prior-cycle week comes first in every one.
+- Verified against the real data before publishing: `weekly_trend`
+  now reads `['Week 50', 'Week 51', 'Week 52', 'Week 1', 'Week 2', ...
+  'Week 21']`; both `blasting_output_trend` and `bay_output_trend`'s
+  weekly lists read `['Week 52', 'Week 1', 'Week 2', ... 'Week 23']` -
+  confirmed correct on all three independently-computed chart
+  families, not just the one the person happened to point at.
+- Side effect worth knowing: the Blasting/Bay charts' own "last 20
+  periods" default range picker was ALSO silently wrong before this
+  fix, for the same underlying reason - with Week 52 misplaced at the
+  END of a 24-week array, "last 20" would have kept that stale
+  straggler while dropping a legitimately recent week to make room.
+  Fixed for free by the same change, no separate code needed.
+
 ### 2026-09-04 - Output by Bay: data labels + a combined-total badge
 
 Asked: "In Output by Bay chart, can you add data labels to each bar
