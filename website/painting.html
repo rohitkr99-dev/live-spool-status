@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="vendor/css/buttons.dataTables.min.css">
 
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/painting.css?v=20260903">
+<link rel="stylesheet" href="css/painting.css?v=20260904">
 </head>
 <body>
 
@@ -178,19 +178,20 @@
           </div>
         </div>
       </div>
-      <div class="chart-card">
-        <div class="chart-card__head">
-          <h3>Internal Blasting</h3>
-          <span class="chart-card__hint" id="chart-output-internal_blasting-hint">Spool count, by week</span>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__head chart-card__head--with-control">
+          <div>
+            <h3>Internal vs External Blasting</h3>
+            <span class="chart-card__hint" id="chart-output-blasting-hint">Spool count, by week — same machines, shown together</span>
+          </div>
+          <div class="chart-card__control">
+            <label for="blasting-range-from">From</label>
+            <select id="blasting-range-from"></select>
+            <label for="blasting-range-to">to</label>
+            <select id="blasting-range-to"></select>
+          </div>
         </div>
-        <div class="chart-card__body"><canvas id="chart-output-internal_blasting"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-card__head">
-          <h3>External Blasting</h3>
-          <span class="chart-card__hint" id="chart-output-external_blasting-hint">Spool count, by week</span>
-        </div>
-        <div class="chart-card__body"><canvas id="chart-output-external_blasting"></canvas></div>
+        <div class="chart-card__body"><canvas id="chart-output-blasting"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
