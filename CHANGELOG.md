@@ -39,6 +39,64 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - New thumb rule (F11=P11) + Export PDF on Production/Quality/Painting
+
+Asked, alongside a bigger multi-part request (Excel export and a
+combined-PDF button - both still in progress, see the entries above
+this one once they land): "Make a thumb rule for this repo. Consider
+F11=P11 wherever it shows... in the projects tab there is a export
+PDF button at the top, I want that button for each page as well."
+Confirmed via `AskUserQuestion` before building: merge repo-wide,
+display as "P11"; and the per-page buttons should cover all 5
+department pages (Packing & Dispatch already had its own, from an
+earlier session - see `website/js/packing-pdfExport.js`).
+
+**F11 = P11 thumb rule.** F11 and P11 are the same alloy steel grade
+(1.25Cr-0.5Mo) - the DPR's "Item Category Code" column (which every
+department's "Material" field ultimately comes from -
+`column_mapping.json`'s `"Item Category Code": "Material"` rename,
+see `docs/decision_log.md`) just spells it differently depending on
+product form (Forging vs Pipe).
+- `src/utils.py`: new `normalize_material_grade()` - maps "F11"
+  (case-insensitive) to "P11", passes everything else through
+  unchanged (including P22/P91, which stay distinct - this is NOT the
+  same thing as `production/classify.py`'s own AS/Alloy-Steel bucket,
+  which already groups F11+P11+P22+P91 together for a different
+  purpose, its own SB/AS/CS-SS 3-way split; that bucket is unaffected).
+- `src/reader.py` -> `ExcelReader.read_fabrication()`: applies it to
+  the `Material` column once, right before returning the DataFrame.
+  This is the single shared method every department's own reader
+  calls to read the Fabrication (DPR) workbook (`src/pipeline.py` for
+  Projects, `production/reader.py`, `quality/reader.py`,
+  `painting/reader.py`, `packing/pipeline.py`) - so the merge applies
+  everywhere "Material" is grouped, filtered, or displayed
+  (Painting's Material Insight chart and its spool-table Material
+  filter, included) with nothing to keep in sync department by
+  department.
+- `tests/test_material_grade_normalization.py` (new, 9 cases).
+
+**Export PDF on Production, Quality, Painting.** New
+`website/js/{production,quality,painting}-pdfExport.js`, each adapted
+from the Projects dashboard's own `website/js/pdfExport.js` (same
+technique: every chart is already a live Chart.js `<canvas>`, exports
+its own current pixels via `toDataURL()` - no html2canvas / page-
+screenshot needed) - swapped in each page's own `{Dept}Data`/
+`{Dept}App` globals, cover title, and output filename; dropped the
+Projects-only "Stage Ageing Summary" project-note special case, which
+doesn't apply anywhere else. Added the matching "Export PDF" button
+to each page's header (same markup as Projects/Packing) and the
+`vendor/jspdf.umd.min.js` script tag each page was missing. Verified
+directly in the browser (not just re-read the code): patched
+`jsPDF.save()` to intercept rather than trigger a real download,
+called `PaintingPdfExport.export()`, confirmed it completed with no
+errors and would have saved `painting-charts-2026-09-04.pdf`, and
+separately confirmed `collectSections()` picked up all 5 chart
+sections / 13 charts on the page. Production and Quality weren't
+independently browser-tested (identical code path, `ProductionApp`/
+`ProductionData` and `QualityApp`/`QualityData` confirmed to exist
+with the same shape by direct inspection first) - worth a quick check
+if either misbehaves.
+
 ### 2026-09-04 - Every "by week" chart: fixed sort order across a fiscal-year boundary
 
 Asked (after the person traced through the Week 50/51/52 example
