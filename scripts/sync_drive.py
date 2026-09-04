@@ -8,17 +8,25 @@ whatever the latest files in Drive are.
 
 Expected Drive layout - one root folder shared with the service
 account (its ID goes in the GDRIVE_FOLDER_ID secret), containing one
-subfolder per *built* department (see src/departments.py):
+subfolder per department whose own workbook isn't already covered by
+another subfolder (see src/departments.py):
 
     <root folder>/
       projects/   -> mirrors data/upload/projects/  (DPR / Weekly / Line History / SIOP workbooks)
       packing/    -> mirrors data/upload/packing/    (one .xlsx per project)
       quality/    -> mirrors data/upload/quality/    (Production Rework Data workbook)
+      painting/   -> mirrors data/upload/painting/   (Painting Weekly Plan workbook)
 
-When a currently-unbuilt department (production / painting) gets its
-pipeline wired into main.py later, add a matching line to
-DEPARTMENT_DRIVE_SUBFOLDERS below and create the matching Drive
-subfolder - nothing else about this script needs to change.
+Production has no subfolder of its own - production_main.py's real
+inputs (DPR/Weekly/Line History/SIOP, plus Rework Data/Material
+Handover) already arrive via the projects/ and quality/ subfolders
+above, so there's nothing further for this script to sync for it.
+
+If another department's pipeline gets wired into main.py later and
+its workbook isn't already covered by an existing subfolder, add a
+matching line to DEPARTMENT_DRIVE_SUBFOLDERS below and create the
+matching Drive subfolder - nothing else about this script needs to
+change.
 
 Auth: a Google Cloud service account. Its JSON key, base64-encoded,
 goes in the GDRIVE_SA_KEY secret. The service account's email (the
@@ -53,6 +61,7 @@ DEPARTMENT_DRIVE_SUBFOLDERS = {
     "projects": Path("data/upload/projects"),
     "packing": Path("data/upload/packing"),
     "quality": Path("data/upload/quality"),
+    "painting": Path("data/upload/painting"),
 }
 
 # Local placeholder files that must survive even when Drive has nothing
