@@ -14,6 +14,21 @@
   min-height: 360px;
 }
 
+/* Internal vs External Blasting butterfly chart (2026-09-04) - the
+   Process Output Over Time section uses .activity-charts-grid (3
+   columns), a different grid class from .charts-grid above, so it
+   needs its own --full rule. Taller body than a plain full-width
+   chart: the diverging layout needs headroom above AND below the
+   zero line for its own per-bar data labels, plus the combined-total
+   label drawn right at the zero line (painting-charts.js ->
+   sumLabelPlugin). */
+.activity-charts-grid .chart-card--full {
+  grid-column: 1 / -1;
+}
+.activity-charts-grid .chart-card--full .chart-card__body {
+  min-height: 380px;
+}
+
 .tables-toolbar {
   display: flex;
   align-items: center;
