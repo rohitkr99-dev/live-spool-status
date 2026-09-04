@@ -25,6 +25,7 @@ from painting.reader import read_all_workbooks, read_dpr_rfp_spools
 from painting.summary import (
     build_anomalies,
     build_aging_buckets,
+    build_bay_output_trend,
     build_cycle_time_histogram,
     build_kpi_summary,
     build_material_insight,
@@ -108,6 +109,7 @@ def run(config: dict[str, Any] | None = None, dpr_rows: list[dict] | None = None
         "aging_buckets": build_aging_buckets(merged),
         "weekly_trend": build_weekly_trend(merged),
         "stage_output_trend": build_stage_output_trend(merged),
+        "bay_output_trend": build_bay_output_trend(merged),
         "project_insight": build_project_insight(merged),
         "material_insight": build_material_insight(merged),
         "anomalies": build_anomalies(not_in_dpr, excluded_already_packed),

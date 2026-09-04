@@ -169,6 +169,26 @@ def _yes_no_flag(raw: str | None) -> bool | None:
     return None
 
 
+def _canonical_bay(raw: str | None) -> str | None:
+    """
+    The real workbook's BAY NO column mixes case ("BAY-4" / "Bay-4") and
+    stray trailing spaces (already trimmed by reader.py's clean_text(),
+    but the case difference isn't) - confirmed 2026-09-04 against the
+    real file: 1720 "BAY-4" + 200 "Bay-4" are the same bay, same for
+    "BAY-6"/"Bay-6". Upper-cased here so they group together. "NA"
+    (559 rows) means no bay was assigned for that spool - reported as
+    None (not applicable), same convention as every other not-
+    applicable field in this module, so it's excluded from
+    build_bay_output_trend() rather than shown as a fake fourth bay.
+    """
+    if not raw:
+        return None
+    text = raw.strip().upper()
+    if text in {"NA", "N/A", ""}:
+        return None
+    return text
+
+
 def _build_record(d: dict, p: dict | None) -> dict:
     rfp = d["rfp_date"]
     pdi_clearance = d["pdi_clearance_date"]
@@ -191,6 +211,7 @@ def _build_record(d: dict, p: dict | None) -> dict:
         "in_painting_plan": p is not None,
         "painting_status": (p or {}).get("status"),
         "paint_system": (p or {}).get("paint_system"),
+        "bay_no": _canonical_bay((p or {}).get("bay_no")),
         "no_of_coats": no_of_coats,
         "internal_blasting_reqd": (p or {}).get("internal_blasting_reqd"),
         "internal_blasting_date": (p or {}).get("internal_blasting_date"),
@@ -488,6 +509,53 @@ def _group_output(merged: list[dict], date_field: str) -> dict:
 
 def build_stage_output_trend(merged: list[dict]) -> dict:
     return {key: _group_output(merged, field) for field, key, _label in OUTPUT_TREND_STAGES}
+
+
+def _group_output_by_bay(merged: list[dict], date_field: str, bays: list[str]) -> dict:
+    """Same grouping as _group_output(), plus a per-bay split within each period - a spool with no bay assigned (see _canonical_bay()) is simply left out, same as a spool with no date for that stage."""
+    daily: dict[str, dict] = {}
+    weekly: dict[str, dict] = {}
+    monthly: dict[str, dict] = {}
+
+    for r in merged:
+        bay = r.get("bay_no")
+        iso = r.get(date_field)
+        if not bay or not iso:
+            continue
+        d = _d(iso)
+        day_key, week_key, month_key = _period_keys(d)
+        for bucket, key in ((daily, day_key), (weekly, week_key), (monthly, month_key)):
+            by_bay = bucket.setdefault(key, {})
+            entry = by_bay.setdefault(bay, {"count": 0, "surface_area": 0.0})
+            entry["count"] += 1
+            entry["surface_area"] += r.get("surface_area") or 0.0
+
+    def to_list(bucket: dict) -> list[dict]:
+        rows = []
+        for key, by_bay in sorted(bucket.items()):
+            row: dict[str, Any] = {"period": key}
+            for bay in bays:
+                v = by_bay.get(bay, {"count": 0, "surface_area": 0.0})
+                row[bay] = {"count": v["count"], "surface_area": round(v["surface_area"], 2)}
+            rows.append(row)
+        return rows
+
+    return {"daily": to_list(daily), "weekly": to_list(weekly), "monthly": to_list(monthly)}
+
+
+def build_bay_output_trend(merged: list[dict]) -> dict:
+    """
+    Point (2026-09-04): compare each bay's output (Bay-4 vs Bay-6 vs
+    Bay-6 Auto) per day/week/month, one process at a time - same 6
+    processes as build_stage_output_trend(), just split by bay instead
+    of totalled. `bays` is the sorted list of bays actually present, so
+    the frontend can build one dataset per bay without hardcoding names.
+    """
+    bays = sorted({r["bay_no"] for r in merged if r.get("bay_no")})
+    return {
+        "bays": bays,
+        "stages": {key: _group_output_by_bay(merged, field, bays) for field, key, _label in OUTPUT_TREND_STAGES},
+    }
 
 
 # ---------------------------------------------------------------
