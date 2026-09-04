@@ -222,6 +222,39 @@
       </div>
     </section>
 
+    <!-- ============ OUTPUT BY BAY ============ -->
+    <section class="charts-grid" aria-label="Output by bay">
+      <div class="charts-grid__head">
+        <h3>Output by Bay</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div class="activity-filter" id="bay-output-stage-filter" role="group" aria-label="Process to plot">
+            <button type="button" class="activity-filter__btn is-active" data-stage="internal_blasting">Internal Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="external_blasting">External Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="primer">Primer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pickling">Pickling</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_offer">PDI Offer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_clearance">PDI Clearance</button>
+          </div>
+          <div class="activity-filter" id="bay-output-metric-filter" role="group" aria-label="Metric to plot">
+            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
+          </div>
+          <div class="activity-filter" id="bay-output-period-filter" role="group" aria-label="Group by period">
+            <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
+            <button type="button" class="activity-filter__btn is-active" data-granularity="Week">Week</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Month">Month</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__head">
+          <h3>Output by Bay</h3>
+          <span class="chart-card__hint" id="chart-bay-output-hint">Spool count, by week — compares Bay-4 vs Bay-6 vs Bay-6 Auto</span>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-bay-output"></canvas></div>
+      </div>
+    </section>
+
     <!-- ============ INSIGHTS ============ -->
     <section class="charts-grid" aria-label="More insights">
       <div class="charts-grid__head">
@@ -454,9 +487,9 @@
   };
 </script>
 <script src="js/chartTheme.js"></script>
-<script src="js/painting-data.js?v=20260903"></script>
+<script src="js/painting-data.js?v=20260904"></script>
 <script src="js/painting-kpi.js?v=20260903"></script>
-<script src="js/painting-charts.js?v=20260903"></script>
+<script src="js/painting-charts.js?v=20260904"></script>
 <script src="js/painting-tables.js?v=20260903"></script>
 <script src="js/painting-app.js?v=20260903"></script>
 
