@@ -47,7 +47,7 @@ from datetime import date, datetime
 from statistics import mean, median
 from typing import Any
 
-from utils import today, working_day_variance
+from utils import fiscal_week_info, today, working_day_variance
 
 IDEAL_CYCLE_DAYS = 4  # config/production_rules.json: pdi_clearance - release_for_painting, every category
 STUCK_THRESHOLD_DAYS = 2 * IDEAL_CYCLE_DAYS  # still open, past 2x the ideal - "needs attention now"
@@ -100,9 +100,25 @@ def _round1(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
 
-def _iso_week_key(d: date) -> str:
-    iso_year, iso_week, _ = d.isocalendar()
-    return f"{iso_year}-W{iso_week:02d}"
+def _fiscal_week_key(d: date) -> str:
+    """
+    Every "by week" chart on this dashboard was grouping by Python's
+    isocalendar() week (Monday-anchored, ISO 8601) - caught by the
+    person (2026-09-04): "the week number showing here are wrong...
+    Week 1 started from 30th March till 5th April." DEE's own fiscal
+    week calendar (utils.py -> fiscal_week_info(), Week 1 anchored to
+    1st April - see that function's own comment for the exact
+    Monday-selection rule) is what the rest of this site already uses
+    (e.g. dashboard.html's Weekly Progress chart, via the master
+    dataset's own "Week" column) - this was the one place in the
+    Painting pipeline still using calendar ISO weeks instead.
+    Zero-padded so the plain-string sort every caller here already
+    does keeps working unchanged (every real RFP-done spool this
+    dashboard tracks falls inside FY26's single Week 1-52 cycle, so
+    the bare week number - no fiscal-year prefix - is unambiguous,
+    same as how the rest of the site's "Week N" labels work).
+    """
+    return f"Week {fiscal_week_info(d)['week_number']:02d}"
 
 
 # ---------------------------------------------------------------
@@ -456,12 +472,12 @@ def build_aging_buckets(merged: list[dict]) -> list[dict]:
 
 
 def build_weekly_trend(merged: list[dict]) -> list[dict]:
-    """Median total cycle time (completed spools only) grouped by the ISO week their RFP date fell in."""
+    """Median total cycle time (completed spools only) grouped by the fiscal week their RFP date fell in."""
     by_week: dict[str, list[int]] = {}
     for r in merged:
         if r["total_cycle_days"] is None or r["total_cycle_days"] < 0 or not r["rfp_date"]:
             continue
-        key = _iso_week_key(_d(r["rfp_date"]))
+        key = _fiscal_week_key(_d(r["rfp_date"]))
         by_week.setdefault(key, []).append(r["total_cycle_days"])
 
     return [
@@ -479,7 +495,7 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------
 
 def _period_keys(d: date) -> tuple[str, str, str]:
-    return d.isoformat(), _iso_week_key(d), f"{d.year}-{d.month:02d}"
+    return d.isoformat(), _fiscal_week_key(d), f"{d.year}-{d.month:02d}"
 
 
 def _group_output(merged: list[dict], date_field: str) -> dict:
