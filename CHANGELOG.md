@@ -39,6 +39,33 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Blasting chart: Internal's own label was hiding behind the sum badge
+
+Caught once real data was actually visible (the manual bundle republish
+in the entry below this one) - with the global bar-chart datalabels
+default (`anchor:"end", align:"end"` - `chartTheme.js`), Internal
+Blasting's per-bar value label wasn't at the bar's far/outer (left)
+tip as intended - it was sitting right at the zero line, directly
+under the combined-total pill, mostly obscured (only a sliver of the
+number visible peeking out from behind the pill). External's own
+label was fine already.
+
+Root cause: for indexAxis:"y" (horizontal bars), Chart.js's stacked-
+segment "end" anchor for a NEGATIVE-valued dataset resolves to the
+segment's near/base tip (at zero), not its far tip - the opposite of
+what "end" means for External's POSITIVE segment, where the global
+default's far-tip behavior is correct as-is. Confirmed live in the
+browser before touching any file: temporarily overrode Internal's
+`datalabels.anchor` to `"start"` on the running chart instance and
+watched the label jump from behind the pill to the bar's actual far
+tip, matching every one of its real values (37, 65, 89, 154...).
+
+Fixed: `website/js/painting-charts.js` -> `renderBlastingOutputTrend()`
+- Internal's dataset now sets `datalabels: { anchor: "start", align:
+"start", ... }` explicitly (External is untouched, its default
+"end"/"end" was always correct). Verified the same way, live in the
+browser, before publishing.
+
 ### 2026-09-04 - Root cause found: Painting was never wired into "Sync from Google Drive" at all
 
 The person ran "Sync from Google Drive" themselves and reported the
