@@ -39,6 +39,92 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-05 - Painting Excel export rebuilt (per-chart, spool-level) + combined PDF progress feedback
+
+Feedback on the two most recent entries below:
+> "1. Export all department charts button in Project is not working
+> and not downloading anything... 2. I didn't ask for single excel
+> download button in Painting page. What I asked was to put a
+> download excel button with every chart separately, which will have
+> the spool details of the data in that chart. So that people can
+> download spool list and check for anomalies."
+Clarified before starting: the Bottleneck chart's export should
+include every spool in that segment, not be skipped.
+
+**Painting Excel export - rebuilt from scratch.** The single combined
+19-sheet workbook (`website/js/painting-excelExport.js`, shipped
+2026-09-04) was the wrong shape entirely - deleted outright, along
+with the header "Export Excel" button. Replaced with **one small
+"Export to Excel" button per chart** (13 total: Stage Completion
+Funnel, Bottleneck, Histogram, Aging, Weekly Trend, Blasting, 4×
+Process Output stages, Output by Bay, Project Insight, Material
+Insight), each downloading the actual **spool-level rows** behind
+that specific chart - not aggregated numbers - so a project engineer
+can open one chart's spool list and check it for anomalies.
+
+New `website/js/painting-chartExport.js`. Follows the exact pattern
+already established on Production (`production-charts.js` ->
+`wireBacklogExportButtons()`/`exportBacklogRows()`): a small
+`.btn-export` button inside each `.chart-card__head`, wired via
+`[data-chart-export]`, `.onclick =` assignment so a re-render replaces
+rather than stacks handlers. Every chart's cohort is filtered
+client-side from `PaintingData.store.spools` - the same full per-spool
+record set the page's own tables already use - rather than shipping a
+second, denormalized copy from Python for every chart; this mirrors
+`src/painting/summary.py -> build_anomalies()`'s own documented reason
+for doing exactly that for the anomaly tables. Nothing here computes a
+new number, only re-filters/re-labels fields Python already computed
+in `_build_record()`.
+
+Bottleneck's export (per the person's clarification) includes every
+merged spool with all 5 segment-day columns - a spool a given segment
+doesn't apply to just shows blank there rather than being dropped.
+Output by Bay's button is dynamic: it re-wires itself (in
+`painting-charts.js -> renderBayOutputTrend()`) to whichever process
+is currently selected on screen, so its filename and cohort always
+match what's on screen.
+
+`website/css/painting.css`: added the `.btn-export` rule (already
+existed in `production.css`/`quality.css`, missing here since this
+page never had per-chart export buttons before). The Blasting chart's
+own button gets an inline `position: static` override so it sits next
+to the From/To range selects instead of colliding with them (the base
+rule pins the button to its card's top-right corner via
+`position: absolute`, which would otherwise land it on top of that
+chart's own on-page date-range control).
+
+Verified in-browser (local scratch preview): all 13 buttons wired and
+enabled, `XLSX.writeFile` intercepted to inspect real output - correct
+headers/values/row-counts for every chart (spot-checked funnel 5,348
+rows, bottleneck 5,348, histogram 4,342 completed, aging 1,005 open,
+blasting 4,283, per-stage outputs, bay-output including a live
+re-filter after switching the on-page stage selector), no console
+errors, no layout overlap (checked the Blasting button's bounding box
+against the From/To selects directly).
+
+**Combined PDF - fixed the "looks broken" problem, not a real hang.**
+Re-tested `CombinedPdfExport.export()` directly on the live site: it
+does complete successfully and does call the real (unpatched)
+`doc.save()` - the code itself was not broken. The likely cause of
+"not downloading anything": the run takes 20-90+ seconds (loading 4
+other department pages one at a time, up to a 20-second budget each),
+and the only feedback was a toast that auto-hides after ~2.6 seconds
+(`app.js -> showToast()`) - for nearly the entire run, nothing visible
+changes except a subtle dimmed button, easy to read as frozen and
+click away from (which would abort the download).
+
+Fixed in `website/js/combinedPdfExport.js` + `website/dashboard.html`:
+the button's own label (wrapped in a new `#export-all-pdf-btn-label`
+span) now updates continuously through the run - "Starting…" ->
+"Loading Production… (1/4)" -> … -> "Finishing up…" - restored to its
+default text in a `finally` block either way, plus a real completion
+toast ("Combined PDF downloaded" / an error message) instead of
+silence at the end. Button also now ignores a second click while
+already running instead of starting a duplicate export. Verified live:
+the label visibly steps through all 5 departments in sequence, the
+export still completes correctly (39-page PDF, matches the prior
+verification), no console errors.
+
 ### 2026-09-04 - Projects: "Export All Departments PDF" (part 4, final part of the same multi-part request)
 
 Completes the request from the two entries below this one: "Also, I
