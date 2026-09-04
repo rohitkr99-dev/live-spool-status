@@ -25,6 +25,17 @@ const PAINTING_CONFIG = {
   idealLineColor: "#1F8A55",
   overIdealColor: "#A82E30",
 
+  // Internal vs External Blasting butterfly chart (2026-09-04) - two
+  // distinct, non-alarming colours (neither is idealLineColor/
+  // overIdealColor, both of which already read as "good"/"bad"
+  // elsewhere on this page) plus a neutral dark pill for the combined-
+  // total label drawn at the zero line.
+  blastingColors: {
+    internal: "#4333A5",
+    external: "#1E8F86",
+    sumLabelBg: "#1B1A2E",
+  },
+
   // A distinct colour per project, cycled if more projects than
   // colours - same qualitative palette as config.js -> projectPalette
   // / packing-config.js -> projectPalette.

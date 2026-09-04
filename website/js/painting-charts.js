@@ -21,6 +21,10 @@ const PaintingCharts = {
   outputMetric: "count",
   outputGranularity: "Week",
 
+  blastingRangeFrom: null,
+  blastingRangeTo: null,
+  _blastingPeriods: [],
+
   bayOutputStage: "internal_blasting",
   bayOutputMetric: "count",
   bayOutputGranularity: "Week",
@@ -33,11 +37,19 @@ const PaintingCharts = {
     this.renderAging();
     this.renderTrend();
     this.setupOutputFilters();
+    this.setupBlastingRangeFilter();
     this.renderAllOutputTrends();
     this.setupBayOutputFilters();
     this.renderBayOutputTrend();
     this.renderProjectInsight();
     this.renderMaterialInsight();
+  },
+
+  _formatMetricValue(value, metric) {
+    const n = Number(value) || 0;
+    return metric === "surface_area"
+      ? n.toLocaleString("en-US", { maximumFractionDigits: 1 })
+      : n.toLocaleString("en-US");
   },
 
   destroy(key) {
@@ -344,9 +356,10 @@ const PaintingCharts = {
   // in the bundle) - same filter pattern as
   // website/js/packing-charts.js -> renderPackingTrend().
   // ---------------------------------------------------------------
+  // Internal/External Blasting are no longer here - same machines, so
+  // the person asked for them combined into one chart instead
+  // (renderBlastingOutputTrend() below), not two separate ones.
   outputStages: [
-    ["internal_blasting", "Internal Blasting"],
-    ["external_blasting", "External Blasting"],
     ["primer", "Primer"],
     ["pickling", "Pickling"],
     ["pdi_offer", "PDI Offer"],
@@ -394,6 +407,7 @@ const PaintingCharts = {
 
   renderAllOutputTrends() {
     this.outputStages.forEach(([stage]) => this.renderOutputTrend(stage));
+    this.renderBlastingOutputTrend();
   },
 
   renderOutputTrend(stage) {
@@ -427,7 +441,9 @@ const PaintingCharts = {
         },
         plugins: {
           legend: { display: false },
-          datalabels: { display: false },
+          datalabels: {
+            formatter: (v) => (v === 0 ? "" : this._formatMetricValue(v, this.outputMetric)),
+          },
           tooltip: {
             titleFont: this.chartFont,
             bodyFont: this.chartFont,
@@ -435,6 +451,200 @@ const PaintingCharts = {
               title(items) {
                 const raw = rawKeys[items[0].dataIndex];
                 return raw;
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
+  // ---------------------------------------------------------------
+  // Internal vs External Blasting - combined into a single diverging
+  // ("butterfly") chart per the person (2026-09-04): "Internal &
+  // External blasting are both done at same machines, I want to show
+  // some chart showing those together." Internal renders as a
+  // positive bar (up), External as a negative bar (down) from a
+  // shared zero line - both stacked on the same x category so they
+  // sit directly opposite each other, plus a combined-total label
+  // drawn at the zero line by sumLabelPlugin below. Shows the most
+  // recent ~20 periods by default; the From/To range selects
+  // (blasting-range-from/-to) let the person widen or narrow that
+  // window, same UI pattern as dashboard.html's Weekly Progress
+  // chart's own from/to week-range control (website/js/charts.js ->
+  // setupWeeklyRangeFilter()).
+  // ---------------------------------------------------------------
+  sumLabelPlugin: {
+    id: "sumLabels",
+    afterDatasetsDraw(chart) {
+      const opts = chart.options.plugins && chart.options.plugins.sumLabels;
+      if (!opts || !opts.totals) return;
+      const { ctx, scales } = chart;
+      const xScale = scales.x, yScale = scales.y;
+      if (!xScale || !yScale) return;
+      const zeroY = yScale.getPixelForValue(0);
+      ctx.save();
+      ctx.font = "700 10px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      opts.totals.forEach((total, i) => {
+        if (!total) return;
+        const x = xScale.getPixelForValue(i);
+        const text = total.toLocaleString("en-US");
+        const boxW = ctx.measureText(text).width + 10;
+        const boxH = 15;
+        ctx.fillStyle = PAINTING_CONFIG.blastingColors.sumLabelBg;
+        ctx.fillRect(x - boxW / 2, zeroY - boxH / 2, boxW, boxH);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, x, zeroY + 1);
+      });
+      ctx.restore();
+    },
+  },
+
+  setupBlastingRangeFilter() {
+    const fromSelect = document.getElementById("blasting-range-from");
+    const toSelect = document.getElementById("blasting-range-to");
+    if (!fromSelect || !toSelect || fromSelect.dataset.wired) return;
+    fromSelect.dataset.wired = "true";
+
+    const onChange = () => {
+      const periods = this._blastingPeriods || [];
+      const fromIdx = periods.indexOf(fromSelect.value);
+      const toIdx = periods.indexOf(toSelect.value);
+      if (fromIdx === -1 || toIdx === -1) return;
+      this.blastingRangeFrom = periods[Math.min(fromIdx, toIdx)];
+      this.blastingRangeTo = periods[Math.max(fromIdx, toIdx)];
+      this.renderBlastingOutputTrend();
+    };
+
+    fromSelect.addEventListener("change", onChange);
+    toSelect.addEventListener("change", onChange);
+  },
+
+  /** Only rebuilds the <option>s when the available period set has actually changed, so an in-progress From/To selection isn't clobbered by every re-render. */
+  refreshBlastingRangeOptions(periods, granularity) {
+    const fromSelect = document.getElementById("blasting-range-from");
+    const toSelect = document.getElementById("blasting-range-to");
+    if (!fromSelect || !toSelect) return;
+
+    const signature = `${granularity}:${periods.join(",")}`;
+    if (fromSelect.dataset.periodsSignature === signature) return;
+    fromSelect.dataset.periodsSignature = signature;
+
+    const optionsHtml = periods
+      .map((p) => `<option value="${p}">${this._formatPeriodLabel(p, granularity)}</option>`)
+      .join("");
+    fromSelect.innerHTML = optionsHtml;
+    toSelect.innerHTML = optionsHtml;
+  },
+
+  renderBlastingOutputTrend() {
+    this.destroy("blasting");
+    const ctx = document.getElementById("chart-output-blasting");
+    if (!ctx) return;
+
+    const metricLabel = this.outputMetric === "surface_area" ? "Surface area (m²)" : "Spool count";
+    const stageData = this.store.blastingOutputTrend || {};
+    const allRows = stageData[this._granularityKey(this.outputGranularity)] || [];
+    const periods = allRows.map((r) => r.period);
+    this._blastingPeriods = periods;
+
+    this.refreshBlastingRangeOptions(periods, this.outputGranularity);
+
+    const rangeStillValid =
+      this.blastingRangeFrom !== null
+      && periods.includes(this.blastingRangeFrom)
+      && periods.includes(this.blastingRangeTo);
+
+    if (!rangeStillValid) {
+      const last20 = periods.slice(-20);
+      this.blastingRangeFrom = last20[0] ?? null;
+      this.blastingRangeTo = last20[last20.length - 1] ?? null;
+    }
+
+    const fromSelect = document.getElementById("blasting-range-from");
+    const toSelect = document.getElementById("blasting-range-to");
+    if (fromSelect && this.blastingRangeFrom !== null) fromSelect.value = this.blastingRangeFrom;
+    if (toSelect && this.blastingRangeTo !== null) toSelect.value = this.blastingRangeTo;
+
+    const fromIdx = Math.max(0, periods.indexOf(this.blastingRangeFrom));
+    const toIdx = periods.indexOf(this.blastingRangeTo);
+    const rows = toIdx >= 0 ? allRows.slice(fromIdx, toIdx + 1) : allRows;
+
+    const hintEl = document.getElementById("chart-output-blasting-hint");
+    if (hintEl) {
+      hintEl.textContent = allRows.length
+        ? `${metricLabel}, by ${this.outputGranularity.toLowerCase()} — same machines, shown together · showing ${rows.length} of ${allRows.length}`
+        : `${metricLabel}, by ${this.outputGranularity.toLowerCase()} — same machines, shown together`;
+    }
+
+    const rawKeys = rows.map((r) => r.period);
+    const labels = rawKeys.map((raw) => this._formatPeriodLabel(raw, this.outputGranularity));
+    const internalData = rows.map((r) => r.internal_blasting[this.outputMetric] || 0);
+    const externalData = rows.map((r) => -(r.external_blasting[this.outputMetric] || 0));
+    const totals = rows.map((r) => r.total[this.outputMetric] || 0);
+
+    this.instances.blasting = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Internal Blasting",
+            data: internalData,
+            backgroundColor: PAINTING_CONFIG.blastingColors.internal,
+            borderRadius: 4,
+            maxBarThickness: 26,
+          },
+          {
+            label: "External Blasting",
+            data: externalData,
+            backgroundColor: PAINTING_CONFIG.blastingColors.external,
+            borderRadius: 4,
+            maxBarThickness: 26,
+            datalabels: {
+              formatter: (v) => (v === 0 ? "" : this._formatMetricValue(Math.abs(v), this.outputMetric)),
+            },
+          },
+        ],
+      },
+      plugins: [this.sumLabelPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 24, bottom: 10 } },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: { family: "IBM Plex Mono, monospace", size: 9.5 }, autoSkip: false, maxRotation: rows.length > 12 ? 60 : 0, minRotation: rows.length > 12 ? 60 : 0 },
+          },
+          y: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { font: this.chartFont, callback: (v) => this._formatMetricValue(Math.abs(v), this.outputMetric) },
+            title: { display: true, text: metricLabel, font: this.chartFont },
+          },
+        },
+        plugins: {
+          legend: { position: "top", align: "end", labels: { font: this.chartFont, boxWidth: 10, usePointStyle: true, pointStyle: "circle" } },
+          datalabels: {
+            formatter: (v) => (v === 0 ? "" : this._formatMetricValue(v, this.outputMetric)),
+          },
+          sumLabels: { totals },
+          tooltip: {
+            titleFont: this.chartFont,
+            bodyFont: this.chartFont,
+            callbacks: {
+              title(items) {
+                return rawKeys[items[0].dataIndex];
+              },
+              label(item) {
+                return ` ${item.dataset.label}: ${Math.abs(item.raw).toLocaleString("en-US")}`;
+              },
+              afterBody(items) {
+                return `Combined total: ${totals[items[0].dataIndex].toLocaleString("en-US")}`;
               },
             },
           },

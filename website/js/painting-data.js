@@ -19,6 +19,7 @@ const PaintingData = {
     agingBuckets: [],
     weeklyTrend: [],
     stageOutputTrend: {},
+    blastingOutputTrend: {},
     bayOutputTrend: {},
     projectInsight: [],
     materialInsight: [],
@@ -79,6 +80,7 @@ const PaintingData = {
     this.store.agingBuckets = bundle.aging_buckets || [];
     this.store.weeklyTrend = bundle.weekly_trend || [];
     this.store.stageOutputTrend = bundle.stage_output_trend || {};
+    this.store.blastingOutputTrend = bundle.blasting_output_trend || {};
     this.store.bayOutputTrend = bundle.bay_output_trend || {};
     this.store.projectInsight = bundle.project_insight || [];
     this.store.materialInsight = bundle.material_insight || [];
