@@ -20,6 +20,7 @@ const PaintingApp = {
 
   renderAll(store) {
     PaintingKPI.render(store.kpiSummary);
+    PaintingPendingWork.render(store);
     PaintingCharts.render(store);
     PaintingTables.renderAll(store);
     PaintingChartExport.wireStatic(store);

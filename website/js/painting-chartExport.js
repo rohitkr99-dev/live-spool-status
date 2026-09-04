@@ -232,4 +232,38 @@ const PaintingChartExport = {
     button.disabled = !rows.length;
     button.onclick = () => this.exportRows(rows, `Output by Bay - ${stageLabel}`);
   },
+
+  /** One row per spool that has a pending stage, with a "Pending Stage" remarks column plus every date the classification could have turned on - so an anomaly (e.g. "why is this one Pending Primer") can be checked straight from the sheet. Respects the chart's current Bay/Project filter (not the metric toggle, which doesn't change which spools count) - re-wired every time PaintingPendingWork.renderChart() runs, same pattern as Output by Bay above. */
+  pendingWorkRows(pendingWork) {
+    const labelOf = Object.fromEntries(pendingWork.STAGES);
+    return pendingWork.classified
+      .filter(({ spool, bucket }) => bucket && pendingWork.matchesFilters(spool))
+      .map(({ spool: s, bucket }) => ({
+        ...this.identity(s),
+        "Pending Stage": labelOf[bucket],
+        "No. of Coats": s.no_of_coats,
+        "In Painting Plan": s.in_painting_plan ? "Yes" : "No",
+        "Internal Blasting Reqd": s.internal_blasting_reqd,
+        "Internal Blasting Date": s.internal_blasting_date,
+        "External Blasting Date": s.external_blasting_date,
+        "Primer Date": s.primer_date,
+        "Mid Coat 1 Date": s.mid_coat_1_date,
+        "Mid Coat 2 Date": s.mid_coat_2_date,
+        "Top Coat Date": s.top_coat_date,
+        "PDI Offer Date (Painting Plan)": s.pdi_offer_date,
+        "PDI Clearance Date (DPR)": s.pdi_clearance_date,
+        "Bay No.": s.bay_no,
+        "Surface Area (m²)": s.surface_area,
+      }));
+  },
+
+  wirePendingWork(pendingWork) {
+    const button = document.querySelector('[data-chart-export="pending-work"]');
+    if (!button) return;
+    const rows = this.pendingWorkRows(pendingWork);
+    button.disabled = !rows.length;
+    const bayText = pendingWork.bay === "__all__" ? "All Bays" : pendingWork.bay;
+    const projectText = pendingWork.project === "__all__" ? "All Projects" : pendingWork.project;
+    button.onclick = () => this.exportRows(rows, `Pending Work - ${bayText} - ${projectText}`);
+  },
 };
