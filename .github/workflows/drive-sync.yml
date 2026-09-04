@@ -60,6 +60,16 @@ jobs:
         continue-on-error: true
         run: python3 quality_main.py
 
+      - name: Run the Painting dashboard pipeline
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        # continue-on-error: this pipeline is additive (see
+        # src/painting/) - a failure here (e.g. the Painting Weekly
+        # Plan workbook is temporarily missing) should never block
+        # the Projects dashboard's own commit/push above. Needs its
+        # own Drive subfolder synced too - see scripts/sync_drive.py.
+        continue-on-error: true
+        run: python3 painting_main.py
+
       - name: Commit and push updated dashboard data
         if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: |
