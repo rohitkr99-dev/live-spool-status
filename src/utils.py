@@ -312,6 +312,41 @@ def material_hold_working_days_lost(
     return max(working_day_variance(initial_start, current_start) or 0, 0)
 
 
+MATERIAL_GRADE_ALIASES = {"F11": "P11"}
+
+
+def normalize_material_grade(raw: Any) -> Any:
+    """
+    Thumb rule (given by the person, 2026-09-04): "Consider F11=P11
+    wherever it shows." F11 and P11 are the same alloy steel grade
+    (1.25Cr-0.5Mo) - the DPR's own "Item Category Code" column (which
+    every department's "Material" field ultimately comes from - see
+    docs/decision_log.md, and column_mapping.json's
+    "Item Category Code" -> "Material" rename) just spells it
+    differently depending on product form (Forging vs Pipe). Applied
+    once here, in reader.py -> ExcelReader.read_fabrication() - the
+    single shared read every department's own reader calls (Projects,
+    Production, Quality, Painting, Packing all go through this same
+    DataFrame) - so every downstream chart, table, and filter already
+    sees the merged value everywhere, with nothing to keep in sync
+    department by department.
+
+    NOT the same thing as production/classify.py's own AS
+    (Alloy Steel) bucket, which already groups F11/P11/P22/P91
+    together for a different purpose (its own SB/AS/CS-SS 3-way
+    classification) - that bucket is unaffected and unchanged by this;
+    P22 and P91 stay their own distinct values everywhere else.
+
+    Passes non-string/empty values through unchanged (pandas NaN,
+    None) - only ever touches the exact "F11" text, case-insensitive,
+    already-trimmed-or-not either way.
+    """
+    if not isinstance(raw, str):
+        return raw
+    text = raw.strip()
+    return MATERIAL_GRADE_ALIASES.get(text.upper(), raw)
+
+
 def is_empty(value: Any) -> bool:
     """
     Return True if a value is considered empty.

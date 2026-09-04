@@ -32,6 +32,7 @@ from constants import (
     INSPECTION_DATA_COLUMNS,
     INSPECTION_REOFFERED_BEFORE_ACCEPT,
     LINE_HISTORY,
+    MATERIAL,
     MATERIAL_HANDOVER,
     MH_CURRENT_STATUS,
     MH_EXPECTED_DATE,
@@ -54,6 +55,7 @@ from constants import (
 from utils import (
     convert_excel_serial_dates,
     extract_file_period,
+    normalize_material_grade,
     normalize_month_name,
     resolve_multi_date_text_cells,
 )
@@ -366,6 +368,13 @@ class ExcelReader:
                 f"{len(dataframe)} spool row(s) after latest-file-wins "
                 "de-duplication."
             )
+
+        # Thumb rule (2026-09-04): F11 = P11 (see utils.py ->
+        # normalize_material_grade()) - applied once here so every
+        # department reading the Fabrication workbook (all of them go
+        # through this one method) already sees the merged grade.
+        if MATERIAL in dataframe.columns:
+            dataframe[MATERIAL] = dataframe[MATERIAL].apply(normalize_material_grade)
 
         return dataframe
 
