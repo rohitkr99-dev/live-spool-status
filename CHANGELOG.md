@@ -39,6 +39,52 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-04 - Painting's "by week" charts were using calendar ISO weeks, not DEE's fiscal week
+
+Asked: "I think the week number showing here are wrong. You remember
+Week 1 started from 30th March till 5th April and then onwards?"
+Correct - `utils.py` already has DEE's own fiscal week calendar
+(`fiscal_week_info()`, Week 1 anchored to 1st April, given by the
+person 2026-08-27) and it's what the rest of the site already uses
+(e.g. dashboard.html's Weekly Progress chart, via the master dataset's
+own "Week" column) - but the Painting pipeline's own weekly grouping
+(`src/painting/summary.py` -> the old `_iso_week_key()`) used Python's
+`isocalendar()` instead, a completely different calendar-ISO-8601
+week numbering nobody asked for. This affected every "by week" chart
+on the page, not just today's new ones: Process Output Over Time (all
+6 processes, plus today's Blasting/Bay charts), and the original
+"Median Cycle Time by RFP Week" trend chart from the very first build.
+
+Fixed: renamed to `_fiscal_week_key()`, now calls the shared
+`utils.fiscal_week_info()` and returns `"Week {week_number:02d}"`
+(zero-padded so the plain-string `sorted()` every call site already
+uses keeps working unchanged - no other line needed to change).
+Verified against the person's own two dates directly:
+`fiscal_week_info(date(2026,3,30))` and `(2026,4,5)` both -> Week 1;
+`(2026,3,29)` -> Week 52 (previous cycle); `(2026,4,6)` -> Week 2.
+`tests/test_painting_fiscal_week.py` (new, 7 cases) locks this in,
+including one asserting March 30 2026 is ISO week 14 but fiscal
+Week 1, so a future regression back to `isocalendar()` fails loudly.
+
+**Known limitation, not fixed (matches an existing site-wide gap, not
+a new one):** a handful of real spools (5, out of 5,348 - all dated
+2026-03-27, 3 days before this fiscal year's Week 1 starts) fall in
+"Week 52" of the PRIOR cycle. Since the week key carries no
+fiscal-year prefix, plain-string sort puts "Week 52" after "Week 23"
+(the current week) instead of before "Week 01" where it chronologically
+belongs. Confirmed this isn't a new problem: `website/js/charts.js`'s
+own Weekly Progress chart (`renderWeeklyChart()`) sorts purely by
+week NUMBER (`parseInt` then numeric sort) with no fiscal-year
+disambiguation either - the whole site has never handled a
+fiscal-year boundary in its "Week N" charts. Left as-is rather than
+inventing a fix nobody asked for; flagged to the person directly
+rather than shipped silently.
+
+Republished `website/data/b3f7e6a1d4.json` (`generated_at:
+2026-09-04T02:26:42`) with the corrected week labels - same manual
+regeneration technique as the entries above, still pending the Drive
+`painting` subfolder for this to self-sustain automatically.
+
 ### 2026-09-04 - Blasting chart: Internal's own label was hiding behind the sum badge
 
 Caught once real data was actually visible (the manual bundle republish
