@@ -39,6 +39,98 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-09-05 - Painting: new "Quantum of Work Pending" chart
+
+Asked: "I want to add quantum of work pending at each stage as well
+... show this in a single chart having first filter on spool count
+and surface area, second filter on bay no., third filter on project
+... it should have excel download button as well for detailed spool
+report along with remarks where it is pending." Placement, given
+explicitly: directly below the KPI cards, above every other chart -
+the first thing on the page after the KPIs.
+
+The exact classification rule took several rounds of clarification
+(worth reading in full if this chart's logic is ever questioned) -
+the short version: every spool lands in **at most one** bucket, its
+single current bottleneck (the earliest unmet step below), so bars
+sum to a meaningful total rather than double-counting a spool stuck
+early as "also pending" at every later stage:
+
+1. **Not Part of Painting Plan** - RFP done (DPR), missing from the
+   Painting Plan file, DPR's own PDI Clearance still blank. (If DPR
+   already shows Cleared despite being missing from the plan, it's
+   excluded outright - already done, nothing to track, per the
+   person: "we can ignore it... we do not need to track it in
+   painting backlogs.") Same population as the existing "Missing from
+   Plan" table, surfaced here as its own backlog bucket too so it
+   doesn't hide inside a single KPI %.
+2. **Pending Internal Blasting** - Reqd = Yes, no date yet.
+3. **Pending External Blasting** - 1+ coats, no date yet.
+4. **Pending Primer** - 1+ coats, no date yet.
+5. **Pending Mid Coat** - 3 coats, Primer done, neither Mid Coat 1 nor
+   2 date filled.
+6. **Pending Top Coat** - 2 coats (Primer done, whichever field the
+   spool's own 2nd coat actually used - Mid Coat 1/2 or Top Coat - not
+   filled) or 3 coats (Primer + Mid Coat done, Top Coat not filled).
+7. **Pending PDI Offer** - every applicable coat done (or none
+   needed), the Painting Plan's own PDI Offer Date is blank.
+8. **Offered, Pending DPR Clearance** - PDI Offer Date filled, DPR's
+   own PDI Clearance Date still blank - kept as its own bucket rather
+   than folded into #7, since "never offered" and "offered, DPR just
+   hasn't logged it yet" are different real problems needing different
+   people to act on them.
+
+Anything with DPR's PDI Clearance Date filled is Complete and excluded
+from the chart - checked FIRST, before any per-stage check, so a
+spool DPR already confirms cleared can never get mis-filed into an
+earlier "pending" bucket just because some intermediate Painting Plan
+date happens to be a data-quality gap (found and fixed live - see
+Errors and fixes below).
+
+New `website/js/painting-pendingWork.js` - `classify()` reads only
+fields already computed once in Python (`src/painting/summary.py ->
+_build_record()`), the same client-side-filtering approach as
+`painting-tables.js -> byFlag()` and `painting-chartExport.js`, for
+the same reason (`summary.py -> build_anomalies()`'s own documented
+comment): no second, denormalized copy of this from Python, just a
+re-partition of the one spool list already shipped to the browser.
+Horizontal bar chart (8 buckets), three filters in the section head:
+Spools/Surface Area (m²) metric toggle, a Bay button-group (populated
+from the distinct bays actually present), and a Project dropdown
+(same population pattern as the existing project filters elsewhere on
+this page) - all three combine, and leaving them on "All" shows the
+full total. `website/painting.html`: new section placed directly
+after the KPI strip and before every other chart section, per the
+person's explicit placement instruction.
+
+**Excel export** (`painting-chartExport.js -> pendingWorkRows()` /
+`wirePendingWork()`): one row per spool that has a pending stage, a
+"Pending Stage" remarks column, plus every date the classification
+could have turned on (Internal/External Blasting, Primer, both Mid
+Coat fields, Top Coat, PDI Offer, DPR PDI Clearance) so an anomaly is
+checkable straight from the sheet. Respects the chart's current
+Bay/Project filter (not the metric toggle, which doesn't change which
+spools count) - re-wired every time the chart re-renders, same
+dynamic-re-wiring pattern already used for the Output by Bay chart's
+own export button.
+
+**Error found and fixed while verifying in-browser**: the terminal
+PDI check was originally the LAST thing evaluated, after every
+per-stage check - so a spool DPR already showed as PDI Cleared could
+still get caught by an earlier stage check (e.g. "Pending Internal
+Blasting") if that spool happened to have a data-quality gap in its
+own intermediate Painting Plan dates, undercounting the Complete
+bucket. Caught by cross-checking the chart's own totals against the
+KPI strip's independently-computed numbers - initially 4,322 spools
+classified "Complete" against a real PDI Cleared count of 4,343, a
+21-spool gap. Fixed by moving the DPR PDI Clearance check to the very
+top of `classify()`, right after the not-in-plan check, so it always
+overrides every later stage check. Re-verified after the fix: Complete
+count (4,343), Not Part of Painting Plan count (373), and the sum of
+every pending bucket (1,005) now match the KPI strip's PDI Cleared,
+Missing from Plan, and Still Open figures exactly - all three
+independently cross-checked, not just eyeballed.
+
 ### 2026-09-05 - Painting Excel export rebuilt (per-chart, spool-level) + combined PDF progress feedback
 
 Feedback on the two most recent entries below:

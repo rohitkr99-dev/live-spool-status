@@ -117,6 +117,36 @@
       </div>
     </section>
 
+    <!-- ============ QUANTUM OF WORK PENDING ============ -->
+    <section class="charts-grid" aria-label="Quantum of work pending by stage">
+      <div class="charts-grid__head">
+        <h3>Quantum of Work Pending</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div class="activity-filter" id="pending-metric-filter" role="group" aria-label="Metric to plot">
+            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
+          </div>
+          <div class="activity-filter" id="pending-bay-filter" role="group" aria-label="Filter by bay">
+            <button type="button" class="activity-filter__btn is-active" data-bay="__all__">All Bays</button>
+          </div>
+          <div class="filter-field">
+            <label for="pending-project-filter">Project</label>
+            <select id="pending-project-filter">
+              <option value="__all__">All Projects</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__head">
+          <h3>Where Spools Are Currently Stuck</h3>
+          <span class="chart-card__hint" id="chart-pending-work-hint">Spool count · all bays · all projects</span>
+          <button type="button" class="btn-export" data-chart-export="pending-work">Export to Excel</button>
+        </div>
+        <div class="chart-card__body"><canvas id="chart-pending-work"></canvas></div>
+      </div>
+    </section>
+
     <!-- ============ STAGE FUNNEL + BOTTLENECK ============ -->
     <section class="charts-grid" aria-label="Stage progress and bottleneck">
       <div class="charts-grid__head">
@@ -510,6 +540,7 @@
 <script src="js/painting-data.js?v=20260904"></script>
 <script src="js/painting-kpi.js?v=20260903"></script>
 <script src="js/painting-charts.js?v=20260904c"></script>
+<script src="js/painting-pendingWork.js?v=20260905"></script>
 <script src="js/painting-tables.js?v=20260903"></script>
 <script src="js/painting-app.js?v=20260903"></script>
 <script src="js/painting-pdfExport.js?v=20260904"></script>
