@@ -306,7 +306,7 @@ const PaintingCharts = {
           {
             type: "bar",
             label: "Still open (RFP'd that week)",
-            data: rows.map((r) => r.open_count),
+            data: rows.map((r) => r.open_surface_area),
             backgroundColor: `${PAINTING_CONFIG.stageColor}55`,
             borderColor: PAINTING_CONFIG.stageColor,
             borderWidth: 1,
@@ -351,7 +351,8 @@ const PaintingCharts = {
             callbacks: {
               afterTitle(items) {
                 const row = rows[items[0].dataIndex];
-                return `${row.count} spool(s) cleared · ${row.open_count} still open, RFP'd that week`;
+                const openArea = row.open_surface_area.toLocaleString("en-US", { maximumFractionDigits: 1 });
+                return `${row.count} spool(s) cleared · ${row.open_count} still open (${openArea} m²), RFP'd that week`;
               },
             },
           },
@@ -370,7 +371,7 @@ const PaintingCharts = {
             position: "right",
             grid: { display: false },
             ticks: { font: this.chartFont },
-            title: { display: true, text: "Still open (spool count)", font: this.chartFont },
+            title: { display: true, text: "Still open (surface area, m²)", font: this.chartFont },
           },
         },
       },
