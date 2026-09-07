@@ -47,7 +47,7 @@ from datetime import date, datetime
 from statistics import mean, median
 from typing import Any
 
-from utils import fiscal_week_info, today, working_day_variance
+from utils import fiscal_week_info, today, week_number_to_start_date, working_day_variance
 
 IDEAL_CYCLE_DAYS = 4  # config/production_rules.json: pdi_clearance - release_for_painting, every category
 STUCK_THRESHOLD_DAYS = 2 * IDEAL_CYCLE_DAYS  # still open, past 2x the ideal - "needs attention now"
@@ -162,7 +162,11 @@ def _relabel_weekly(rows: list[dict], field: str = "period") -> list[dict]:
 # Merge
 # ---------------------------------------------------------------
 
-def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> tuple[list[dict], list[dict]]:
+def merge_spools(
+    dpr_rows: list[dict],
+    painting_rows: list[dict],
+    planned_weeks: dict[str, str] | None = None,
+) -> tuple[list[dict], list[dict]]:
     """
     One record per RFP-done DPR spool, joined to its Painting Weekly
     Plan row by Composite Key where one exists. dpr_rows is the
@@ -170,7 +174,12 @@ def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> tuple[list[
     Clearance; painting_rows is the only source for every
     blasting/primer/coat/PDI-Offer date, per the person's own
     instruction to take the former from the DPR and not re-derive it
-    from the Painting sheet.
+    from the Painting sheet. planned_weeks (reader.py ->
+    read_planned_weeks(), added 2026-09-07) is a THIRD, independent
+    Composite-Key lookup - straight off the Weekly Production Planning
+    workbook, not the Painting Weekly Plan one - used only for
+    build_weekly_trend()'s "pending PDI by planned week" series (see
+    that function's own docstring).
 
     Returns (merged, excluded_already_packed):
       - merged: every RFP-done spool worth analysing for painting
@@ -190,6 +199,7 @@ def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> tuple[list[
     dashboard should analyse RFP-to-PDI cycle time for.
     """
     painting_by_key = {p["composite_key"]: p for p in painting_rows}
+    planned_weeks = planned_weeks or {}
 
     merged: list[dict] = []
     excluded_already_packed: list[dict] = []
@@ -207,7 +217,7 @@ def merge_spools(dpr_rows: list[dict], painting_rows: list[dict]) -> tuple[list[
                 "dispatch_date": d.get("dispatch_date"),
             })
             continue
-        merged.append(_build_record(d, p))
+        merged.append(_build_record(d, p, planned_weeks.get(d["composite_key"])))
     return merged, excluded_already_packed
 
 
@@ -242,7 +252,7 @@ def _canonical_bay(raw: str | None) -> str | None:
     return text
 
 
-def _build_record(d: dict, p: dict | None) -> dict:
+def _build_record(d: dict, p: dict | None, week_planned: str | None = None) -> dict:
     rfp = d["rfp_date"]
     pdi_clearance = d["pdi_clearance_date"]
     no_of_coats = (p or {}).get("no_of_coats")
@@ -261,6 +271,7 @@ def _build_record(d: dict, p: dict | None) -> dict:
         "surface_area": d.get("surface_area"),
         "rfp_date": rfp,
         "pdi_clearance_date": pdi_clearance,
+        "week_planned": week_planned,
         "in_painting_plan": p is not None,
         "painting_status": (p or {}).get("status"),
         "paint_system": (p or {}).get("paint_system"),
@@ -508,38 +519,86 @@ def build_aging_buckets(merged: list[dict]) -> list[dict]:
     return [{"bucket": label, "count": counts.get(label, 0)} for _, _, label in CYCLE_BUCKETS]
 
 
+def _planned_week_sort_key(week_planned: str) -> str | None:
+    """
+    Converts a Weekly Production Planning "Week Planned" value (a
+    label like "Week 21", already human-readable straight off the
+    workbook - see reader.py -> read_planned_weeks()) into the SAME
+    sort-key space _fiscal_week_sort_key() uses (that week's own
+    fiscal Monday, ISO date form), via utils.week_number_to_start_date()
+    - built for exactly this conversion (see its own docstring: "the
+    common case of converting a CURRENT planning workbook's week
+    numbers"). Sharing one key space with the RFP-week series lets
+    build_weekly_trend() union both onto one "Week No." x-axis even
+    though a spool's planned week and RFP week are usually different
+    numbers. Returns None for anything that doesn't parse as "Week N"
+    (defensive - the workbook has always used this exact format so
+    far, but a stray value shouldn't crash the whole pipeline run).
+    """
+    text = week_planned.strip()
+    if not text.lower().startswith("week"):
+        return None
+    try:
+        week_number = int(text[4:].strip())
+    except ValueError:
+        return None
+    return week_number_to_start_date(week_number, reference=today()).isoformat()
+
+
 def build_weekly_trend(merged: list[dict]) -> list[dict]:
     """
     Median total cycle time of COMPLETED spools, grouped by the fiscal
-    week their RFP date fell in - plus, added 2026-09-07 per the
-    person, how much surface area from that SAME RFP week is still
-    open (not yet PDI cleared) as of today (surface area, not spool
-    count, per the person - "instead of spool count, please show
-    surface area", 2026-09-07, so the bar reflects actual paint-shop
-    workload rather than treating a small fitting and a large spool as
-    equal). A shrinking median on its own can't tell you whether the
-    team is genuinely faster or just cherry-picking recently-RFP'd
-    spools while an older week's batch still sits open; open_surface_area
-    on the same RFP-week bucket makes that visible on the one chart
-    instead of requiring a second lookup. open_count is kept alongside
-    it (cheap, useful for the tooltip) but the chart itself plots the
-    surface area. Both come from the same `merged` population
-    (is_complete / surface_area), no new data source needed.
+    week their RFP date fell in - plus two "still pending PDI" surface-
+    area series added 2026-09-07 per the person, who wanted to see
+    "how old is the spool pending for PDI that was taken into the
+    planning for production along with how old RFP'd spools are also
+    pending for PDI ... use Week No. as the base irrespective of how
+    it is viewed for RFP or Planned spool":
+
+      - open_surface_area: pending spools grouped by the fiscal week
+        their RFP date fell in (added earlier the same day - see the
+        "instead of spool count, please show surface area" entry).
+      - planned_open_surface_area: pending spools grouped by their OWN
+        Week Planned instead (reader.py -> read_planned_weeks(), a
+        THIRD Composite-Key source - the Weekly Production Planning
+        workbook, not Painting's own). A spool's planned week and RFP
+        week are usually different numbers (planning happens before
+        RFP), so this can - and does, confirmed against real data -
+        show backlog on weeks the RFP-only view has no data for at all
+        (a spool already committed to the schedule but not RFP'd yet).
+
+    A shrinking median on its own can't tell you whether the team is
+    genuinely faster or just cherry-picking recently-RFP'd/recently-
+    planned spools while an older week's batch still sits open; both
+    "still pending" series on the same Week No. axis make that visible
+    on the one chart instead of requiring a second lookup. open_count
+    is kept alongside for the tooltip. Both series come from the same
+    `merged` population (is_complete / surface_area / week_planned) -
+    no Python-side filtering by which spools are "in the plan", same
+    as the rest of this dashboard.
     """
     completed_by_week: dict[str, list[int]] = {}
     open_count_by_week: dict[str, int] = {}
     open_area_by_week: dict[str, float] = {}
+    planned_open_area_by_week: dict[str, float] = {}
     for r in merged:
-        if not r["rfp_date"]:
-            continue
-        key = _fiscal_week_sort_key(_d(r["rfp_date"]))
-        if r["is_complete"]:
-            if r["total_cycle_days"] is not None and r["total_cycle_days"] >= 0:
-                completed_by_week.setdefault(key, []).append(r["total_cycle_days"])
-        else:
-            open_count_by_week[key] = open_count_by_week.get(key, 0) + 1
-            open_area_by_week[key] = open_area_by_week.get(key, 0) + (r["surface_area"] or 0)
+        if r["rfp_date"]:
+            key = _fiscal_week_sort_key(_d(r["rfp_date"]))
+            if r["is_complete"]:
+                if r["total_cycle_days"] is not None and r["total_cycle_days"] >= 0:
+                    completed_by_week.setdefault(key, []).append(r["total_cycle_days"])
+            else:
+                open_count_by_week[key] = open_count_by_week.get(key, 0) + 1
+                open_area_by_week[key] = open_area_by_week.get(key, 0) + (r["surface_area"] or 0)
 
+        if r["week_planned"] and not r["is_complete"]:
+            planned_key = _planned_week_sort_key(r["week_planned"])
+            if planned_key is not None:
+                planned_open_area_by_week[planned_key] = (
+                    planned_open_area_by_week.get(planned_key, 0) + (r["surface_area"] or 0)
+                )
+
+    all_weeks = sorted(set(completed_by_week) | set(open_count_by_week) | set(planned_open_area_by_week))
     rows = [
         {
             "week": week,
@@ -547,8 +606,9 @@ def build_weekly_trend(merged: list[dict]) -> list[dict]:
             "count": len(completed_by_week.get(week, [])),
             "open_count": open_count_by_week.get(week, 0),
             "open_surface_area": _round1(open_area_by_week.get(week, 0)),
+            "planned_open_surface_area": _round1(planned_open_area_by_week.get(week, 0)),
         }
-        for week in sorted(set(completed_by_week) | set(open_count_by_week))
+        for week in all_weeks
     ]
     return _relabel_weekly(rows, field="week")
 

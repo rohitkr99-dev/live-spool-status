@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from painting.logger import logger
-from painting.reader import read_all_workbooks, read_dpr_rfp_spools
+from painting.reader import read_all_workbooks, read_dpr_rfp_spools, read_planned_weeks
 from painting.summary import (
     build_anomalies,
     build_aging_buckets,
@@ -53,14 +53,21 @@ def load_config() -> dict[str, Any]:
         return json.load(f)
 
 
-def run(config: dict[str, Any] | None = None, dpr_rows: list[dict] | None = None) -> dict[str, Any]:
+def run(
+    config: dict[str, Any] | None = None,
+    dpr_rows: list[dict] | None = None,
+    planned_weeks: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """
     dpr_rows is normally left as None, which reads the real
     Fabrication (DPR) workbook via reader.read_dpr_rfp_spools() - see
     that function's docstring for why this pipeline is allowed to
-    read the DPR directly. The parameter exists so tests (and one-off
-    local runs against an already-published DPR export) can inject a
-    pre-built list instead of needing the real .xlsb workbook on disk.
+    read the DPR directly. planned_weeks works the same way, one level
+    up: normally None, which reads the real Weekly Production Planning
+    workbook via reader.read_planned_weeks(). Both parameters exist so
+    tests (and one-off local runs against an already-published export)
+    can inject pre-built data instead of needing the real workbooks on
+    disk.
     """
     config = config or load_config()
 
@@ -94,7 +101,10 @@ def run(config: dict[str, Any] | None = None, dpr_rows: list[dict] | None = None
             "workbook - the bundle will show zero RFP-done spools this run."
         )
 
-    merged, excluded_already_packed = merge_spools(dpr_rows, painting_rows)
+    if planned_weeks is None:
+        planned_weeks = read_planned_weeks()
+
+    merged, excluded_already_packed = merge_spools(dpr_rows, painting_rows, planned_weeks)
     not_in_dpr = build_not_in_dpr(dpr_rows, painting_rows)
 
     bundle = {

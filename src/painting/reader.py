@@ -227,3 +227,60 @@ def read_dpr_rfp_spools() -> list[dict[str, Any]]:
 
     logger.info(f"Fabrication (DPR): {len(rows)} spool(s) with RFP done.")
     return rows
+
+
+# ---------------------------------------------------------------
+# Weekly Production Planning cross-reference - Week Planned only,
+# added 2026-09-07 so build_weekly_trend() can show how much surface
+# area is still pending PDI when grouped by WHEN A SPOOL WAS
+# SCHEDULED, not just when it was RFP'd. See summary.py ->
+# build_weekly_trend()'s own docstring for the full reasoning.
+# ---------------------------------------------------------------
+
+def read_planned_weeks() -> dict[str, str]:
+    """
+    Reads the Weekly Production Planning workbook's Master Planning
+    Sheet via ExcelReader().read_planning() - the same reliably-synced
+    "projects" upload folder every other department's Composite-Key
+    join already reads through, NOT the flaky Painting Weekly Plan
+    workbook this pipeline otherwise depends on - and returns
+    {composite_key: "Week N"} for every spool that has a Week Planned
+    value.
+
+    Best-effort, matching read_dpr_rfp_spools()'s own contract:
+    returns an empty {} (never raises) if the Planning workbook can't
+    be read - the pipeline still runs, the "pending PDI by planned
+    week" series is just empty for that run, every other Painting
+    chart is unaffected.
+    """
+    try:
+        # Same top-level src/ import pattern as read_dpr_rfp_spools()
+        # above.
+        from reader import ExcelReader  # noqa: E402
+        from utils import to_json_safe  # noqa: E402
+
+        master = ExcelReader().read_planning()["master_sheet"]
+    except Exception as error:
+        logger.warning(
+            f"Could not read the Weekly Production Planning workbook "
+            f"({error}). The 'pending PDI by planned week' series will "
+            "be empty this run - every other Painting chart is "
+            "unaffected."
+        )
+        return {}
+
+    if master is None or master.empty or "Week" not in master.columns:
+        return {}
+
+    weeks: dict[str, str] = {}
+    for _, row in master.iterrows():
+        week = to_json_safe(row.get("Week"))
+        if not week:
+            continue
+        project_code = to_json_safe(row.get("Project Code"))
+        drawing_no = to_json_safe(row.get("Drawing No"))
+        spool_no = to_json_safe(row.get("Spool No"))
+        weeks[composite_key(project_code, drawing_no, spool_no)] = week
+
+    logger.info(f"Weekly Production Planning: {len(weeks)} spool(s) with a Week Planned value.")
+    return weeks

@@ -25,6 +25,20 @@ const PAINTING_CONFIG = {
   idealLineColor: "#1F8A55",
   overIdealColor: "#A82E30",
 
+  // "Median Cycle Time by RFP Week" chart (painting-charts.js ->
+  // renderTrend()), added 2026-09-07: plannedPendingColor is the
+  // "pending PDI, by planned week" bar - same magenta/purple as
+  // projectPalette's own 7th entry below, picked live with the person
+  // against a preview (rejected an initial amber/yellow: "please use
+  // some other color instead of yellowish"). medianTrendColor is the
+  // median-cycle-days line's own colour, changed from overIdealColor
+  // to a neutral grey per the person, again picked live against the
+  // preview ("change it to greyish please") - deliberately NOT reusing
+  // overIdealColor/stageColor, which carry other meanings elsewhere on
+  // this page.
+  plannedPendingColor: "#8A3E82",
+  medianTrendColor: "#5F5E5A",
+
   // Internal vs External Blasting butterfly chart (2026-09-04,
   // corrected same day to the DEE logo's own two brand colours per
   // the person - "use the color code of DEE logo and some

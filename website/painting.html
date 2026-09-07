@@ -194,7 +194,7 @@
       <div class="chart-card chart-card--full">
         <div class="chart-card__head">
           <h3>Median Cycle Time by RFP Week</h3>
-          <span class="chart-card__hint">Line = median days for completed spools, by RFP week. Bars = surface area still open from that same week — a shrinking median with a growing bar isn't speed, it's backlog.</span>
+          <span class="chart-card__hint">Line = median days for completed spools, by RFP week. Bars = surface area still pending PDI, by RFP week and by planned week — a shrinking median with growing bars isn't speed, it's backlog.</span>
           <button type="button" class="btn-export" data-chart-export="trend">Export to Excel</button>
         </div>
         <div class="chart-card__body"><canvas id="chart-trend"></canvas></div>
@@ -527,7 +527,7 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="vendor/xlsx.core.min.js"></script>
 
-<script src="js/painting-config.js?v=20260903"></script>
+<script src="js/painting-config.js?v=20260907"></script>
 <script>
   const SPOOL_STATUS_CONFIG = {
     chartGridColor: "rgba(23, 21, 43, 0.08)",
@@ -539,7 +539,7 @@
 <script src="js/chartTheme.js"></script>
 <script src="js/painting-data.js?v=20260904"></script>
 <script src="js/painting-kpi.js?v=20260903"></script>
-<script src="js/painting-charts.js?v=20260907b"></script>
+<script src="js/painting-charts.js?v=20260907c"></script>
 <script src="js/painting-pendingWork.js?v=20260905"></script>
 <script src="js/painting-tables.js?v=20260903"></script>
 <script src="js/painting-app.js?v=20260905"></script>

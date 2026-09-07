@@ -305,9 +305,19 @@ const PaintingCharts = {
         datasets: [
           {
             type: "bar",
-            label: "Still open (RFP'd that week)",
+            label: "Pending PDI, by planned week",
+            data: rows.map((r) => r.planned_open_surface_area),
+            backgroundColor: `${PAINTING_CONFIG.plannedPendingColor}99`,
+            borderColor: PAINTING_CONFIG.plannedPendingColor,
+            borderWidth: 1,
+            yAxisID: "y1",
+            order: 2,
+          },
+          {
+            type: "bar",
+            label: "Pending PDI, by RFP week",
             data: rows.map((r) => r.open_surface_area),
-            backgroundColor: `${PAINTING_CONFIG.stageColor}55`,
+            backgroundColor: `${PAINTING_CONFIG.stageColor}99`,
             borderColor: PAINTING_CONFIG.stageColor,
             borderWidth: 1,
             yAxisID: "y1",
@@ -317,8 +327,10 @@ const PaintingCharts = {
             type: "line",
             label: "Median cycle days",
             data: rows.map((r) => r.median_days),
-            borderColor: PAINTING_CONFIG.overIdealColor,
-            backgroundColor: `${PAINTING_CONFIG.overIdealColor}33`,
+            borderColor: `${PAINTING_CONFIG.medianTrendColor}66`,
+            backgroundColor: `${PAINTING_CONFIG.medianTrendColor}26`,
+            borderWidth: 2,
+            pointBackgroundColor: PAINTING_CONFIG.medianTrendColor,
             fill: true,
             tension: 0.3,
             pointRadius: 3,
@@ -352,7 +364,8 @@ const PaintingCharts = {
               afterTitle(items) {
                 const row = rows[items[0].dataIndex];
                 const openArea = row.open_surface_area.toLocaleString("en-US", { maximumFractionDigits: 1 });
-                return `${row.count} spool(s) cleared · ${row.open_count} still open (${openArea} m²), RFP'd that week`;
+                const plannedArea = row.planned_open_surface_area.toLocaleString("en-US", { maximumFractionDigits: 1 });
+                return `${row.count} spool(s) cleared · ${row.open_count} still open (${openArea} m² by RFP week, ${plannedArea} m² by planned week)`;
               },
             },
           },
@@ -371,7 +384,7 @@ const PaintingCharts = {
             position: "right",
             grid: { display: false },
             ticks: { font: this.chartFont },
-            title: { display: true, text: "Still open (surface area, m²)", font: this.chartFont },
+            title: { display: true, text: "Still pending PDI (surface area, m²)", font: this.chartFont },
           },
         },
       },
