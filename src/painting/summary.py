@@ -509,17 +509,38 @@ def build_aging_buckets(merged: list[dict]) -> list[dict]:
 
 
 def build_weekly_trend(merged: list[dict]) -> list[dict]:
-    """Median total cycle time (completed spools only) grouped by the fiscal week their RFP date fell in."""
-    by_week: dict[str, list[int]] = {}
+    """
+    Median total cycle time of COMPLETED spools, grouped by the fiscal
+    week their RFP date fell in - plus, added 2026-09-07 per the
+    person, how many spools from that SAME RFP week are still open
+    (not yet PDI cleared) as of today. A shrinking median on its own
+    can't tell you whether the team is genuinely faster or just
+    cherry-picking recently-RFP'd spools while an older week's batch
+    still sits open; open_count on the same RFP-week bucket makes that
+    visible on the one chart instead of requiring a second lookup.
+    Both counts come from the same `merged` population (is_complete),
+    no new data source needed.
+    """
+    completed_by_week: dict[str, list[int]] = {}
+    open_by_week: dict[str, int] = {}
     for r in merged:
-        if r["total_cycle_days"] is None or r["total_cycle_days"] < 0 or not r["rfp_date"]:
+        if not r["rfp_date"]:
             continue
         key = _fiscal_week_sort_key(_d(r["rfp_date"]))
-        by_week.setdefault(key, []).append(r["total_cycle_days"])
+        if r["is_complete"]:
+            if r["total_cycle_days"] is not None and r["total_cycle_days"] >= 0:
+                completed_by_week.setdefault(key, []).append(r["total_cycle_days"])
+        else:
+            open_by_week[key] = open_by_week.get(key, 0) + 1
 
     rows = [
-        {"week": week, "median_days": _round1(median(days)), "count": len(days)}
-        for week, days in sorted(by_week.items())
+        {
+            "week": week,
+            "median_days": _round1(median(completed_by_week[week])) if week in completed_by_week else None,
+            "count": len(completed_by_week.get(week, [])),
+            "open_count": open_by_week.get(week, 0),
+        }
+        for week in sorted(set(completed_by_week) | set(open_by_week))
     ]
     return _relabel_weekly(rows, field="week")
 

@@ -300,11 +300,21 @@ const PaintingCharts = {
     const rows = this.store.weeklyTrend || [];
 
     this.instances.trend = new Chart(ctx, {
-      type: "line",
       data: {
         labels: rows.map((r) => r.week),
         datasets: [
           {
+            type: "bar",
+            label: "Still open (RFP'd that week)",
+            data: rows.map((r) => r.open_count),
+            backgroundColor: `${PAINTING_CONFIG.stageColor}55`,
+            borderColor: PAINTING_CONFIG.stageColor,
+            borderWidth: 1,
+            yAxisID: "y1",
+            order: 2,
+          },
+          {
+            type: "line",
             label: "Median cycle days",
             data: rows.map((r) => r.median_days),
             borderColor: PAINTING_CONFIG.overIdealColor,
@@ -312,14 +322,20 @@ const PaintingCharts = {
             fill: true,
             tension: 0.3,
             pointRadius: 3,
+            spanGaps: true,
+            yAxisID: "y",
+            order: 1,
           },
           {
+            type: "line",
             label: "4-day ideal",
             data: rows.map(() => PAINTING_CONFIG.idealCycleDays),
             borderColor: PAINTING_CONFIG.idealLineColor,
             borderDash: [6, 4],
             pointRadius: 0,
             fill: false,
+            yAxisID: "y",
+            order: 1,
           },
         ],
       },
@@ -335,14 +351,27 @@ const PaintingCharts = {
             callbacks: {
               afterTitle(items) {
                 const row = rows[items[0].dataIndex];
-                return `${row.count} spool(s) RFP'd that week`;
+                return `${row.count} spool(s) cleared · ${row.open_count} still open, RFP'd that week`;
               },
             },
           },
         },
         scales: {
           x: { grid: { display: false }, ticks: { font: { family: "IBM Plex Mono, monospace", size: 10 }, autoSkip: true, maxRotation: 0 } },
-          y: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont }, title: { display: true, text: "Working days", font: this.chartFont } },
+          y: {
+            beginAtZero: true,
+            position: "left",
+            grid: { display: false },
+            ticks: { font: this.chartFont },
+            title: { display: true, text: "Median cycle time (working days)", font: this.chartFont },
+          },
+          y1: {
+            beginAtZero: true,
+            position: "right",
+            grid: { display: false },
+            ticks: { font: this.chartFont },
+            title: { display: true, text: "Still open (spool count)", font: this.chartFont },
+          },
         },
       },
     });
