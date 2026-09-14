@@ -26,7 +26,7 @@
   "TJ/25-26/183|251137_1A_HP002_007|251137-1A-HP-007-09": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-11",
         "hold_start": "2026-06-30"
       }
     ]
@@ -90,7 +90,7 @@
   "TJ/25-26/183|251137_2A_HP002_007|251137-2A-HP-007-09": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-11",
         "hold_start": "2026-08-06"
       }
     ]
@@ -199,6 +199,14 @@
       }
     ]
   },
+  "TJ/25-26/189|251235_00_LP001_023|251235-00-LP-023-15": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-09-11"
+      }
+    ]
+  },
   "TJ/25-26/189|251235_00_LP001_035|251235-00-LP-035-01": {
     "hold_periods": [
       {
@@ -252,6 +260,22 @@
       {
         "hold_removed": null,
         "hold_start": "2026-07-14"
+      }
+    ]
+  },
+  "TJ/25-26/189|251237_00_HP002_004|251237-00-HP-004-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-09-11"
+      }
+    ]
+  },
+  "TJ/25-26/189|251237_00_HP002_004|251237-00-HP-004-02": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-09-11"
       }
     ]
   },
