@@ -55,8 +55,13 @@ const QualityApp = {
     }
 
     if (published) {
+      // No toast here (2026-09-15, per the person) - this is the
+      // routine, expected path on every page load, and the "DATA AS
+      // OF" timestamp in the header already confirms freshness
+      // permanently. Toasts below are reserved for the cases where
+      // what's on screen might NOT be what you expect (a manual
+      // upload, a local-only preview, an error).
       this.renderAll(published.store);
-      this.showToast("Showing the latest published data");
       return;
     }
 
