@@ -675,6 +675,72 @@ def build_rework_cycles(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
 
 
 # -----------------------------------------------------
+# Open Rework & Hold by Project (2026-09-15)
+#
+# Unlike every chart above, this one is built directly off the
+# Rework Data workbook (`sources.rework`), not the Inspection Data
+# workbook - see the function's own docstring for why.
+# -----------------------------------------------------
+
+
+def build_open_rework_hold_by_project(
+    dataframe: pd.DataFrame,
+    project_names: dict[str, str],
+) -> list[dict[str, Any]]:
+    """
+    Chart: currently open Rework/Hold spools, per project. Unlike
+    every other chart in this file, `dataframe` here is the Rework
+    Data workbook (Production Rework Data.xlsx, `sources.rework` -
+    see quality/reader.py), NOT the Inspection Data workbook - per
+    the person's explicit instruction (2026-09-15) to use this
+    workbook's own "Packing Release Date" column, classified exactly
+    as src/rework_pdqc_rule.py's Accept/Hold/Rework rule already
+    does (FQC Accept/Packing Release/RFP -> Accept, Not Found/Rework
+    -> Rework, Project Hold/Query/Hold -> Hold).
+
+    For each spool, only its LATEST offer event (by Prod Offer Date -
+    same "last row wins" rule used throughout this codebase) decides
+    its current status. A spool whose latest status is Accept is
+    closed and excluded; Rework and Hold are counted separately per
+    project as "currently open".
+    """
+
+    if dataframe is None or dataframe.empty:
+        return []
+
+    df = dataframe.dropna(subset=["Prod Offer Date"]).copy()
+    if df.empty:
+        return []
+
+    latest_idx = (
+        df.sort_values("Prod Offer Date", kind="stable")
+        .groupby(SPOOL_KEY_COLUMNS)
+        .tail(1)
+        .index
+    )
+    latest = df.loc[latest_idx].copy()
+    latest["_status"] = latest["Packing Release Date"].apply(normalize_rework_status)
+
+    open_spools = latest[latest["_status"] != "Accept"]
+
+    results = []
+    for project_code, group in open_spools.groupby("Project Code"):
+        rework_count = int((group["_status"] == "Rework").sum())
+        hold_count = int((group["_status"] == "Hold").sum())
+        results.append({
+            "project_code": project_code,
+            "project_name": project_names.get(project_code, project_code),
+            "rework_count": rework_count,
+            "hold_count": hold_count,
+            "open_total": rework_count + hold_count,
+        })
+
+    results.sort(key=lambda item: item["open_total"], reverse=True)
+
+    return results
+
+
+# -----------------------------------------------------
 # Downloadable "Production Rework" export
 #
 # The two functions below feed the Quality dashboard's "Download

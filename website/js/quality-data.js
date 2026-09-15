@@ -77,6 +77,7 @@ const QualityData = {
     kpis: null,
     topReworkTypes: { items: [], total_rework_events: 0 },
     reworkByProject: [],
+    openReworkHoldByProject: [],
     firstOfferSplit: null,
     reworkTrend: { day: [], week: [], month: [] },
     reworkCycles: [],
@@ -183,6 +184,7 @@ const QualityData = {
     this.store.kpis = bundle.kpis || null;
     this.store.topReworkTypes = bundle.top_rework_types || { items: [], total_rework_events: 0 };
     this.store.reworkByProject = bundle.rework_by_project || [];
+    this.store.openReworkHoldByProject = bundle.open_rework_hold_by_project || [];
     this.store.firstOfferSplit = bundle.first_offer_split || null;
     this.store.reworkTrend = bundle.rework_trend || { day: [], week: [], month: [] };
     this.store.reworkCycles = bundle.rework_cycles || [];

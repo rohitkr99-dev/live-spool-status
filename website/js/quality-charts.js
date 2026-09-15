@@ -45,6 +45,7 @@ const QualityCharts = {
 
     this.renderTopReworkTypes(store.topReworkTypes);
     this.renderReworkByProject(store.reworkByProject);
+    this.renderOpenReworkHoldByProject(store.openReworkHoldByProject);
     this.renderFirstOfferSplit(store.firstOfferSplit);
     this.renderReworkTrend(store.reworkTrend, this.trendGranularity);
     this.renderReworkCycles(store.reworkCycles);
@@ -220,6 +221,106 @@ const QualityCharts = {
           y: {
             beginAtZero: true,
             ticks: { font: this.chartFont, callback: (v) => `${v}%` },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  },
+
+  // ---- Open Rework & Hold by Project (2026-09-15) ----------------
+  //
+  // Sourced from the Production Rework Data workbook's own "Packing
+  // Release Date" status column (src/quality/summary.py ->
+  // build_open_rework_hold_by_project()) - a DIFFERENT source than
+  // every other chart on this page, which use the Inspection Data
+  // workbook instead. Each spool's LATEST offer event decides its
+  // current status; Accept is excluded, so this only shows what's
+  // currently open. Stacked bar (Rework + Hold) so each project's
+  // total bar height reads as "total currently open" at a glance.
+  // Colors match the Rework by Project chart above (same indigo/grey
+  // pairing) rather than a new red/amber combo, per direct feedback.
+  // borderRadius:0 overrides chartTheme.js's global rounded-corner
+  // default (borderRadius:6, borderSkipped:false) - on a STACKED bar
+  // that rounds every corner of every segment, which looks broken
+  // right where Rework meets Hold; every other bar chart here is a
+  // single series per bar, so the global default never showed this.
+
+  renderOpenReworkHoldByProject(rows) {
+    const ctx = this._ctx("chart-open-rework-hold");
+    if (!ctx || !rows || !rows.length) return;
+
+    const labels = rows.map((p) => p.project_name || p.project_code);
+    const reworkCounts = rows.map((p) => p.rework_count);
+    const holdCounts = rows.map((p) => p.hold_count);
+    const extra = rows.map((p) => ({
+      projectCode: p.project_code,
+      projectName: p.project_name,
+      openTotal: p.open_total,
+    }));
+
+    this.instances.openReworkHold = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Open Rework",
+            data: reworkCounts,
+            backgroundColor: QUALITY_CONFIG.projectBarColor,
+            stack: "open",
+            borderRadius: 0,
+          },
+          {
+            label: "Open Hold",
+            data: holdCounts,
+            backgroundColor: QUALITY_CONFIG.otherColor,
+            stack: "open",
+            borderRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "top",
+            labels: { boxWidth: 12, boxHeight: 12, font: { size: 12, weight: "600" } },
+          },
+          tooltip: {
+            callbacks: {
+              title(items) {
+                const e = extra[items[0].dataIndex];
+                return e.projectName ? `${e.projectName} (${e.projectCode})` : e.projectCode;
+              },
+              afterBody(items) {
+                const e = extra[items[0].dataIndex];
+                return [`${e.openTotal} spool(s) currently open`];
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: {
+              // Same two-line "Project Name / (Code)" convention as
+              // the Rework by Project chart above.
+              callback(value, index) {
+                const e = extra[index];
+                if (!e) return "";
+                return e.projectName ? [e.projectName, `(${e.projectCode})`] : [e.projectCode];
+              },
+              font: this.chartFont,
+            },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: { font: this.chartFont, precision: 0 },
+            title: { display: true, text: "Spool count", font: this.chartFont },
             grid: { display: false },
           },
         },

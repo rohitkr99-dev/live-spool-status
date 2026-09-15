@@ -46,6 +46,7 @@ from quality.reader import load_sources
 from quality.summary import (
     build_first_offer_split,
     build_kpis,
+    build_open_rework_hold_by_project,
     build_rework_by_project,
     build_rework_cycles,
     build_rework_status_monthly,
@@ -121,6 +122,12 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
         "kpis": build_kpis(inspection_data, cycles),
         "top_rework_types": build_top_rework_types(inspection_data, top_n=top_n),
         "rework_by_project": build_rework_by_project(inspection_data, sources.project_names),
+        # Sourced from the Rework Data workbook (sources.rework), NOT
+        # inspection_data - see build_open_rework_hold_by_project()'s
+        # own docstring for why this one chart is the exception.
+        "open_rework_hold_by_project": build_open_rework_hold_by_project(
+            sources.rework, sources.project_names
+        ),
         "first_offer_split": build_first_offer_split(inspection_data),
         "rework_trend": build_rework_trend(inspection_data),
         "rework_cycles": cycles,
