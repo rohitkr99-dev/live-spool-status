@@ -86,7 +86,7 @@ import pandas as pd
 from constants import INSPECTION_REOFFERED_BEFORE_ACCEPT
 from quality.logger import logger
 from rework_pdqc_rule import normalize_rework_status
-from utils import fiscal_week_info, today, week_number_to_start_date
+from utils import dataframe_to_json_records, fiscal_week_info, today, week_number_to_start_date
 
 SPOOL_KEY_COLUMNS = ["Project Code", "Drawing No", "Spool No"]
 
@@ -738,6 +738,54 @@ def build_open_rework_hold_by_project(
     results.sort(key=lambda item: item["open_total"], reverse=True)
 
     return results
+
+
+def build_open_rework_hold_export(
+    dataframe: pd.DataFrame,
+    project_names: dict[str, str],
+) -> list[dict[str, Any]]:
+    """
+    Spool-level detail behind build_open_rework_hold_by_project()
+    above - same population (currently open Rework/Hold, latest
+    offer event per spool, same Rework Data workbook), just one row
+    per spool instead of counted per project. Feeds that chart's
+    "Download Open Rework & Hold" button (2026-09-15, given by the
+    person: "I want to show type of rework and qc observation") -
+    includes Rework Type and QC Observation, which the aggregated
+    chart data has no room for.
+    """
+
+    if dataframe is None or dataframe.empty:
+        return []
+
+    df = dataframe.dropna(subset=["Prod Offer Date"]).copy()
+    if df.empty:
+        return []
+
+    latest_idx = (
+        df.sort_values("Prod Offer Date", kind="stable")
+        .groupby(SPOOL_KEY_COLUMNS)
+        .tail(1)
+        .index
+    )
+    latest = df.loc[latest_idx].copy()
+    latest["_status"] = latest["Packing Release Date"].apply(normalize_rework_status)
+
+    open_spools = latest[latest["_status"] != "Accept"].copy()
+    open_spools["Project Name"] = open_spools["Project Code"].apply(
+        lambda code: project_names.get(code, code)
+    )
+    open_spools = open_spools.rename(columns={"_status": "Status"})
+    open_spools = open_spools.sort_values(["Project Code", "Drawing No", "Spool No"])
+
+    return dataframe_to_json_records(
+        open_spools,
+        columns=[
+            "Project Name", "Project Code", "Drawing No", "Spool No",
+            "Prod Offer Date", "Status", "Rework Type",
+            "QC Observation", "Prod Engineer",
+        ],
+    )
 
 
 # -----------------------------------------------------

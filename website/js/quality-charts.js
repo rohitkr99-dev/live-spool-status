@@ -46,6 +46,7 @@ const QualityCharts = {
     this.renderTopReworkTypes(store.topReworkTypes);
     this.renderReworkByProject(store.reworkByProject);
     this.renderOpenReworkHoldByProject(store.openReworkHoldByProject);
+    this.wireOpenReworkHoldExportButton(store.openReworkHoldExport);
     this.renderFirstOfferSplit(store.firstOfferSplit);
     this.renderReworkTrend(store.reworkTrend, this.trendGranularity);
     this.renderReworkCycles(store.reworkCycles);
@@ -326,6 +327,39 @@ const QualityCharts = {
         },
       },
     });
+  },
+
+  // ---- "Download Open Rework & Hold" ------------------------------
+  //
+  // Client-side only, same no-second-Python-pass pattern as
+  // "Download Production Rework Data" above: the spool-level rows
+  // are already sitting in the bundle (src/quality/summary.py ->
+  // build_open_rework_hold_export()), one row per currently-open
+  // spool with Rework Type and QC Observation included (2026-09-15,
+  // given by the person: "I want to show type of rework and qc
+  // observation") - a single sheet, since there's no monthly summary
+  // to go with this one.
+
+  wireOpenReworkHoldExportButton(openReworkHoldExport) {
+    const button = document.getElementById("open-rework-hold-export-btn");
+    if (!button) return;
+
+    const hasData = openReworkHoldExport && openReworkHoldExport.length;
+    button.disabled = !hasData;
+
+    button.onclick = () => {
+      if (!hasData || typeof XLSX === "undefined") return;
+      this.exportOpenReworkHoldWorkbook(openReworkHoldExport);
+    };
+  },
+
+  exportOpenReworkHoldWorkbook(rows) {
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, sheet, "Open Rework & Hold");
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Open Rework and Hold - ${dateStamp}.xlsx`);
   },
 
   // ---- 3. First Offer Split -----------------------------------

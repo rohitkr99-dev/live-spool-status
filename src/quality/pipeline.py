@@ -47,6 +47,7 @@ from quality.summary import (
     build_first_offer_split,
     build_kpis,
     build_open_rework_hold_by_project,
+    build_open_rework_hold_export,
     build_rework_by_project,
     build_rework_cycles,
     build_rework_status_monthly,
@@ -126,6 +127,11 @@ def run(settings: dict[str, Any] | None = None) -> dict[str, Any]:
         # inspection_data - see build_open_rework_hold_by_project()'s
         # own docstring for why this one chart is the exception.
         "open_rework_hold_by_project": build_open_rework_hold_by_project(
+            sources.rework, sources.project_names
+        ),
+        # Spool-level detail feeding that chart's "Download Open
+        # Rework & Hold" button - same population, row per spool.
+        "open_rework_hold_export": build_open_rework_hold_export(
             sources.rework, sources.project_names
         ),
         "first_offer_split": build_first_offer_split(inspection_data),
