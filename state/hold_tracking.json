@@ -98,7 +98,7 @@
   "TJ/25-26/183|251137_2A_HP002_008|251137-2A-HP-008-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-16",
         "hold_start": "2026-07-31"
       }
     ]
@@ -194,7 +194,7 @@
   "TJ/25-26/189|251235_00_LP001_023|251235-00-LP-023-13": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-16",
         "hold_start": "2026-09-03"
       }
     ]
@@ -266,7 +266,7 @@
   "TJ/25-26/189|251237_00_HP002_004|251237-00-HP-004-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-16",
         "hold_start": "2026-09-11"
       }
     ]
