@@ -14,7 +14,18 @@ function initLoader() {
 
   const countEl = document.getElementById("loader-count");
   const barFill = document.getElementById("loader-bar-fill");
-  const duration = reducedMotion ? 150 : 900;
+
+  // Skip the full ~900ms count-up on repeat visits within the same
+  // tab - it's a one-time first-impression flourish (this page has no
+  // real data to wait on), so replaying it in full every time someone
+  // clicks back to the hub just feels slow. Reuses the same fast path
+  // already built for prefers-reduced-motion.
+  let alreadySeen = false;
+  try {
+    alreadySeen = sessionStorage.getItem("hubLoaderSeen") === "true";
+  } catch (e) { /* storage blocked - just show the full splash */ }
+
+  const duration = (reducedMotion || alreadySeen) ? 150 : 900;
   const start = performance.now();
 
   function tick(now) {
@@ -34,6 +45,7 @@ function initLoader() {
     body.setAttribute("data-loading", "false");
     body.style.overflow = "";
     body.style.height = "";
+    try { sessionStorage.setItem("hubLoaderSeen", "true"); } catch (e) { /* ignore */ }
     window.setTimeout(() => loader.remove(), 600);
   }
 

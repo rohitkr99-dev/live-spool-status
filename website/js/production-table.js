@@ -20,6 +20,41 @@ const ProductionTable = {
   sortKey: null,
   sortDirection: "asc", // "asc" | "desc"
 
+  // Remembers the column sort and filters across visits, same
+  // per-browser localStorage approach as js/theme.js - previously
+  // this reset on every reload, which was tedious to re-apply on a
+  // table with this many columns.
+  STORAGE_KEY: "productionTableState",
+
+  persistState() {
+    try {
+      const filters = {};
+      Object.entries(ProductionFilters.tableColumnFilters).forEach(([key, set]) => {
+        filters[key] = Array.from(set);
+      });
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+        sortKey: this.sortKey,
+        sortDirection: this.sortDirection,
+        filters,
+      }));
+    } catch (e) { /* storage blocked - state just won't persist this run */ }
+  },
+
+  restoreState() {
+    let saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(this.STORAGE_KEY));
+    } catch (e) {
+      saved = null;
+    }
+    if (!saved) return;
+    this.sortKey = saved.sortKey || null;
+    this.sortDirection = saved.sortDirection || "asc";
+    Object.entries(saved.filters || {}).forEach(([key, values]) => {
+      ProductionFilters.setColumnFilter(key, values);
+    });
+  },
+
   // Column definitions - `key` for the identifier/text/number
   // columns comes straight off each spool row; `stageKey` columns
   // instead read row.stage_days[stageKey].
@@ -46,6 +81,7 @@ const ProductionTable = {
   init(store) {
     this.store = store;
     this.currentPage = 1;
+    this.restoreState();
     // Project Code -> Project Name (2026-08-08 site-wide convention
     // - see docs/ageing-and-project-naming-conventions.md). The
     // FILTER VALUE for the project_code column stays the raw code
@@ -64,6 +100,8 @@ const ProductionTable = {
     document.getElementById("table-clear-filters-btn").addEventListener("click", () => {
       ProductionFilters.clearTableFilters();
       this.currentPage = 1;
+      this.persistState();
+      this.buildHeader();
       this.render();
     });
 
@@ -71,6 +109,17 @@ const ProductionTable = {
       const popover = document.getElementById("table-filter-popover");
       if (!popover.hidden && !popover.contains(event.target) && !event.target.closest(".table-filter-btn")) {
         popover.hidden = true;
+      }
+    });
+
+    // Keyboard users had no way to dismiss the filter popover short of
+    // tabbing all the way past it - Escape closes it and returns focus
+    // to the filter button that opened it, same as a mouse click away.
+    document.addEventListener("keydown", (event) => {
+      const popover = document.getElementById("table-filter-popover");
+      if (event.key === "Escape" && !popover.hidden) {
+        popover.hidden = true;
+        if (this._popoverAnchor) this._popoverAnchor.focus();
       }
     });
   },
@@ -166,7 +215,7 @@ const ProductionTable = {
           : '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true"><path d="M8 12L4 6h8z" fill="currentColor"/></svg>')
         : '<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true" class="table-sort-icon--idle"><path d="M8 4l3 4H5zM8 12l-3-4h6z" fill="currentColor"/></svg>';
       th.innerHTML = `
-        <span class="table-th__sort${isSorted ? " is-sorted" : ""}" data-column="${column.key}" title="Sort by ${column.label}">
+        <span class="table-th__sort${isSorted ? " is-sorted" : ""}" data-column="${column.key}" title="Sort by ${column.label}" role="button" tabindex="0" aria-label="Sort by ${column.label}">
           <span class="table-th__label">${column.label}</span>
           <span class="table-sort-icon">${sortIcon}</span>
         </span>
@@ -174,7 +223,16 @@ const ProductionTable = {
           <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M2 3h12l-4.5 5.5v4L7 14v-5.5L2 3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
         </button>
       `;
-      th.querySelector(".table-th__sort").addEventListener("click", () => this.toggleSort(column));
+      const sortEl = th.querySelector(".table-th__sort");
+      sortEl.addEventListener("click", () => this.toggleSort(column));
+      // Was a mouse-only click target (a <span>, not a real button) -
+      // keyboard users couldn't reach or activate column sorting at all.
+      sortEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          this.toggleSort(column);
+        }
+      });
       th.querySelector(".table-filter-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         this.openFilterPopover(column, e.currentTarget);
@@ -199,6 +257,7 @@ const ProductionTable = {
       this.sortKey = null;
       this.sortDirection = "asc";
     }
+    this.persistState();
     this.buildHeader();
     this.currentPage = 1;
     this.render();
@@ -284,6 +343,7 @@ const ProductionTable = {
     popover.querySelector("#table-filter-clear").addEventListener("click", () => {
       ProductionFilters.setColumnFilter(column.key, null);
       popover.hidden = true;
+      this.persistState();
       this.buildHeader();
       this.currentPage = 1;
       this.render();
@@ -293,6 +353,7 @@ const ProductionTable = {
       const checked = Array.from(listEl.querySelectorAll("input[type=checkbox]:checked")).map((i) => i.value);
       ProductionFilters.setColumnFilter(column.key, checked);
       popover.hidden = true;
+      this.persistState();
       this.buildHeader();
       this.currentPage = 1;
       this.render();
@@ -302,6 +363,8 @@ const ProductionTable = {
     popover.style.top = `${rect.bottom + window.scrollY + 4}px`;
     popover.style.left = `${Math.max(8, rect.left + window.scrollX - 180)}px`;
     popover.hidden = false;
+    this._popoverAnchor = anchorEl;
+    popover.querySelector("#table-filter-search").focus();
   },
 
   render() {
