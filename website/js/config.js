@@ -56,6 +56,7 @@ const SPOOL_STATUS_CONFIG = {
   // hues bridging the two so all nine stages stay distinguishable.
   stageOrder: [
     "Production Order Not Released",
+    "Spools Planned in Next Week",
     "Fit-Up",
     "Partial Fit-Up/Welding",
     "Welding",
@@ -80,6 +81,7 @@ const SPOOL_STATUS_CONFIG = {
   // these values for the sibling updates.
   stageColor: {
     "Production Order Not Released": "#7b88d8",
+    "Spools Planned in Next Week": "#2E86C9",
     "Fit-Up": "#C9791F",
     "Partial Fit-Up/Welding": "#0095a5",
     "Welding": "#0c2dd5",

@@ -71,7 +71,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 
@@ -124,6 +124,16 @@ from utils import (
 )
 
 UNASSIGNED = "Unassigned"
+
+# Fabrication Line card (2026-09-21, per the person): spools sitting
+# at the first configured stage (Fit-Up) whose planned "Week" is
+# exactly next week aren't overdue - they're on schedule and just
+# haven't started yet. Split out of that stage's count into their own
+# card, positioned between "Production Order Not Released" and
+# "Fit-Up" in website/js/config.js -> SPOOL_STATUS_CONFIG.stageOrder
+# (that array, not this dict's key order, decides what the fabline
+# actually renders and where). See generate_dashboard_summary().
+PLANNED_NEXT_WEEK_LABEL = "Spools Planned in Next Week"
 
 # Age buckets for the ageing-distribution style summaries - mirrors
 # website/js/config.js -> SPOOL_STATUS_CONFIG.ageingBuckets exactly
@@ -413,6 +423,33 @@ class SummaryEngine:
             .value_counts()
             .to_dict()
         )
+
+        # Split "Spools Planned in Next Week" out of the first
+        # stage's (Fit-Up) count - see PLANNED_NEXT_WEEK_LABEL above.
+        # Only the fabline's OWN distribution is reshaped here; the
+        # underlying Current Stage value on each spool is untouched,
+        # so every other KPI/chart that reads it (average age,
+        # hold-by-project-stage, group/project summaries, the
+        # Production dashboard) still sees these spools as "Fit-Up",
+        # exactly as before.
+        first_stage_name = self.stages[0].display_name if self.stages else None
+        planned_next_week_count = 0
+        if first_stage_name and first_stage_name in stage_counts:
+            next_week_label = fiscal_week_info(
+                today() + timedelta(days=7)
+            )["week_label"]
+            week_values = (
+                dataframe[WEEK] if WEEK in dataframe.columns
+                else pd.Series(None, index=dataframe.index)
+            )
+            planned_next_week_mask = (
+                ~on_hold_mask
+                & (dataframe[CURRENT_STAGE] == first_stage_name)
+                & (week_values == next_week_label)
+            )
+            planned_next_week_count = int(planned_next_week_mask.sum())
+            stage_counts[first_stage_name] -= planned_next_week_count
+
         ordered_stage_names = self.stage_display_order + [
             name for name in stage_counts
             if name not in self.stage_display_order
@@ -421,6 +458,7 @@ class SummaryEngine:
             name: int(stage_counts.get(name, 0))
             for name in ordered_stage_names
         }
+        current_stage_distribution[PLANNED_NEXT_WEEK_LABEL] = planned_next_week_count
 
         # "Holds & Reworks" reconciliation strip (2026-08-20, per the
         # person's earlier request - this got sidetracked into the

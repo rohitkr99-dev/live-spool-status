@@ -28,11 +28,15 @@ const SpoolFabline = {
     // "Completed" bucket and "Dispatch" (already Packed and just
     // awaiting shipment - not a fabrication bottleneck, per the
     // project owner: "any box which is packed is not a bottleneck
-    // for the company") and "Production Order Not Released"
+    // for the company"), "Production Order Not Released"
     // (fabrication hasn't even started for those spools yet, so
     // they can't be a fabrication bottleneck either - see
-    // business_rules.py Rule 0).
-    const EXCLUDED_FROM_BOTTLENECK = ["Completed", "Dispatch", "Production Order Not Released"];
+    // business_rules.py Rule 0), and "Spools Planned in Next Week"
+    // (2026-09-21, same reasoning - on schedule and not yet due, not
+    // a real backlog - see summary.py -> PLANNED_NEXT_WEEK_LABEL).
+    const EXCLUDED_FROM_BOTTLENECK = [
+      "Completed", "Dispatch", "Production Order Not Released", "Spools Planned in Next Week",
+    ];
     let bottleneckStage = null;
     let bottleneckCount = -1;
     for (const stage of order) {

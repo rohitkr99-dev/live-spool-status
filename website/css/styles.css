@@ -752,9 +752,17 @@ a { color: inherit; }
   letter-spacing: 0.04em;
   color: var(--frost-dim);
   z-index: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wraps onto 2+ lines instead of forcing the card wide - a long
+     name like "Production Order Not Released" used to set this flex
+     item's content-based minimum width to its full unwrapped line
+     length (nowrap's min-content == max-content), which flex-grow
+     could only ever add to, never shrink below, since flex-shrink is
+     0 on .fabline__stage. Wrapping gives the browser a much smaller
+     min-content width (the longest single word) to work from, so
+     card width goes back to being governed by flex-grow/count alone. */
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.25;
 }
 
 .fabline__stage-count {
