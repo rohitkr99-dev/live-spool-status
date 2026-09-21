@@ -678,11 +678,20 @@ a { color: inherit; }
 }
 
 .fabline {
+  /* Equal-size grid, always exactly 2 rows (2026-09-21, per the
+     person: "Make 2 rows and make the cards of equal shape and size
+     so that it looks balanced and good" - replacing the previous
+     flex-grow-proportional-width layout, which reliably overflowed
+     its container once an 11th stage card was added: 11 cards'
+     combined natural widths (225px+ for the longest labels, even
+     wrapped onto 2 lines) summed past the row's ~1320px budget, with
+     nothing to catch the overflow. column count is set inline by
+     fabline.js -> render() as Math.ceil(stageCount / 2), so it stays
+     exactly 2 rows regardless of how many stages are configured. */
   position: relative;
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
-  height: 108px;
   padding-bottom: 16px;
 }
 
@@ -708,10 +717,11 @@ a { color: inherit; }
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
   color: var(--frost);
-  min-width: 72px;
-  flex-shrink: 0;
+  /* Every card the same height, since width is now equal too (grid
+     columns) - "shape and size" both uniform, per the person. */
+  height: 108px;
   overflow: hidden;
-  transition: flex-grow 0.5s var(--ease-out), transform 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.25s ease, border-color 0.25s ease;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1510,8 +1520,12 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
     font-size: 12.5px;
   }
   .topbar__updated { flex-basis: 100%; align-items: flex-start; text-align: left; }
-  .fabline { flex-wrap: wrap; height: auto; }
-  .fabline__stage { min-width: 100px; flex: 1 1 30%; }
+  /* Fewer, wider columns than fabline.js's desktop 2-row column
+     count (set inline, so !important is needed here to win) - a
+     6-column grid would make each card too narrow to read on a
+     phone-width screen. More than 2 rows on mobile is fine; there's
+     no "exactly 2 rows" requirement at this breakpoint. */
+  .fabline { grid-template-columns: repeat(3, 1fr) !important; }
   .fabline-section__note { text-align: left; max-width: none; }
   .scurve-stats { gap: 18px; }
 }

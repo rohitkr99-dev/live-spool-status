@@ -2,9 +2,17 @@
  * fabline.js
  * ---------------------------------------------------------
  * Renders the "Fabrication Line" - the dashboard's signature visual.
- * Each stage from current_stage_distribution becomes a block; block
- * width is proportional to spool count, so the widest block is
- * visibly where work is piling up (the bottleneck).
+ * Each stage from current_stage_distribution becomes a block in a
+ * uniform grid, always exactly 2 rows (2026-09-21, per the person:
+ * "Make 2 rows and make the cards of equal shape and size so that it
+ * looks balanced and good"). Column count is computed here and set
+ * on the container's inline style; every card's own size comes from
+ * CSS (website/css/styles.css -> .fabline / .fabline__stage), not
+ * from spool count - the "widest block = bottleneck" idea this
+ * section used before (proportional flex-grow widths) reliably
+ * overflowed its container once an 11th stage card was added, with
+ * nothing to catch the overflow. The Bottleneck badge + count number
+ * carry that signal now instead of width.
  *
  * Purely a rendering of dashboard_summary.json ->
  * current_stage_distribution. No counting happens here.
@@ -23,6 +31,12 @@ const SpoolFabline = {
     const order = SPOOL_STATUS_CONFIG.stageOrder.filter(
       (stage) => stage in distribution
     );
+
+    // Exactly 2 rows, whatever the stage count turns out to be -
+    // the mobile breakpoint overrides this (with !important, since
+    // it has to beat this inline style) to a narrower, more-rows
+    // layout instead.
+    container.style.gridTemplateColumns = `repeat(${Math.ceil(order.length / 2)}, 1fr)`;
 
     // Bottleneck = the largest WIP stage, excluding the terminal
     // "Completed" bucket and "Dispatch" (already Packed and just
@@ -47,8 +61,6 @@ const SpoolFabline = {
       }
     }
 
-    const maxCount = Math.max(...order.map((s) => distribution[s]), 1);
-
     for (const stage of order) {
       const count = distribution[stage];
       const isBottleneck = stage === bottleneckStage;
@@ -61,11 +73,6 @@ const SpoolFabline = {
 
       const color = SPOOL_STATUS_CONFIG.stageColor[stage] || SPOOL_STATUS_CONFIG.defaultStageColor;
       block.style.setProperty("--stage-color", color);
-
-      // Width proportional to count, with a floor so zero/small
-      // stages stay visible and readable.
-      const proportion = count / maxCount;
-      block.style.flexGrow = String(Math.max(proportion * 10, 0.6));
 
       const name = document.createElement("span");
       name.className = "fabline__stage-name";
