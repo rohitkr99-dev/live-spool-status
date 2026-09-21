@@ -93,6 +93,26 @@ const SPOOL_STATUS_CONFIG = {
     "Completed": "#1F8A55",
   },
 
+  // Fabrication Line card wording only (2026-09-21, per the person) -
+  // NOT a rename of the underlying Current Stage value, which is
+  // still "Fit-Up"/"Welding"/etc. everywhere else (the All Spools
+  // table, filters, CSV exports, other charts, the Production
+  // dashboard's own stage tracking). Only fabline.js's rendered card
+  // name, its hover tooltip, and the "Busiest stage right now" note
+  // read through this - the stage keys used for every lookup
+  // (distribution[stage], stageColor[stage], the bottleneck
+  // exclusion list) are untouched. A stage not listed here just
+  // displays its own raw name, unchanged.
+  stageDisplayLabel: {
+    "Fit-Up": "Under Fit-Up",
+    "Welding": "Under Welding",
+    "PDQC": "Under PDQC",
+    "Ready for Painting": "Pending Ready for Painting",
+    "Packing": "Under Packing",
+    "Dispatch": "Under Dispatch",
+    "Completed": "Shipment Complete",
+  },
+
   // Stage-age thresholds purely for the colour chip in the table -
   // a display convenience, not a business rule. The underlying
   // number always comes straight from Stage Age in the JSON.

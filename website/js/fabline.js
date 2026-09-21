@@ -65,6 +65,7 @@ const SpoolFabline = {
       const count = distribution[stage];
       const isBottleneck = stage === bottleneckStage;
       const isComplete = stage === "Completed";
+      const displayLabel = SPOOL_STATUS_CONFIG.stageDisplayLabel[stage] || stage;
 
       const block = document.createElement("div");
       block.className = "fabline__stage";
@@ -76,7 +77,7 @@ const SpoolFabline = {
 
       const name = document.createElement("span");
       name.className = "fabline__stage-name";
-      name.textContent = stage;
+      name.textContent = displayLabel;
 
       const countEl = document.createElement("span");
       countEl.className = "fabline__stage-count";
@@ -90,14 +91,15 @@ const SpoolFabline = {
         block.appendChild(badge);
       }
       block.appendChild(countEl);
-      block.title = `${stage}: ${count} spool${count === 1 ? "" : "s"}`;
+      block.title = `${displayLabel}: ${count} spool${count === 1 ? "" : "s"}`;
 
       container.appendChild(block);
     }
 
     if (bottleneckStage && bottleneckCount > 0) {
+      const bottleneckLabel = SPOOL_STATUS_CONFIG.stageDisplayLabel[bottleneckStage] || bottleneckStage;
       bottleneckNote.innerHTML =
-        `Busiest stage right now: <strong>${bottleneckStage}</strong> — ${new Intl.NumberFormat("en-US").format(bottleneckCount)} spools waiting.`;
+        `Busiest stage right now: <strong>${bottleneckLabel}</strong> — ${new Intl.NumberFormat("en-US").format(bottleneckCount)} spools waiting.`;
     } else {
       bottleneckNote.textContent = "No spools currently in progress.";
     }
