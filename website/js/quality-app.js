@@ -15,11 +15,22 @@ const QualityApp = {
     this.setupUploadControl();
     this.setupClearControl();
     this.setupTrendGranularityControl();
+    document.getElementById("retry-load-btn").addEventListener("click", () => location.reload());
     await this.loadInitialData();
   },
 
-  showEmptyState() {
-    document.getElementById("last-updated").textContent = "No data uploaded yet";
+  /**
+   * loadFailed distinguishes "the published bundle couldn't be
+   * fetched" (a real error - see quality-data.js -> fetchPublished())
+   * from the genuine first-run case where nothing has ever been
+   * uploaded on this browser either. Only the former gets a Retry
+   * button, since re-uploading isn't the fix for a network/data blip.
+   */
+  showEmptyState(loadFailed) {
+    document.getElementById("last-updated").textContent = loadFailed
+      ? "Couldn't load dashboard data"
+      : "No data uploaded yet";
+    document.getElementById("retry-load-btn").hidden = !loadFailed;
     document.getElementById("clear-data-btn").hidden = true;
     document.body.classList.add("is-ready");
   },
@@ -31,6 +42,7 @@ const QualityApp = {
 
     document.getElementById("last-updated").textContent = QualityKPI.formatTimestamp(store.generatedAt);
     document.getElementById("clear-data-btn").hidden = false;
+    document.getElementById("retry-load-btn").hidden = true;
 
     document.body.classList.add("is-ready");
   },
@@ -47,11 +59,13 @@ const QualityApp = {
 
   async loadInitialData() {
     let published;
+    let publishedFailed = false;
     try {
       published = await QualityData.fetchPublished();
     } catch (error) {
       console.error(error);
       published = null;
+      publishedFailed = true;
     }
 
     if (published) {
@@ -74,7 +88,7 @@ const QualityApp = {
     }
 
     if (!restored) {
-      this.showEmptyState();
+      this.showEmptyState(publishedFailed);
       return;
     }
 

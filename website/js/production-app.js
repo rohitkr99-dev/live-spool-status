@@ -14,11 +14,22 @@ const ProductionApp = {
     this.setupUploadControl();
     this.setupClearControl();
     this.setupGlobalFilters();
+    document.getElementById("retry-load-btn").addEventListener("click", () => location.reload());
     await this.loadInitialData();
   },
 
-  showEmptyState() {
-    document.getElementById("last-updated").textContent = "No data uploaded yet";
+  /**
+   * loadFailed distinguishes "the published bundle couldn't be
+   * fetched" (a real error - see production-data.js -> fetchPublished())
+   * from the genuine first-run case where nothing has ever been
+   * uploaded on this browser either. Only the former gets a Retry
+   * button, since re-uploading isn't the fix for a network/data blip.
+   */
+  showEmptyState(loadFailed) {
+    document.getElementById("last-updated").textContent = loadFailed
+      ? "Couldn't load dashboard data"
+      : "No data uploaded yet";
+    document.getElementById("retry-load-btn").hidden = !loadFailed;
     document.getElementById("clear-data-btn").hidden = true;
     document.body.classList.add("is-ready");
   },
@@ -32,6 +43,7 @@ const ProductionApp = {
 
     document.getElementById("last-updated").textContent = ProductionKPI.formatTimestamp(store.generatedAt);
     document.getElementById("clear-data-btn").hidden = false;
+    document.getElementById("retry-load-btn").hidden = true;
 
     document.body.classList.add("is-ready");
   },
@@ -78,11 +90,13 @@ const ProductionApp = {
 
   async loadInitialData() {
     let published;
+    let publishedFailed = false;
     try {
       published = await ProductionData.fetchPublished();
     } catch (error) {
       console.error(error);
       published = null;
+      publishedFailed = true;
     }
 
     if (published) {
@@ -100,7 +114,7 @@ const ProductionApp = {
     }
 
     if (!restored) {
-      this.showEmptyState();
+      this.showEmptyState(publishedFailed);
       return;
     }
 

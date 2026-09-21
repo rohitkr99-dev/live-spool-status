@@ -11,11 +11,20 @@ const PaintingApp = {
   async init() {
     this.setupTabs();
     this.setupProjectFilter();
+    document.getElementById("retry-load-btn").addEventListener("click", () => location.reload());
     await this.loadInitialData();
   },
 
-  showEmptyState() {
-    document.getElementById("last-updated").textContent = "No data published yet";
+  /**
+   * Painting has no local-upload fallback (see file header) - the
+   * published bundle is the only source, so any failure to fetch it
+   * always means "couldn't load," never "haven't uploaded yet."
+   */
+  showEmptyState(loadFailed) {
+    document.getElementById("last-updated").textContent = loadFailed
+      ? "Couldn't load dashboard data"
+      : "No data published yet";
+    document.getElementById("retry-load-btn").hidden = !loadFailed;
   },
 
   renderAll(store) {
@@ -26,6 +35,7 @@ const PaintingApp = {
     PaintingChartExport.wireStatic(store);
 
     document.getElementById("last-updated").textContent = PaintingKPI.formatTimestamp(store.generatedAt);
+    document.getElementById("retry-load-btn").hidden = true;
     const footer = document.getElementById("footer-generated");
     if (footer && store.sourceFiles) {
       const files = store.sourceFiles.painting_workbooks || [];
@@ -37,11 +47,13 @@ const PaintingApp = {
 
   async loadInitialData() {
     let published;
+    let publishedFailed = false;
     try {
       published = await PaintingData.fetchPublished();
     } catch (error) {
       console.error(error);
       published = null;
+      publishedFailed = true;
     }
 
     if (published) {
@@ -50,7 +62,7 @@ const PaintingApp = {
       return;
     }
 
-    this.showEmptyState();
+    this.showEmptyState(publishedFailed);
   },
 
   setupProjectFilter() {

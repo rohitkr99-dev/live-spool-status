@@ -89,33 +89,34 @@ const QualityData = {
 
   hasData: false,
 
+  /**
+   * Throws on any real failure (network, bad status, bad JSON,
+   * unreadable bundle) rather than returning null - the published
+   * bundle should always be there on a working deployment, so any
+   * failure here is a genuine error the caller should surface
+   * distinctly from "nothing's been uploaded yet" (see
+   * quality-app.js -> loadInitialData()/showEmptyState()).
+   */
   async fetchPublished() {
-    let response;
-    try {
-      response = await fetch(
-        `${QUALITY_CONFIG.publishedDataUrl}?t=${Date.now()}`,
-        { cache: "no-store" },
-      );
-    } catch (error) {
-      return null;
-    }
+    const response = await fetch(
+      `${QUALITY_CONFIG.publishedDataUrl}?t=${Date.now()}`,
+      { cache: "no-store" },
+    );
 
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error(`Published quality data returned ${response.status}`);
 
     let bundle;
     try {
       bundle = await response.json();
     } catch (error) {
-      console.warn("Published quality data isn't valid JSON:", error);
-      return null;
+      throw new Error("Published quality data isn't valid JSON: " + error.message);
     }
 
     let store;
     try {
       store = this.loadFromBundle(bundle);
     } catch (error) {
-      console.warn("Published quality data is unreadable:", error);
-      return null;
+      throw new Error("Published quality data is unreadable: " + error.message);
     }
 
     try {

@@ -125,36 +125,37 @@ const SpoolData = {
    * restorePersisted() in that case, so plain local-upload usage is
    * completely unaffected.
    */
+  /**
+   * Throws on any real failure (network, bad status, bad JSON,
+   * unreadable bundle) rather than returning null - the published
+   * bundle should always be there on a working deployment, so any
+   * failure here is a genuine error the caller should surface
+   * distinctly from "nothing's been uploaded yet" (see
+   * app.js -> loadInitialData()/showEmptyState()).
+   */
   async fetchPublished() {
-    let response;
-    try {
-      // Cache-bust: hosts commonly cache static JSON aggressively,
-      // which would otherwise mean a fresh publish doesn't show up
-      // for visitors until their browser's cache happens to expire.
-      response = await fetch(
-        `${SPOOL_STATUS_CONFIG.publishedDataUrl}?t=${Date.now()}`,
-        { cache: "no-store" },
-      );
-    } catch (error) {
-      return null; // offline, no host, CORS on file://, etc.
-    }
+    // Cache-bust: hosts commonly cache static JSON aggressively,
+    // which would otherwise mean a fresh publish doesn't show up
+    // for visitors until their browser's cache happens to expire.
+    const response = await fetch(
+      `${SPOOL_STATUS_CONFIG.publishedDataUrl}?t=${Date.now()}`,
+      { cache: "no-store" },
+    );
 
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error(`Published dashboard data returned ${response.status}`);
 
     let bundle;
     try {
       bundle = await response.json();
     } catch (error) {
-      console.warn("Published dashboard data isn't valid JSON:", error);
-      return null;
+      throw new Error("Published dashboard data isn't valid JSON: " + error.message);
     }
 
     let store;
     try {
       store = this.loadFromBundle(bundle);
     } catch (error) {
-      console.warn("Published dashboard data is unreadable:", error);
-      return null;
+      throw new Error("Published dashboard data is unreadable: " + error.message);
     }
 
     // Cache it as the fallback for next time (e.g. offline, or this
