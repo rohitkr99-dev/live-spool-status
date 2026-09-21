@@ -39,7 +39,7 @@ const SPOOL_STATUS_CONFIG = {
   chartTextColor: "#55566E",
   chartTextColorStrong: "#1B1A2E",
   chartWellColor: "#FFFFFF",
-  defaultStageColor: "#8A8FA6",
+  defaultStageColor: "#7b88d8", // re-stepped from #8A8FA6 - failed the categorical chroma floor (read as gray, no identity signal)
 
   // Stage sequence + colour, matching config/stages.json in the
   // Python pipeline. Kept here only for DISPLAY (colour, order) -
@@ -67,15 +67,26 @@ const SPOOL_STATUS_CONFIG = {
     "Completed",
   ],
 
+  // Re-stepped 2026-09-20 after running the dataviz skill's color
+  // validator: "Fit-Up" vs "Partial Fit-Up/Welding" (adjacent stages,
+  // adjacent bar segments) measured Delta E 5.0 under NORMAL vision -
+  // below the 15 floor, meaning even full-color-vision readers
+  // struggled to tell them apart, not just a CVD problem. "Welding"
+  // was outside the lightness band; "Production Order Not Released"
+  // and "PDQC" were under the chroma floor (read as flat gray,
+  // no identity signal); "Packing" was under 3:1 contrast against
+  // the chart surface. Same hue families, re-stepped in L/C only -
+  // see js/config.js and the other *-config.js files that share
+  // these values for the sibling updates.
   stageColor: {
-    "Production Order Not Released": "#8A8FA6",
+    "Production Order Not Released": "#7b88d8",
     "Fit-Up": "#C9791F",
-    "Partial Fit-Up/Welding": "#B08628",
-    "Welding": "#4333A5",
-    "PDQC": "#1E8F86",
+    "Partial Fit-Up/Welding": "#0095a5",
+    "Welding": "#0c2dd5",
+    "PDQC": "#00948a",
     "Ready for Painting": "#6E5FD1",
     "Under Painting": "#A82E30",
-    "Packing": "#D9A22D",
+    "Packing": "#b78612",
     "Dispatch": "#8A3E82",
     "Completed": "#1F8A55",
   },
@@ -150,7 +161,7 @@ const SPOOL_STATUS_CONFIG = {
   // Actual makes it read as "the line that matters right now",
   // consistent with --primary elsewhere on the page.
   sCurve: {
-    plannedColor: "#4333A5",
+    plannedColor: "#0c2dd5",
     actualColor: "#A82E30",
   },
 
@@ -161,8 +172,14 @@ const SPOOL_STATUS_CONFIG = {
   // supporting teal/amber/violet/green/plum/slate hues, so it reads
   // as clearly "categorical" rather than echoing the sequential
   // ageing-bucket ramp or the stage colours above.
+  //
+  // NOTE: the cycling itself (when project count > 8) is a known,
+  // separate gap the dataviz skill flags - a 9th project silently
+  // reuses slot 1's colour. Not fixed here (touches js/stageAgeing.js's
+  // rendering, not just this config); only the base hues were
+  // refreshed to match the re-stepped values used elsewhere.
   projectPalette: [
-    "#4333A5", "#A82E30", "#1E8F86", "#D9A22D",
-    "#6E5FD1", "#1F8A55", "#8A3E82", "#8A8FA6",
+    "#0c2dd5", "#A82E30", "#00948a", "#b78612",
+    "#6E5FD1", "#1F8A55", "#8A3E82", "#7b88d8",
   ],
 };

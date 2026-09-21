@@ -162,15 +162,22 @@ const SpoolStageAgeing = {
 
     if (allProjects) {
       const projects = this.distinctProjects();
+      // Past the palette's 8 identity colours, don't cycle back to
+      // slot 1 - that would make two unrelated projects' bars look
+      // identical. Each project still gets its own dataset/tooltip/
+      // legend entry (nothing is merged or re-averaged), it just
+      // shares one muted "overflow" colour instead of a repeated
+      // identity colour.
+      const paletteLen = SPOOL_STATUS_CONFIG.projectPalette.length;
       datasets = projects.map((project, index) => ({
         label: SpoolData.projectLabel(project),
         data: stages.map((stage) => {
           const record = this.findRecord(project, stage);
           return record ? record.average_days : null;
         }),
-        backgroundColor: SPOOL_STATUS_CONFIG.projectPalette[
-          index % SPOOL_STATUS_CONFIG.projectPalette.length
-        ],
+        backgroundColor: index < paletteLen
+          ? SPOOL_STATUS_CONFIG.projectPalette[index]
+          : SPOOL_STATUS_CONFIG.defaultStageColor,
         borderRadius: 2,
       }));
     } else {

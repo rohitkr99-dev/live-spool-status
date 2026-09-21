@@ -21,7 +21,7 @@ const PAINTING_CONFIG = {
 
   idealCycleDays: 4,
 
-  stageColor: "#4333A5",
+  stageColor: "#0c2dd5", // re-stepped 2026-09-20, dataviz validator (see config.js)
   idealLineColor: "#1F8A55",
   overIdealColor: "#A82E30",
 
@@ -51,16 +51,17 @@ const PAINTING_CONFIG = {
   // page and this one doesn't carry that meaning here. Plus a neutral
   // dark pill for the combined-total label drawn at the row's center.
   blastingColors: {
-    internal: "#4333A5",
+    internal: "#0c2dd5",
     external: "#A82E30",
     sumLabelBg: "#1B1A2E",
   },
 
   // A distinct colour per project, cycled if more projects than
   // colours - same qualitative palette as config.js -> projectPalette
-  // / packing-config.js -> projectPalette.
+  // / packing-config.js -> projectPalette. Re-stepped 2026-09-20 to
+  // match (same dataviz-validator fixes; cycling gap still unfixed).
   projectPalette: [
-    "#4333A5", "#A82E30", "#1E8F86", "#D9A22D",
-    "#6E5FD1", "#1F8A55", "#8A3E82", "#8A8FA6",
+    "#0c2dd5", "#A82E30", "#00948a", "#b78612",
+    "#6E5FD1", "#1F8A55", "#8A3E82", "#7b88d8",
   ],
 };

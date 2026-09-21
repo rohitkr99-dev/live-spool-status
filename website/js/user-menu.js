@@ -80,6 +80,7 @@
       window.removeEventListener("resize", position);
       document.removeEventListener("click", onDocClick, true);
       document.removeEventListener("keydown", onKeydown, true);
+      disarm();
     }
 
     function onDocClick(event) {
@@ -96,9 +97,32 @@
       if (isOpen) close(); else open();
     });
 
+    // Two-step inline confirm instead of a blocking native confirm() -
+    // first click arms it, second click (within 3s) signs out. Resets
+    // if the menu closes in between.
+    var logoutLabel = logoutBtn.querySelector("span");
+    var defaultLabel = logoutLabel.textContent;
+    var armed = false;
+    var armTimer = null;
+
+    function disarm() {
+      armed = false;
+      clearTimeout(armTimer);
+      logoutBtn.classList.remove("user-menu__item--confirm");
+      logoutLabel.textContent = defaultLabel;
+    }
+
     logoutBtn.addEventListener("click", function () {
+      if (!armed) {
+        armed = true;
+        logoutBtn.classList.add("user-menu__item--confirm");
+        logoutLabel.textContent = "Click to confirm";
+        armTimer = setTimeout(disarm, 3000);
+        return;
+      }
+      disarm();
       close();
-      logout();
+      performSignOut(logoutBtn);
     });
 
     if (window.firebase && firebase.auth) {
@@ -110,11 +134,7 @@
     }
   }
 
-  function logout() {
-
-    if (!confirm("Are you sure you want to logout?")) {
-      return;
-    }
+  function performSignOut(triggerEl) {
 
     firebase.auth().signOut()
 
@@ -129,14 +149,21 @@
 
       .catch(function (error) {
 
-        alert(error.message);
+        // Sign-out failures are rare (offline, etc.) - surface it on the
+        // element that was clicked instead of blocking with alert().
+        if (triggerEl) {
+          var label = triggerEl.querySelector("span") || triggerEl;
+          var original = label.textContent;
+          label.textContent = "Couldn't sign out - retry";
+          setTimeout(function () { label.textContent = original; }, 3000);
+        }
 
       });
 
   }
 
   // Exposed for any page/legacy markup that still calls logout() directly.
-  window.logout = logout;
+  window.logout = performSignOut;
 
   document.addEventListener("DOMContentLoaded", function () {
     var mount = document.getElementById("user-menu");

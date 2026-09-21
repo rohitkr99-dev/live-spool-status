@@ -20,10 +20,11 @@
 
   --frost: #1B1A2E;
   --frost-dim: #55566E;
-  --frost-faint: #8C8DA3;
+  --frost-faint: #686980; /* darkened from #8C8DA3 - 3.1:1 on glass failed WCAG AA for the 9-11px labels using it; this measures ~5.2:1 */
 
   --line: rgba(23, 21, 43, 0.08);
   --line-strong: rgba(23, 21, 43, 0.14);
+  --tint-weak: rgba(23, 21, 43, 0.025);
 
   /* ---- brand accents --------------------------------- */
   --ember: #A82E30;
@@ -68,6 +69,118 @@
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* =====================================================
+   DARK MODE — three states, per page: System (default, follows
+   the OS/browser preference), or an explicit Light/Dark override
+   set via js/theme.js and stored per-page in localStorage as
+   <html data-theme="dark|light">. The token block below is
+   duplicated across two selectors rather than shared, so each stays
+   readable on its own - keep them in sync if either changes.
+   Same tokens, re-stepped for a dark surface rather than a naive
+   filter/invert: text contrast and the brand accents were checked
+   against the dark card colour below (see the dataviz skill's
+   contrast() check - all clear 4.5:1+). Chart.js colours are a
+   separate runtime concern (js/chartTheme.js reads the same
+   data-theme attribute, since canvases can't see CSS vars).
+   ===================================================== */
+@media (prefers-color-scheme: dark) {
+  /* System default: dark tokens apply unless the page has been
+     explicitly overridden back to Light. */
+  :root:not([data-theme="light"]) {
+    /* --void stays the fixed dark splash-screen backdrop in both
+       themes - the loader's own graphics (.loader__name etc.) are
+       hardcoded white, assuming a dark surface underneath. */
+    --bg-1: #14131f;
+    --bg-2: #1c1b2b;
+    --bg-3: #211f33;
+
+    --glass-fill: rgba(38, 37, 56, 0.6);
+    --glass-fill-strong: rgba(38, 37, 56, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-strong: rgba(255, 255, 255, 0.16);
+    --glass-sheen: rgba(255, 255, 255, 0.08);
+
+    --frost: #F1F1F7;
+    --frost-dim: #B4B5C9;
+    --frost-faint: #9496B0;
+
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --tint-weak: rgba(255, 255, 255, 0.03);
+
+    --ember: #E2585B;
+    --ember-dark: #A82E30;
+    --ember-soft: rgba(226, 88, 91, 0.16);
+    --ice: #8477DD;
+    --ice-dark: #4333A5;
+    --ice-soft: rgba(132, 119, 221, 0.16);
+
+    --status-notstarted: #9496B0;
+    --status-notstarted-soft: rgba(148, 150, 176, 0.16);
+    --status-progress: #8477DD;
+    --status-progress-soft: rgba(132, 119, 221, 0.16);
+    --status-warning: #D99A2E;
+    --status-warning-soft: rgba(217, 154, 46, 0.16);
+    --status-critical: #E2585B;
+    --status-critical-soft: rgba(226, 88, 91, 0.16);
+    --status-complete: #3DAF74;
+    --status-complete-soft: rgba(61, 175, 116, 0.16);
+
+    --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 32px -18px rgba(0, 0, 0, 0.55);
+    --shadow-raised: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
+  }
+
+  /* DataTables and native form controls don't take CSS custom
+     properties for their own chrome - tell the browser this page
+     is dark so checkboxes, scrollbars-in-iframes, etc. use their
+     dark rendering instead of forcing light chrome onto a dark page. */
+  html:not([data-theme="light"]) { color-scheme: dark; }
+}
+
+/* Explicit override: Dark chosen for this page regardless of the
+   OS/browser preference. Identical values to the block above. */
+:root[data-theme="dark"] {
+  --bg-1: #14131f;
+  --bg-2: #1c1b2b;
+  --bg-3: #211f33;
+
+  --glass-fill: rgba(38, 37, 56, 0.6);
+  --glass-fill-strong: rgba(38, 37, 56, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-sheen: rgba(255, 255, 255, 0.08);
+
+  --frost: #F1F1F7;
+  --frost-dim: #B4B5C9;
+  --frost-faint: #9496B0;
+
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --tint-weak: rgba(255, 255, 255, 0.03);
+
+  --ember: #E2585B;
+  --ember-dark: #A82E30;
+  --ember-soft: rgba(226, 88, 91, 0.16);
+  --ice: #8477DD;
+  --ice-dark: #4333A5;
+  --ice-soft: rgba(132, 119, 221, 0.16);
+
+  --status-notstarted: #9496B0;
+  --status-notstarted-soft: rgba(148, 150, 176, 0.16);
+  --status-progress: #8477DD;
+  --status-progress-soft: rgba(132, 119, 221, 0.16);
+  --status-warning: #D99A2E;
+  --status-warning-soft: rgba(217, 154, 46, 0.16);
+  --status-critical: #E2585B;
+  --status-critical-soft: rgba(226, 88, 91, 0.16);
+  --status-complete: #3DAF74;
+  --status-complete-soft: rgba(61, 175, 116, 0.16);
+
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 32px -18px rgba(0, 0, 0, 0.55);
+  --shadow-raised: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
+}
+html[data-theme="dark"] { color-scheme: dark; }
 
 * { box-sizing: border-box; }
 
@@ -225,7 +338,7 @@ a { color: inherit; }
   margin: 20px 0 28px;
   gap: 20px;
   flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--glass-fill-strong);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--glass-border);
@@ -309,6 +422,8 @@ a { color: inherit; }
 .topbar__meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 10px;
   gap: 16px;
 }
 
@@ -829,7 +944,7 @@ a { color: inherit; }
   padding: 3px 6px;
   border-radius: 7px;
   border: 1px solid var(--glass-border-strong);
-  background: #FFFFFF;
+  background: var(--bg-2);
   color: var(--frost);
 }
 
@@ -987,7 +1102,7 @@ a { color: inherit; }
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--glass-border);
-  background: rgba(23, 21, 43, 0.025);
+  background: var(--tint-weak);
   padding: 0 8px;
 }
 
@@ -1033,7 +1148,7 @@ a { color: inherit; }
   gap: 14px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--line);
-  background: rgba(23, 21, 43, 0.02);
+  background: var(--tint-weak);
 }
 
 .filter-field {
@@ -1302,7 +1417,7 @@ a { color: inherit; }
   bottom: 24px;
   left: 50%;
   transform: translate(-50%, 12px);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--glass-fill-strong);
   border: 1px solid var(--glass-border-strong);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
@@ -1373,7 +1488,20 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
   .app-shell { padding: 0 14px 40px; }
   .kpi-strip { grid-template-columns: repeat(2, 1fr); }
   .topbar { padding: 16px 16px; margin: 12px 0 20px; }
-  .topbar__meta { width: 100%; justify-content: space-between; }
+  .topbar__meta {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  /* The action buttons were being squeezed onto one nowrap row with the
+     timestamp and clipped to single letters below ~600px. Let them wrap
+     and shrink their padding instead of their text. */
+  .topbar__meta .btn {
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+  .topbar__updated { flex-basis: 100%; align-items: flex-start; text-align: left; }
   .fabline { flex-wrap: wrap; height: auto; }
   .fabline__stage { min-width: 100px; flex: 1 1 30%; }
   .fabline-section__note { text-align: left; max-width: none; }
@@ -1392,6 +1520,43 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
    this lets it escape any ancestor with overflow:hidden or its own
    stacking context (e.g. .topbar's clipped corner flourish) instead
    of being silently clipped. */
+
+/* Three-way Light/Dark/System toggle - js/theme.js. One per page,
+   stored per-page, so it sits beside the user-menu as its own small
+   pill rather than sharing a control. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-fill);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+}
+
+.theme-toggle__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--frost-faint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.theme-toggle__btn:hover { color: var(--frost-dim); }
+
+.theme-toggle__btn.is-active {
+  background: var(--ember);
+  color: #FFFFFF;
+}
 
 .user-menu {
   position: relative;
@@ -1431,7 +1596,7 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
   position: fixed;
   min-width: 220px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--glass-fill-strong);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--glass-border);
@@ -1505,3 +1670,11 @@ body.is-ready .tables-section { animation-delay: 0.6s; }
   background: rgba(168, 46, 48, 0.08);
   color: var(--ember);
 }
+
+/* Armed state for the two-step inline logout confirm - replaces a
+   blocking native confirm() dialog. */
+.user-menu__item--confirm {
+  background: var(--status-critical-soft);
+  color: var(--ember);
+}
+.user-menu__item--confirm:hover { background: var(--status-critical-soft); }

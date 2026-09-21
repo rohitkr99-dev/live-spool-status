@@ -15,15 +15,36 @@
 
   const cfg = SPOOL_STATUS_CONFIG;
 
+  // Canvas can't read CSS custom properties, so it can't pick up the
+  // dark-mode :root overrides in styles.css on its own - mirror that
+  // switch here, once, so every page's chart theme (each page aliases
+  // just these 4 literals before loading this file - see e.g.
+  // production.html) goes dark together with the rest of the UI
+  // instead of staying a bright white "well" on a dark page.
+  //
+  // Same resolution order as styles.css: an explicit per-page choice
+  // from js/theme.js (<html data-theme="...">) wins; System (no
+  // attribute) falls back to the OS/browser preference.
+  const explicitTheme = document.documentElement.getAttribute("data-theme");
+  const isDark = explicitTheme
+    ? explicitTheme === "dark"
+    : !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  if (isDark) {
+    cfg.chartGridColor = "rgba(255, 255, 255, 0.08)";
+    cfg.chartTextColor = "#B4B5C9";
+    cfg.chartTextColorStrong = "#F1F1F7";
+    cfg.chartWellColor = "#1c1b2b";
+  }
+
   Chart.defaults.color = cfg.chartTextColor;
   Chart.defaults.borderColor = cfg.chartGridColor;
   Chart.defaults.font.family = "'Manrope', -apple-system, sans-serif";
   Chart.defaults.font.size = 12;
 
-  Chart.defaults.plugins.tooltip.backgroundColor = "rgba(255, 255, 255, 0.96)";
+  Chart.defaults.plugins.tooltip.backgroundColor = isDark ? "rgba(38, 37, 56, 0.96)" : "rgba(255, 255, 255, 0.96)";
   Chart.defaults.plugins.tooltip.titleColor = cfg.chartTextColorStrong;
   Chart.defaults.plugins.tooltip.bodyColor = cfg.chartTextColor;
-  Chart.defaults.plugins.tooltip.borderColor = "rgba(23, 21, 43, 0.1)";
+  Chart.defaults.plugins.tooltip.borderColor = isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(23, 21, 43, 0.1)";
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.padding = 10;
   Chart.defaults.plugins.tooltip.cornerRadius = 8;
@@ -220,7 +241,7 @@
       if (chart.config.type !== "bar" || !chart.chartArea) return;
       const horizontal = chart.options.indexAxis === "y";
       chart.ctx.save();
-      chart.ctx.shadowColor = "rgba(23, 21, 43, 0.16)";
+      chart.ctx.shadowColor = isDark ? "rgba(0, 0, 0, 0.4)" : "rgba(23, 21, 43, 0.16)";
       chart.ctx.shadowBlur = 9;
       chart.ctx.shadowOffsetY = horizontal ? 0 : 4;
       chart.ctx.shadowOffsetX = horizontal ? 4 : 0;

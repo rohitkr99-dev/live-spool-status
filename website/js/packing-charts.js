@@ -148,6 +148,11 @@ const PackingCharts = {
                     fillStyle: dataset.backgroundColor[i],
                     strokeStyle: dataset.borderColor,
                     lineWidth: dataset.borderWidth,
+                    // Chart.js's own default generateLabels sets this from
+                    // the same option - a custom generateLabels has to set
+                    // it itself, or the text falls back to canvas-default
+                    // black regardless of the dark/light theme.
+                    fontColor: chart.legend.options.labels.color,
                     hidden: false,
                     index: i,
                   };
@@ -355,7 +360,7 @@ const PackingCharts = {
       `${this.metricLabel(this.packingMetric)}, by ${this.packingGranularity.toLowerCase()}, by Packing Date · FY26 (from 30-Mar-2025)`;
     this._renderTrendChart(
       "packingTrend", "chart-packing-trend", this.store.packingTrend,
-      this.packingGranularity, this.packingMetric, "#4333A5", "Packed",
+      this.packingGranularity, this.packingMetric, "#0c2dd5", "Packed",
     );
   },
 
@@ -406,9 +411,20 @@ const PackingCharts = {
       return 5 + t * 16;
     };
 
+    // Beyond the palette's 8 identity colours, share one muted
+    // "overflow" tone rather than cycling back to slot 1 - a bubble
+    // chart needs the stricter all-different-pairs guarantee (any two
+    // bubbles can sit side by side), so reusing an identity colour
+    // here would make two different projects' shipments
+    // indistinguishable by colour, not just similar.
     const projects = [...new Set(shipments.map((s) => s.project_code))];
+    const paletteLen = PACKING_CONFIG.projectPalette.length;
     const projectColor = {};
-    projects.forEach((code, i) => { projectColor[code] = PACKING_CONFIG.projectPalette[i % PACKING_CONFIG.projectPalette.length]; });
+    projects.forEach((code, i) => {
+      projectColor[code] = i < paletteLen
+        ? PACKING_CONFIG.projectPalette[i]
+        : PACKING_CONFIG.projectPaletteOverflow;
+    });
 
     const datasets = projects.map((code) => {
       const rows = shipments.filter((s) => s.project_code === code);

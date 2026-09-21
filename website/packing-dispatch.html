@@ -8,10 +8,16 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="assets/dee-mark.png">
 
+<!-- Applies this page's saved Light/Dark/System choice before first
+     paint, so a page saved as Dark doesn't flash Light first. Must
+     load before css/styles.css. -->
+<script src="js/theme.js?v=20260920"></script>
+
 <!-- Page stays hidden until auth-guard.js confirms a valid login and
      calls revealPage() - see website/auth-guard.js. This must load
      before any real content so nothing flashes on screen for a
      visitor who isn't logged in. -->
+
 <style>html.auth-pending body { visibility: hidden; }</style>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
@@ -25,8 +31,8 @@
 <link rel="stylesheet" href="vendor/css/dataTables.dataTables.min.css">
 <link rel="stylesheet" href="vendor/css/buttons.dataTables.min.css">
 
-<link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/packing.css?v=20260729">
+<link rel="stylesheet" href="css/styles.css?v=20260921">
+<link rel="stylesheet" href="css/packing.css?v=20260920b">
 </head>
 <body>
 
@@ -70,6 +76,7 @@
         <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 13V4M6 8l4-4 4 4M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Upload Data
       </button>
+      <div class="theme-toggle" id="theme-toggle"></div>
       <div class="user-menu" id="user-menu"></div>
     </div>
   </header>
@@ -340,7 +347,7 @@
      new date) any time these files change, so every visitor is
      guaranteed to fetch the fresh copy instead of a cached one. -->
 
-<script src="js/user-menu.js"></script>
+<script src="js/user-menu.js?v=20260920b"></script>
 
 <script src="vendor/jquery.min.js"></script>
 <script src="vendor/dataTables.min.js"></script>
@@ -351,7 +358,7 @@
 <script src="vendor/chartjs-plugin-datalabels.min.js"></script>
 <script src="vendor/jspdf.umd.min.js"></script>
 
-<script src="js/packing-config.js?v=20260729"></script>
+<script src="js/packing-config.js?v=20260920b"></script>
 <script>
   // Reuses the shared Chart.js visual theme (fonts, tooltips,
   // gradient bars) from js/chartTheme.js, which reads
@@ -364,10 +371,10 @@
     chartWellColor: "#FFFFFF",
   };
 </script>
-<script src="js/chartTheme.js"></script>
+<script src="js/chartTheme.js?v=20260920b"></script>
 <script src="js/packing-data.js?v=20260729"></script>
 <script src="js/packing-kpi.js?v=20260729"></script>
-<script src="js/packing-charts.js?v=20260814"></script>
+<script src="js/packing-charts.js?v=20260921"></script>
 <script src="js/packing-tables.js?v=20260729"></script>
 <script src="js/packing-app.js?v=20260729"></script>
 <script src="js/packing-pdfExport.js?v=20260729"></script>

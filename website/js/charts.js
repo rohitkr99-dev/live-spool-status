@@ -108,6 +108,31 @@ const SpoolCharts = {
     }
   },
 
+  /**
+   * Every render*Chart() destroys the previous Chart.js instance and
+   * builds a fresh one (simplest way to hand it a new dataset shape
+   * per stage), which otherwise reads as a jarring blank-then-flash
+   * every time a filter changes and Chart.js replays its ~1s
+   * grow-from-zero entrance animation. Wrapping the destroy+recreate
+   * in a brief opacity cross-fade on the chart's own body turns that
+   * into a soft dip-and-reveal instead - continuous, not a flash.
+   * Skipped under prefers-reduced-motion.
+   */
+  redrawWithFade(canvasId, drawFn) {
+    const canvas = document.getElementById(canvasId);
+    const body = canvas && canvas.closest(".chart-card__body");
+    if (!body || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      drawFn();
+      return;
+    }
+    body.style.transition = "opacity 0.15s ease";
+    body.style.opacity = "0.25";
+    requestAnimationFrame(() => {
+      drawFn();
+      requestAnimationFrame(() => { body.style.opacity = "1"; });
+    });
+  },
+
   // -----------------------------------------------------
   // Overview metric selector (shared by all 3 charts below)
   // -----------------------------------------------------
@@ -244,6 +269,10 @@ const SpoolCharts = {
   },
 
   renderProjectChart() {
+    this.redrawWithFade("chart-project", () => this.drawProjectChart());
+  },
+
+  drawProjectChart() {
 
     this.destroy("project");
 
@@ -297,6 +326,10 @@ const SpoolCharts = {
   },
 
   renderWeeklyChart() {
+    this.redrawWithFade("chart-weekly", () => this.drawWeeklyChart());
+  },
+
+  drawWeeklyChart() {
 
     this.destroy("weekly");
 
@@ -377,6 +410,10 @@ const SpoolCharts = {
    * "Spools"). Buckets defined once in SPOOL_STATUS_CONFIG.ageingBuckets.
    */
   renderAgeingDistributionChart() {
+    this.redrawWithFade("chart-group", () => this.drawAgeingDistributionChart());
+  },
+
+  drawAgeingDistributionChart() {
 
     this.destroy("group");
 

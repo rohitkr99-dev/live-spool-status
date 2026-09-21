@@ -38,14 +38,14 @@
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: var(--text-soft, #55566E);
+  color: var(--frost-dim);
 }
 .chart-card__control select {
   font: inherit;
   padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid var(--hairline, rgba(23,21,43,0.15));
-  background: #FFFFFF;
+  background: var(--bg-2, #FFFFFF);
 }
 
 @media (max-width: 900px) {
