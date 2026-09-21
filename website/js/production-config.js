@@ -20,24 +20,28 @@ const PRODUCTION_CONFIG = {
 
   // One colour per category, used consistently across every chart
   // on this page (pie slice, "target" bar, "actual" bar tint).
+  // Re-stepped 2026-09-20 (dataviz skill validator) - see
+  // js/config.js's stageColor comment for the failures this fixes;
+  // same base hues, same fix, shared across every dashboard that
+  // reused these values.
   categoryColor: {
-    le8_cs_ss: "#4333A5",
+    le8_cs_ss: "#0c2dd5",
     gt8_cs_ss: "#6E5FD1",
-    le8_as: "#1E8F86",
-    gt8_as: "#D9A22D",
+    le8_as: "#00948a",
+    gt8_as: "#b78612",
     sb: "#A82E30",
     loose: "#3E7CB1",
   },
 
-  targetColor: "#8A8FA6",
-  actualColor: "#4333A5",
+  targetColor: "#7b88d8",
+  actualColor: "#0c2dd5",
   actualDelayedColor: "#A82E30",
 
   // Matches css/production.css -> .production-table td.cell-delayed
   // / .cell-on-time, so the Delayed vs. In Time by Project chart uses
   // the exact same two colours as the spool table's own delay flag.
   delayedColor: "#A82E30",
-  onTimeColor: "#1E8F86",
+  onTimeColor: "#00948a",
 
   // Material Handover section (src/production/material_handover.py).
   // Pending/On Hold reuses delayedColor's red family so "something's
@@ -46,7 +50,7 @@ const PRODUCTION_CONFIG = {
   // not good/bad splits.
   mhPendingColor: "#A82E30",
   mhNeutralColor: "#6E5FD1",
-  mhCleanColor: "#1E8F86",
+  mhCleanColor: "#00948a",
   mhIssueColor: "#C9791F",
 
   // Backlog by Operation section (src/production/backlog.py) - a

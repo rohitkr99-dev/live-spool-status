@@ -61,7 +61,7 @@
   flex-wrap: wrap;
   gap: 12px;
   border-bottom: 1px solid var(--glass-border);
-  background: rgba(23, 21, 43, 0.025);
+  background: var(--tint-weak);
 }
 .tables-toolbar .tabs {
   border-bottom: none;
@@ -79,7 +79,7 @@
 .table-note {
   margin: 14px 16px 0;
   font-size: 12.5px;
-  color: var(--text-muted, #6A6B85);
+  color: var(--frost-dim);
 }
 
 /* Day-count cells in the tables - green when at/under the 4-day

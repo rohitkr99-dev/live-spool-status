@@ -17,7 +17,8 @@
  * whole split per project, which is what stacking is for.
  *
  * Charts:
- *   1. chart-category-pie      Spool count/metric by category (pie)
+ *   1. chart-category-pie      Spool count/metric by category
+ *                              (horizontal bar, largest first)
  *   2. chart-delayed-by-project  Delayed vs. In Time spool count per
  *                              project (stacked bar) - unreleased
  *                              spools never reach this dashboard at
@@ -91,12 +92,18 @@ const ProductionCharts = {
     const ctx = this._ctx("chart-category-pie");
     if (!ctx || !distribution) return;
 
-    const labels = distribution.map((c) => c.short_label);
-    const data = distribution.map((c) => c.value);
-    const colors = distribution.map((c) => PRODUCTION_CONFIG.categoryColor[c.key] || "#8A8FA6");
+    // Bar, not pie (changed 2026-09-20): 6 wedges is past where angle
+    // comparison stays reliable, and two of the six category colours
+    // measured Delta E just under the normal-vision floor - a length
+    // comparison (bar) degrades far more gracefully than an angle
+    // comparison (pie) when colours are this close.
+    const sorted = [...distribution].sort((a, b) => b.value - a.value);
+    const labels = sorted.map((c) => c.short_label);
+    const data = sorted.map((c) => c.value);
+    const colors = sorted.map((c) => PRODUCTION_CONFIG.categoryColor[c.key] || "#7b88d8");
 
     this.instances.pie = new Chart(ctx, {
-      type: "pie",
+      type: "bar",
       data: {
         labels,
         datasets: [{
@@ -107,14 +114,13 @@ const ProductionCharts = {
         }],
       },
       options: {
+        indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
-        // A single wide card with a round chart in it leaves a lot of
-        // empty space either side of the circle - putting the legend
-        // there (instead of a cramped row underneath) uses that space
-        // and gives room to show each slice's % alongside its label.
-        // Falls back to a bottom legend on narrow/mobile widths where
-        // there's no side space to use.
+        // Bars are sorted largest-first and self-labelled on the axis,
+        // so the legend's job is now just to spell out each %, still
+        // useful since the same categoryColor mapping recurs in the
+        // "target"/"actual" bars and table elsewhere on this page.
         plugins: {
           legend: {
             position: window.innerWidth < 640 ? "bottom" : "right",
@@ -137,6 +143,12 @@ const ProductionCharts = {
                     fillStyle: dataset.backgroundColor[i],
                     strokeStyle: dataset.borderColor,
                     lineWidth: dataset.borderWidth,
+                    // Chart.js's own default generateLabels sets this from
+                    // the same option (see its doughnut/pie overrides) -
+                    // a custom generateLabels has to set it itself, or the
+                    // legend text silently falls back to canvas-default
+                    // black regardless of the dark/light theme.
+                    fontColor: chart.legend.options.labels.color,
                     hidden: false,
                     index: i,
                   };
@@ -153,6 +165,10 @@ const ProductionCharts = {
               },
             },
           },
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { display: false }, ticks: { font: this.chartFont } },
+          y: { grid: { display: false }, ticks: { font: this.chartFont } },
         },
       },
     });
@@ -755,6 +771,12 @@ const ProductionCharts = {
                     fillStyle: dataset.backgroundColor[i],
                     strokeStyle: dataset.borderColor,
                     lineWidth: dataset.borderWidth,
+                    // Chart.js's own default generateLabels sets this from
+                    // the same option (see its doughnut/pie overrides) -
+                    // a custom generateLabels has to set it itself, or the
+                    // legend text silently falls back to canvas-default
+                    // black regardless of the dark/light theme.
+                    fontColor: chart.legend.options.labels.color,
                     hidden: false,
                     index: i,
                   };
@@ -822,6 +844,12 @@ const ProductionCharts = {
                     fillStyle: dataset.backgroundColor[i],
                     strokeStyle: dataset.borderColor,
                     lineWidth: dataset.borderWidth,
+                    // Chart.js's own default generateLabels sets this from
+                    // the same option (see its doughnut/pie overrides) -
+                    // a custom generateLabels has to set it itself, or the
+                    // legend text silently falls back to canvas-default
+                    // black regardless of the dark/light theme.
+                    fontColor: chart.legend.options.labels.color,
                     hidden: false,
                     index: i,
                   };

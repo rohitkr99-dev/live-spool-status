@@ -32,8 +32,15 @@ const PACKING_CONFIG = {
 
   // A distinct colour per project, cycled if more projects than
   // colours - same qualitative palette as config.js -> projectPalette.
+  // Re-stepped 2026-09-20 to match config.js -> projectPalette (same
+  // dataviz-validator fixes).
   projectPalette: [
-    "#4333A5", "#A82E30", "#1E8F86", "#D9A22D",
-    "#6E5FD1", "#1F8A55", "#8A3E82", "#8A8FA6",
+    "#0c2dd5", "#A82E30", "#00948a", "#b78612",
+    "#6E5FD1", "#1F8A55", "#8A3E82", "#7b88d8",
   ],
+  // Shared "overflow" colour for the 9th+ project in the Shipment
+  // Bubble chart (js/packing-charts.js) - past the 8 identity colours
+  // above, projects share this one muted tone instead of cycling back
+  // to slot 1 and looking like a project it isn't.
+  projectPaletteOverflow: "#5F6078",
 };

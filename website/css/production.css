@@ -62,14 +62,15 @@
 }
 .production-global-filters__group label {
   font-weight: 600;
-  color: #55566E;
+  color: var(--frost-dim);
 }
 .production-global-filters select {
   border-radius: 8px;
   border: 1px solid rgba(23,21,43,0.15);
   padding: 5px 8px;
   font-size: 13px;
-  background: #fff;
+  background: var(--bg-2);
+  color: var(--frost);
 }
 #project-select {
   min-width: 160px;
@@ -78,13 +79,13 @@
 }
 .production-global-filters__hint {
   font-size: 11.5px;
-  color: #8A8FA6;
+  color: var(--frost-faint);
 }
 .production-global-filters__count {
   margin-left: auto;
   font-size: 12.5px;
   font-weight: 600;
-  color: #55566E;
+  color: var(--frost-dim);
 }
 
 /* ---- Spool table ---- */
@@ -103,7 +104,7 @@
   align-items: center;
   gap: 10px;
   font-size: 12.5px;
-  color: #55566E;
+  color: var(--frost-dim);
   white-space: nowrap;
 }
 .table-scroll {
@@ -122,7 +123,8 @@ table.production-table {
 .production-table thead th {
   position: sticky;
   top: 0;
-  background: #F3F4F9;
+  background: var(--bg-1);
+  color: var(--frost);
   text-align: left;
   padding: 8px 10px;
   border-bottom: 1px solid rgba(23,21,43,0.12);
@@ -135,14 +137,14 @@ table.production-table {
 .table-filter-btn {
   border: none;
   background: transparent;
-  color: #8A8FA6;
+  color: var(--frost-faint);
   cursor: pointer;
   padding: 2px;
   border-radius: 4px;
   vertical-align: middle;
 }
-.table-filter-btn:hover { color: #4333A5; background: rgba(67,51,165,0.08); }
-.table-filter-btn.is-filtered { color: #A82E30; }
+.table-filter-btn:hover { color: var(--ice); background: rgba(67,51,165,0.08); }
+.table-filter-btn.is-filtered { color: var(--ember); }
 .table-th__sort {
   display: inline-flex;
   align-items: center;
@@ -153,36 +155,46 @@ table.production-table {
   margin: -2px -3px;
 }
 .table-th__sort:hover { background: rgba(67,51,165,0.08); }
-.table-th__sort.is-sorted .table-th__label { color: #17152B; }
-.table-sort-icon { display: inline-flex; color: #4333A5; }
+/* Was a literal near-black (#17152B) - invisible once the table
+   header background above went dark. */
+.table-th__sort.is-sorted .table-th__label { color: var(--frost); }
+.table-sort-icon { display: inline-flex; color: var(--ice); }
 .table-sort-icon--idle { color: #C7C9D9; }
-.table-th__sort:hover .table-sort-icon--idle { color: #8A8FA6; }
+.table-th__sort:hover .table-sort-icon--idle { color: var(--frost-dim); }
 .production-table tbody td, .production-table tfoot td {
   padding: 6px 10px;
   border-bottom: 1px solid rgba(23,21,43,0.06);
   white-space: nowrap;
 }
 .production-table tbody tr.is-delayed-row td:first-child {
-  box-shadow: inset 3px 0 0 #A82E30;
+  box-shadow: inset 3px 0 0 var(--ember);
 }
 .production-table td.cell-delayed {
-  color: #A82E30;
+  color: var(--ember);
   font-weight: 700;
 }
 .production-table td.cell-on-time {
   color: #1E8F86;
   font-weight: 600;
 }
+/* #1E8F86 measures under 4.5:1 on the dark card surface (was already
+   marginal on light, but not this session's problem to relitigate) -
+   a brighter dark-mode-only step of the same teal, 6.6:1 on #1c1b2b. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .production-table td.cell-on-time { color: #33b4a9; }
+}
+:root[data-theme="dark"] .production-table td.cell-on-time { color: #33b4a9; }
 .production-table tfoot td {
   font-weight: 700;
-  background: #F8F8FC;
+  background: var(--bg-3);
+  color: var(--frost);
   border-top: 2px solid rgba(23,21,43,0.15);
   position: sticky;
   bottom: 0;
 }
 .table-empty {
   text-align: center;
-  color: #8A8FA6;
+  color: var(--frost-faint);
   padding: 24px !important;
 }
 .table-pagination {
@@ -192,7 +204,7 @@ table.production-table {
   gap: 14px;
   margin-top: 12px;
   font-size: 12.5px;
-  color: #55566E;
+  color: var(--frost-dim);
 }
 
 /* ---- Column filter popover ---- */
@@ -200,7 +212,8 @@ table.production-table {
   position: absolute;
   z-index: 50;
   width: 220px;
-  background: #fff;
+  background: var(--bg-2);
+  color: var(--frost);
   border: 1px solid rgba(23,21,43,0.15);
   border-radius: 10px;
   box-shadow: 0 12px 28px -10px rgba(23,21,43,0.35);
@@ -214,6 +227,8 @@ table.production-table {
   border: 1px solid rgba(23,21,43,0.15);
   font-size: 12.5px;
   margin-bottom: 8px;
+  background: var(--bg-2);
+  color: var(--frost);
 }
 .table-filter-popover__list {
   max-height: 220px;

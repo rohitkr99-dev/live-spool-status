@@ -402,6 +402,11 @@ const QualityCharts = {
                   text: `${label} — ${pcts[i]}%`,
                   fillStyle: colors[i],
                   strokeStyle: colors[i],
+                  // Chart.js's own default generateLabels sets this from
+                  // the same option - a custom generateLabels has to set
+                  // it itself, or the text falls back to canvas-default
+                  // black regardless of the dark/light theme.
+                  fontColor: chart.legend.options.labels.color,
                   index: i,
                 }));
               },
@@ -841,16 +846,35 @@ const QualityCharts = {
     const ctx = this._ctx("chart-welder-defect-type");
     if (!ctx || !rows || !rows.length) { console.warn("Type of Defect: no rows to chart.", { ctx: !!ctx, rows }); return; }
 
-    const labels = rows.map((r) => r.defect);
+    // Palette has a fixed number of distinct hues (7). Past that, fold
+    // the smallest remaining defect types into one "Others" wedge
+    // instead of cycling colours back to slot 1 - a repeated colour
+    // would make two unrelated defect types visually identical in the
+    // same chart, distinguishable only by legend text.
     const palette = QUALITY_CONFIG.welderDefectPalette;
-    const colors = rows.map((_, i) => palette[i % palette.length]);
-    const pcts = rows.map((r) => r.pct);
+    const sorted = [...rows].sort((a, b) => b.count - a.count);
+    const shown = sorted.slice(0, palette.length);
+    const rest = sorted.slice(palette.length);
+
+    const foldedRows = rest.length
+      ? [...shown, {
+          defect: `Others (${rest.length})`,
+          count: rest.reduce((sum, r) => sum + r.count, 0),
+          pct: Math.round(rest.reduce((sum, r) => sum + r.pct, 0) * 10) / 10,
+        }]
+      : shown;
+
+    const labels = foldedRows.map((r) => r.defect);
+    const colors = foldedRows.map((_, i) =>
+      i < palette.length ? palette[i] : QUALITY_CONFIG.welderDefectOthersColor
+    );
+    const pcts = foldedRows.map((r) => r.pct);
 
     this.instances.welderDefect = new Chart(ctx, {
       type: "pie",
       data: {
         labels,
-        datasets: [{ data: rows.map((r) => r.count), backgroundColor: colors }],
+        datasets: [{ data: foldedRows.map((r) => r.count), backgroundColor: colors }],
       },
       options: {
         responsive: true,
