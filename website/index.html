@@ -65,6 +65,7 @@
       </div>
     </div>
     <div class="hub-header__actions">
+      <div class="lang-toggle" id="lang-toggle"></div>
       <div class="theme-toggle" id="theme-toggle"></div>
       <div class="user-menu" id="user-menu"></div>
     </div>
@@ -73,70 +74,71 @@
 
 <main>
   <section class="hub-intro">
-    <span class="section-eyebrow hub-intro__eyebrow">Internal Portal</span>
-    <h1 class="hub-intro__heading">One hub for every department's numbers.</h1>
-    <p class="hub-intro__sub">Live dashboards and analysis for DEE Piping Systems, Thailand — pick a department to get started.</p>
+    <span class="section-eyebrow hub-intro__eyebrow" data-i18n="hub.eyebrow">Internal Portal</span>
+    <h1 class="hub-intro__heading" data-i18n="hub.heading">One hub for every department's numbers.</h1>
+    <p class="hub-intro__sub" data-i18n="hub.sub">Live dashboards and analysis for DEE Piping Systems, Thailand — pick a department to get started.</p>
   </section>
 
   <section class="hub-grid" aria-label="Departments">
     <a class="dept-card dept-card--live" href="dashboard.html">
       <div class="dept-card__top">
         <span class="dept-card__mark"><img src="assets/icons/icon-projects.png" alt=""></span>
-        <span class="dept-card__status dept-card__status--live">Live</span>
+        <span class="dept-card__status dept-card__status--live" data-i18n="common.live">Live</span>
       </div>
-      <h2>Projects</h2>
-      <p>Spool status, ageing, and live production intelligence across active project scopes.</p>
-      <span class="dept-card__cta">Open dashboard <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h2 data-i18n="hub.deptProjects.name">Projects</h2>
+      <p data-i18n="hub.deptProjects.desc">Spool status, ageing, and live production intelligence across active project scopes.</p>
+      <span class="dept-card__cta"><span data-i18n="common.openDashboard">Open dashboard</span> <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
 
     <a class="dept-card dept-card--live" href="production.html">
       <div class="dept-card__top">
         <span class="dept-card__mark"><img src="assets/icons/icon-production.png" alt=""></span>
-        <span class="dept-card__status dept-card__status--live">Live</span>
+        <span class="dept-card__status dept-card__status--live" data-i18n="common.live">Live</span>
       </div>
-      <h2>Production</h2>
-      <p>Spool ageing by category against the target-day matrix - distribution, stage-wise ageing, and ideal vs. actual cycle time.</p>
-      <span class="dept-card__cta">Open dashboard <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h2 data-i18n="hub.deptProduction.name">Production</h2>
+      <p data-i18n="hub.deptProduction.desc">Spool ageing by category against the target-day matrix - distribution, stage-wise ageing, and ideal vs. actual cycle time.</p>
+      <span class="dept-card__cta"><span data-i18n="common.openDashboard">Open dashboard</span> <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
 
     <a class="dept-card dept-card--live" href="quality.html">
       <div class="dept-card__top">
         <span class="dept-card__mark"><img src="assets/icons/icon-quality.png" alt=""></span>
-        <span class="dept-card__status dept-card__status--live">Live</span>
+        <span class="dept-card__status dept-card__status--live" data-i18n="common.live">Live</span>
       </div>
-      <h2>Quality Assurance / Control</h2>
-      <p>Rework analysis from QC's inspection report - top defect types, rework rate by project, first-offer acceptance, and trend over time.</p>
-      <span class="dept-card__cta">Open dashboard <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h2 data-i18n="hub.deptQuality.name">Quality Assurance / Control</h2>
+      <p data-i18n="hub.deptQuality.desc">Rework analysis from QC's inspection report - top defect types, rework rate by project, first-offer acceptance, and trend over time.</p>
+      <span class="dept-card__cta"><span data-i18n="common.openDashboard">Open dashboard</span> <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
 
     <a class="dept-card dept-card--live" href="painting.html">
       <div class="dept-card__top">
         <span class="dept-card__mark"><img src="assets/icons/icon-painting.png" alt=""></span>
-        <span class="dept-card__status dept-card__status--live">Live</span>
+        <span class="dept-card__status dept-card__status--live" data-i18n="common.live">Live</span>
       </div>
-      <h2>Painting</h2>
-      <p>RFP-to-PDI-Clearance cycle time vs. the 4-day ideal, stage bottleneck analysis, and an anomaly list for spools needing attention.</p>
-      <span class="dept-card__cta">Open dashboard <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h2 data-i18n="hub.deptPainting.name">Painting</h2>
+      <p data-i18n="hub.deptPainting.desc">RFP-to-PDI-Clearance cycle time vs. the 4-day ideal, stage bottleneck analysis, and an anomaly list for spools needing attention.</p>
+      <span class="dept-card__cta"><span data-i18n="common.openDashboard">Open dashboard</span> <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
 
     <a class="dept-card dept-card--live" href="packing-dispatch.html">
       <div class="dept-card__top">
         <span class="dept-card__mark"><img src="assets/icons/icon-packing-dispatch.png" alt=""></span>
-        <span class="dept-card__status dept-card__status--live">Live</span>
+        <span class="dept-card__status dept-card__status--live" data-i18n="common.live">Live</span>
       </div>
-      <h2>Packing &amp; Dispatch</h2>
-      <p>Packing readiness, dispatch scheduling, and logistics tracking through to site delivery.</p>
-      <span class="dept-card__cta">Open dashboard <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h2 data-i18n="hub.deptPacking.name">Packing &amp; Dispatch</h2>
+      <p data-i18n="hub.deptPacking.desc">Packing readiness, dispatch scheduling, and logistics tracking through to site delivery.</p>
+      <span class="dept-card__cta"><span data-i18n="common.openDashboard">Open dashboard</span> <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 8h8m0 0L8.5 4M12 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
   </section>
 </main>
 
 <footer class="hub-footer">
-  <span>DEE Piping Systems — Thailand · Internal Operations Portal</span>
+  <span data-i18n="hub.footer">DEE Piping Systems — Thailand · Internal Operations Portal</span>
   <span id="footer-year"></span>
 </footer>
 
 <script src="js/user-menu.js?v=20260920b"></script>
+<script src="js/i18n.js?v=20260922"></script>
 
 <script type="module" src="js/hub.js?v=20260921"></script>
 </body>

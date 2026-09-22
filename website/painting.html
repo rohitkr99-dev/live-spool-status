@@ -45,24 +45,25 @@
       <img class="topbar__logo" src="assets/dee-mark.png" alt="DEE Piping Systems logo">
       <div class="topbar__divider" aria-hidden="true"></div>
       <div class="topbar__title">
-        <span class="topbar__eyebrow">DEE Piping Systems — Painting</span>
-        <h1>Painting</h1>
+        <span class="topbar__eyebrow" data-i18n="painting.eyebrow">DEE Piping Systems — Painting</span>
+        <h1 data-i18n="painting.h1">Painting</h1>
       </div>
     </a>
     <div class="topbar__meta">
       <a class="btn btn--ghost" href="index.html">
         <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 10 10 4l6 6M6 8.5V16h8V8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        All Departments
+        <span data-i18n="common.allDepartments">All Departments</span>
       </a>
       <div class="topbar__updated">
-        <span class="topbar__updated-label">Data as of</span>
+        <span class="topbar__updated-label" data-i18n="common.dataAsOf">Data as of</span>
         <span class="topbar__updated-value" id="last-updated">—</span>
       </div>
-      <button class="btn btn--ghost" id="retry-load-btn" type="button" hidden>Retry</button>
+      <button class="btn btn--ghost" id="retry-load-btn" type="button" hidden><span data-i18n="common.retry">Retry</span></button>
       <button class="btn btn--ghost" id="export-pdf-btn" type="button" title="Download every chart on this page (not the spool tables) as a PDF">
         <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 3v9M6.5 8.5 10 12l3.5-3.5M4 15.5h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Export PDF
+        <span data-i18n="common.exportPdf">Export PDF</span>
       </button>
+      <div class="lang-toggle" id="lang-toggle"></div>
       <div class="theme-toggle" id="theme-toggle"></div>
       <div class="user-menu" id="user-menu"></div>
     </div>
@@ -73,80 +74,80 @@
     <!-- ============ KPI STRIP ============ -->
     <section class="kpi-strip" id="kpi-strip" aria-label="Key metrics">
       <div class="kpi-card" data-kpi="rfp-done">
-        <span class="kpi-card__label">RFP Done (DPR)</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiRfpDone">RFP Done (DPR)</span>
         <span class="kpi-card__value" id="kpi-rfp-done">—</span>
-        <span class="kpi-card__sub">spools</span>
+        <span class="kpi-card__sub" data-i18n="production.subSpools">spools</span>
       </div>
       <div class="kpi-card kpi-card--warning" data-kpi="missing-plan">
-        <span class="kpi-card__label">Missing from Painting Plan</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiMissingPlan">Missing from Painting Plan</span>
         <span class="kpi-card__value" id="kpi-missing-plan">—</span>
         <span class="kpi-card__sub" id="kpi-missing-plan-pct">spools</span>
       </div>
       <div class="kpi-card" data-kpi="excluded-packed" title="RFP-done, not in the Painting Plan, but already Packed/Dispatched per the DPR - excluded from every calculation on this page, not counted as a gap.">
-        <span class="kpi-card__label">Excluded (Already Packed)</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiExcludedPacked">Excluded (Already Packed)</span>
         <span class="kpi-card__value" id="kpi-excluded-packed">—</span>
-        <span class="kpi-card__sub">spools, not counted below</span>
+        <span class="kpi-card__sub" data-i18n="painting.subSpoolsNotCounted">spools, not counted below</span>
       </div>
       <div class="kpi-card kpi-card--complete" data-kpi="pdi-cleared">
-        <span class="kpi-card__label">PDI Cleared</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiPdiCleared">PDI Cleared</span>
         <span class="kpi-card__value" id="kpi-pdi-cleared">—</span>
-        <span class="kpi-card__sub">spools</span>
+        <span class="kpi-card__sub" data-i18n="production.subSpools">spools</span>
       </div>
       <div class="kpi-card" data-kpi="open">
-        <span class="kpi-card__label">Still Open</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiStillOpen">Still Open</span>
         <span class="kpi-card__value" id="kpi-open">—</span>
-        <span class="kpi-card__sub">spools</span>
+        <span class="kpi-card__sub" data-i18n="production.subSpools">spools</span>
       </div>
       <div class="kpi-card kpi-card--warning" data-kpi="stuck">
-        <span class="kpi-card__label">Stuck &gt; 8 working days</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiStuck">Stuck &gt; 8 working days</span>
         <span class="kpi-card__value" id="kpi-stuck">—</span>
-        <span class="kpi-card__sub">open spools</span>
+        <span class="kpi-card__sub" data-i18n="painting.subOpenSpools">open spools</span>
       </div>
       <div class="kpi-card" data-kpi="pickling" title="No.of Coats = 0 (no paint) spools that are eligible for pickling instead - mostly SS/P91.">
-        <span class="kpi-card__label">Pickling Done / Eligible</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiPickling">Pickling Done / Eligible</span>
         <span class="kpi-card__value" id="kpi-pickling">—</span>
-        <span class="kpi-card__sub">no-paint route spools</span>
+        <span class="kpi-card__sub" data-i18n="painting.subNoPaintRoute">no-paint route spools</span>
       </div>
       <div class="kpi-card" data-kpi="median-cycle">
-        <span class="kpi-card__label">Median RFP → PDI Clearance</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiMedianCycle">Median RFP → PDI Clearance</span>
         <span class="kpi-card__value" id="kpi-median-cycle">—</span>
-        <span class="kpi-card__sub">working days · ideal is 4</span>
+        <span class="kpi-card__sub" data-i18n="painting.subWorkingDaysIdeal4">working days · ideal is 4</span>
       </div>
       <div class="kpi-card" data-kpi="avg-cycle">
-        <span class="kpi-card__label">Average RFP → PDI Clearance</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiAvgCycle">Average RFP → PDI Clearance</span>
         <span class="kpi-card__value" id="kpi-avg-cycle">—</span>
-        <span class="kpi-card__sub">working days</span>
+        <span class="kpi-card__sub" data-i18n="painting.subWorkingDays">working days</span>
       </div>
       <div class="kpi-card kpi-card--warning" data-kpi="within-ideal">
-        <span class="kpi-card__label">Within the 4-day Ideal</span>
+        <span class="kpi-card__label" data-i18n="painting.kpiWithinIdeal">Within the 4-day Ideal</span>
         <span class="kpi-card__value" id="kpi-within-ideal">—</span>
-        <span class="kpi-card__sub">of cleared spools</span>
+        <span class="kpi-card__sub" data-i18n="painting.subOfClearedSpools">of cleared spools</span>
       </div>
     </section>
 
     <!-- ============ QUANTUM OF WORK PENDING ============ -->
     <section class="charts-grid" aria-label="Quantum of work pending by stage">
       <div class="charts-grid__head">
-        <h3>Quantum of Work Pending</h3>
+        <h3 data-i18n="painting.chartQuantumPending">Quantum of Work Pending</h3>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <div class="activity-filter" id="pending-metric-filter" role="group" aria-label="Metric to plot">
-            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn is-active" data-metric="count" data-i18n="common.spools">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
           </div>
           <div class="activity-filter" id="pending-bay-filter" role="group" aria-label="Filter by bay">
-            <button type="button" class="activity-filter__btn is-active" data-bay="__all__">All Bays</button>
+            <button type="button" class="activity-filter__btn is-active" data-bay="__all__" data-i18n="painting.allBays">All Bays</button>
           </div>
           <div class="filter-field">
-            <label for="pending-project-filter">Project</label>
+            <label for="pending-project-filter" data-i18n="common.project">Project</label>
             <select id="pending-project-filter">
-              <option value="__all__">All Projects</option>
+              <option value="__all__" data-i18n="common.allProjects">All Projects</option>
             </select>
           </div>
         </div>
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__head">
-          <h3>Where Spools Are Currently Stuck</h3>
+          <h3 data-i18n="painting.chartWhereStuck">Where Spools Are Currently Stuck</h3>
           <span class="chart-card__hint" id="chart-pending-work-hint">Spool count · all bays · all projects</span>
           <button type="button" class="btn-export" data-chart-export="pending-work">Export to Excel</button>
         </div>
@@ -157,11 +158,11 @@
     <!-- ============ STAGE FUNNEL + BOTTLENECK ============ -->
     <section class="charts-grid" aria-label="Stage progress and bottleneck">
       <div class="charts-grid__head">
-        <h3>Where Spools Are Getting Stuck</h3>
+        <h3 data-i18n="painting.stageFunnelHeading">Where Spools Are Getting Stuck</h3>
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Stage Completion Funnel</h3>
+          <h3 data-i18n="painting.chartFunnel">Stage Completion Funnel</h3>
           <span class="chart-card__hint">% done, of spools the stage actually applies to - not every spool needs every process</span>
           <button type="button" class="btn-export" data-chart-export="funnel">Export to Excel</button>
         </div>
@@ -169,7 +170,7 @@
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Median Days per Stage Transition</h3>
+          <h3 data-i18n="painting.chartBottleneck">Median Days per Stage Transition</h3>
           <span class="chart-card__hint">Which segment eats the most time · dashed line = 4-day total ideal</span>
           <button type="button" class="btn-export" data-chart-export="bottleneck">Export to Excel</button>
         </div>
@@ -180,11 +181,11 @@
     <!-- ============ CYCLE TIME DEEP DIVE ============ -->
     <section class="charts-grid" aria-label="Cycle time analysis">
       <div class="charts-grid__head">
-        <h3>Cycle Time: Ideal vs. Actual</h3>
+        <h3 data-i18n="painting.cycleTimeHeading">Cycle Time: Ideal vs. Actual</h3>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Completed Spools by Total Cycle Time</h3>
+          <h3 data-i18n="painting.chartHistogram">Completed Spools by Total Cycle Time</h3>
           <span class="chart-card__hint">RFP → PDI Clearance, bucketed · ideal is 0–4 days</span>
           <button type="button" class="btn-export" data-chart-export="histogram">Export to Excel</button>
         </div>
@@ -192,7 +193,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Open Spools by Age Since RFP</h3>
+          <h3 data-i18n="painting.chartAging">Open Spools by Age Since RFP</h3>
           <span class="chart-card__hint">Today's backlog shape · not yet PDI-cleared</span>
           <button type="button" class="btn-export" data-chart-export="aging">Export to Excel</button>
         </div>
@@ -200,7 +201,7 @@
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__head">
-          <h3>Median Cycle Time by RFP Week</h3>
+          <h3 data-i18n="painting.chartTrend">Median Cycle Time by RFP Week</h3>
           <span class="chart-card__hint">Line = median days for completed spools, by RFP week. Bars = surface area still pending PDI, by RFP week and by planned week — a shrinking median with growing bars isn't speed, it's backlog.</span>
           <button type="button" class="btn-export" data-chart-export="trend">Export to Excel</button>
         </div>
@@ -211,29 +212,29 @@
     <!-- ============ PROCESS OUTPUT OVER TIME ============ -->
     <section class="activity-charts-grid" aria-label="Process output over time">
       <div class="charts-grid__head">
-        <h3>Process Output Over Time</h3>
+        <h3 data-i18n="painting.processOutputHeading">Process Output Over Time</h3>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <div class="activity-filter" id="output-metric-filter" role="group" aria-label="Metric to plot">
-            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn is-active" data-metric="count" data-i18n="common.spools">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
           </div>
           <div class="activity-filter" id="output-period-filter" role="group" aria-label="Group by period">
-            <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
-            <button type="button" class="activity-filter__btn is-active" data-granularity="Week">Week</button>
-            <button type="button" class="activity-filter__btn" data-granularity="Month">Month</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Day" data-i18n="common.day">Day</button>
+            <button type="button" class="activity-filter__btn is-active" data-granularity="Week" data-i18n="common.week">Week</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Month" data-i18n="common.month">Month</button>
           </div>
         </div>
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__head chart-card__head--with-control">
           <div>
-            <h3>Internal vs External Blasting</h3>
+            <h3 data-i18n="painting.chartBlasting">Internal vs External Blasting</h3>
             <span class="chart-card__hint" id="chart-output-blasting-hint">Spool count, by week — same machines, shown together</span>
           </div>
           <div class="chart-card__control">
-            <label for="blasting-range-from">From</label>
+            <label for="blasting-range-from" data-i18n="dashboard.chartWeeklyFrom">From</label>
             <select id="blasting-range-from"></select>
-            <label for="blasting-range-to">to</label>
+            <label for="blasting-range-to" data-i18n="dashboard.chartWeeklyTo">to</label>
             <select id="blasting-range-to"></select>
             <button type="button" class="btn-export" data-chart-export="output-blasting" style="position:static; margin-left:4px;">Export to Excel</button>
           </div>
@@ -242,7 +243,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Primer</h3>
+          <h3 data-i18n="painting.chartPrimer">Primer</h3>
           <span class="chart-card__hint" id="chart-output-primer-hint">Spool count, by week</span>
           <button type="button" class="btn-export" data-chart-export="output-primer">Export to Excel</button>
         </div>
@@ -250,7 +251,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Pickling</h3>
+          <h3 data-i18n="painting.chartPickling">Pickling</h3>
           <span class="chart-card__hint" id="chart-output-pickling-hint">Spool count, by week</span>
           <button type="button" class="btn-export" data-chart-export="output-pickling">Export to Excel</button>
         </div>
@@ -258,7 +259,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>PDI Offer</h3>
+          <h3 data-i18n="painting.chartPdiOffer">PDI Offer</h3>
           <span class="chart-card__hint" id="chart-output-pdi_offer-hint">Spool count, by week</span>
           <button type="button" class="btn-export" data-chart-export="output-pdi_offer">Export to Excel</button>
         </div>
@@ -266,7 +267,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>PDI Clearance</h3>
+          <h3 data-i18n="painting.chartPdiClearance">PDI Clearance</h3>
           <span class="chart-card__hint" id="chart-output-pdi_clearance-hint">Spool count, by week</span>
           <button type="button" class="btn-export" data-chart-export="output-pdi_clearance">Export to Excel</button>
         </div>
@@ -277,30 +278,30 @@
     <!-- ============ OUTPUT BY BAY ============ -->
     <section class="charts-grid" aria-label="Output by bay">
       <div class="charts-grid__head">
-        <h3>Output by Bay</h3>
+        <h3 data-i18n="painting.outputByBay">Output by Bay</h3>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <div class="activity-filter" id="bay-output-stage-filter" role="group" aria-label="Process to plot">
-            <button type="button" class="activity-filter__btn is-active" data-stage="internal_blasting">Internal Blasting</button>
-            <button type="button" class="activity-filter__btn" data-stage="external_blasting">External Blasting</button>
-            <button type="button" class="activity-filter__btn" data-stage="primer">Primer</button>
-            <button type="button" class="activity-filter__btn" data-stage="pickling">Pickling</button>
-            <button type="button" class="activity-filter__btn" data-stage="pdi_offer">PDI Offer</button>
-            <button type="button" class="activity-filter__btn" data-stage="pdi_clearance">PDI Clearance</button>
+            <button type="button" class="activity-filter__btn is-active" data-stage="internal_blasting" data-i18n="painting.stageInternalBlasting">Internal Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="external_blasting" data-i18n="painting.stageExternalBlasting">External Blasting</button>
+            <button type="button" class="activity-filter__btn" data-stage="primer" data-i18n="painting.chartPrimer">Primer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pickling" data-i18n="painting.chartPickling">Pickling</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_offer" data-i18n="painting.chartPdiOffer">PDI Offer</button>
+            <button type="button" class="activity-filter__btn" data-stage="pdi_clearance" data-i18n="painting.chartPdiClearance">PDI Clearance</button>
           </div>
           <div class="activity-filter" id="bay-output-metric-filter" role="group" aria-label="Metric to plot">
-            <button type="button" class="activity-filter__btn is-active" data-metric="count">Spools</button>
+            <button type="button" class="activity-filter__btn is-active" data-metric="count" data-i18n="common.spools">Spools</button>
             <button type="button" class="activity-filter__btn" data-metric="surface_area">Surface Area (m²)</button>
           </div>
           <div class="activity-filter" id="bay-output-period-filter" role="group" aria-label="Group by period">
-            <button type="button" class="activity-filter__btn" data-granularity="Day">Day</button>
-            <button type="button" class="activity-filter__btn is-active" data-granularity="Week">Week</button>
-            <button type="button" class="activity-filter__btn" data-granularity="Month">Month</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Day" data-i18n="common.day">Day</button>
+            <button type="button" class="activity-filter__btn is-active" data-granularity="Week" data-i18n="common.week">Week</button>
+            <button type="button" class="activity-filter__btn" data-granularity="Month" data-i18n="common.month">Month</button>
           </div>
         </div>
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__head">
-          <h3>Output by Bay</h3>
+          <h3 data-i18n="painting.outputByBay">Output by Bay</h3>
           <span class="chart-card__hint" id="chart-bay-output-hint">Spool count, by week — compares Bay-4 vs Bay-6 vs Bay-6 Auto</span>
           <button type="button" class="btn-export" data-chart-export="bay-output">Export to Excel</button>
         </div>
@@ -311,11 +312,11 @@
     <!-- ============ INSIGHTS ============ -->
     <section class="charts-grid" aria-label="More insights">
       <div class="charts-grid__head">
-        <h3>More Insights</h3>
+        <h3 data-i18n="painting.moreInsights">More Insights</h3>
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Median Cycle Time by Project</h3>
+          <h3 data-i18n="painting.chartCycleByProject">Median Cycle Time by Project</h3>
           <span class="chart-card__hint">RFP → PDI Clearance, completed spools only · red = past the ideal</span>
           <button type="button" class="btn-export" data-chart-export="project-insight">Export to Excel</button>
         </div>
@@ -323,7 +324,7 @@
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Median Cycle Time by Material</h3>
+          <h3 data-i18n="painting.chartCycleByMaterial">Median Cycle Time by Material</h3>
           <span class="chart-card__hint">Stainless (pickling route) vs. carbon/alloy steel (blasted &amp; painted)</span>
           <button type="button" class="btn-export" data-chart-export="material-insight">Export to Excel</button>
         </div>
@@ -336,19 +337,19 @@
 
       <div class="tables-toolbar">
         <div class="tabs" role="tablist">
-          <button class="tab is-active" role="tab" aria-selected="true" data-tab="all">All RFP-Done Spools</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="missing">Missing from Plan</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="excluded">Excluded (Already Packed)</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="stuck">Stuck / Long Open</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="extreme">Extreme Cycle Time</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="dataquality">Data Quality Issues</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="pdimismatch">DPR / Painting PDI Mismatch</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="notindpr">In Plan, Not RFP in DPR</button>
+          <button class="tab is-active" role="tab" aria-selected="true" data-tab="all" data-i18n="painting.tabAllRfpDone">All RFP-Done Spools</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="missing" data-i18n="painting.tabMissingFromPlan">Missing from Plan</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="excluded" data-i18n="painting.tabExcluded">Excluded (Already Packed)</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="stuck" data-i18n="painting.tabStuck">Stuck / Long Open</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="extreme" data-i18n="painting.tabExtreme">Extreme Cycle Time</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="dataquality" data-i18n="painting.tabDataQuality">Data Quality Issues</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="pdimismatch" data-i18n="painting.tabPdiMismatch">DPR / Painting PDI Mismatch</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="notindpr" data-i18n="painting.tabNotInDpr">In Plan, Not RFP in DPR</button>
         </div>
         <div class="filter-field tables-toolbar__filter">
-          <label for="table-project-filter">Project</label>
+          <label for="table-project-filter" data-i18n="common.project">Project</label>
           <select id="table-project-filter">
-            <option value="__all__">All Projects</option>
+            <option value="__all__" data-i18n="common.allProjects">All Projects</option>
           </select>
         </div>
       </div>
@@ -357,55 +358,55 @@
 
         <div class="filter-bar" id="painting-filter-bar">
           <div class="filter-field">
-            <label for="pfilter-project">Project <span class="filter-field__hint">(multi)</span></label>
+            <label for="pfilter-project"><span data-i18n="common.project">Project</span> <span class="filter-field__hint" data-i18n="common.multi">(multi)</span></label>
             <select id="pfilter-project" multiple size="4"></select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-material">Material <span class="filter-field__hint">(multi)</span></label>
+            <label for="pfilter-material"><span data-i18n="dashboard.filterMaterial">Material</span> <span class="filter-field__hint" data-i18n="common.multi">(multi)</span></label>
             <select id="pfilter-material" multiple size="4"></select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-category">Item Category <span class="filter-field__hint">(multi)</span></label>
+            <label for="pfilter-category"><span data-i18n="painting.filterItemCategory">Item Category</span> <span class="filter-field__hint" data-i18n="common.multi">(multi)</span></label>
             <select id="pfilter-category" multiple size="4"></select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-status">Painting Status <span class="filter-field__hint">(multi)</span></label>
+            <label for="pfilter-status"><span data-i18n="painting.filterPaintingStatus">Painting Status</span> <span class="filter-field__hint" data-i18n="common.multi">(multi)</span></label>
             <select id="pfilter-status" multiple size="4"></select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-inplan">In Painting Plan</label>
+            <label for="pfilter-inplan" data-i18n="painting.filterInPaintingPlan">In Painting Plan</label>
             <select id="pfilter-inplan">
-              <option value="">All</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
+              <option value="" data-i18n="common.all">All</option>
+              <option value="Yes" data-i18n="painting.yes">Yes</option>
+              <option value="No" data-i18n="painting.no">No</option>
             </select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-completion">Completion</label>
+            <label for="pfilter-completion" data-i18n="painting.filterCompletion">Completion</label>
             <select id="pfilter-completion">
-              <option value="">All</option>
-              <option value="Completed">Completed</option>
-              <option value="Open">Open</option>
+              <option value="" data-i18n="common.all">All</option>
+              <option value="Completed" data-i18n="painting.completed">Completed</option>
+              <option value="Open" data-i18n="painting.open">Open</option>
             </select>
           </div>
           <div class="filter-field">
-            <label for="pfilter-cycle-min">Cycle Days <span class="filter-field__hint">(completed)</span></label>
+            <label for="pfilter-cycle-min"><span data-i18n="painting.filterCycleDays">Cycle Days</span> <span class="filter-field__hint">(completed)</span></label>
             <div class="filter-field__range">
-              <input type="number" id="pfilter-cycle-min" placeholder="Min" min="0" inputmode="numeric">
+              <input type="number" id="pfilter-cycle-min" placeholder="Min" data-i18n-placeholder="common.min" min="0" inputmode="numeric">
               <span class="filter-field__range-sep" aria-hidden="true">–</span>
-              <input type="number" id="pfilter-cycle-max" placeholder="Max" min="0" inputmode="numeric">
+              <input type="number" id="pfilter-cycle-max" placeholder="Max" data-i18n-placeholder="common.max" min="0" inputmode="numeric">
             </div>
           </div>
           <div class="filter-field">
-            <label for="pfilter-age-min">Current Age <span class="filter-field__hint">(open, days)</span></label>
+            <label for="pfilter-age-min"><span data-i18n="painting.filterCurrentAge">Current Age</span> <span class="filter-field__hint">(open, days)</span></label>
             <div class="filter-field__range">
-              <input type="number" id="pfilter-age-min" placeholder="Min" min="0" inputmode="numeric">
+              <input type="number" id="pfilter-age-min" placeholder="Min" data-i18n-placeholder="common.min" min="0" inputmode="numeric">
               <span class="filter-field__range-sep" aria-hidden="true">–</span>
-              <input type="number" id="pfilter-age-max" placeholder="Max" min="0" inputmode="numeric">
+              <input type="number" id="pfilter-age-max" placeholder="Max" data-i18n-placeholder="common.max" min="0" inputmode="numeric">
             </div>
           </div>
           <div class="filter-field">
-            <label for="psort-field">Sort by</label>
+            <label for="psort-field" data-i18n="common.sortBy">Sort by</label>
             <select id="psort-field">
               <option value="11">PDI Clearance Date</option>
               <option value="12">Cycle Days</option>
@@ -417,13 +418,13 @@
             </select>
           </div>
           <div class="filter-field">
-            <label for="psort-direction">Direction</label>
+            <label for="psort-direction" data-i18n="common.direction">Direction</label>
             <select id="psort-direction">
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
+              <option value="desc" data-i18n="common.descending">Descending</option>
+              <option value="asc" data-i18n="common.ascending">Ascending</option>
             </select>
           </div>
-          <button class="btn btn--ghost" id="painting-clear-filters" type="button">Clear filters</button>
+          <button class="btn btn--ghost" id="painting-clear-filters" type="button" data-i18n="common.clearFilters">Clear filters</button>
         </div>
 
         <div class="selection-summary" id="painting-selection-summary" aria-live="polite">
@@ -514,7 +515,7 @@
   </main>
 
   <footer class="app-footer">
-    <span>Data is pre-calculated in Python (src/painting/) — this page only displays it.</span>
+    <span data-i18n="painting.footer">Data is pre-calculated in Python (src/painting/) — this page only displays it.</span>
     <span id="footer-generated"></span>
   </footer>
 
@@ -523,6 +524,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/user-menu.js?v=20260920b"></script>
+<script src="js/i18n.js?v=20260922"></script>
 
 <script src="vendor/jquery.min.js"></script>
 <script src="vendor/dataTables.min.js"></script>

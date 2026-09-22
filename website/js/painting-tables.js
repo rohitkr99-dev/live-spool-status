@@ -365,7 +365,8 @@ const PaintingTables = {
 
     const codes = [...new Set(spools.map((s) => s.project_code).filter(Boolean))].sort();
     const current = select.value;
-    select.innerHTML = '<option value="__all__">All Projects</option>';
+    select.innerHTML = '<option value="__all__" data-i18n="common.allProjects">' +
+      (window.I18N ? window.I18N.t("common.allProjects") : "All Projects") + "</option>";
     codes.forEach((code) => {
       const row = spools.find((s) => s.project_code === code);
       const opt = document.createElement("option");

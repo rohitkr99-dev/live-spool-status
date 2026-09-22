@@ -109,7 +109,8 @@ const SpoolStageAgeing = {
 
     const previous = select.value || "__all__";
 
-    select.innerHTML = '<option value="__all__">All Projects</option>';
+    select.innerHTML = '<option value="__all__" data-i18n="common.allProjects">' +
+      (window.I18N ? window.I18N.t("common.allProjects") : "All Projects") + "</option>";
     this.distinctProjects().forEach((project) => {
       const option = document.createElement("option");
       option.value = project;

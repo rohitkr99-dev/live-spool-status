@@ -136,6 +136,8 @@
   @media (prefers-reduced-motion: reduce) {
     .login-card { animation: none; opacity: 1; transform: none; }
   }
+
+  .login-lang-toggle { position: fixed; top: 20px; right: 20px; z-index: 5; }
 </style>
 </head>
 <body class="login">
@@ -147,26 +149,28 @@
   <div class="ambient__grid"></div>
 </div>
 
+<div class="lang-toggle login-lang-toggle" id="lang-toggle"></div>
+
 <form class="login-card" id="login-form" novalidate>
   <div class="login-card__brand">
     <img src="assets/dee-mark.png" alt="">
     <h1>DEE Piping Systems</h1>
-    <p>Operations Hub — Sign In</p>
+    <p data-i18n="login.tagline">Operations Hub — Sign In</p>
   </div>
 
   <div class="login-field">
-    <label for="email">Email address</label>
+    <label for="email" data-i18n="login.email">Email address</label>
     <input type="email" id="email" name="email" placeholder="you@deepiping.com" autocomplete="username" required>
   </div>
 
   <div class="login-field">
-    <label for="password">Password</label>
+    <label for="password" data-i18n="login.password">Password</label>
     <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
   </div>
 
   <button class="btn btn--primary login-submit" id="loginBtn" type="submit">
     <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M8 4H5.5a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 5.5 16H8M13 13l3-3-3-3M16 10H7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Sign in
+    <span data-i18n="login.submit">Sign in</span>
   </button>
 
   <div class="login-error" id="error" role="alert">
@@ -181,6 +185,7 @@
 
 <!-- Firebase Configuration -->
 <script src="firebase-config.js"></script>
+<script src="js/i18n.js?v=20260922"></script>
 
 <script>
 const form = document.getElementById("login-form");
@@ -196,13 +201,16 @@ function hideError() {
   errorBox.classList.remove("is-shown");
 }
 
-const FRIENDLY_ERRORS = {
-  "auth/invalid-email": "That email address doesn't look right.",
-  "auth/user-not-found": "No account found for that email.",
-  "auth/wrong-password": "Incorrect password. Try again.",
-  "auth/invalid-credential": "Email or password is incorrect.",
-  "auth/too-many-requests": "Too many attempts. Wait a moment and try again.",
-};
+function friendlyError(code) {
+  const KEYS = {
+    "auth/invalid-email": "login.errInvalidEmail",
+    "auth/user-not-found": "login.errUserNotFound",
+    "auth/wrong-password": "login.errWrongPassword",
+    "auth/invalid-credential": "login.errInvalidCredential",
+    "auth/too-many-requests": "login.errTooManyRequests",
+  };
+  return window.I18N.t(KEYS[code] || "login.errGeneric");
+}
 
 firebase.auth().onAuthStateChanged(function (user) {
   if (user) {
@@ -225,7 +233,7 @@ form.addEventListener("submit", function (event) {
     })
     .catch(function (error) {
       submitBtn.disabled = false;
-      showError(FRIENDLY_ERRORS[error.code] || "Couldn't sign in. Please try again.");
+      showError(friendlyError(error.code));
     });
 });
 </script>

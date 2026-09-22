@@ -244,7 +244,8 @@ const PackingTables = {
     if (!select) return;
 
     const current = select.value;
-    select.innerHTML = '<option value="__all__">All Projects</option>';
+    select.innerHTML = '<option value="__all__" data-i18n="common.allProjects">' +
+      (window.I18N ? window.I18N.t("common.allProjects") : "All Projects") + "</option>";
     [...projectSummary]
       .sort((a, b) => (a.project_code || "").localeCompare(b.project_code || ""))
       .forEach((p) => {
