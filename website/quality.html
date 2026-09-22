@@ -119,19 +119,19 @@
     <!-- ============ TOP REWORK TYPES + FIRST OFFER SPLIT ============ -->
     <section class="charts-grid charts-grid--single-row quality-overview-grid" aria-label="Rework type breakdown and first-offer outcome">
       <div class="charts-grid__head">
-        <h3>Overview</h3>
-        <button type="button" class="btn-export" id="rework-export-btn" style="position:static" title="Download Production Rework data + auto-filled monthly summary">Download Production Rework Data</button>
+        <h3 data-i18n="common.overview">Overview</h3>
+        <button type="button" class="btn-export" id="rework-export-btn" style="position:static" title="Download Production Rework data + auto-filled monthly summary" data-i18n="quality.downloadReworkData">Download Production Rework Data</button>
       </div>
       <div class="chart-card chart-card--wide chart-card--tall">
         <div class="chart-card__head">
-          <h3>Top 10 Rework Types</h3>
+          <h3 data-i18n="quality.top10ReworkTypes">Top 10 Rework Types</h3>
           <span class="chart-card__hint">By rework event count, out of every rework event on record — everything outside the top 10 is grouped as "Others"</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-top-rework-types"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>First Offer Outcome</h3>
+          <h3 data-i18n="quality.firstOfferOutcome">First Offer Outcome</h3>
           <span class="chart-card__hint">Share of spools accepted on their first offer vs. needing rework</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-first-offer-split"></canvas></div>
@@ -141,7 +141,7 @@
     <!-- ============ REWORK BY PROJECT ============ -->
     <section class="charts-grid charts-grid--single-row" aria-label="Rework by project">
       <div class="charts-grid__head">
-        <h3>Rework by Project</h3>
+        <h3 data-i18n="quality.reworkByProject">Rework by Project</h3>
         <span class="chart-card__hint">Reworked-spool % and rework-event % per project, sorted worst first</span>
       </div>
       <div class="chart-card chart-card--full">
@@ -153,10 +153,10 @@
     <section class="charts-grid charts-grid--single-row" aria-label="Currently open rework and hold spools, by project">
       <div class="charts-grid__head">
         <div>
-          <h3>Open Rework &amp; Hold by Project</h3>
+          <h3 data-i18n="quality.openReworkHoldByProject">Open Rework &amp; Hold by Project</h3>
           <span class="chart-card__hint">Spools currently in Rework or Hold (latest offer event, Production Rework Data workbook) — Accepted spools excluded</span>
         </div>
-        <button type="button" class="btn-export" id="open-rework-hold-export-btn" style="position:static" title="Download the spool-level list behind this chart, with Rework Type and QC Observation">Download Open Rework &amp; Hold</button>
+        <button type="button" class="btn-export" id="open-rework-hold-export-btn" style="position:static" title="Download the spool-level list behind this chart, with Rework Type and QC Observation" data-i18n="quality.downloadOpenReworkHold">Download Open Rework &amp; Hold</button>
       </div>
       <div class="chart-card chart-card--full">
         <div class="chart-card__body"><canvas id="chart-open-rework-hold"></canvas></div>
@@ -166,20 +166,20 @@
     <!-- ============ REWORK TREND + CYCLES ============ -->
     <section class="charts-grid charts-grid--single-row" aria-label="Rework trend and repeat-cycle distribution">
       <div class="charts-grid__head">
-        <h3>Trend &amp; Repeat Cycles</h3>
+        <h3 data-i18n="quality.trendRepeatCycles">Trend &amp; Repeat Cycles</h3>
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head chart-card__head--with-control">
           <div>
-            <h3>Rework Rate Over Time</h3>
+            <h3 data-i18n="quality.reworkRateOverTime">Rework Rate Over Time</h3>
             <span class="chart-card__hint">% of offer events returned for rework, by Prod. Offer date</span>
           </div>
           <div class="chart-card__control">
-            <label for="trend-granularity-select">Group by</label>
+            <label for="trend-granularity-select" data-i18n="quality.groupBy">Group by</label>
             <select id="trend-granularity-select">
-              <option value="day">Day</option>
-              <option value="week" selected>Week</option>
-              <option value="month">Month</option>
+              <option value="day" data-i18n="common.day">Day</option>
+              <option value="week" selected data-i18n="common.week">Week</option>
+              <option value="month" data-i18n="common.month">Month</option>
             </select>
           </div>
         </div>
@@ -187,7 +187,7 @@
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Rework Cycles per Spool</h3>
+          <h3 data-i18n="quality.reworkCyclesPerSpool">Rework Cycles per Spool</h3>
           <span class="chart-card__hint">How many times a spool was sent back before acceptance</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-rework-cycles"></canvas></div>
@@ -197,40 +197,40 @@
     <!-- ============ WELDER PERFORMANCE ============ -->
     <section class="charts-grid charts-grid--single-row" aria-label="Welder performance and NDT reject rates" id="welder-performance-section" hidden>
       <div class="charts-grid__head">
-        <h3>Welder Performance</h3>
-        <button type="button" class="btn-export" id="welder-export-btn" style="position:static" title="Download the Welder Performance Record, with an auto-filled Weld Reject Rate summary">Download Welder Performance Record</button>
+        <h3 data-i18n="quality.welderPerformance">Welder Performance</h3>
+        <button type="button" class="btn-export" id="welder-export-btn" style="position:static" title="Download the Welder Performance Record, with an auto-filled Weld Reject Rate summary" data-i18n="quality.downloadWelderPerformance">Download Welder Performance Record</button>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Month Wise Joint Reject Rate</h3>
+          <h3 data-i18n="quality.monthWiseJointRejectRate">Month Wise Joint Reject Rate</h3>
           <span class="chart-card__hint">NDT joints inspected vs. rejected, by month</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-welder-month-joint"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Month Wise NDT Length Reject %</h3>
+          <h3 data-i18n="quality.monthWiseNdtLengthReject">Month Wise NDT Length Reject %</h3>
           <span class="chart-card__hint">% of NDT'd weld length (mm) rejected, by month</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-welder-month-length"></canvas></div>
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Project Wise Reject %</h3>
+          <h3 data-i18n="quality.projectWiseRejectPct">Project Wise Reject %</h3>
           <span class="chart-card__hint">NDT joint reject % per project, sorted worst first</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-welder-project"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Type of Defect</h3>
+          <h3 data-i18n="quality.typeOfDefect">Type of Defect</h3>
           <span class="chart-card__hint">Share of rejected joints by defect code</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-welder-defect-type"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Rejected Joints by Welding Process</h3>
+          <h3 data-i18n="quality.rejectedJointsByWeldingProcess">Rejected Joints by Welding Process</h3>
           <span class="chart-card__hint">Among joints flagged with a defect</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-welder-process"></canvas></div>

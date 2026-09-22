@@ -144,18 +144,18 @@
     <!-- ============ OVERVIEW: DISTRIBUTION + IDEAL VS ACTUAL ============ -->
     <section class="charts-grid charts-grid--single-row" aria-label="Category overview">
       <div class="charts-grid__head">
-        <h3>Overview</h3>
+        <h3 data-i18n="common.overview">Overview</h3>
       </div>
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Spool Distribution</h3>
+          <h3 data-i18n="production.chartSpoolDistribution">Spool Distribution</h3>
           <span class="chart-card__hint">Spool count by category</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-category-pie"></canvas></div>
       </div>
       <div class="chart-card chart-card--wide">
         <div class="chart-card__head">
-          <h3>Ideal vs. Actual Time</h3>
+          <h3 data-i18n="production.chartIdealVsActual">Ideal vs. Actual Time</h3>
           <span class="chart-card__hint">Target vs. average actual days, Planned Start &rarr; final tracked stage, per category</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-ideal-vs-actual"></canvas></div>
@@ -165,7 +165,7 @@
     <!-- ============ DELAYED VS IN TIME, BY PROJECT ============ -->
     <section class="charts-grid charts-grid--single-row" aria-label="Delayed vs in time by project">
       <div class="charts-grid__head">
-        <h3>Delayed vs. In Time by Project</h3>
+        <h3 data-i18n="production.chartDelayedInTime">Delayed vs. In Time by Project</h3>
         <span class="chart-card__hint">Released spools only - excludes anything still awaiting Production Order Release</span>
       </div>
       <div class="chart-card chart-card--full">
@@ -177,16 +177,16 @@
     <section id="backlog-section">
 
       <section class="charts-grid__head" aria-label="Backlog by Operation">
-        <h3>Backlog by Operation</h3>
+        <h3 data-i18n="production.backlogByOperation">Backlog by Operation</h3>
         <span class="chart-card__hint">Spools currently stuck at each operation, by days past their target date (uses the metric selector above)</span>
       </section>
 
       <section class="charts-grid charts-grid--single-row" aria-label="Fit-Up and Welding backlog">
         <div class="chart-card chart-card--full">
           <div class="chart-card__head">
-            <h3>Fit-Up &amp; Welding Backlog</h3>
+            <h3 data-i18n="production.chartFitupWeldingBacklog">Fit-Up &amp; Welding Backlog</h3>
             <span class="chart-card__hint">No separate Fit-Up target exists - spools not yet at Welding Finish are combined here</span>
-            <button type="button" class="btn-export" data-backlog-export="welding_finish" data-backlog-label="Fit-Up &amp; Welding Backlog">Export to Excel</button>
+            <button type="button" class="btn-export" data-backlog-export="welding_finish" data-backlog-label="Fit-Up &amp; Welding Backlog" data-i18n="common.exportToExcel">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-welding_finish"></canvas></div>
         </div>
@@ -195,23 +195,23 @@
       <section class="activity-charts-grid" aria-label="PDQC, Release for Painting and PDI Clearance backlog">
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>PDQC Backlog</h3>
-            <button type="button" class="btn-export" data-backlog-export="pdqc" data-backlog-label="PDQC Backlog">Export to Excel</button>
+            <h3 data-i18n="production.chartPdqcBacklog">PDQC Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="pdqc" data-backlog-label="PDQC Backlog" data-i18n="common.exportToExcel">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-pdqc"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Release for Painting Backlog</h3>
-            <button type="button" class="btn-export" data-backlog-export="release_for_painting" data-backlog-label="Release for Painting Backlog">Export to Excel</button>
+            <h3 data-i18n="production.chartReleaseForPaintingBacklog">Release for Painting Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="release_for_painting" data-backlog-label="Release for Painting Backlog" data-i18n="common.exportToExcel">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-release_for_painting"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Painting Backlog</h3>
+            <h3 data-i18n="production.chartPaintingBacklog">Painting Backlog</h3>
             <span class="chart-card__hint">PDI Clearance</span>
-            <button type="button" class="btn-export" data-backlog-export="pdi_clearance" data-backlog-label="Painting Backlog">Export to Excel</button>
+            <button type="button" class="btn-export" data-backlog-export="pdi_clearance" data-backlog-label="Painting Backlog" data-i18n="common.exportToExcel">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-pdi_clearance"></canvas></div>
         </div>
@@ -220,8 +220,8 @@
       <section class="charts-grid charts-grid--single-row" aria-label="Packing backlog">
         <div class="chart-card chart-card--full">
           <div class="chart-card__head">
-            <h3>Packing Backlog</h3>
-            <button type="button" class="btn-export" data-backlog-export="packed" data-backlog-label="Packing Backlog">Export to Excel</button>
+            <h3 data-i18n="production.chartPackingBacklog">Packing Backlog</h3>
+            <button type="button" class="btn-export" data-backlog-export="packed" data-backlog-label="Packing Backlog" data-i18n="common.exportToExcel">Export to Excel</button>
           </div>
           <div class="chart-card__body"><canvas id="chart-backlog-packed"></canvas></div>
         </div>
@@ -233,7 +233,7 @@
     <section id="hold-section" aria-label="Currently on Hold">
 
       <section class="charts-grid__head">
-        <h3>Currently on Hold</h3>
+        <h3 data-i18n="production.currentlyOnHold">Currently on Hold</h3>
         <span class="chart-card__hint">Spools with an open Hold right now, by Project and current stage - excluded from every backlog chart above while the Hold is open (see the Rework Data workbook's Final Status)</span>
       </section>
 
@@ -241,7 +241,7 @@
         <div class="chart-card chart-card--full" id="chart-hold-by-project-stage-wrapper">
           <div class="chart-card__body"><canvas id="chart-hold-by-project-stage"></canvas></div>
         </div>
-        <p id="chart-hold-by-project-stage-empty" class="chart-card__hint" style="display:none;">No spools currently on Hold.</p>
+        <p id="chart-hold-by-project-stage-empty" class="chart-card__hint" style="display:none;" data-i18n="production.noSpoolsOnHold">No spools currently on Hold.</p>
       </section>
 
     </section>
@@ -250,7 +250,7 @@
     <section id="rework-section" aria-label="Currently in Rework">
 
       <section class="charts-grid__head">
-        <h3>Currently in Rework</h3>
+        <h3 data-i18n="production.currentlyInRework">Currently in Rework</h3>
         <span class="chart-card__hint">Spools the Rework Data workbook's latest offer event shows as Rework right now, by Project and current stage - excluded from every backlog chart above the same way Hold spools are (a Rework spool's PDQC/RFP are forced blank, so it isn't a genuine stage delay)</span>
       </section>
 
@@ -258,7 +258,7 @@
         <div class="chart-card chart-card--full" id="chart-rework-by-project-stage-wrapper">
           <div class="chart-card__body"><canvas id="chart-rework-by-project-stage"></canvas></div>
         </div>
-        <p id="chart-rework-by-project-stage-empty" class="chart-card__hint" style="display:none;">No spools currently in Rework.</p>
+        <p id="chart-rework-by-project-stage-empty" class="chart-card__hint" style="display:none;" data-i18n="production.noSpoolsInRework">No spools currently in Rework.</p>
       </section>
 
     </section>
@@ -267,44 +267,44 @@
     <section id="material-handover-section" hidden>
 
       <section class="charts-grid__head" aria-label="Material Handover">
-        <h3>Material Handover</h3>
+        <h3 data-i18n="production.materialHandover">Material Handover</h3>
         <span class="chart-card__hint">Whether required material has been handed over to Production, per spool - data/upload/production/ Material Handover workbook</span>
       </section>
 
       <section class="kpi-strip" aria-label="Material Handover metrics">
         <div class="kpi-card" data-kpi="mh-total">
-          <span class="kpi-card__label">Material Handover Items</span>
+          <span class="kpi-card__label" data-i18n="production.kpiMhTotal">Material Handover Items</span>
           <span class="kpi-card__value" id="mh-kpi-total">—</span>
-          <span class="kpi-card__sub">spools tracked</span>
+          <span class="kpi-card__sub" data-i18n="production.subSpoolsTracked">spools tracked</span>
         </div>
         <div class="kpi-card kpi-card--complete" data-kpi="mh-resolved">
-          <span class="kpi-card__label">Handed Over</span>
+          <span class="kpi-card__label" data-i18n="production.kpiMhHandedOver">Handed Over</span>
           <span class="kpi-card__value" id="mh-kpi-resolved">—</span>
-          <span class="kpi-card__sub">of tracked items</span>
+          <span class="kpi-card__sub" data-i18n="production.subOfTrackedItems">of tracked items</span>
         </div>
         <div class="kpi-card kpi-card--warning" data-kpi="mh-pending">
-          <span class="kpi-card__label">Pending / On Hold</span>
+          <span class="kpi-card__label" data-i18n="production.kpiMhPending">Pending / On Hold</span>
           <span class="kpi-card__value" id="mh-kpi-pending">—</span>
-          <span class="kpi-card__sub">spools</span>
+          <span class="kpi-card__sub" data-i18n="production.subSpools">spools</span>
         </div>
         <div class="kpi-card" data-kpi="mh-hold-reasons">
-          <span class="kpi-card__label">Open Hold Reasons</span>
+          <span class="kpi-card__label" data-i18n="production.kpiMhHoldReasons">Open Hold Reasons</span>
           <span class="kpi-card__value" id="mh-kpi-hold-reasons">—</span>
-          <span class="kpi-card__sub">distinct, among pending items</span>
+          <span class="kpi-card__sub" data-i18n="production.subDistinctAmongPending">distinct, among pending items</span>
         </div>
       </section>
 
       <section class="charts-grid charts-grid--single-row" aria-label="Material Handover status and trend">
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Handover Status</h3>
+            <h3 data-i18n="production.chartHandoverStatus">Handover Status</h3>
             <span class="chart-card__hint">Handed over vs. currently pending/on hold</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-status"></canvas></div>
         </div>
         <div class="chart-card chart-card--wide">
           <div class="chart-card__head">
-            <h3>Handover Volume by Month</h3>
+            <h3 data-i18n="production.chartHandoverVolumeByMonth">Handover Volume by Month</h3>
             <span class="chart-card__hint">Item count by Handover Date</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-trend"></canvas></div>
@@ -314,20 +314,20 @@
       <section class="activity-charts-grid" aria-label="Material Handover breakdowns">
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Top Pending / Hold Reasons</h3>
+            <h3 data-i18n="production.chartTopPendingHoldReasons">Top Pending / Hold Reasons</h3>
             <span class="chart-card__hint">Currently pending items only</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-pending"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>By Concern Department</h3>
+            <h3 data-i18n="production.chartByConcernDept">By Concern Department</h3>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-department"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>By Material</h3>
+            <h3 data-i18n="production.chartByMaterial">By Material</h3>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-material"></canvas></div>
         </div>
@@ -336,14 +336,14 @@
       <section class="charts-grid charts-grid--single-row" aria-label="Material Handover weekly throughput and timeliness">
         <div class="chart-card chart-card--wide">
           <div class="chart-card__head">
-            <h3>Weekly Handover (Inch Dia)</h3>
+            <h3 data-i18n="production.chartWeeklyHandoverInchDia">Weekly Handover (Inch Dia)</h3>
             <span class="chart-card__hint">Total inch-dia handed over per week, by Handover Date</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-weekly-inch-dia"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Handover Timeliness</h3>
+            <h3 data-i18n="production.chartHandoverTimeliness">Handover Timeliness</h3>
             <span class="chart-card__hint">vs. Planned Start (Weekly Production Planning, SIOP fallback)</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-timeliness"></canvas></div>
@@ -353,14 +353,14 @@
       <section class="charts-grid charts-grid--single-row" aria-label="Material Handover first-pass quality">
         <div class="chart-card chart-card--wide">
           <div class="chart-card__head">
-            <h3>Weekly First-Time Handover vs. Issue Found</h3>
+            <h3 data-i18n="production.chartWeeklyFirstTimeVsIssue">Weekly First-Time Handover vs. Issue Found</h3>
             <span class="chart-card__hint">Of items handed over that week: clean on first check vs. needed an issue resolved first</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-weekly-first-time"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card__head">
-            <h3>Weekly First-Pass Yield</h3>
+            <h3 data-i18n="production.chartWeeklyFirstPassYield">Weekly First-Pass Yield</h3>
             <span class="chart-card__hint">% of that week's handovers clean on the first check</span>
           </div>
           <div class="chart-card__body"><canvas id="chart-mh-first-pass-yield"></canvas></div>
@@ -372,41 +372,41 @@
     <!-- ============ STAGE-WISE AGEING, PER CATEGORY ============ -->
     <section class="activity-charts-grid production-stage-grid" aria-label="Stage-wise ageing by category">
       <div class="charts-grid__head">
-        <h3>Stage-wise Ageing by Category</h3>
+        <h3 data-i18n="production.stagewiseAgeingByCategory">Stage-wise Ageing by Category</h3>
         <span class="chart-card__hint">Target day (from Planned Start) vs. average actual day, per stage</span>
       </div>
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>&le;8 Joints (CS/SS)</h3>
+          <h3 data-i18n="production.le8JointsCsSs">&le;8 Joints (CS/SS)</h3>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-le8_cs_ss"></canvas></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>&gt;8 Joints (CS/SS)</h3>
+          <h3 data-i18n="production.gt8JointsCsSs">&gt;8 Joints (CS/SS)</h3>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-gt8_cs_ss"></canvas></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>&le;8 Joints (Alloy)</h3>
+          <h3 data-i18n="production.le8JointsAlloy">&le;8 Joints (Alloy)</h3>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-le8_as"></canvas></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>&gt;8 Joints (Alloy)</h3>
+          <h3 data-i18n="production.gt8JointsAlloy">&gt;8 Joints (Alloy)</h3>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-gt8_as"></canvas></div>
       </div>
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Small Bore (CS/SS/AS)</h3>
+          <h3 data-i18n="production.smallBore">Small Bore (CS/SS/AS)</h3>
           <span class="chart-card__hint">Any material/joint count, Spool Size &le; 2"</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-sb"></canvas></div>
@@ -414,7 +414,7 @@
 
       <div class="chart-card">
         <div class="chart-card__head">
-          <h3>Loose</h3>
+          <h3 data-i18n="production.loose">Loose</h3>
           <span class="chart-card__hint">Zero Total Joints &amp; zero Inch Dia</span>
         </div>
         <div class="chart-card__body"><canvas id="chart-stage-loose"></canvas></div>
@@ -425,12 +425,12 @@
     <section class="chart-card production-table-card" aria-label="Spool list">
       <div class="chart-card__head production-table-card__head">
         <div>
-          <h3>Spool List</h3>
+          <h3 data-i18n="production.spoolList">Spool List</h3>
           <span class="chart-card__hint">Every column has its own filter (click the funnel icon) - subtotal row reflects whatever's currently filtered</span>
         </div>
         <div class="production-table-card__actions">
           <span id="table-filtered-count"></span>
-          <button type="button" class="btn btn--ghost btn--tiny" id="table-clear-filters-btn">Clear All Filters</button>
+          <button type="button" class="btn btn--ghost btn--tiny" id="table-clear-filters-btn" data-i18n="production.clearAllFilters">Clear All Filters</button>
         </div>
       </div>
 
@@ -443,9 +443,9 @@
       </div>
 
       <div class="table-pagination">
-        <button type="button" class="btn btn--ghost btn--tiny" id="table-prev-page">&larr; Prev</button>
+        <button type="button" class="btn btn--ghost btn--tiny" id="table-prev-page">&larr; <span data-i18n="production.prev">Prev</span></button>
         <span id="table-page-info"></span>
-        <button type="button" class="btn btn--ghost btn--tiny" id="table-next-page">Next &rarr;</button>
+        <button type="button" class="btn btn--ghost btn--tiny" id="table-next-page"><span data-i18n="production.next">Next</span> &rarr;</button>
       </div>
     </section>
 
