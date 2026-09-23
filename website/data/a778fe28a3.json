@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T02:18:25.706194",
+  "generated_at": "2026-09-23T03:00:51.950525",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -190816,16 +190816,16 @@
       "Material": "CS",
       "First Fit-Up": "2026-08-13",
       "Welding Finish": "2026-09-15",
-      "PDQC": "2026-09-18",
+      "PDQC": "2026-09-21",
       "RFP": null,
       "PDI": null,
       "Packing": null,
       "Dispatch": null,
       "First Activity Date": "2026-08-13",
-      "Last Activity": "2026-09-18",
+      "Last Activity": "2026-09-21",
       "Current Stage": "Ready for Painting",
       "Next Stage": "Under Painting",
-      "Stage Age": 3,
+      "Stage Age": 2,
       "Total Age": 29,
       "Completed": false,
       "Planned": true,
@@ -328776,16 +328776,16 @@
       "Material": "CS",
       "First Fit-Up": "2026-09-16",
       "Welding Finish": "2026-09-17",
-      "PDQC": "2026-09-18",
+      "PDQC": "2026-09-21",
       "RFP": null,
       "PDI": null,
       "Packing": null,
       "Dispatch": null,
       "First Activity Date": "2026-09-16",
-      "Last Activity": "2026-09-18",
+      "Last Activity": "2026-09-21",
       "Current Stage": "Ready for Painting",
       "Next Stage": "Under Painting",
-      "Stage Age": 3,
+      "Stage Age": 2,
       "Total Age": 17,
       "Completed": false,
       "Planned": true,
@@ -403376,16 +403376,16 @@
       "Material": "CS",
       "First Fit-Up": "2026-09-02",
       "Welding Finish": "2026-09-03",
-      "PDQC": "2062-09-18",
+      "PDQC": "2026-09-18",
       "RFP": null,
       "PDI": null,
       "Packing": null,
       "Dispatch": null,
       "First Activity Date": "2026-09-02",
-      "Last Activity": "2062-09-18",
+      "Last Activity": "2026-09-18",
       "Current Stage": "Ready for Painting",
       "Next Stage": "Under Painting",
-      "Stage Age": 0,
+      "Stage Age": 3,
       "Total Age": 17,
       "Completed": false,
       "Planned": true,
@@ -403399,7 +403399,7 @@
       "Line History Stage": "PDQC",
       "Material Hold Status": null,
       "Total Age (excl. Hold Period)": 17.0,
-      "Stage Age (excl. Hold Period)": 0.0
+      "Stage Age (excl. Hold Period)": 3.0
     },
     {
       "Composite Key": "TE/25-26/196|20LCA50BR001|20LCA50BR001_SP6",
@@ -525563,7 +525563,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-09-23T02:18:20.636165",
+    "generated_at": "2026-09-23T03:00:45.055743",
     "kpis": {
       "total_spools": 13139,
       "planned": 10117,
@@ -526838,13 +526838,13 @@
       "Project Code": "TE/25-26/196",
       "Stage": "PDQC",
       "spool_count": 233,
-      "average_days": 44.3,
+      "average_days": 4.0,
       "bucket_counts": {
         "0\u20137d": 206,
-        "8\u201314d": 26,
+        "8\u201314d": 27,
         "15\u201330d": 0,
         "31\u201360d": 0,
-        "60d+": 1
+        "60d+": 0
       }
     },
     {
