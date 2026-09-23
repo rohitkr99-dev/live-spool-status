@@ -63,12 +63,25 @@
   border-bottom: 1px solid var(--glass-border);
   background: var(--tint-weak);
 }
+/* 8 tabs (longest: "DPR / Painting PDI Mismatch") only fit one flex
+   row above ~1400px - past the site's own 1440px --max-width, so on
+   effectively every real screen flex-wrap wraps them, and wrapping
+   flex items of uneven width packs however many happen to fit per
+   line, producing a ragged 2-then-1-then-2 pattern instead of a
+   scannable list. Labels also change length with the EN/TH toggle
+   (see js/i18n.js), which would keep shifting any pixel breakpoint
+   trying to catch the single-row case - not worth chasing. A strict,
+   unconditional 2-column grid keeps every tab the same width so rows
+   always align, while still surfacing all 8 without a horizontal-
+   scroll strip that would hide the later ones off-screen. */
 .tables-toolbar .tabs {
   border-bottom: none;
   background: transparent;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
+.tables-toolbar .tab { text-align: center; }
 .tables-toolbar__filter {
   padding: 8px 16px;
 }

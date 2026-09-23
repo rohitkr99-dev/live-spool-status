@@ -57,9 +57,19 @@
 .production-global-filters__group {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
   gap: 8px;
   font-size: 13px;
 }
+/* The Project group alone (label + the 160px-min-width multi-select
+   + the "All Projects" reset button) already runs ~385px wide - the
+   parent's own flex-wrap only wraps whole groups onto new lines, so
+   on a ~360px content width (most phones) this one group was still
+   wider than the viewport and its own overflow got clipped by the
+   filter bar's rounded corners, hiding the reset button entirely
+   rather than just looking cramped. Wrapping within the group drops
+   the button to its own line instead. */
 .production-global-filters__group label {
   font-weight: 600;
   color: var(--frost-dim);
