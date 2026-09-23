@@ -34,7 +34,7 @@
   "TJ/25-26/183|251137_1A_HP002_008|251137-1A-HP-008-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-18",
         "hold_start": "2026-07-08"
       }
     ]
@@ -42,7 +42,7 @@
   "TJ/25-26/183|251137_1A_HP002_015|251137-1A-HP-015-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-21",
         "hold_start": "2026-06-29"
       }
     ]
@@ -50,7 +50,7 @@
   "TJ/25-26/183|251137_1A_HP002_016|251137-1A-HP-016-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-21",
         "hold_start": "2026-06-30"
       }
     ]
@@ -58,7 +58,7 @@
   "TJ/25-26/183|251137_1A_HP002_018|251137-1A-HP-018-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-21",
         "hold_start": "2026-07-01"
       }
     ]
@@ -66,7 +66,7 @@
   "TJ/25-26/183|251137_1A_HP002_021|251137-1A-HP-021-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-21",
         "hold_start": "2026-06-26"
       }
     ]
@@ -74,7 +74,7 @@
   "TJ/25-26/183|251137_1A_HP002_022|251137-1A-HP-022-03": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-21",
         "hold_start": "2026-06-29"
       }
     ]
@@ -274,7 +274,7 @@
   "TJ/25-26/189|251237_00_HP002_004|251237-00-HP-004-02": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-22",
         "hold_start": "2026-09-11"
       }
     ]
@@ -330,7 +330,7 @@
   "TJ/25-26/206|V17566-PIND-0134|V17566-PIND-0134-07": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-18",
         "hold_start": "2026-08-28"
       }
     ]
