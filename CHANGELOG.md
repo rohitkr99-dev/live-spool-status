@@ -2304,7 +2304,7 @@ Not yet pushed to `origin/main`; waiting on the person's go-ahead.
 
 ### 2026-09-24 - Dashboard "Project Progress" chart: stages consolidated (this chart only)
 
-Per the person: on the Dashboard page's Project Progress chart, Fit-Up + Partial Fit-Up/Welding + Welding + PDQC now show as one **Production** segment, Ready for Painting is relabelled **Under QC**, and Packing + Dispatch show as one **Packed** segment. Production Order Not Released, Under Painting and Completed are unchanged. The person explicitly scoped this to that one chart - nothing else was touched.
+Per the person: on the Dashboard page's Project Progress chart, Fit-Up + Partial Fit-Up/Welding + Welding + PDQC now show as one **Under Production** segment, Ready for Painting is relabelled **Under QC**, and Packing + Dispatch show as one **Packed** segment. Production Order Not Released, Under Painting and Completed are unchanged. The person explicitly scoped this to that one chart - nothing else was touched.
 
 Implementation is entirely inside `drawProjectChart()` in `website/js/charts.js`: it regroups the per-project stage values after `buildStageBreakdown()` and passes an explicit stage order to `stageDatasets()` (which gained an optional second parameter defaulting to the old `SPOOL_STATUS_CONFIG.stageOrder`, so Weekly Progress still calls it unchanged). Merged segments reuse existing stage colours (Production = Fit-Up amber, Under QC = Ready for Painting purple, Packed = Dispatch magenta) rather than adding new ones. `config.js`, the data JSON, tooltips' underlying stage values, filters, tables and exports are unchanged. `dashboard.html`'s `charts.js?v=` cache-buster bumped to `20260924`.
 

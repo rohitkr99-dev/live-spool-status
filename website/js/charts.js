@@ -280,7 +280,7 @@ const SpoolCharts = {
     // consolidated for this chart alone - Weekly Progress, filters,
     // tables and exports keep the raw Current Stage names.
     const groups = [
-      { label: "Production", color: "Fit-Up", stages: ["Fit-Up", "Partial Fit-Up/Welding", "Welding", "PDQC"] },
+      { label: "Under Production", color: "Fit-Up", stages: ["Fit-Up", "Partial Fit-Up/Welding", "Welding", "PDQC"] },
       { label: "Under QC", color: "Ready for Painting", stages: ["Ready for Painting"] },
       { label: "Packed", color: "Dispatch", stages: ["Packing", "Dispatch"] },
     ];
@@ -295,7 +295,7 @@ const SpoolCharts = {
       }
       return { ...r, values };
     });
-    const order = ["Production Order Not Released", "Production", "Under QC", "Under Painting", "Packed", "Completed"];
+    const order = ["Production Order Not Released", "Under Production", "Under QC", "Under Painting", "Packed", "Completed"];
     const colorOf = (stage) => {
       const g = groups.find((x) => x.label === stage);
       return SPOOL_STATUS_CONFIG.stageColor[g ? g.color : stage] || SPOOL_STATUS_CONFIG.defaultStageColor;
