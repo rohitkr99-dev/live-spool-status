@@ -253,9 +253,9 @@ const SpoolCharts = {
    * SPOOL_STATUS_CONFIG.stageColor, from buildStageBreakdown()
    * records. Stages with zero across every record are skipped.
    */
-  stageDatasets(records) {
+  stageDatasets(records, stageOrder = SPOOL_STATUS_CONFIG.stageOrder) {
 
-    const stagesPresent = SPOOL_STATUS_CONFIG.stageOrder.filter(
+    const stagesPresent = stageOrder.filter(
       (stage) => records.some((r) => (r.values || {})[stage] > 0)
     );
 
@@ -276,13 +276,36 @@ const SpoolCharts = {
 
     this.destroy("project");
 
-    const records = this.buildStageBreakdown("Project Code");
+    // Project Progress only (2026-09-24, per the person): stages are
+    // consolidated for this chart alone - Weekly Progress, filters,
+    // tables and exports keep the raw Current Stage names.
+    const groups = [
+      { label: "Production", color: "Fit-Up", stages: ["Fit-Up", "Partial Fit-Up/Welding", "Welding", "PDQC"] },
+      { label: "Under QC", color: "Ready for Painting", stages: ["Ready for Painting"] },
+      { label: "Packed", color: "Dispatch", stages: ["Packing", "Dispatch"] },
+    ];
+    const grouped = new Set(groups.flatMap((g) => g.stages));
+    const records = this.buildStageBreakdown("Project Code").map((r) => {
+      const values = {};
+      for (const [stage, amount] of Object.entries(r.values)) {
+        if (!grouped.has(stage)) values[stage] = amount;
+      }
+      for (const g of groups) {
+        values[g.label] = g.stages.reduce((sum, st) => sum + (r.values[st] || 0), 0);
+      }
+      return { ...r, values };
+    });
+    const order = ["Production Order Not Released", "Production", "Under QC", "Under Painting", "Packed", "Completed"];
+    const colorOf = (stage) => {
+      const g = groups.find((x) => x.label === stage);
+      return SPOOL_STATUS_CONFIG.stageColor[g ? g.color : stage] || SPOOL_STATUS_CONFIG.defaultStageColor;
+    };
     const labels = records.map((r) => r.key);
     const twoPartLabels = records.map((r) => ({
       code: r.key,
       name: r.key === "Unassigned" ? null : SpoolData.projectNameByCode()[r.key],
     }));
-    const datasets = this.stageDatasets(records);
+    const datasets = this.stageDatasets(records, order).map((d) => ({ ...d, backgroundColor: colorOf(d.label) }));
 
     const metricConfig = this.overviewMetricConfig();
     const hint = document.getElementById("chart-project-hint");

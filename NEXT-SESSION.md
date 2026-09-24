@@ -14,7 +14,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
-## Where things stand (as of 2026-09-23)
+## Where things stand (as of 2026-09-24)
+
+**Project Progress chart regrouped (2026-09-24)** - Dashboard page's Project Progress chart only: Production (Fit-Up/Partial/Welding/PDQC), Under QC (was Ready for Painting), Packed (Packing/Dispatch). Logic lives in `drawProjectChart()` in `website/js/charts.js`; everything else (Weekly Progress, filters, tables, other pages) intentionally keeps raw stage names. Detail in `CHANGELOG.md`'s 2026-09-24 entry. Thai labels for the three new names were not added.
 
 **English/Thai language toggle — fully shipped.** Both rollouts (`6cc5f34` site-wide toggle, `16181f0` Production/Quality brought to full depth) are live on `origin/main` and deployed. Full detail in `CHANGELOG.md`'s three 2026-09-22/23 entries if this area needs touching again. Short version: `website/js/i18n.js` (site-wide `localStorage` language, ~297-entry dictionary) covers UI chrome only (not `<table>` headers, data-populated dropdown options, or Chart.js canvas text) across all 6 dashboard pages at full depth, plus `login.html` at its own narrower scope. One recurring bug class worth remembering: JS that rebuilds a `<select>`'s default option from a hardcoded English string at runtime silently discards `data-i18n` markup - hit three times (`stageAgeing.js`, `packing-tables.js`, `painting-tables.js`), all fixed by routing through `window.I18N.t()`. If it surfaces again: `grep -rn "innerHTML = '<option" website/js/`.
 
