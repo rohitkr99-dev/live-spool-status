@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T02:54:33.840139",
+  "generated_at": "2026-09-25T03:11:50.858768",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -551643,7 +551643,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-09-25T02:54:26.649797",
+    "generated_at": "2026-09-25T03:11:45.730254",
     "kpis": {
       "total_spools": 13791,
       "planned": 10581,
@@ -551662,7 +551662,7 @@
       "planning_variance_days": -0.0
     },
     "current_stage_distribution": {
-      "Fit-Up": 524,
+      "Fit-Up": 60,
       "Partial Fit-Up/Welding": 163,
       "Welding": 66,
       "PDQC": 193,
@@ -551672,7 +551672,7 @@
       "Dispatch": 4834,
       "Production Order Not Released": 3205,
       "Completed": 3001,
-      "Spools Planned in Next Week": 674
+      "Spools Planned in Next Week": 1138
     },
     "rework_quantum": {
       "rework": 55,
