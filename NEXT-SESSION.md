@@ -16,6 +16,8 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-09-25)
 
+**Sync now auto-deploys (2026-09-25)** - `drive-sync.yml` dispatches `deploy.yml` after committing new data (previously the site stayed stale until a manual deploy). Verify on the next hourly sync that a Deploy Website run follows it; see `CHANGELOG.md`.
+
 **Fabrication Line "planned" card widened (2026-09-25)** - now counts all Fit-Up spools with a planned Week after the current fiscal week (was: next week only); displays as "Spools Planned in Future Weeks". Needs a pipeline run to show; see `CHANGELOG.md` 2026-09-25 for the fiscal-year-wrap limitation.
 
 **Project Progress chart regrouped (2026-09-24)** - Dashboard page's Project Progress chart only: Under Production (Fit-Up/Partial/Welding/PDQC), Under QC (was Ready for Painting), Packed (Packing/Dispatch). Logic lives in `drawProjectChart()` in `website/js/charts.js`; everything else (Weekly Progress, filters, tables, other pages) intentionally keeps raw stage names. Detail in `CHANGELOG.md`'s 2026-09-24 entry. Thai labels for the three new names were not added.

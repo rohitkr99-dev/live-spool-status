@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  # actions: write lets the last step below dispatch deploy.yml.
+  actions: write
 
 concurrency:
   group: drive-sync
@@ -72,6 +74,8 @@ jobs:
 
       - name: Commit and push updated dashboard data
         if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "drive-sync-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -86,4 +90,9 @@ jobs:
           else
             git commit -m "Auto-update: sync from Google Drive"
             git push
+            # A push made with the default GITHUB_TOKEN does not
+            # trigger other workflows, so deploy.yml's "on: push" never
+            # fires for this commit - dispatch it explicitly, or the
+            # live site keeps serving the old data (2026-09-25).
+            gh workflow run deploy.yml --ref main
           fi
