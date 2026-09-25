@@ -14,7 +14,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
-## Where things stand (as of 2026-09-24)
+## Where things stand (as of 2026-09-25)
+
+**Fabrication Line "planned" card widened (2026-09-25)** - now counts all Fit-Up spools with a planned Week after the current fiscal week (was: next week only); displays as "Spools Planned in Future Weeks". Needs a pipeline run to show; see `CHANGELOG.md` 2026-09-25 for the fiscal-year-wrap limitation.
 
 **Project Progress chart regrouped (2026-09-24)** - Dashboard page's Project Progress chart only: Under Production (Fit-Up/Partial/Welding/PDQC), Under QC (was Ready for Painting), Packed (Packing/Dispatch). Logic lives in `drawProjectChart()` in `website/js/charts.js`; everything else (Weekly Progress, filters, tables, other pages) intentionally keeps raw stage names. Detail in `CHANGELOG.md`'s 2026-09-24 entry. Thai labels for the three new names were not added.
 

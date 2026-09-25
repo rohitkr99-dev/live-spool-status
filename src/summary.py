@@ -71,7 +71,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 
@@ -127,8 +127,11 @@ UNASSIGNED = "Unassigned"
 
 # Fabrication Line card (2026-09-21, per the person): spools sitting
 # at the first configured stage (Fit-Up) whose planned "Week" is
-# exactly next week aren't overdue - they're on schedule and just
-# haven't started yet. Split out of that stage's count into their own
+# after the current fiscal week (widened 2026-09-25 from "exactly next
+# week" - the person plans several weeks ahead) aren't overdue -
+# they're on schedule and just haven't started yet. The key keeps its
+# old name; the card's displayed wording is in config.js ->
+# stageDisplayLabel. Split out of that stage's count into their own
 # card, positioned between "Production Order Not Released" and
 # "Fit-Up" in website/js/config.js -> SPOOL_STATUS_CONFIG.stageOrder
 # (that array, not this dict's key order, decides what the fabline
@@ -435,17 +438,22 @@ class SummaryEngine:
         first_stage_name = self.stages[0].display_name if self.stages else None
         planned_next_week_count = 0
         if first_stage_name and first_stage_name in stage_counts:
-            next_week_label = fiscal_week_info(
-                today() + timedelta(days=7)
-            )["week_label"]
+            # Widened 2026-09-25, per the person: every spool whose
+            # planned Week is AFTER the current fiscal week counts
+            # (not just next week) - they may plan 3-4+ weeks ahead.
+            current_week_number = fiscal_week_info(today())["week_number"]
             week_values = (
                 dataframe[WEEK] if WEEK in dataframe.columns
                 else pd.Series(None, index=dataframe.index)
             )
+            planned_week_numbers = pd.to_numeric(
+                week_values.astype("string").str.extract(r"(\d+)")[0],
+                errors="coerce",
+            )
             planned_next_week_mask = (
                 ~on_hold_mask
                 & (dataframe[CURRENT_STAGE] == first_stage_name)
-                & (week_values == next_week_label)
+                & (planned_week_numbers > current_week_number)
             )
             planned_next_week_count = int(planned_next_week_mask.sum())
             stage_counts[first_stage_name] -= planned_next_week_count

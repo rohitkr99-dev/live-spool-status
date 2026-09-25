@@ -108,6 +108,7 @@ const SPOOL_STATUS_CONFIG = {
     "Welding": "Under Welding",
     "PDQC": "Under PDQC",
     "Ready for Painting": "Pending Ready for Painting",
+    "Spools Planned in Next Week": "Spools Planned in Future Weeks",
     "Packing": "Under Packing",
     "Dispatch": "Under Dispatch",
     "Completed": "Shipment Complete",
