@@ -298,7 +298,7 @@
   "TJ/25-26/189|251237_00_LP002_084|251237-00-LP-084-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-09-25",
         "hold_start": "2026-08-11"
       }
     ]
