@@ -450,6 +450,22 @@ class SummaryEngine:
                 week_values.astype("string").str.extract(r"(\d+)")[0],
                 errors="coerce",
             )
+            # 2026-10-02, per the person: spools whose Planned Start
+            # came only from the SIOP Planned Spools fallback have no
+            # "Week" (that column is filled from the Weekly Production
+            # Planning workbook alone), so 175 Week-29 spools were
+            # invisible to this card. Use the fiscal week of their
+            # Planned Start instead when Week is blank.
+            if PLANNED_START in dataframe.columns:
+                no_week = planned_week_numbers.isna()
+                start_dates = pd.to_datetime(
+                    dataframe.loc[no_week, PLANNED_START], errors="coerce"
+                )
+                planned_week_numbers.loc[no_week] = [
+                    fiscal_week_info(d.date())["week_number"]
+                    if pd.notna(d) else float("nan")
+                    for d in start_dates
+                ]
             planned_next_week_mask = (
                 ~on_hold_mask
                 & (dataframe[CURRENT_STAGE] == first_stage_name)
