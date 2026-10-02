@@ -1,4 +1,12 @@
 {
+  "TE/25-26/196|20LAB13BR001|20LAB13BR001_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-09-28"
+      }
+    ]
+  },
   "TJ/25-26/182|241535_1A_LP001_023|241535-1A-LP-023-01": {
     "hold_periods": [
       {
