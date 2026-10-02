@@ -5,6 +5,12 @@ on:
     # Every 15 minutes. GitHub may delay scheduled runs by a few extra
     # minutes at busy times - use "Run workflow" below to test on demand.
     - cron: "0 * * * *"
+    # Daily 10:30 AM Thailand time (UTC+7 = 03:30 UTC; GitHub cron is
+    # always UTC). Unlike the runs above, this one always re-runs the
+    # pipelines even when Drive has no new files (see the `if:` on each
+    # step below), so date-dependent outputs - e.g. the Fabrication
+    # Line "planned in future weeks" card - refresh every morning.
+    - cron: "30 3 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -41,11 +47,11 @@ jobs:
         run: python3 scripts/sync_drive.py
 
       - name: Run the pipeline
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         run: python3 main.py
 
       - name: Run the Production dashboard pipeline
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         # continue-on-error: this pipeline is additive (see
         # src/production/) - a failure here (e.g. a workbook it
         # needs is temporarily missing) should never block the
@@ -54,7 +60,7 @@ jobs:
         run: python3 production_main.py
 
       - name: Run the Quality Assurance/Control dashboard pipeline
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         # continue-on-error: this pipeline is additive (see
         # src/quality/) - a failure here (e.g. the Rework Data
         # workbook is temporarily missing) should never block the
@@ -63,7 +69,7 @@ jobs:
         run: python3 quality_main.py
 
       - name: Run the Painting dashboard pipeline
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         # continue-on-error: this pipeline is additive (see
         # src/painting/) - a failure here (e.g. the Painting Weekly
         # Plan workbook is temporarily missing) should never block
@@ -73,7 +79,7 @@ jobs:
         run: python3 painting_main.py
 
       - name: Commit and push updated dashboard data
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

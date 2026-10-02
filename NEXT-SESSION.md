@@ -16,6 +16,8 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-09-25)
 
+**Daily 10:30 AM sync (2026-10-02)** - `drive-sync.yml` has a second cron (`30 3 * * *` = 10:30 Thailand time) that always re-runs the pipelines. Confirm the first run happened; the hourly cron is actually hourly, not 4-hourly. See `CHANGELOG.md`.
+
 **Sync now auto-deploys (2026-09-25)** - `drive-sync.yml` dispatches `deploy.yml` after committing new data (previously the site stayed stale until a manual deploy). Verify on the next hourly sync that a Deploy Website run follows it; see `CHANGELOG.md`.
 
 **Fabrication Line "planned" card widened (2026-09-25)** - now counts all Fit-Up spools with a planned Week after the current fiscal week (was: next week only); displays as "Spools Planned in Future Weeks". Needs a pipeline run to show; see `CHANGELOG.md` 2026-09-25 for the fiscal-year-wrap limitation.
