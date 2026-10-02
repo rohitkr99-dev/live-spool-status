@@ -2,9 +2,10 @@ name: Sync from Google Drive
 
 on:
   schedule:
-    # Every 15 minutes. GitHub may delay scheduled runs by a few extra
-    # minutes at busy times - use "Run workflow" below to test on demand.
-    - cron: "0 * * * *"
+    # Every 4 hours (00:00, 04:00, 08:00 ... UTC). GitHub may delay
+    # scheduled runs by a few extra minutes at busy times - use "Run
+    # workflow" below to test on demand.
+    - cron: "0 */4 * * *"
     # Daily 10:30 AM Thailand time (UTC+7 = 03:30 UTC; GitHub cron is
     # always UTC). Unlike the runs above, this one always re-runs the
     # pipelines even when Drive has no new files (see the `if:` on each
