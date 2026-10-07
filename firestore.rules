@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+
+    match /work_queue_assignments/{spoolId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['spoolKey', 'ownerUid', 'ownerEmail', 'claimedAt']);
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['spoolKey', 'ownerUid', 'ownerEmail', 'claimedAt']);
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /work_handoffs/{handoffId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.keys().hasOnly([
+          'spoolKey', 'projectCode', 'projectName', 'drawingNo', 'spoolNo',
+          'currentStage', 'nextStage', 'statusMessage', 'fromDepartment',
+          'toDepartment', 'note', 'attachment', 'status', 'createdByUid', 'createdByEmail', 'createdAt'
+        ]);
+      allow update: if signedIn()
+        && resource.data.status == 'open'
+        && request.resource.data.status in ['acknowledged', 'clarification_requested']
+        && request.resource.data.respondedByUid == request.auth.uid
+        && request.resource.data.spoolKey == resource.data.spoolKey
+        && request.resource.data.keys().hasOnly([
+          'spoolKey', 'projectCode', 'projectName', 'drawingNo', 'spoolNo',
+          'currentStage', 'nextStage', 'statusMessage', 'fromDepartment',
+          'toDepartment', 'note', 'attachment', 'status', 'createdByUid', 'createdByEmail', 'createdAt',
+          'responseNote', 'respondedByUid', 'respondedByEmail', 'respondedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
+
