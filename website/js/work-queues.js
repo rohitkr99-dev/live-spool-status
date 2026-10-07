@@ -13,7 +13,8 @@ const WorkQueues = {
   handoffsReady: false,
   storeErrors: false,
   activeView: "team",
-  activeDepartment: "all",
+  activeDepartments: new Set(),
+  selectedHandoffFile: null,
   timer: null,
 
   init() {
@@ -24,9 +25,12 @@ const WorkQueues = {
       this.render();
     }));
     document.getElementById("search").addEventListener("input", () => this.render());
-    document.getElementById("department").addEventListener("change", event => { this.activeDepartment = event.target.value; this.render(); });
+    document.querySelectorAll(".wq-dept-tab").forEach(button => button.addEventListener("click", event => this.toggleDepartment(button.dataset.dept, event)));
     document.getElementById("age-filter").addEventListener("change", () => this.render());
     document.getElementById("handoff-form").addEventListener("submit", event => this.submitHandoff(event));
+    document.getElementById("choose-handoff-file").addEventListener("click", () => document.getElementById("handoff-file").click());
+    document.getElementById("handoff-file").addEventListener("change", event => this.selectHandoffFile(event.target.files?.[0] || null));
+    document.getElementById("remove-handoff-file").addEventListener("click", () => this.resetHandoffFile());
 
     firebase.auth().onAuthStateChanged(user => {
       if (!user || this.user) return;
@@ -103,6 +107,21 @@ const WorkQueues = {
     return "Projects";
   },
 
+  toggleDepartment(department, event) {
+    const selected = this.activeDepartments.has(department);
+    if (event.ctrlKey || event.metaKey) {
+      if (selected) this.activeDepartments.delete(department);
+      else this.activeDepartments.add(department);
+    } else if (selected && this.activeDepartments.size === 1) {
+      this.activeDepartments.clear();
+    } else {
+      this.activeDepartments.clear();
+      this.activeDepartments.add(department);
+    }
+    document.querySelectorAll(".wq-dept-tab").forEach(button => button.setAttribute("aria-pressed", String(this.activeDepartments.has(button.dataset.dept))));
+    this.render();
+  },
+
   spoolKey(row) {
     return String(row["Composite Key"] || [row["Project Code"], row["Drawing No"], row["Spool No"]].join(" | "));
   },
@@ -138,7 +157,7 @@ const WorkQueues = {
     const ageFilter = document.getElementById("age-filter").value;
     const dept = this.departmentForStage(stage);
     const haystack = [key, row["Project Code"], row["Project Name"], row["Drawing No"], row["Spool No"], stage, row["Next Stage"], row["Status Message"], row.Material].join(" ").toLowerCase();
-    if (this.activeDepartment !== "all" && dept !== this.activeDepartment) return false;
+    if (this.activeDepartments.size && !this.activeDepartments.has(dept)) return false;
     if (this.activeView === "mine" && (!assignment || assignment.ownerUid !== this.user?.uid)) return false;
     if (this.activeView === "handoffs" && !this.handoffs.some(handoff => handoff.spoolKey === key && handoff.status === "open")) return false;
     if (ageFilter === "warn" && (age === null || age < SPOOL_STATUS_CONFIG.ageThresholds.warnDays)) return false;
@@ -213,7 +232,36 @@ const WorkQueues = {
     document.getElementById("handoff-target").value = "";
     dialog.dataset.spoolKey = key;
     document.getElementById("handoff-note").value = "";
+    this.resetHandoffFile();
     dialog.showModal();
+  },
+
+  selectHandoffFile(file) {
+    if (!file) return;
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!["xls", "xlsx"].includes(extension)) {
+      this.resetHandoffFile();
+      this.toast("Choose an Excel workbook in .xls or .xlsx format.");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      this.resetHandoffFile();
+      this.toast("Excel handover files must be 15 MB or smaller.");
+      return;
+    }
+    this.selectedHandoffFile = file;
+    document.getElementById("handoff-file-name").textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    document.getElementById("remove-handoff-file").hidden = false;
+  },
+
+  resetHandoffFile() {
+    this.selectedHandoffFile = null;
+    const input = document.getElementById("handoff-file");
+    if (input) input.value = "";
+    const label = document.getElementById("handoff-file-name");
+    if (label) label.textContent = "Optional · Excel .xls / .xlsx · max 15 MB";
+    const remove = document.getElementById("remove-handoff-file");
+    if (remove) remove.hidden = true;
   },
 
   async submitHandoff(event) {
@@ -224,8 +272,23 @@ const WorkQueues = {
     const row = this.rows.find(item => this.spoolKey(item) === key);
     const button = document.getElementById("send-handoff");
     button.disabled = true;
+    let uploadedPath = null;
     try {
-      await firebase.firestore().collection("work_handoffs").add({
+      const handoffRef = firebase.firestore().collection("work_handoffs").doc();
+      let attachment = null;
+      if (this.selectedHandoffFile) {
+        const file = this.selectedHandoffFile;
+        const extension = file.name.split(".").pop().toLowerCase();
+        const safeName = file.name.replace(/[^a-z0-9._-]/gi, "_").slice(-100).replace(/\.(xls|xlsx)$/i, `.${extension}`);
+        uploadedPath = `work_handoffs/${handoffRef.id}/${safeName}`;
+        const storageRef = firebase.storage().ref().child(uploadedPath);
+        await storageRef.put(file, {
+          contentType: extension === "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/vnd.ms-excel",
+          customMetadata: { ownerUid: this.user.uid },
+        });
+        attachment = { name: file.name, size: file.size, path: uploadedPath };
+      }
+      await handoffRef.set({
         spoolKey: key,
         projectCode: row["Project Code"] || "",
         projectName: row["Project Name"] || "",
@@ -237,14 +300,21 @@ const WorkQueues = {
         fromDepartment: this.departmentForStage(String(row["Current Stage"] || "")),
         toDepartment: document.getElementById("handoff-target").value,
         note: document.getElementById("handoff-note").value.trim(),
+        attachment,
         status: "open",
         createdByUid: this.user.uid,
         createdByEmail: this.user.email || "",
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       document.getElementById("handoff-dialog").close();
+      this.resetHandoffFile();
       this.toast("Handoff sent to the shared team queue.");
-    } catch (error) { this.toast(error.message || "Could not send the handoff. Check the shared-store setup."); }
+    } catch (error) {
+      if (uploadedPath) {
+        try { await firebase.storage().ref().child(uploadedPath).delete(); } catch (cleanupError) { console.warn("Could not remove an unlinked handoff workbook", cleanupError); }
+      }
+      this.toast(error.message || "Could not send the handoff. Check the shared-store setup.");
+    }
     finally { button.disabled = false; }
   },
 
@@ -257,9 +327,25 @@ const WorkQueues = {
       <h3>${this.escape(item.projectCode)} · ${this.escape(item.drawingNo)} · ${this.escape(item.spoolNo)}</h3>
       <p>${this.escape(item.currentStage)} → ${this.escape(item.nextStage)}</p>
       <p>${this.escape(item.note)}</p><p>Sent by ${this.escape(item.createdByEmail || "team member")}</p>
+      ${item.attachment?.path ? '<button class="wq-button" data-download="' + this.escape(item.id) + '">Download Excel</button>' : ''}
       <div class="wq-handoff__actions"><button class="wq-button wq-button--primary" data-respond="${this.escape(item.id)}" data-response="acknowledged">Acknowledge</button><button class="wq-button" data-respond="${this.escape(item.id)}" data-response="clarification_requested">Request detail</button></div>
     </article>`).join("");
     list.querySelectorAll("[data-respond]").forEach(button => button.addEventListener("click", () => this.respond(button.dataset.respond, button.dataset.response)));
+    list.querySelectorAll("[data-download]").forEach(button => button.addEventListener("click", () => this.downloadAttachment(button.dataset.download)));
+  },
+
+  async downloadAttachment(id) {
+    const item = this.handoffs.find(handoff => handoff.id === id);
+    if (!item?.attachment?.path) return;
+    try {
+      const url = await firebase.storage().ref().child(item.attachment.path).getDownloadURL();
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = item.attachment.name || "handover.xlsx";
+      anchor.target = "_blank";
+      anchor.rel = "noopener";
+      anchor.click();
+    } catch (error) { this.toast(error.message || "Could not download the attached Excel workbook."); }
   },
 
   async respond(id, status) {

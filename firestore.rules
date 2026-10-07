@@ -23,7 +23,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'spoolKey', 'projectCode', 'projectName', 'drawingNo', 'spoolNo',
           'currentStage', 'nextStage', 'statusMessage', 'fromDepartment',
-          'toDepartment', 'note', 'status', 'createdByUid', 'createdByEmail', 'createdAt'
+          'toDepartment', 'note', 'attachment', 'status', 'createdByUid', 'createdByEmail', 'createdAt'
         ]);
       allow update: if signedIn()
         && resource.data.status == 'open'
@@ -33,7 +33,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'spoolKey', 'projectCode', 'projectName', 'drawingNo', 'spoolNo',
           'currentStage', 'nextStage', 'statusMessage', 'fromDepartment',
-          'toDepartment', 'note', 'status', 'createdByUid', 'createdByEmail', 'createdAt',
+          'toDepartment', 'note', 'attachment', 'status', 'createdByUid', 'createdByEmail', 'createdAt',
           'responseNote', 'respondedByUid', 'respondedByEmail', 'respondedAt'
         ]);
       allow delete: if false;

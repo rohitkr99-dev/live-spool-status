@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /work_handoffs/{handoffId}/{fileName} {
+      function signedIn() { return request.auth != null; }
+      function isExcel() { return fileName.matches('.*\\.(xls|xlsx)$'); }
+
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && isExcel()
+        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]
+        && request.resource.metadata.ownerUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if signedIn() && resource.metadata.ownerUid == request.auth.uid;
+    }
+  }
+}
+

@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-storage-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="auth-guard.js"></script>
 <link rel="icon" href="assets/dee-mark.png">
@@ -36,9 +37,19 @@
       <article class="is-critical"><span>Age band · 30+ days</span><strong id="kpi-critical">—</strong></article>
       <article class="is-handoff"><span>Open handoffs</span><strong id="kpi-handoffs">—</strong></article>
     </section>
+    <section class="wq-department-section" aria-label="Department filters">
+      <div class="wq-dept-tabs" id="department-tabs" role="group" aria-label="Filter by department">
+        <button class="wq-dept-tab" type="button" data-dept="Projects" aria-pressed="false">Projects</button>
+        <button class="wq-dept-tab" type="button" data-dept="Production" aria-pressed="false">Production</button>
+        <button class="wq-dept-tab" type="button" data-dept="Quality" aria-pressed="false">QC / Quality</button>
+        <button class="wq-dept-tab" type="button" data-dept="Painting" aria-pressed="false">Painting</button>
+        <button class="wq-dept-tab" type="button" data-dept="Packing &amp; Dispatch" aria-pressed="false">Packing &amp; Dispatch</button>
+      </div>
+      <p class="wq-dept-hint">No selection shows all departments. Click a department to filter; click it again to clear. Hold Ctrl (⌘ on Mac) while clicking to select multiple.</p>
+    </section>
     <section class="wq-controls" aria-label="Queue filters">
       <div class="wq-views" role="group" aria-label="Choose work list"><button type="button" data-view="team" aria-pressed="true">Team queue</button><button type="button" data-view="mine" aria-pressed="false">My claims</button><button type="button" data-view="handoffs" aria-pressed="false">Handoffs</button></div>
-      <div class="wq-filters"><label class="sr-only" for="search">Search spool records</label><input id="search" type="search" placeholder="Search spool, drawing, project…"><label class="sr-only" for="department">Department</label><select id="department"><option value="all">All departments</option><option>Projects</option><option>Production</option><option>Quality</option><option>Painting</option><option>Packing &amp; Dispatch</option></select><label class="sr-only" for="age-filter">Age band</label><select id="age-filter"><option value="all">All age bands</option><option value="warn">14+ days</option><option value="critical">30+ days</option></select></div>
+      <div class="wq-filters"><label class="sr-only" for="search">Search spool records</label><input id="search" type="search" placeholder="Search spool, drawing, project…"><label class="sr-only" for="age-filter">Age band</label><select id="age-filter"><option value="all">All age bands</option><option value="warn">14+ days</option><option value="critical">30+ days</option></select></div>
     </section>
     <p class="wq-rule-note">Age bands use the existing dashboard thresholds (14 and 30 days). They indicate ageing only; they are not delivery due dates or new fabrication rules. Queue ownership follows the shop flow: PDQC is under Production; Ready for Painting is under QC / Quality.</p>
     <section class="wq-columns">
@@ -48,7 +59,7 @@
   </main>
   <footer class="wq-footer">DEE Piping Systems — Thailand · Internal operations portal · <span id="footer-year"></span></footer>
 </div>
-<dialog id="handoff-dialog" class="wq-dialog"><form method="dialog" id="handoff-form"><header><div><p class="eyebrow">SHARED HANDOFF</p><h2>Send spool to another team</h2></div><button class="wq-close" value="cancel" aria-label="Close">×</button></header><p id="handoff-spool" class="mono"></p><label for="handoff-target">Receiving department</label><select id="handoff-target" required><option value="" disabled selected>Select department</option><option>Projects</option><option>Production</option><option>Quality</option><option>Painting</option><option>Packing &amp; Dispatch</option></select><label for="handoff-note">What should the receiving team check?</label><textarea id="handoff-note" rows="3" maxlength="500" placeholder="Add the context needed to act on this handoff…" required></textarea><div class="wq-dialog-actions"><button class="wq-secondary" value="cancel">Cancel</button><button class="wq-primary" id="send-handoff" value="default">Send handoff</button></div></form></dialog>
+<dialog id="handoff-dialog" class="wq-dialog"><form method="dialog" id="handoff-form"><header><div><p class="eyebrow">SHARED HANDOFF</p><h2>Send spool to another team</h2></div><button class="wq-close" value="cancel" aria-label="Close">×</button></header><p id="handoff-spool" class="mono"></p><label for="handoff-target">Receiving department</label><select id="handoff-target" required><option value="" disabled selected>Select department</option><option>Projects</option><option>Production</option><option>Quality</option><option>Painting</option><option>Packing &amp; Dispatch</option></select><label for="handoff-note">What should the receiving team check?</label><textarea id="handoff-note" rows="3" maxlength="500" placeholder="Add the context needed to act on this handoff…" required></textarea><div class="wq-upload-row"><input id="handoff-file" type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="wq-secondary" type="button" id="choose-handoff-file">Upload Excel</button><span id="handoff-file-name">Optional · Excel .xls / .xlsx · max 15 MB</span><button class="wq-remove-file" type="button" id="remove-handoff-file" hidden>Remove</button></div><div class="wq-dialog-actions"><button class="wq-secondary" value="cancel">Cancel</button><button class="wq-primary" id="send-handoff" value="default">Send handoff</button></div></form></dialog>
 <div class="wq-toast" id="toast" role="status" aria-live="polite"></div>
 <script src="js/user-menu.js?v=20260920b"></script>
 <script src="js/config.js?v=20260921b"></script>
