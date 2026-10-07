@@ -96,9 +96,9 @@ const WorkQueues = {
 
   departmentForStage(stage) {
     if (["Production Order Not Released", "Spools Planned in Next Week"].includes(stage)) return "Projects";
-    if (["Fit-Up", "Partial Fit-Up/Welding", "Welding"].includes(stage)) return "Production";
-    if (stage === "PDQC") return "Quality";
-    if (["Ready for Painting", "Under Painting"].includes(stage)) return "Painting";
+    if (["Fit-Up", "Partial Fit-Up/Welding", "Welding", "PDQC"].includes(stage)) return "Production";
+    if (stage === "Ready for Painting") return "Quality";
+    if (stage === "Under Painting") return "Painting";
     if (["Packing", "Dispatch"].includes(stage)) return "Packing & Dispatch";
     return "Projects";
   },
