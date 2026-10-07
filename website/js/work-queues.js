@@ -264,8 +264,13 @@ const WorkQueues = {
 
   async respond(id, status) {
     if (!this.firestoreReady || !this.user) return;
+    let responseNote = "";
+    if (status === "clarification_requested") {
+      responseNote = window.prompt("What detail does your team need before accepting this handoff?") || "";
+      if (!responseNote.trim()) return;
+    }
     try {
-      await firebase.firestore().collection("work_handoffs").doc(id).update({ status, responseNote: "", respondedByUid: this.user.uid, respondedByEmail: this.user.email || "", respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      await firebase.firestore().collection("work_handoffs").doc(id).update({ status, responseNote: responseNote.trim(), respondedByUid: this.user.uid, respondedByEmail: this.user.email || "", respondedAt: firebase.firestore.FieldValue.serverTimestamp() });
       this.toast(status === "acknowledged" ? "Handoff acknowledged." : "Detail request recorded in the handoff.");
     } catch (error) { this.toast(error.message || "Could not record the response."); }
   },
