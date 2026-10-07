@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3F4F9">
+<meta name="robots" content="noindex, nofollow">
+<title>DEE Piping Systems — Work Queues &amp; Handoffs</title>
+<script src="js/theme.js?v=20260920"></script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth-guard.js"></script>
+<link rel="icon" href="assets/dee-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20260921">
+<link rel="stylesheet" href="css/work-queues.css?v=20261007">
+</head>
+<body class="work-queues">
+<div class="ambient" aria-hidden="true"><span class="ambient__orb ambient__orb--ember"></span><span class="ambient__orb ambient__orb--ice"></span><span class="ambient__orb ambient__orb--deep"></span><div class="ambient__grid"></div></div>
+<div class="wq-shell">
+  <header class="wq-topbar">
+    <a class="wq-brand" href="index.html"><img src="assets/dee-mark.png" alt=""><span><small>DEE Piping Systems · Operations</small><strong>Work Queues</strong></span></a>
+    <nav class="wq-nav" aria-label="Main navigation"><a href="index.html">Operations hub</a><a href="dashboard.html">Spool dashboard</a><div id="user-menu"></div></nav>
+  </header>
+  <div class="wq-data-status" id="data-status" role="status">Loading the latest published spool data…</div>
+  <main>
+    <section class="wq-heading"><div><p class="eyebrow">DEPARTMENT COORDINATION</p><h1>Move the next spool forward.</h1><p>Work from the published spool register. Claims and handoffs are shared with signed-in teams.</p></div><div class="wq-updated" id="data-updated">—</div></section>
+    <section class="wq-kpis" aria-label="Queue summary">
+      <article><span>Active spools</span><strong id="kpi-open">—</strong></article>
+      <article><span>Age band · 14+ days</span><strong id="kpi-warn">—</strong></article>
+      <article class="is-critical"><span>Age band · 30+ days</span><strong id="kpi-critical">—</strong></article>
+      <article class="is-handoff"><span>Open handoffs</span><strong id="kpi-handoffs">—</strong></article>
+    </section>
+    <section class="wq-controls" aria-label="Queue filters">
+      <div class="wq-views" role="group" aria-label="Choose work list"><button type="button" data-view="team" aria-pressed="true">Team queue</button><button type="button" data-view="mine" aria-pressed="false">My claims</button><button type="button" data-view="handoffs" aria-pressed="false">Handoffs</button></div>
+      <div class="wq-filters"><label class="sr-only" for="search">Search spool records</label><input id="search" type="search" placeholder="Search spool, drawing, project…"><label class="sr-only" for="department">Department</label><select id="department"><option value="all">All departments</option><option>Projects</option><option>Production</option><option>Quality</option><option>Painting</option><option>Packing &amp; Dispatch</option></select><label class="sr-only" for="age-filter">Age band</label><select id="age-filter"><option value="all">All age bands</option><option value="warn">14+ days</option><option value="critical">30+ days</option></select></div>
+    </section>
+    <p class="wq-rule-note">Age bands use the existing dashboard thresholds (14 and 30 days). They indicate ageing only; they are not delivery due dates or new fabrication rules.</p>
+    <section class="wq-columns">
+      <article class="wq-panel" aria-labelledby="queue-title"><header><h2 id="queue-title">Active spool worklist</h2><span id="queue-count">—</span></header><div class="wq-table-wrap"><table><thead><tr><th>Spool / drawing</th><th>Current stage</th><th>Next stage</th><th>Stage age</th><th>Status message</th><th>Claim</th><th>Handoff</th></tr></thead><tbody id="queue-body"></tbody></table><div class="wq-empty" id="queue-empty" hidden>No spools match these filters.</div></div><footer id="queue-foot">Values are read from the published dashboard bundle. No queue action changes spool status or fabrication data.</footer></article>
+      <aside class="wq-panel wq-handoffs" aria-labelledby="handoffs-title"><header><h2 id="handoffs-title">Handoffs needing response</h2><span id="handoff-count">—</span></header><div id="handoff-list" class="wq-handoff-list"><p class="wq-muted">Connecting to shared handoff store…</p></div><footer>Acknowledgements are recorded separately from the spool record.</footer></aside>
+    </section>
+  </main>
+  <footer class="wq-footer">DEE Piping Systems — Thailand · Internal operations portal · <span id="footer-year"></span></footer>
+</div>
+<dialog id="handoff-dialog" class="wq-dialog"><form method="dialog" id="handoff-form"><header><div><p class="eyebrow">SHARED HANDOFF</p><h2>Send spool to another team</h2></div><button class="wq-close" value="cancel" aria-label="Close">×</button></header><p id="handoff-spool" class="mono"></p><label for="handoff-target">Receiving department</label><select id="handoff-target" required><option value="" disabled selected>Select department</option><option>Projects</option><option>Production</option><option>Quality</option><option>Painting</option><option>Packing &amp; Dispatch</option></select><label for="handoff-note">What should the receiving team check?</label><textarea id="handoff-note" rows="3" maxlength="500" placeholder="Add the context needed to act on this handoff…" required></textarea><div class="wq-dialog-actions"><button class="wq-secondary" value="cancel">Cancel</button><button class="wq-primary" id="send-handoff" value="default">Send handoff</button></div></form></dialog>
+<div class="wq-toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/user-menu.js?v=20260920b"></script>
+<script src="js/config.js?v=20260921b"></script>
+<script src="js/data.js?v=20260921"></script>
+<script src="js/work-queues.js?v=20261007"></script>
+</body>
+</html>
+
