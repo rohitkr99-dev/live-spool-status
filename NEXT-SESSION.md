@@ -14,7 +14,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
-## Where things stand (as of 2026-09-25)
+## Where things stand (as of 2026-10-08)
+
+**Spool Traveler search - in a PR, not merged (2026-10-08).** Branch `feat/spool-traveler-search`: the Spool Traveler page now searches real spool records by Project/Drawing/Spool with candidate selection; joint details show "unavailable" because there is no signed-in-only data path yet (see `docs/spool-traveler-joint-data.md`). Landing tile still says Coming Soon. Waiting for review; do not merge or deploy without explicit approval.
 
 **Planned-in-future-weeks card fixed to include SIOP-only spools (2026-10-02)** - blank Week now falls back to the fiscal week of Planned Start (+175 Week-29 spools). Verify the card reads ~638 after the next sync; see `CHANGELOG.md`.
 
