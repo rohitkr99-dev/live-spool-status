@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F3F4F9">
+<meta name="robots" content="noindex, nofollow">
+<title>DEE Piping Systems — Spool Traveler</title>
+<script src="js/theme.js?v=20260920"></script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth-guard.js"></script>
+<link rel="icon" href="assets/dee-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20260921">
+<link rel="stylesheet" href="css/spool-traveler.css?v=20261007">
+</head>
+<body class="spool-traveler">
+<div class="ambient" aria-hidden="true"><span class="ambient__orb ambient__orb--ember"></span><span class="ambient__orb ambient__orb--ice"></span><span class="ambient__orb ambient__orb--deep"></span><div class="ambient__grid"></div></div>
+<div class="st-shell">
+  <header class="st-topbar">
+    <a class="st-brand" href="index.html"><img src="assets/dee-mark.png" alt=""><span><small>DEE Piping Systems · Operations</small><strong>Spool Traveler</strong></span></a>
+    <nav class="st-nav" aria-label="Main navigation"><a href="index.html">Operations hub</a><a href="dashboard.html">Spool dashboard</a><div id="user-menu"></div></nav>
+  </header>
+  <main>
+    <section class="st-hero">
+      <div class="st-hero-copy">
+        <span class="st-status"><span aria-hidden="true"></span>Coming Soon</span>
+        <h1>One spool.<br>Every joint. One clear trail.</h1>
+        <p>Follow a single spool from shop-floor work through inspection, painting, packing, and dispatch. Start with its QR code or select its Project, Drawing, and Spool.</p>
+      </div>
+      <div class="st-emblem" aria-hidden="true"><img src="assets/icons/icon-spool-traveler.svg" alt=""></div>
+    </section>
+    <section class="st-lookup" aria-labelledby="lookup-title">
+      <div class="st-lookup-heading"><div><h2 id="lookup-title">Find a spool</h2><p>One result at a time, identified by Project + Drawing + Spool.</p></div><span class="st-lookup-qr" aria-hidden="true">QR</span></div>
+      <div class="st-search-row"><label class="sr-only" for="spool-search">Search Project, Drawing, or Spool</label><input id="spool-search" type="search" placeholder="Project, drawing, spool, or QR scan" disabled><button type="button" disabled>Find spool</button></div>
+      <p class="st-coming-note">Lookup will be enabled when the traveler data connection is ready.</p>
+    </section>
+    <section class="st-trail" aria-labelledby="trail-title">
+      <header><div><h2 id="trail-title">Spool status trail</h2><p>Stage dates and current status for the selected item.</p></div><span class="st-empty-tag">Awaiting spool selection</span></header>
+      <ol class="st-stage-list" aria-label="Fabrication and delivery stages">
+        <li><span class="st-stage-dot"></span><span>Release</span></li><li><span class="st-stage-dot"></span><span>Material</span></li><li><span class="st-stage-dot"></span><span>Plan</span></li><li><span class="st-stage-dot"></span><span>PDQC</span></li><li><span class="st-stage-dot"></span><span>FQC</span></li><li><span class="st-stage-dot"></span><span>Ready for Painting</span></li><li><span class="st-stage-dot"></span><span>Painting</span></li><li><span class="st-stage-dot"></span><span>Packing</span></li><li><span class="st-stage-dot"></span><span>Dispatch</span></li>
+      </ol>
+      <p class="st-stage-empty">Select one spool to see its recorded dates and latest stage.</p>
+    </section>
+    <section class="st-joints" aria-labelledby="joints-title">
+      <header><div><h2 id="joints-title">Joint-wise work &amp; responsibility</h2><p>Shop-floor detail stays tied to the selected drawing and spool.</p></div><span class="st-empty-tag">No item selected</span></header>
+      <div class="st-table-wrap"><table><thead><tr><th>Joint</th><th>Fit-up date</th><th>Fit-up contractor</th><th>Welding date</th><th>Welder</th><th>Joint status</th></tr></thead><tbody><tr><td colspan="6" class="st-table-empty">Joint records will appear here after a spool is selected.</td></tr></tbody></table></div>
+      <div class="st-joint-foot"><span>Fit-up contractor and welder details will be shown per joint.</span><span>One Project + Drawing + Spool per view</span></div>
+    </section>
+  </main>
+  <footer class="st-footer">DEE Piping Systems — Thailand · Internal operations portal</footer>
+</div>
+<script src="js/user-menu.js?v=20260920b"></script>
+</body>
+</html>
