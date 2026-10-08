@@ -45,7 +45,7 @@ from constants import (
     MH_INCH_DIA,
     PROJECT_CODE,
 )
-from utils import create_composite_key
+from utils import create_composite_key, week_number_to_start_date
 
 SPOOL_KEY_COLUMNS = [PROJECT_CODE, "Drawing No", "Spool No"]
 
@@ -134,6 +134,37 @@ def _is_empty(text: Any) -> bool:
 
 def _is_available(dataframe: pd.DataFrame | None) -> bool:
     return dataframe is not None and not dataframe.empty
+
+
+def restrict_to_current_fiscal_year(
+    dataframe: pd.DataFrame,
+    reference: Any = None,
+) -> tuple[pd.DataFrame, Any]:
+    """
+    Keeps only the items that belong to the current fiscal year
+    (given by the person, 2026-10-08: the Material Handover charts
+    should start from the current FY's Week 1). Returns the filtered
+    dataframe and that Week 1 start date.
+
+    Rule: an item stays if its Handover Date is on or after the
+    current FY's Week 1 start (a Monday - see utils.py ->
+    week_number_to_start_date()), or if it has no Handover Date at
+    all. A dateless item is by definition still open (not yet handed
+    over), so dropping it would make today's pending count look
+    smaller than it is; there is no date to place it in a year by.
+
+    `reference` is only for tests; it defaults to today.
+    """
+
+    start = pd.Timestamp(week_number_to_start_date(1, reference))
+
+    if MH_HANDOVER_DATE not in dataframe.columns:
+        return dataframe, start
+
+    dates = pd.to_datetime(dataframe[MH_HANDOVER_DATE], errors="coerce")
+    keep = dates.isna() | (dates >= start)
+
+    return dataframe.loc[keep], start
 
 
 
@@ -492,7 +523,10 @@ def build_material_handover_summary(
             "weekly_first_pass_yield": [],
             "timeliness_split": [],
             "timeliness_unmatched_count": 0,
+            "fiscal_year_start": None,
         }
+
+    dataframe, fiscal_year_start = restrict_to_current_fiscal_year(dataframe)
 
     weekly_first_time_split = build_weekly_first_time_split(dataframe)
     timeliness_split, timeliness_unmatched = build_timeliness_split(
@@ -514,4 +548,5 @@ def build_material_handover_summary(
         ),
         "timeliness_split": timeliness_split,
         "timeliness_unmatched_count": timeliness_unmatched,
+        "fiscal_year_start": fiscal_year_start.date().isoformat(),
     }

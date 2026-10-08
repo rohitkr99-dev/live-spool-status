@@ -16,6 +16,8 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-10-08)
 
+**Material Handover charts limited to current FY (2026-10-08)** - Production page, from FY Week 1 (plus still-open dateless items); in a PR, see `CHANGELOG.md`. Confirm the numbers after the next sync.
+
 **Spool Traveler Plan/Material dates (2026-10-08)** - Plan = Planned Start; Material = Material Handover workbook date (Drive `production` subfolder is now synced). FQC was added then removed the same day as confusing (Ready for Painting is the QC marker); see `CHANGELOG.md`.
 
 **Spool Traveler search - in a PR, not merged (2026-10-08).** Branch `feat/spool-traveler-search`: the Spool Traveler page now searches real spool records by Project/Drawing/Spool with candidate selection; joint details show "unavailable" because there is no signed-in-only data path yet (see `docs/spool-traveler-joint-data.md`). Landing tile still says Coming Soon. Waiting for review; do not merge or deploy without explicit approval.

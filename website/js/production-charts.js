@@ -682,6 +682,13 @@ const ProductionCharts = {
     }
     section.hidden = false;
 
+    // Only the current fiscal year is charted (pipeline filters, see
+    // production/material_handover.py -> restrict_to_current_fiscal_year()).
+    const fyStart = materialHandover.fiscal_year_start;
+    this._setText("mh-fy-note", fyStart
+      ? `Current fiscal year only: handovers from FY Week 1 (${new Date(fyStart + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}), plus items still open.`
+      : "");
+
     const kpis = materialHandover.kpis || {};
     this._setText("mh-kpi-total", (kpis.total_items ?? 0).toLocaleString());
     this._setText("mh-kpi-resolved", `${kpis.resolved_pct ?? 0}%`);
