@@ -20,7 +20,9 @@
 "enabled": true,
 "file_pattern": "*DPR*.xlsb",
 "sheet_name": "Detailed Sheet",
-"header_row": 0
+"header_row": 0,
+"fqc_column_letter": "BE",
+"fqc_comment": "FQC date for the Spool Traveler (2026-10-08, per the person: DPR Detailed Sheet, column BE). Read by column position so no header name has to be guessed; the header found there is logged on every run. Remove this key to turn FQC off."
 },
 "planning": {
 "enabled": true,

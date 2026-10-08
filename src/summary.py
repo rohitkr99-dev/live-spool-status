@@ -359,6 +359,7 @@ class SummaryEngine:
         # between Inch Dia and Surface Area Out.
         for optional_field in (
             "Prod Order Release", "Inch Dia", "Total Wt.", "Surface Area Out",
+            "Material Handover", "FQC",
             "Line History Stage", MATERIAL_HOLD_STATUS,
             TOTAL_AGE_EXCL_HOLD, STAGE_AGE_EXCL_HOLD,
         ):

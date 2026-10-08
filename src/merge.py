@@ -48,6 +48,8 @@ from constants import (
     LH_WELDING_AGE,
     LINE_HISTORY_STAGE,
     INITIAL_WEEK_PLANNED,
+    MATERIAL_HANDOVER_DATE,
+    MH_HANDOVER_DATE,
     MATERIAL_HOLD_STATUS,
     MATERIAL_HOLD_STATUS_RAW,
     MATERIAL_HOLD_WORKING_DAYS_LOST,
@@ -672,6 +674,53 @@ class MergeEngine:
 
     # -----------------------------------------------------
 
+    def apply_material_handover(
+        self,
+        master: pd.DataFrame,
+        material_handover: Optional[pd.DataFrame],
+    ) -> pd.DataFrame:
+        """
+        Adds a "Material Handover" date column: the date the Material
+        Handover workbook says the spool's material was handed over to
+        Production (Spool Traveler's Material stage). Display only -
+        nothing downstream (stages, ageing, rules) reads it.
+
+        Joined on the Composite Key. A spool the workbook doesn't list,
+        or lists without a date, stays blank. No-op if the workbook
+        wasn't available this run.
+        """
+
+        if material_handover is None or material_handover.empty:
+            return master
+
+        if MH_HANDOVER_DATE not in material_handover.columns:
+            logger.warning(
+                "Material Handover workbook has no usable handover-date "
+                "column; skipping the Material Handover date for this run."
+            )
+            return master
+
+        keyed = self.add_composite_key(material_handover)
+
+        lookup = (
+            keyed[[COMPOSITE_KEY, MH_HANDOVER_DATE]]
+            .dropna(subset=[MH_HANDOVER_DATE])
+            .sort_values(MH_HANDOVER_DATE)
+            .drop_duplicates(subset=[COMPOSITE_KEY], keep="last")
+            .rename(columns={MH_HANDOVER_DATE: MATERIAL_HANDOVER_DATE})
+        )
+
+        master = master.merge(lookup, on=COMPOSITE_KEY, how="left")
+
+        logger.info(
+            f"Material Handover: {int(master[MATERIAL_HANDOVER_DATE].notna().sum())} "
+            f"of {len(master)} spool(s) have a handover date."
+        )
+
+        return master
+
+    # -----------------------------------------------------
+
     def apply_welding_finish(
         self,
         master: pd.DataFrame,
@@ -928,6 +977,7 @@ class MergeEngine:
         siop_planned: Optional[pd.DataFrame] = None,
         packing_spools: Optional[list[dict]] = None,
         rework: Optional[pd.DataFrame] = None,
+        material_handover: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
         """
         Build the Master Spool Dataset.
@@ -1047,6 +1097,8 @@ class MergeEngine:
         master = self.apply_welding_finish(
             master, welding_db, line_history, activity_date_field
         )
+
+        master = self.apply_material_handover(master, material_handover)
 
         master = self.apply_rework_pdqc_override(master, rework)
 

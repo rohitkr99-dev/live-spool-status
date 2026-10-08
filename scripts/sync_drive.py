@@ -16,11 +16,12 @@ another subfolder (see src/departments.py):
       packing/    -> mirrors data/upload/packing/    (one .xlsx per project)
       quality/    -> mirrors data/upload/quality/    (Production Rework Data workbook)
       painting/   -> mirrors data/upload/painting/   (Painting Weekly Plan workbook)
+      production/ -> mirrors data/upload/production/ (Material Handover workbook)
 
-Production has no subfolder of its own - production_main.py's real
-inputs (DPR/Weekly/Line History/SIOP, plus Rework Data/Material
-Handover) already arrive via the projects/ and quality/ subfolders
-above, so there's nothing further for this script to sync for it.
+production_main.py's other inputs (DPR/Weekly/Line History/SIOP, plus
+Rework Data) arrive via the projects/ and quality/ subfolders above.
+The production/ subfolder (2026-10-08) carries the Material Handover
+workbook, which the Spool Traveler's Material stage also reads.
 
 If another department's pipeline gets wired into main.py later and
 its workbook isn't already covered by an existing subfolder, add a
@@ -62,6 +63,7 @@ DEPARTMENT_DRIVE_SUBFOLDERS = {
     "packing": Path("data/upload/packing"),
     "quality": Path("data/upload/quality"),
     "painting": Path("data/upload/painting"),
+    "production": Path("data/upload/production"),
 }
 
 # Local placeholder files that must survive even when Drive has nothing
