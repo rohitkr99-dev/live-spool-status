@@ -22,9 +22,8 @@ signed-in-only data path for them:
   Drawing + Spool (the record's Composite Key) is the unique item.
 - More than one match shows a candidate list; one item must be selected, and only
   that record is rendered.
-- Stage dates come from the spool record: release, PDQC, FQC (DPR Detailed
-  Sheet column BE, read by position), ready for painting, painting, packing and
-  dispatch from the DPR; Plan is the Planned Start date; Material is the Material
+- Stage dates come from the spool record: release, PDQC, ready for painting,
+  painting, packing and dispatch from the DPR; Plan is the Planned Start date; Material is the Material
   Handover workbook's handover date. PDQC is labelled Production; Ready for
   Painting is labelled QC. A date the published data does not carry at all says
   "No date published"; a blank one says "Not yet".
