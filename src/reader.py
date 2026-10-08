@@ -941,6 +941,13 @@ class ExcelReader:
                 "de-duplication."
             )
 
+        # Thumb rule F11 = P11 (see utils.py -> normalize_material_grade()),
+        # applied here as well so the Material Handover "By Material"
+        # chart merges them too (2026-10-08) - this workbook has its own
+        # Material column, separate from the DPR's.
+        if MATERIAL in dataframe.columns:
+            dataframe[MATERIAL] = dataframe[MATERIAL].apply(normalize_material_grade)
+
         return dataframe
 
     def read_welder_performance(self) -> Optional[pd.DataFrame]:

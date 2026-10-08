@@ -39,7 +39,6 @@ import pandas as pd
 from constants import (
     MATERIAL,
     MH_CURRENT_STATUS,
-    MH_DEPARTMENT,
     MH_FIRST_STATUS,
     MH_HANDOVER_DATE,
     MH_INCH_DIA,
@@ -233,14 +232,6 @@ def build_pending_breakdown(dataframe: pd.DataFrame, top_n: int = 8) -> list[dic
     others_total = sum(g["value"] for g in groups[top_n:])
     top.append({"label": "Others", "value": others_total})
     return top
-
-
-def build_department_breakdown(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
-    """Chart 3: item count by Concern Department."""
-
-    if MH_DEPARTMENT not in dataframe.columns:
-        return []
-    return _group_with_original_labels(dataframe[MH_DEPARTMENT])
 
 
 def build_material_breakdown(dataframe: pd.DataFrame) -> list[dict[str, Any]]:
@@ -515,7 +506,6 @@ def build_material_handover_summary(
             "kpis": None,
             "status_overview": [],
             "pending_breakdown": [],
-            "department_breakdown": [],
             "material_breakdown": [],
             "monthly_trend": [],
             "weekly_inch_dia": [],
@@ -538,7 +528,6 @@ def build_material_handover_summary(
         "kpis": build_kpis(dataframe),
         "status_overview": build_status_overview(dataframe),
         "pending_breakdown": build_pending_breakdown(dataframe),
-        "department_breakdown": build_department_breakdown(dataframe),
         "material_breakdown": build_material_breakdown(dataframe),
         "monthly_trend": build_monthly_trend(dataframe),
         "weekly_inch_dia": build_weekly_inch_dia(dataframe),

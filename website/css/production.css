@@ -284,3 +284,8 @@ table.production-table {
 }
 .btn-export:hover { background: var(--ice-soft); }
 .btn-export:disabled { opacity: 0.5; cursor: default; }
+
+/* Material Handover breakdowns now hold 2 cards (Concern Department chart removed 2026-10-08): fill the row instead of leaving an empty third column. The phone/tablet single-column rule in styles.css (max-width 900px) still applies below this width. */
+@media (min-width: 901px) {
+  .activity-charts-grid--two { grid-template-columns: repeat(2, 1fr); }
+}
