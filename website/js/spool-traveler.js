@@ -28,8 +28,7 @@
   // Date fields are the spool record's own stage dates: Release, PDQC,
   // Ready for Painting, Painting, Packing and Dispatch come from the
   // DPR; Material is the Material Handover date; Plan is the Planned
-  // Start date; FQC is a DPR column. A field the published data does
-  // not carry at all (not even as blank) shows "No date published"
+  // Start date. A field the published data does not carry at all (not even as blank) shows "No date published"
   // rather than "Not yet". Owner labels follow the plant's rule: PDQC
   // belongs to Production, Ready for Painting to QC.
   const STAGES = [
@@ -37,7 +36,6 @@
     { id: "material", field: "Material Handover" },
     { id: "plan", field: "Planned Start" },
     { id: "pdqc", field: "PDQC", owner: "Production", at: ["PDQC"] },
-    { id: "fqc", field: "FQC" },
     { id: "rfp", field: "RFP", owner: "QC", at: ["Ready for Painting"] },
     { id: "painting", field: "PDI", at: ["Under Painting"] },
     { id: "packing", field: "Packing", at: ["Packing"] },

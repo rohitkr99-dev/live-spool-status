@@ -16,7 +16,7 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-10-08)
 
-**Spool Traveler Plan/Material/FQC dates - in a PR (2026-10-08).** Branch `feat/spool-traveler-stage-dates`: FQC read from DPR column BE by position, Material from the Material Handover workbook (new `production` Drive subfolder in the sync), Plan = Planned Start. After merging and the first sync, check the run log for the `reading FQC dates from column BE (header ...)` line and confirm that header really is FQC; if not, fix `fqc_column_letter`. See `CHANGELOG.md`.
+**Spool Traveler Plan/Material dates (2026-10-08)** - Plan = Planned Start; Material = Material Handover workbook date (Drive `production` subfolder is now synced). FQC was added then removed the same day as confusing (Ready for Painting is the QC marker); see `CHANGELOG.md`.
 
 **Spool Traveler search - in a PR, not merged (2026-10-08).** Branch `feat/spool-traveler-search`: the Spool Traveler page now searches real spool records by Project/Drawing/Spool with candidate selection; joint details show "unavailable" because there is no signed-in-only data path yet (see `docs/spool-traveler-joint-data.md`). Landing tile still says Coming Soon. Waiting for review; do not merge or deploy without explicit approval.
 

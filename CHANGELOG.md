@@ -2351,3 +2351,9 @@ Plan needed no pipeline change (`Planned Start` was already published). FQC: `sr
 Front end (`website/js/spool-traveler.js`): the three stages read `Planned Start`, `Material Handover` and `FQC`. A field the published data does not carry at all shows "No date published"; a blank one shows "Not yet".
 
 Verified: 5 new unit tests (`tests/test_spool_traveler_dates.py`); the full suite has the same 34 failures before and after, which pre-date this change (date-dependent summary tests; `tests/test_production_classify.py` imports a module that no longer exists). UI checked in a local preview with sample values injected for the two `V17565-PIND-0012-01` drawings. NOT verified against the real DPR: the actual header at column BE, and real handover dates, appear only after the first sync from this change - check the run log line above.
+
+### 2026-10-08 (cont'd) - Spool Traveler: FQC removed
+
+Per the person: FQC was confusing and Ready for Painting already marks the QC sign-off, so it is removed from the Spool Traveler completely. Checked against the published data first: of spools with both dates, FQC fell before PDQC for 1,712 and on the same day for 4,878, so placed after PDQC the trail would have contradicted itself about as often as it agreed. This also restores the original decision in `docs/decision_log.md` that `7. FQC` is not tracked.
+
+Removed: the FQC stage on the page (the trail is now 8 stages, grid columns 9 -> 8), the DPR column-BE read (`extract_column_by_letter()` in `src/reader.py`), the `FQC` constant, the `fqc_column_letter` settings keys, the `FQC` field in `master_spools`, and their tests. Plan (Planned Start) and Material (Material Handover) are unchanged. After the next sync the published bundle no longer carries `FQC`. The 34 failing tests noted earlier are unrelated and unchanged.

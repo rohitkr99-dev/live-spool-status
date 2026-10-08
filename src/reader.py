@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Optional
 
 import pandas as pd
-from openpyxl.utils import column_index_from_string
 
 from config_loader import (
     load_business_rules,
@@ -29,7 +28,6 @@ from column_mapper import standardize_columns
 from logger import logger
 from constants import (
     FABRICATION,
-    FQC,
     INSPECTION_DATA,
     INSPECTION_DATA_COLUMNS,
     INSPECTION_REOFFERED_BEFORE_ACCEPT,
@@ -61,41 +59,6 @@ from utils import (
     normalize_month_name,
     resolve_multi_date_text_cells,
 )
-
-
-def extract_column_by_letter(
-    frame: pd.DataFrame,
-    letter: Optional[str],
-    label: str,
-    file_name: str,
-) -> Optional[pd.Series]:
-    """
-    Return the column at an Excel column letter (e.g. "BE"), or None
-    if no letter is configured or the sheet is narrower than that.
-    Logs the header found there, so a layout change in the source
-    workbook is visible in the run log instead of silently reading
-    the wrong column.
-    """
-
-    if not letter:
-        return None
-
-    index = column_index_from_string(letter) - 1
-
-    if index >= frame.shape[1]:
-        logger.warning(
-            f"{file_name}: expected the {label} date in column {letter}, "
-            f"but the sheet only has {frame.shape[1]} columns. {label} "
-            "will be blank for this file."
-        )
-        return None
-
-    logger.info(
-        f"{file_name}: reading {label} dates from column {letter} "
-        f"(header '{frame.columns[index]}')."
-    )
-
-    return frame.iloc[:, index]
 
 
 class ExcelReader:
@@ -379,26 +342,14 @@ class ExcelReader:
                 engine="pyxlsb"
             )
 
-            # Taken by position BEFORE the rename below, so a header
-            # that happens to match a mapped name can't swallow it.
-            fqc_values = extract_column_by_letter(
-                frame, config.get("fqc_column_letter"), "FQC", file.name
-            )
-
             frame = standardize_columns(
                 frame,
                 FABRICATION
             )
 
-            date_columns = self._fabrication_date_columns()
-
-            if fqc_values is not None:
-                frame[FQC] = fqc_values.to_numpy()
-                date_columns = date_columns + [FQC]
-
             frame = convert_excel_serial_dates(
                 frame,
-                date_columns
+                self._fabrication_date_columns()
             )
 
             logger.info(

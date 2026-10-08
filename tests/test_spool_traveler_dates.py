@@ -1,42 +1,17 @@
 """
-Unit tests for the Spool Traveler stage dates (2026-10-08): the FQC
-column read by Excel column letter, and the Material Handover date
-joined onto the master spool dataset.
+Unit tests for the Spool Traveler stage dates (2026-10-08): the Material
+Handover date joined onto the master spool dataset.
 """
 
 import pandas as pd
 import pytest
 
 from merge import MergeEngine
-from reader import extract_column_by_letter
 
 
 @pytest.fixture
 def engine():
     return MergeEngine()
-
-
-def _wide_frame(columns: int = 60) -> pd.DataFrame:
-    frame = pd.DataFrame([[i for i in range(columns)]], columns=[f"c{i}" for i in range(columns)])
-    return frame
-
-
-def test_extract_column_by_letter_reads_the_right_position():
-    frame = _wide_frame()
-
-    result = extract_column_by_letter(frame, "BE", "FQC", "dpr.xlsb")
-
-    # BE is the 57th column, i.e. index 56.
-    assert result.iloc[0] == 56
-    assert result.name == "c56"
-
-
-def test_extract_column_by_letter_handles_narrow_sheet_and_no_letter():
-    frame = _wide_frame(columns=20)
-
-    assert extract_column_by_letter(frame, "BE", "FQC", "dpr.xlsb") is None
-    assert extract_column_by_letter(frame, None, "FQC", "dpr.xlsb") is None
-    assert extract_column_by_letter(frame, "", "FQC", "dpr.xlsb") is None
 
 
 def _master() -> pd.DataFrame:
