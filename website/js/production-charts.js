@@ -33,7 +33,6 @@
  *   src/production/material_handover.py):
  *   10. chart-mh-status        Handed Over vs. Pending/On Hold (donut)
  *   11. chart-mh-pending       Top pending/hold reasons (horizontal bar)
- *   12. chart-mh-department    Item count by Concern Department (bar)
  *   13. chart-mh-material      Item count by material group (bar)
  *   14. chart-mh-trend         Handover volume by month (bar)
  */
@@ -699,10 +698,6 @@ const ProductionCharts = {
     this.renderMHBar("chart-mh-pending", materialHandover.pending_breakdown, {
       indexAxis: "y",
       color: PRODUCTION_CONFIG.mhPendingColor,
-      axisTitle: "Items",
-    });
-    this.renderMHBar("chart-mh-department", materialHandover.department_breakdown, {
-      color: PRODUCTION_CONFIG.mhNeutralColor,
       axisTitle: "Items",
     });
     this.renderMHBar("chart-mh-material", materialHandover.material_breakdown, {

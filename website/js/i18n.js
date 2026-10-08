@@ -194,7 +194,6 @@
     "production.chartHandoverStatus": { en: "Handover Status", th: "สถานะการส่งมอบ" },
     "production.chartHandoverVolumeByMonth": { en: "Handover Volume by Month", th: "ปริมาณการส่งมอบแยกตามเดือน" },
     "production.chartTopPendingHoldReasons": { en: "Top Pending / Hold Reasons", th: "เหตุผลรอดำเนินการ / พักไว้ สูงสุด" },
-    "production.chartByConcernDept": { en: "By Concern Department", th: "แยกตามแผนกที่เกี่ยวข้อง" },
     "production.chartByMaterial": { en: "By Material", th: "แยกตามวัสดุ" },
     "production.chartWeeklyHandoverInchDia": { en: "Weekly Handover (Inch Dia)", th: "การส่งมอบรายสัปดาห์ (นิ้วเส้นผ่านศูนย์กลาง)" },
     "production.chartHandoverTimeliness": { en: "Handover Timeliness", th: "ความตรงเวลาในการส่งมอบ" },
