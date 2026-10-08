@@ -194,6 +194,13 @@ class Pipeline:
 
         rework_cleaned = self.read_and_clean_rework()
 
+        # ---- Material Handover (optional) --------------------------
+        # Handover date shown on the Spool Traveler (merge.py ->
+        # apply_material_handover()). Same best-effort contract: never
+        # raises, spools just keep a blank date.
+
+        material_handover = self.read_material_handover_best_effort()
+
         # ---- Merge -> Business Rules -> Ageing -----------------------
 
         master = self.merge_engine.merge(
@@ -205,6 +212,7 @@ class Pipeline:
             siop_planned=siop_planned_cleaned,
             packing_spools=packing_spools,
             rework=rework_cleaned,
+            material_handover=material_handover,
         )
 
         with_rules = self.business_rule_engine.apply(master)
@@ -332,6 +340,25 @@ class Pipeline:
         )
 
         return cleaned
+
+    # -----------------------------------------------------
+
+    def read_material_handover_best_effort(self):
+        """
+        Best-effort read of the Material Handover workbook (one row
+        per spool). Returns None (never raises) if it is missing,
+        disabled or unreadable - the Material date on the Spool
+        Traveler is then simply blank.
+        """
+
+        try:
+            return self.reader.read_material_handover()
+        except Exception as error:
+            logger.warning(
+                f"Could not read Material Handover workbook ({error}). "
+                "No Material Handover dates for this run."
+            )
+            return None
 
     # -----------------------------------------------------
 

@@ -25,16 +25,19 @@
   const MIN_QUERY = 2;
   const MAX_CANDIDATES = 50;
 
-  // Date fields are the spool record's own stage dates. Material,
-  // Plan and FQC have no published date, so they show as such rather
-  // than borrowing a date from somewhere else. Owner labels follow the
-  // plant's rule: PDQC belongs to Production, Ready for Painting to QC.
+  // Date fields are the spool record's own stage dates: Release, PDQC,
+  // Ready for Painting, Painting, Packing and Dispatch come from the
+  // DPR; Material is the Material Handover date; Plan is the Planned
+  // Start date; FQC is a DPR column. A field the published data does
+  // not carry at all (not even as blank) shows "No date published"
+  // rather than "Not yet". Owner labels follow the plant's rule: PDQC
+  // belongs to Production, Ready for Painting to QC.
   const STAGES = [
     { id: "release", field: "Prod Order Release", at: ["Production Order Not Released"] },
-    { id: "material", field: null },
-    { id: "plan", field: null },
+    { id: "material", field: "Material Handover" },
+    { id: "plan", field: "Planned Start" },
     { id: "pdqc", field: "PDQC", owner: "Production", at: ["PDQC"] },
-    { id: "fqc", field: null },
+    { id: "fqc", field: "FQC" },
     { id: "rfp", field: "RFP", owner: "QC", at: ["Ready for Painting"] },
     { id: "painting", field: "PDI", at: ["Under Painting"] },
     { id: "packing", field: "Packing", at: ["Packing"] },
@@ -245,16 +248,17 @@
       const meta = li.querySelector(".st-stage-meta");
       meta.replaceChildren();
 
-      const date = stage.field ? formatDate(record[stage.field]) : null;
+      const published = !!stage.field && stage.field in record;
+      const date = published ? formatDate(record[stage.field]) : null;
       const isCurrent = !!stage.at && stage.at.includes(current);
 
       if (date) li.classList.add("is-done");
-      else if (!stage.field) li.classList.add("is-na");
+      else if (!published) li.classList.add("is-na");
       if (isCurrent) li.classList.add("is-current");
 
       if (stage.owner) meta.append(el("span", "st-stage-owner", stage.owner));
       if (date) meta.append(el("span", "st-stage-date", date));
-      else if (!stage.field) meta.append(el("span", "st-stage-date", "No date published"));
+      else if (!published) meta.append(el("span", "st-stage-date", "No date published"));
       else if (isCurrent) meta.append(el("span", "st-stage-date", "Current stage"));
       else meta.append(el("span", "st-stage-date", "Not yet"));
     }

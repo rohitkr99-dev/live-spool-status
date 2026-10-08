@@ -130,6 +130,13 @@ MH_CURRENT_STATUS = "MH Current Status"
 MH_HANDOVER_DATE = "MH Handover Date"
 MH_EXPECTED_DATE = "MH Expected Date"
 
+# Spool Traveler stage dates (2026-10-08): FQC is read from a fixed
+# column of the DPR Detailed Sheet (config/settings.json ->
+# input_files.fabrication.fqc_column_letter); MATERIAL_HANDOVER_DATE is
+# the Material Handover workbook's handover date, joined per spool.
+FQC = "FQC"
+MATERIAL_HANDOVER_DATE = "Material Handover"
+
 CURRENT_STAGE = "Current Stage"
 NEXT_STAGE = "Next Stage"
 
