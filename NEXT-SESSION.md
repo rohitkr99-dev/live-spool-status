@@ -16,7 +16,7 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-10-12) - Cutting Plan page
 
-New page `website/cutting-plan.html`, live as **Coming Soon** (hub card + public panel); the working tool is behind `?preview=1`. Full detail in `CHANGELOG.md`'s 2026-10-12 entry. **Next:** (1) the person tests a real Drive save with the passcode (Apps Script inbox is deployed and `DRIVE_URL` is set; guide: `Documents/Cutting Plan/DRIVE-SETUP.md`); (2) a tracker pipeline step reads the saved plan JSON/Excel from the Drive inbox; (3) remove the Coming Soon gate once the cutting team has trialled it with real cut lists (compare against the old tool's PDF). Constraint: master workbook stays manual for now - the tool only produces paste-ready SPOOL/STORE update sheets.
+New page `website/cutting-plan.html`, now in **Testing** (2026-10-12): the tool is visible to signed-in users, the hub card says Testing, and the `?preview=1` gate is gone. Full detail in `CHANGELOG.md`'s 2026-10-12 entry. **Next:** (1) the person tests a real Drive save with the passcode (Apps Script inbox is deployed and `DRIVE_URL` is set; guide: `Documents/Cutting Plan/DRIVE-SETUP.md`); (2) a tracker pipeline step reads the saved plan JSON/Excel from the Drive inbox; (3) once the cutting team has trialled it with real cut lists (compare against the old tool's PDF), change the Testing badge to Live. Constraint: master workbook stays manual for now - the tool only produces paste-ready SPOOL/STORE update sheets.
 
 ## Where things stand (as of 2026-10-08)
 

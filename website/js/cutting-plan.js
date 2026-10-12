@@ -2,7 +2,7 @@
  * cutting-plan.js - UI for the Cutting Plan page (engine: cutplan-engine.js).
  * Runs entirely in the browser. Accepted plans are kept in localStorage and can
  * optionally be saved to Google Drive through the Apps Script inbox (DRIVE_URL).
- * The tool section stays hidden until the page is opened with ?preview=1.
+ * The page is in a Testing phase: the tool is visible, with a Testing notice (see #cp-soon in cutting-plan.html).
  */
 (function () {
   'use strict';
@@ -13,7 +13,6 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
-  if (new URLSearchParams(location.search).has('preview')) { $('cp-soon').hidden = true; $('cp-tool').hidden = false; } else { return; }
 
   var KEY = 'cutplan.records.v1';
   function loadRecs() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
