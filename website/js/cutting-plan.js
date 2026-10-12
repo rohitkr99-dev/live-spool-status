@@ -7,8 +7,8 @@
 (function () {
   'use strict';
 
-  // Paste the Apps Script web-app URL here once the Drive inbox is set up (see Cutting Plan/DRIVE-SETUP.md).
-  var DRIVE_URL = '';
+  // Apps Script web-app URL of the Drive inbox (setup: Cutting Plan/DRIVE-SETUP.md). Public by design; the passcode protects it.
+  var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbzcxLVu9YxbFQKQzK56zZyzdFihEnfG3QrhRZEA-ESM89cxlqQ8lPHCPz2ZRKr4UgVZ/exec';
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
