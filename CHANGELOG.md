@@ -39,6 +39,14 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-10-12 - Cutting Plan page (Coming Soon) + pipe cutting tool
+
+- **Asked:** add the Cutting Plan tool to the website as a new page, keep it "Coming Soon", output both Excel and a real PDF, and guide the Google Drive part.
+- **Added:** `website/cutting-plan.html` (+ `css/cutting-plan.css`, `js/cutting-plan.js`, `js/cutplan-engine.js`, `assets/icons/icon-cutting-plan.svg`) and a "Coming Soon" card on the hub (`index.html`). Visitors see only the Coming Soon panel; the working tool is revealed with `cutting-plan.html?preview=1`. Page sits behind the same Firebase login as every other page. Uses the already-vendored `xlsx.core.min.js` and `jspdf.umd.min.js` - no new dependencies.
+- **How the tool works:** upload cut list (Project, Drawing No., Spool No., Item Code, Length, Group, Bevel) + available pipes (Barcode, Item Code, Length=current remain, Control No., Heat No.); enter plan no. and allowance (default 8 mm, charged per piece incl. the last - this reproduces the remain figures in the existing PDFs, e.g. NE 207-100 bar 642831: 6000 -> 5238). Matching is by Item Code only; only uploaded pipes are used; pieces with no pipe are `MNA`. Plan -> review -> Accept; undo only if no later plan used the same pipe. Output: PDF (drawn with jsPDF) and one Excel workbook (Cutting Plan, Pipes (remain), MNA, SPOOL updates, STORE updates) that the team pastes into their manual master workbook. Plates are out of scope for now; DCR sheet / Sheet1 of the master are ignored.
+- **Records** are kept in browser localStorage (export/import JSON). **Drive save is wired but off**: set `DRIVE_URL` in `js/cutting-plan.js` after deploying the Apps Script inbox (script + setup guide live outside this repo in `Documents/Cutting Plan/`). The Drive path has NOT been tested against a real Apps Script deployment.
+- **Not built yet:** tracker pipeline reading the saved Excel/JSON from Drive, auto plan no., auto pipe choice, direct master-file update, plates.
+
 ### 2026-09-05 - Painting: new "Quantum of Work Pending" chart
 
 Asked: "I want to add quantum of work pending at each stage as well

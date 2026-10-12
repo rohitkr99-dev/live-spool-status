@@ -1,0 +1,40 @@
+/* Cutting Plan page. Header/footer come from hub.css; this file is the Coming Soon panel + the tool. */
+
+.cp-main { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; }
+
+/* ---------- Coming Soon ---------- */
+.cp-soon { text-align: center; padding: 70px 20px 40px; }
+.cp-soon__mark { width: 76px; height: 76px; padding: 14px; margin: 0 auto 24px; border-radius: var(--radius-lg); background: var(--ember-soft); display: flex; align-items: center; justify-content: center; }
+.cp-soon__mark img { width: 100%; height: 100%; object-fit: contain; }
+.cp-soon__badge { display: inline-block; font: 600 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; color: var(--frost-dim); background: var(--glass-fill); border: 1px solid var(--glass-border); margin-bottom: 18px; }
+.cp-soon h1 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 16px; }
+.cp-soon p { font-size: 15px; line-height: 1.65; color: var(--frost-dim); margin: 0 auto; max-width: 520px; }
+
+/* ---------- Tool (shown only with ?preview=1 until launch) ---------- */
+#cp-tool[hidden], .cp-soon[hidden], [hidden].cp-card { display: none; }
+.cp-lead { color: var(--frost-dim); margin: 0 0 16px; font-size: 14px; }
+.cp-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.cp-tabs .btn[aria-selected="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cp-card { background: var(--glass-fill-strong); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-card); }
+.cp-card h2 { font-size: 16px; margin: 0 0 12px; }
+.cp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.cp-card label { display: block; font-size: 12.5px; color: var(--frost-dim); }
+.cp-card input[type=text], .cp-card input[type=number], .cp-card input[type=date], .cp-card input[type=password] { width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--bg-1); color: var(--frost); font: inherit; }
+.cp-card input[type=file] { margin-top: 4px; max-width: 100%; color: var(--frost); }
+.cp-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+.cp-note { color: var(--frost-dim); font-size: 12.5px; margin: 10px 0 0; }
+.cp-warn { color: var(--status-warning); } .cp-ok { color: var(--status-complete); } .cp-bad { color: var(--status-critical); }
+.cp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.cp-kpi { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; }
+.cp-kpi b { display: block; font-size: 19px; } .cp-kpi span { font-size: 11.5px; color: var(--frost-dim); }
+.cp-tw { overflow-x: auto; }
+.cp-card table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.cp-card th, .cp-card td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cp-card th { color: var(--frost-dim); font-weight: 600; } .cp-card .n { text-align: right; }
+.cp-bar { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; }
+.cp-barhd { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; margin-bottom: 8px; }
+.cp-barhd h3 { font-size: 14px; margin: 0; } .cp-barhd small { color: var(--frost-dim); }
+.cp-lay { height: 16px; background: var(--line-strong); border-radius: 3px; display: flex; overflow: hidden; margin-bottom: 8px; }
+.cp-lay i { display: block; height: 100%; border-right: 1px solid var(--bg-2); background: var(--ice); }
+.cp-lay i.rem { background: var(--status-complete); opacity: .55; }
+.cp-mna { border-color: var(--status-warning); }

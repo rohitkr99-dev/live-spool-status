@@ -14,6 +14,10 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
+## Where things stand (as of 2026-10-12) - Cutting Plan page
+
+New page `website/cutting-plan.html`, live as **Coming Soon** (hub card + public panel); the working tool is behind `?preview=1`. Full detail in `CHANGELOG.md`'s 2026-10-12 entry. **Next:** (1) the person sets up the Google Apps Script Drive inbox (guide: `Documents/Cutting Plan/DRIVE-SETUP.md`), pastes its URL into `DRIVE_URL` in `website/js/cutting-plan.js`, and tests a real save; (2) a tracker pipeline step reads the saved plan JSON/Excel from the Drive inbox; (3) remove the Coming Soon gate once the cutting team has trialled it with real cut lists (compare against the old tool's PDF). Constraint: master workbook stays manual for now - the tool only produces paste-ready SPOOL/STORE update sheets.
+
 ## Where things stand (as of 2026-10-08)
 
 **Stage Age (excl. Hold Period) fix (2026-10-12)** - material-hold weeks now come off Total Age only, not Stage Age; in a PR, see `CHANGELOG.md`.

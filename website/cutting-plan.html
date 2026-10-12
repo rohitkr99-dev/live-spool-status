@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3F4F9">
+<meta name="robots" content="noindex, nofollow">
+<title>DEE Piping Systems — Cutting Plan</title>
+<script src="js/theme.js?v=20260920"></script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth-guard.js"></script>
+<link rel="icon" href="assets/dee-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20260921">
+<link rel="stylesheet" href="css/hub.css">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261012">
+</head>
+<body class="hub">
+<div class="ambient" aria-hidden="true"><span class="ambient__orb ambient__orb--ember"></span><span class="ambient__orb ambient__orb--ice"></span><span class="ambient__orb ambient__orb--deep"></span><div class="ambient__grid"></div></div>
+
+<header class="hub-header">
+  <div class="hub-header__inner">
+    <a class="hub-header__brand" href="index.html" aria-label="DEE Piping Systems — back to Operations Hub">
+      <img src="assets/dee-mark.png" alt="DEE Piping Systems">
+      <div><span class="hub-header__name">DEE Piping Systems</span><span class="hub-header__region">Thailand — Cutting Plan</span></div>
+    </a>
+    <div class="hub-header__actions">
+      <a class="hub-header__back" href="index.html">Operations hub</a>
+      <div class="theme-toggle" id="theme-toggle"></div>
+      <div class="user-menu" id="user-menu"></div>
+    </div>
+  </div>
+</header>
+
+<main class="cp-main">
+
+  <!-- Public face until launch. The working tool below stays hidden unless the URL has ?preview=1 -->
+  <section class="cp-soon" id="cp-soon">
+    <div class="cp-soon__mark"><img src="assets/icons/icon-cutting-plan.svg" alt=""></div>
+    <span class="cp-soon__badge">Coming Soon</span>
+    <h1>Cutting Plan</h1>
+    <p>Upload the cut list and the available pipe lengths, review a cutting plan with heat and control numbers, and get the plan as PDF and Excel. Plans are saved to Google Drive for later reuse of leftover pipe.</p>
+  </section>
+
+  <section id="cp-tool" hidden>
+    <p class="cp-lead">Pipes and structural profiles. Upload the cut list and the available lengths, review the plan, then accept it. Calculation runs in your browser.</p>
+    <div class="cp-tabs" role="tablist">
+      <button class="btn btn--ghost" id="tabPlan" role="tab" aria-selected="true" type="button">New plan</button>
+      <button class="btn btn--ghost" id="tabRec" role="tab" aria-selected="false" type="button">Accepted plans</button>
+    </div>
+
+    <section id="paneRec" hidden>
+      <div class="cp-card"><h2>Accepted plans</h2><div class="cp-tw"><table id="recTbl"></table></div>
+        <p id="recEmpty" class="cp-note">No accepted plans yet.</p>
+        <div class="cp-row"><button class="btn btn--ghost" id="exp" type="button">Export records (.json)</button><label style="display:inline">Import records <input type="file" id="imp" accept=".json"></label></div>
+        <p class="cp-note">Records are kept in this browser. Export a backup now and then; accepted plans can also be saved to Google Drive.</p></div>
+    </section>
+
+    <section id="panePlan">
+      <div class="cp-card">
+        <h2>1. Inputs</h2>
+        <div class="cp-grid">
+          <label>Cut list (.xlsx / .csv)<input type="file" id="cutFile" accept=".xlsx,.xls,.csv"></label>
+          <label>Available pipes (.xlsx / .csv)<input type="file" id="barFile" accept=".xlsx,.xls,.csv"></label>
+        </div>
+        <p class="cp-note">Cut list columns: Project, Drawing No., Spool No., Item Code, Length, Group, Bevel (optional: Qty).<br>Available pipes columns: Barcode, Item Code, Length, Control No., Heat No. Length is the current remaining length.</p>
+        <div class="cp-row"><button class="btn btn--ghost" id="tplCut" type="button">Cut-list template</button><button class="btn btn--ghost" id="tplBar" type="button">Available-pipes template</button></div>
+      </div>
+      <div class="cp-card">
+        <h2>2. Settings</h2>
+        <div class="cp-grid">
+          <label>Cutting Plan No.<input type="text" id="planNo" placeholder="NE 207-104"></label>
+          <label>Date<input type="date" id="date"></label>
+          <label>Cutting allowance per piece (mm)<input type="number" id="kerf" value="8" min="0" step="0.5"></label>
+          <label>Trim at pipe start (mm)<input type="number" id="trim" value="0" min="0"></label>
+        </div>
+        <div class="cp-row"><button class="btn btn--primary" id="run" type="button">Create plan</button><span id="msg" role="status"></span></div>
+      </div>
+      <div id="warns" class="cp-card" hidden></div>
+    </section>
+
+    <section id="sheet" hidden>
+      <div class="cp-card" id="actions"></div>
+      <div class="cp-card"><div class="cp-kpis" id="kpis"></div></div>
+      <div id="mnaBox"></div>
+      <div id="bars"></div>
+    </section>
+  </section>
+</main>
+
+<footer class="hub-footer"><span>DEE Piping Systems — Thailand · Internal Operations Portal</span></footer>
+
+<script src="js/user-menu.js?v=20260920b"></script>
+<script src="vendor/xlsx.core.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="js/cutplan-engine.js?v=20261012"></script>
+<script src="js/cutting-plan.js?v=20261012"></script>
+</body>
+</html>
