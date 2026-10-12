@@ -40,18 +40,26 @@ def test_total_age_excl_hold_subtracts_material_hold_days_lost(engine):
     assert excl_hold == raw_total_age - 15
 
 
-def test_stage_age_excl_hold_subtracts_material_hold_days_lost(engine):
-    row = pd.Series({
-        "Planned": True, "Current Stage": "Fit-Up",
-        "Planned Start": _iso(50),
+def test_stage_age_excl_hold_ignores_material_hold_days_lost(engine):
+    # 2026-10-12, option A: a spool that lost a lot of weeks to material
+    # hold earlier must not have its CURRENT stage age wiped to 0.
+    dataframe = pd.DataFrame([{
+        "Planned": True, "Current Stage": "Under Painting",
+        "Completed": False,
+        "Planned Start": _iso(120),
         "Composite Key": "P001|D001|S001",
-        MATERIAL_HOLD_WORKING_DAYS_LOST: 8,
-    })
+        MATERIAL_HOLD_WORKING_DAYS_LOST: 67,
+        "First Fit-Up": _iso(110), "First Welding": _iso(100),
+        "PDQC": _iso(40), "RFP": _iso(27), "PDI": None, "Packing": None,
+        "Prod Order Release": _iso(130), "First Activity Date": _iso(110),
+    }])
 
-    raw_stage_age = engine.determine_stage_age(row)
-    excl_hold = engine._exclude_material_hold_days(row, raw_stage_age)
+    result = engine.apply(dataframe).iloc[0]
 
-    assert excl_hold == raw_stage_age - 8
+    assert result["Stage Age"] > 0
+    assert result["Stage Age (excl. Hold Period)"] == result["Stage Age"]
+    # Total Age still gets the reduction.
+    assert result["Total Age (excl. Hold Period)"] == max(result["Total Age"] - 67, 0)
 
 
 def test_floors_at_zero_when_days_lost_exceeds_raw_age(engine):
@@ -86,4 +94,4 @@ def test_apply_adds_both_new_columns_to_dataframe(engine):
     assert "Total Age (excl. Hold Period)" in result.columns
     assert "Stage Age (excl. Hold Period)" in result.columns
     assert result.iloc[0]["Total Age (excl. Hold Period)"] == result.iloc[0]["Total Age"] - 5
-    assert result.iloc[0]["Stage Age (excl. Hold Period)"] == result.iloc[0]["Stage Age"] - 5
+    assert result.iloc[0]["Stage Age (excl. Hold Period)"] == result.iloc[0]["Stage Age"]

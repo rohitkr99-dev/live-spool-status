@@ -208,12 +208,15 @@ class AgeingEngine:
                 axis=1,
             )
 
-            dataframe[STAGE_AGE_EXCL_HOLD] = dataframe.apply(
-                lambda row: self._exclude_material_hold_days(
-                    row, row[STAGE_AGE]
-                ),
-                axis=1,
-            )
+            # Option A, per the person (2026-10-12): the Material/Hold
+            # Week-gap days are NOT subtracted from Stage Age. That delay
+            # happened before the spool reached its current stage, and a
+            # flat total can't be placed in the right stage, so charging
+            # it here floored late-stage spools (e.g. Under Painting after
+            # a long material delay) to 0. The column stays, equal to Stage
+            # Age (which already excludes Rework Hold ledger periods), so
+            # the website and exports keep working.
+            dataframe[STAGE_AGE_EXCL_HOLD] = dataframe[STAGE_AGE]
 
         logger.info(
             f"Ageing Engine completed for {len(dataframe)} row(s)."
@@ -301,6 +304,11 @@ class AgeingEngine:
 
     def _exclude_material_hold_days(self, row: pd.Series, raw_days) -> Optional[int]:
         """
+        Used for Total Age (excl. Hold Period) only. Stage Age (excl.
+        Hold Period) no longer subtracts this figure (2026-10-12, option
+        A, see apply()): a flat total can't be attributed to the stage
+        where the delay happened, so it was zeroing late-stage spools.
+
         Given by the person, 2026-08-26 - his explicit choice when
         asked which Hold source these two new columns should
         reflect: ONLY the Material/Hold Status Week-gap figure
