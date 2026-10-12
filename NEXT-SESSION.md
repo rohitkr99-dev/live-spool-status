@@ -16,6 +16,8 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Where things stand (as of 2026-10-08)
 
+**Stage Age (excl. Hold Period) fix (2026-10-12)** - material-hold weeks now come off Total Age only, not Stage Age; in a PR, see `CHANGELOG.md`.
+
 **Material Handover: F11 merged, Concern Department chart removed (2026-10-08)** - in a PR; see `CHANGELOG.md`.
 
 **Material Handover charts limited to current FY (2026-10-08)** - Production page, from FY Week 1 (plus still-open dateless items); in a PR, see `CHANGELOG.md`. Confirm the numbers after the next sync.
