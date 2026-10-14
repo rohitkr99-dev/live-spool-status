@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-14T03:28:03.545267",
+  "generated_at": "2026-10-14T08:57:41.103844",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -593765,7 +593765,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-10-14T03:27:59.070970",
+    "generated_at": "2026-10-14T08:57:33.412759",
     "kpis": {
       "total_spools": 14482,
       "planned": 10972,
