@@ -39,3 +39,7 @@
 .cp-lay i.rem { border-right: 0; background: repeating-linear-gradient(135deg, var(--line-strong) 0 4px, var(--tint-weak) 4px 8px); }
 .cp-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .cp-mna { border-color: var(--status-warning); }
+.cp-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; gap: 14px; max-width: min(92vw, 560px); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; color: #fff; box-shadow: var(--shadow-raised); }
+.cp-toast[hidden] { display: none; }
+.cp-toast--ok { background: #15803D; } .cp-toast--bad { background: #B91C1C; }
+.cp-toast button { background: transparent; border: 0; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }

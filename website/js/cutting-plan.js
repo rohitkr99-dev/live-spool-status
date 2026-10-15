@@ -203,10 +203,22 @@
   }
 
   /* ---------- Google Drive (Apps Script inbox) ---------- */
+  // Big, hard-to-miss message at the bottom of the screen. Success fades after 10 s; errors stay until closed.
+  var toastTimer = null;
+  function toast(ok, text) {
+    var t = $('cp-toast');
+    if (!t) { t = document.createElement('div'); t.id = 'cp-toast'; t.setAttribute('role', 'alert'); document.body.appendChild(t); }
+    t.className = 'cp-toast ' + (ok ? 'cp-toast--ok' : 'cp-toast--bad');
+    t.innerHTML = '<span>' + esc(text) + '</span><button type="button" aria-label="Close">&times;</button>';
+    t.querySelector('button').onclick = function () { t.hidden = true; };
+    t.hidden = false; clearTimeout(toastTimer);
+    if (ok) toastTimer = setTimeout(function () { t.hidden = true; }, 10000);
+  }
   function saveToDrive(rec) {
-    var note = $('actnote'), pass = $('pass').value;
-    if (!pass) { note.textContent = 'Enter the passcode.'; note.className = 'cp-note cp-bad'; return; }
-    note.className = 'cp-note'; note.textContent = 'Saving to Drive...';
+    var note = $('actnote'), pass = $('pass').value, btn = $('drv');
+    if (!pass) { note.textContent = 'Enter the passcode.'; note.className = 'cp-note cp-bad'; toast(false, 'Enter the passcode first.'); return; }
+    note.className = 'cp-note'; note.textContent = 'Saving to Drive...'; btn.disabled = true; btn.textContent = 'Saving...';
+    var done = function () { btn.disabled = false; btn.textContent = 'Save to Drive'; };
     var b64 = function (u) { return u.split(',')[1]; };
     var xl = XLSX.write(buildWorkbook(rec), { type: 'base64', bookType: 'xlsx' });
     var pdf = b64(buildPdf(rec).output('datauristring'));
@@ -216,9 +228,20 @@
       passcode: pass, planNo: rec.planNo, project: rec.project || 'Unassigned',
       files: [{ name: base + '.xlsx', b64: xl }, { name: base + '.pdf', b64: pdf }, { name: base + '.json', b64: json }]
     }) }).then(function (r) { return r.json(); }).then(function (r) {
-      note.textContent = r.ok ? 'Saved to Drive (' + r.saved + ' files).' : 'Drive refused: ' + (r.error || 'unknown error');
-      note.className = 'cp-note ' + (r.ok ? 'cp-ok' : 'cp-bad');
-    }).catch(function () { note.textContent = 'Could not reach Drive. Download the files and check the setup.'; note.className = 'cp-note cp-bad'; });
+      done();
+      if (r.ok) {
+        $('pass').value = '';                                  // never leave the passcode sitting in the box
+        var all = loadRecs(); all.forEach(function (x) { if (x.createdAt === rec.createdAt) x.driveSavedAt = Date.now(); }); saveRecs(all);
+        note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + new Date().toLocaleString() + '.'; note.className = 'cp-note cp-ok';
+        toast(true, 'Saved to Drive: plan ' + rec.planNo + ' (' + r.saved + ' files).');
+      } else {
+        note.textContent = 'Drive refused: ' + (r.error || 'unknown error'); note.className = 'cp-note cp-bad';
+        toast(false, 'NOT saved to Drive: ' + (r.error || 'unknown error'));
+      }
+    }).catch(function () {
+      done(); note.textContent = 'Could not reach Drive. Download the files and check the setup.'; note.className = 'cp-note cp-bad';
+      toast(false, 'NOT saved to Drive: could not reach Google. Check your internet and try again.');
+    });
   }
 
   /* ---------- accepted plans ---------- */
@@ -230,9 +253,9 @@
   function renderRecs() {
     var recs = loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; });
     $('recEmpty').hidden = !!recs.length;
-    $('recTbl').innerHTML = recs.length ? '<tr><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th></th></tr>' + recs.map(function (r, i) {
+    $('recTbl').innerHTML = recs.length ? '<tr><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + recs.map(function (r, i) {
       var blk = undoBlock(r, recs);
-      return '<tr><td>' + esc(r.planNo) + '</td><td>' + esc(r.date) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' +
+      return '<tr><td>' + esc(r.planNo) + '</td><td>' + esc(r.date) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(new Date(r.driveSavedAt).toLocaleDateString()) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
         '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> <button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () { $('paneRec').hidden = true; show(recs[b.dataset.v], true); window.scrollTo(0, 0); }; });
