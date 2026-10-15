@@ -97,8 +97,8 @@
     $('mnaBox').innerHTML = rec.unplaced.length ? '<div class="cp-card cp-mna"><h2 class="cp-warn">MNA - no pipe available (' + rec.unplaced.length + ')</h2><div class="cp-tw"><table><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Item Code</th><th>Group</th><th>Bevel</th><th class="n">Length</th><th>Reason</th></tr>' +
       rec.unplaced.map(function (p) { return '<tr><td>' + esc(p.project) + '</td><td>' + esc(p.drawing) + '</td><td>' + esc(p.spool) + '</td><td>' + esc(p.item) + '</td><td>' + esc(p.group) + '</td><td>' + esc(p.bevel) + '</td><td class="n">' + p.length + '</td><td>' + esc(p.reason) + '</td></tr>'; }).join('') + '</table></div></div>' : '';
     $('bars').innerHTML = rec.bars.map(function (b, i) {
-      var seg = b.pieces.map(function (p) { return '<i style="width:' + (p.length / b.startLength * 100) + '%" title="' + p.length + '"></i>'; }).join('') + '<i class="rem" style="width:' + (Math.max(b.remain, 0) / b.startLength * 100) + '%"></i>';
-      var rows = b.pieces.map(function (p, j) { return '<tr><td>' + (j + 1) + '</td><td>' + esc(p.project) + '</td><td>' + esc(p.drawing) + '</td><td>' + esc(p.spool) + '</td><td>' + esc(p.group) + '</td><td>' + esc(p.bevel) + '</td><td class="n">' + p.length + '</td></tr>'; }).join('');
+      var seg = b.pieces.map(function (p, j) { var w = (p.length + rec.kerf) / b.startLength * 100; return '<i style="width:' + w + '%;background:' + colorOf(j) + '" title="#' + (j + 1) + ': ' + p.length + '">' + (w >= 3.5 ? j + 1 : '') + '</i>'; }).join('') + '<i class="rem" style="flex:1"></i>';
+      var rows = b.pieces.map(function (p, j) { return '<tr><td><span class="cp-dot" style="background:' + colorOf(j) + '"></span>' + (j + 1) + '</td><td>' + esc(p.project) + '</td><td>' + esc(p.drawing) + '</td><td>' + esc(p.spool) + '</td><td>' + esc(p.group) + '</td><td>' + esc(p.bevel) + '</td><td class="n">' + p.length + '</td></tr>'; }).join('');
       return '<div class="cp-card cp-bar"><div class="cp-barhd"><h3>' + barTitle(b, i) + '</h3><small>Barcode ' + esc(b.barcode) + '</small><small>Heat ' + esc(b.heat) + '</small><small>Length ' + b.startLength + '</small><b>Remain ' + b.remain + '</b></div>' +
         '<div class="cp-lay">' + seg + '</div><div class="cp-tw"><table><tr><th>#</th><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Group</th><th>Bevel</th><th class="n">Length</th></tr>' + rows + '</table></div></div>';
     }).join('');
@@ -107,6 +107,9 @@
     if (!accepted) $('acc').onclick = accept;
     if (accepted && DRIVE_URL && $('drv')) $('drv').onclick = function () { saveToDrive(rec); };
   }
+  // Piece colours cycle through six; neighbours always differ and each piece also carries its number.
+  var COLORS = ['#1F4E9E', '#C2410C', '#15803D', '#7E22CE', '#BE123C', '#0E7490'];
+  function colorOf(j) { return COLORS[j % COLORS.length]; }
   function barId(i) { return 'B' + String(i + 1).padStart(2, '0'); }
   function barLabel(b) { return b.item + ' / ' + b.control + ' / ' + String(b.barcode).slice(-6); }
   function barTitle(b, i) { return barId(i) + ' &nbsp; ' + esc(barLabel(b)); }
@@ -148,13 +151,14 @@
   function buildPdf(rec) {
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
     var L = 12, W = 186, H = 297, B = 14, y = 0;
-    var cols = [['#', 7, 'l'], ['Project', 30, 'l'], ['Drawing No.', 48, 'l'], ['Spool No.', 44, 'l'], ['Group', 22, 'l'], ['Bevel', 15, 'l'], ['Length', 20, 'r']];
+    var cols = [['#', 10, 'l'], ['Project', 30, 'l'], ['Drawing No.', 48, 'l'], ['Spool No.', 41, 'l'], ['Group', 22, 'l'], ['Bevel', 15, 'l'], ['Length', 20, 'r']];
     function fit(t, w) { t = String(t == null ? '' : t); while (t.length > 1 && doc.getTextWidth(t) > w - 1.5) t = t.slice(0, -1); return t; }
     function ensure(h) { if (y + h > H - B) { doc.addPage(); y = 14; } }
-    function row(vals, bold) {
+    function row(vals, bold, dot) {
       doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(8);
       var x = L;
-      cols.forEach(function (c, i) { var t = fit(vals[i], c[1]); doc.text(t, c[2] === 'r' ? x + c[1] - 1 : x + 0.8, y, { align: c[2] === 'r' ? 'right' : 'left' }); x += c[1]; });
+      if (dot) { doc.setFillColor(dot); doc.circle(L + 2, y - 1, 1.1, 'F'); }
+      cols.forEach(function (c, i) { var t = fit(vals[i], c[1]); doc.text(t, c[2] === 'r' ? x + c[1] - 1 : x + (i === 0 && dot ? 4.2 : 0.8), y, { align: c[2] === 'r' ? 'right' : 'left' }); x += c[1]; });
       doc.setDrawColor(200); doc.line(L, y + 1.3, L + W, y + 1.3); y += 4.6;
     }
     y = 14;
@@ -169,11 +173,22 @@
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(barId(i) + '   ' + barLabel(b), L, y);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
       doc.text('Barcode ' + b.barcode + '   Heat ' + b.heat + '   Length ' + b.startLength + '   Remain ' + b.remain, L + W, y, { align: 'right' }); y += 3;
-      var x = L; doc.setFillColor(225, 225, 232); doc.rect(L, y, W, 5, 'F');
-      b.pieces.forEach(function (p, j) { var w = p.length / b.startLength * W; doc.setFillColor(j % 2 ? 90 : 60, j % 2 ? 80 : 60, 160); doc.rect(x, y, w, 5, 'F'); x += w; });
-      doc.setFillColor(120, 190, 150); doc.rect(x, y, Math.max(b.remain, 0) / b.startLength * W, 5, 'F'); y += 9;
+      var x = L, BH = 6;
+      b.pieces.forEach(function (p, j) {
+        var w = (p.length + rec.kerf) / b.startLength * W;
+        doc.setFillColor(colorOf(j)); doc.rect(x, y, w, BH, 'F');
+        doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.4); doc.line(x + w, y, x + w, y + BH);
+        if (w >= 4.5) { doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(255, 255, 255); doc.text(String(j + 1), x + w / 2, y + 4.1, { align: 'center' }); doc.setTextColor(0, 0, 0); }
+        x += w;
+      });
+      var rw = L + W - x;                                  // remain: light grey with diagonal hatch
+      if (rw > 0.2) {
+        doc.setFillColor(238, 238, 242); doc.rect(x, y, rw, BH, 'F'); doc.setDrawColor(190, 190, 200); doc.setLineWidth(0.2);
+        for (var hx = 0; hx < rw; hx += 1.8) { var run = Math.min(BH, rw - hx); doc.line(x + hx, y + BH, x + hx + run, y + BH - run); }
+      }
+      doc.setDrawColor(150); doc.setLineWidth(0.2); doc.rect(L, y, W, BH); doc.setLineWidth(0.2); y += BH + 4;
       row(cols.map(function (c) { return c[0]; }), true);
-      b.pieces.forEach(function (p, j) { row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length], false); });
+      b.pieces.forEach(function (p, j) { row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length], false, colorOf(j)); });
       y += 4;
     });
 

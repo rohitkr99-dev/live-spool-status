@@ -34,7 +34,8 @@
 .cp-bar { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; }
 .cp-barhd { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; margin-bottom: 8px; }
 .cp-barhd h3 { font-size: 14px; margin: 0; } .cp-barhd small { color: var(--frost-dim); }
-.cp-lay { height: 16px; background: var(--line-strong); border-radius: 3px; display: flex; overflow: hidden; margin-bottom: 8px; }
-.cp-lay i { display: block; height: 100%; border-right: 1px solid var(--bg-2); background: var(--ice); }
-.cp-lay i.rem { background: var(--status-complete); opacity: .55; }
+.cp-lay { height: 22px; border: 1px solid var(--line-strong); border-radius: 3px; display: flex; overflow: hidden; margin-bottom: 8px; }
+.cp-lay i { display: flex; align-items: center; justify-content: center; height: 100%; border-right: 2px solid #fff; color: #fff; font: 600 11px var(--font-body); font-style: normal; overflow: hidden; }
+.cp-lay i.rem { border-right: 0; background: repeating-linear-gradient(135deg, var(--line-strong) 0 4px, var(--tint-weak) 4px 8px); }
+.cp-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .cp-mna { border-color: var(--status-warning); }
