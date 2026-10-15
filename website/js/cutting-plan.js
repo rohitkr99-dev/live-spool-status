@@ -2,7 +2,7 @@
  * cutting-plan.js - UI for the Cutting Plan page (engine: cutplan-engine.js).
  * Runs entirely in the browser. Accepted plans are kept in localStorage and can
  * optionally be saved to Google Drive through the Apps Script inbox (DRIVE_URL).
- * The page is in a Testing phase: the tool is visible, with a Testing notice (see #cp-soon in cutting-plan.html).
+ * The page is in a Testing phase: the tool is visible, with a Testing badge in the top bar.
  */
 (function () {
   'use strict';
@@ -40,6 +40,25 @@
       return mapRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' }));
     });
   }
+  // Pasted text (copied from Excel = tab separated). With a heading row it is read like a file; without one the template's column order is assumed.
+  var DEFAULT_COLS = { cut: ['Project', 'Drawing No.', 'Spool No.', 'Item Code', 'Length', 'Group', 'Bevel'], bar: ['Barcode', 'Item Code', 'Length', 'Control No.', 'Heat No.'] };
+  function parsePasted(text, kind) {
+    var wb = XLSX.read(text.replace(/\r\n?/g, '\n').trim(), { type: 'string', raw: true });
+    var aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', blankrows: false })
+      .filter(function (row) { return row.some(function (c) { return String(c).trim() !== ''; }); });
+    if (!aoa.length) return [];
+    var known = {}; Object.keys(SYN).forEach(function (f) { SYN[f].forEach(function (n) { known[n] = 1; }); });
+    var hits = aoa[0].filter(function (c) { return known[String(c).trim().toLowerCase()]; }).length;
+    var head = hits >= 2 ? aoa.shift().map(String) : DEFAULT_COLS[kind];
+    return mapRows(aoa.map(function (row) { var o = {}; head.forEach(function (h, i) { if (h && !(h in o)) o[h] = row[i] == null ? '' : row[i]; }); return o; }));
+  }
+  function readInput(kind) {          // pasted text wins over an uploaded file
+    var txt = $(kind + 'Paste').value.trim(), f = $(kind + 'File').files[0];
+    if (txt) return Promise.resolve(parsePasted(txt, kind));
+    if (f) return readFile(f);
+    return Promise.reject(new Error('Add the ' + (kind === 'cut' ? 'cut list' : 'available pipes') + ': upload a file or paste the rows.'));
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'), function (b) { b.onclick = function () { $(b.dataset.clear).value = ''; }; });
   function template(h, n) { var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([h]), 'Sheet1'); XLSX.writeFile(wb, n); }
   $('tplCut').onclick = function () { template(['Project', 'Drawing No.', 'Spool No.', 'Item Code', 'Length', 'Group', 'Bevel'], 'cut-list-template.xlsx'); };
   $('tplBar').onclick = function () { template(['Barcode', 'Item Code', 'Length', 'Control No.', 'Heat No.'], 'available-pipes-template.xlsx'); };
@@ -47,6 +66,7 @@
   /* ---------- tabs ---------- */
   function tab(rec) {
     $('tabPlan').setAttribute('aria-selected', String(!rec)); $('tabRec').setAttribute('aria-selected', String(rec));
+    $('tabPlan').className = 'btn ' + (rec ? 'btn--ghost' : 'btn--primary'); $('tabRec').className = 'btn ' + (rec ? 'btn--primary' : 'btn--ghost');
     $('panePlan').hidden = rec; $('paneRec').hidden = !rec; $('sheet').hidden = true;
     if (rec) renderRecs();
   }
@@ -68,8 +88,7 @@
     var fail = function (m) { msg.textContent = m; msg.className = 'cp-bad'; };
     if (!planNo) return fail('Enter the Cutting Plan No.');
     if (loadRecs().some(function (r) { return r.planNo.toLowerCase() === planNo.toLowerCase(); })) return fail('Plan No. ' + planNo + ' is already accepted. Use a new number, or undo it first.');
-    if (!$('cutFile').files[0] || !$('barFile').files[0]) return fail('Choose both files first.');
-    Promise.all([readFile($('cutFile').files[0]), readFile($('barFile').files[0])]).then(function (r) {
+    Promise.all([readInput('cut'), readInput('bar')]).then(function (r) {
       var pieces = r[0], bars = r[1];
       var res = CutPlan.plan(pieces, bars, { kerf: +$('kerf').value || 0, trim: +$('trim').value || 0 });
       draft = { planNo: planNo, project: topProject(pieces), date: $('date').value, kerf: res.opts.kerf, trim: res.opts.trim, createdAt: Date.now(), bars: res.bars.map(slimBar), unplaced: res.unplaced.map(slimPiece), summary: res.summary };
@@ -79,9 +98,9 @@
         recs.some(function (rec) { var x = rec.bars.find(function (y) { return y.barcode === b.barcode; }); if (x) last = x; return !!x; });
         if (last && last.remain !== Number(b.length)) w.push('Barcode ' + b.barcode + ': your file says ' + b.length + ' mm, but the last accepted plan left ' + last.remain + ' mm. Your file was used.');
       });
-      if (w.length) { $('warns').hidden = false; $('warns').innerHTML = '<h2 class="cp-warn">Please check</h2>' + w.map(esc).join('<br>'); }
-      show(draft, false); msg.textContent = pieces.length + ' pieces, ' + bars.length + ' pipes read.'; msg.className = 'cp-ok';
-    }).catch(function (e) { fail(e.message || 'Could not read the files.'); });
+      if (w.length) { $('warns').hidden = false; $('warns').innerHTML = '<div class="cp-card__head"><h3 class="cp-warn">Please check</h3></div>' + w.map(esc).join('<br>'); }
+      show(draft, false); msg.textContent = pieces.length + ' pieces, ' + bars.length + ' pipes read' + ($('cutPaste').value.trim() || $('barPaste').value.trim() ? ' (pasted data used where pasted)' : '') + '.'; msg.className = 'cp-ok';
+    }).catch(function (e) { fail(e.message || 'Could not read the data.'); });
   };
 
   /* ---------- plan view ---------- */
@@ -93,8 +112,8 @@
       (accepted && DRIVE_URL ? ' <button class="btn btn--ghost" id="drv" type="button">Save to Drive</button> <input type="password" id="pass" placeholder="Passcode" autocomplete="off" style="width:140px">' : '') +
       '<p class="cp-note" id="actnote">' + (accepted ? '' : 'Nothing is recorded until you accept.') + '</p>';
     var k = [['Pieces', s.pieces], ['Planned', s.placed], ['MNA (no pipe)', s.unplaced], ['Pipes used', s.bars], ['Pipe length used (m)', m(s.startMm)], ['Net cut (m)', m(s.netMm)], ['Remain after (m)', m(s.remainMm)], ['Yield %', s.yieldPct.toFixed(1)]];
-    $('kpis').innerHTML = k.map(function (x) { return '<div class="cp-kpi"><b>' + esc(x[1]) + '</b><span>' + esc(x[0]) + '</span></div>'; }).join('');
-    $('mnaBox').innerHTML = rec.unplaced.length ? '<div class="cp-card cp-mna"><h2 class="cp-warn">MNA - no pipe available (' + rec.unplaced.length + ')</h2><div class="cp-tw"><table><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Item Code</th><th>Group</th><th>Bevel</th><th class="n">Length</th><th>Reason</th></tr>' +
+    $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi-card"><span class="kpi-card__label">' + esc(x[0]) + '</span><span class="kpi-card__value">' + esc(x[1]) + '</span></div>'; }).join('');
+    $('mnaBox').innerHTML = rec.unplaced.length ? '<div class="cp-card cp-mna"><div class="cp-card__head"><h3 class="cp-warn">MNA - no pipe available (' + rec.unplaced.length + ')</h3><span class="cp-hint">These pieces are not on any plan; mark them MNA in the master.</span></div><div class="cp-tw"><table><tr><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Item Code</th><th>Group</th><th>Bevel</th><th class="n">Length</th><th>Reason</th></tr>' +
       rec.unplaced.map(function (p) { return '<tr><td>' + esc(p.project) + '</td><td>' + esc(p.drawing) + '</td><td>' + esc(p.spool) + '</td><td>' + esc(p.item) + '</td><td>' + esc(p.group) + '</td><td>' + esc(p.bevel) + '</td><td class="n">' + p.length + '</td><td>' + esc(p.reason) + '</td></tr>'; }).join('') + '</table></div></div>' : '';
     $('bars').innerHTML = rec.bars.map(function (b, i) {
       var seg = b.pieces.map(function (p, j) { var w = (p.length + rec.kerf) / b.startLength * 100; return '<i style="width:' + w + '%;background:' + colorOf(j) + '" title="#' + (j + 1) + ': ' + p.length + '">' + (w >= 3.5 ? j + 1 : '') + '</i>'; }).join('') + '<i class="rem" style="flex:1"></i>';

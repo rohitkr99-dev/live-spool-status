@@ -17,61 +17,82 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/hub.css">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261016">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261019">
 </head>
-<body class="hub">
-<div class="ambient" aria-hidden="true"><span class="ambient__orb ambient__orb--ember"></span><span class="ambient__orb ambient__orb--ice"></span><span class="ambient__orb ambient__orb--deep"></span><div class="ambient__grid"></div></div>
+<body class="is-ready">
+<div class="ambient" aria-hidden="true">
+  <span class="ambient__orb ambient__orb--ember"></span>
+  <span class="ambient__orb ambient__orb--ice"></span>
+  <span class="ambient__orb ambient__orb--deep"></span>
+  <div class="ambient__grid"></div>
+</div>
 
-<header class="hub-header">
-  <div class="hub-header__inner">
-    <a class="hub-header__brand" href="index.html" aria-label="DEE Piping Systems — back to Operations Hub">
-      <img src="assets/dee-mark.png" alt="DEE Piping Systems">
-      <div><span class="hub-header__name">DEE Piping Systems</span><span class="hub-header__region">Thailand — Cutting Plan</span></div>
+<div class="app-shell">
+
+  <!-- ============ TOP BAR (same as the other department pages) ============ -->
+  <header class="topbar">
+    <a class="topbar__brand" href="index.html" aria-label="DEE Piping Systems — back to site home">
+      <img class="topbar__logo" src="assets/dee-mark.png" alt="DEE Piping Systems logo">
+      <div class="topbar__divider" aria-hidden="true"></div>
+      <div class="topbar__title">
+        <span class="topbar__eyebrow">DEE Piping Systems — Cutting Plan</span>
+        <h1>Cutting Plan</h1>
+      </div>
     </a>
-    <div class="hub-header__actions">
-      <a class="hub-header__back" href="index.html">Operations hub</a>
+    <div class="topbar__meta">
+      <span class="cp-badge" title="This tool is being trialled with the cutting team">Testing</span>
+      <a class="btn btn--ghost" href="index.html">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 10 10 4l6 6M6 8.5V16h8V8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>All Departments</span>
+      </a>
       <div class="theme-toggle" id="theme-toggle"></div>
       <div class="user-menu" id="user-menu"></div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main class="cp-main">
+  <main id="cp-tool">
 
-  <section class="cp-soon" id="cp-soon">
-    <div class="cp-soon__mark"><img src="assets/icons/icon-cutting-plan.svg" alt=""></div>
-    <span class="cp-soon__badge">Testing</span>
-    <h1>Cutting Plan</h1>
-    <p>Upload the cut list and the available pipe lengths, review a cutting plan with heat and control numbers, and get the plan as PDF and Excel. This tool is in testing: keep using your master workbook as usual, and check each plan before cutting.</p>
-  </section>
+    <p class="cp-intro">Pipes and structural profiles. Upload or paste the cut list and the available lengths, review the plan, then accept it. The calculation runs in your browser. <strong>Testing:</strong> keep using your master workbook as usual and check each plan before cutting.</p>
 
-  <section id="cp-tool">
-    <p class="cp-lead">Pipes and structural profiles. Upload the cut list and the available lengths, review the plan, then accept it. Calculation runs in your browser.</p>
     <div class="cp-tabs" role="tablist">
-      <button class="btn btn--ghost" id="tabPlan" role="tab" aria-selected="true" type="button">New plan</button>
+      <button class="btn btn--primary" id="tabPlan" role="tab" aria-selected="true" type="button">New plan</button>
       <button class="btn btn--ghost" id="tabRec" role="tab" aria-selected="false" type="button">Accepted plans</button>
     </div>
 
+    <!-- ============ ACCEPTED PLANS ============ -->
     <section id="paneRec" hidden>
-      <div class="cp-card"><h2>Accepted plans</h2><div class="cp-tw"><table id="recTbl"></table></div>
+      <div class="cp-card">
+        <div class="cp-card__head"><h3>Accepted plans</h3><span class="cp-hint">Newest first. A plan can be undone only if no later plan used the same pipe.</span></div>
+        <div class="cp-tw"><table id="recTbl"></table></div>
         <p id="recEmpty" class="cp-note">No accepted plans yet.</p>
-        <div class="cp-row"><button class="btn btn--ghost" id="exp" type="button">Export records (.json)</button><label style="display:inline">Import records <input type="file" id="imp" accept=".json"></label></div>
-        <p class="cp-note">Records are kept in this browser. Export a backup now and then; accepted plans can also be saved to Google Drive.</p></div>
+        <div class="cp-row"><button class="btn btn--ghost" id="exp" type="button">Export records (.json)</button><label class="cp-inline">Import records <input type="file" id="imp" accept=".json"></label></div>
+        <p class="cp-note">Records are kept in this browser. Export a backup now and then; accepted plans can also be saved to Google Drive.</p>
+      </div>
     </section>
 
+    <!-- ============ NEW PLAN ============ -->
     <section id="panePlan">
       <div class="cp-card">
-        <h2>1. Inputs</h2>
+        <div class="cp-card__head"><h3>1. Inputs</h3><span class="cp-hint">Upload a file or paste rows copied from Excel</span></div>
         <div class="cp-grid">
-          <label>Cut list (.xlsx / .csv)<input type="file" id="cutFile" accept=".xlsx,.xls,.csv"></label>
-          <label>Available pipes (.xlsx / .csv)<input type="file" id="barFile" accept=".xlsx,.xls,.csv"></label>
+          <div>
+            <label>Cut list: upload a file (.xlsx / .csv)<input type="file" id="cutFile" accept=".xlsx,.xls,.csv"></label>
+            <label class="cp-or">or paste the rows copied from Excel<textarea id="cutPaste" rows="6" spellcheck="false" placeholder="Project &#9;Drawing No. &#9;Spool No. &#9;Item Code &#9;Length &#9;Group &#9;Bevel"></textarea></label>
+            <button class="btn btn--ghost cp-clear" type="button" data-clear="cutPaste">Clear pasted data</button>
+          </div>
+          <div>
+            <label>Available pipes: upload a file (.xlsx / .csv)<input type="file" id="barFile" accept=".xlsx,.xls,.csv"></label>
+            <label class="cp-or">or paste the rows copied from Excel<textarea id="barPaste" rows="6" spellcheck="false" placeholder="Barcode &#9;Item Code &#9;Length &#9;Control No. &#9;Heat No."></textarea></label>
+            <button class="btn btn--ghost cp-clear" type="button" data-clear="barPaste">Clear pasted data</button>
+          </div>
         </div>
+        <p class="cp-note">Pasting: copy the cells in Excel (with or without the heading row) and paste them in the box. If there is no heading row, the columns must be in the order shown in the box. If you both upload and paste, the pasted rows are used.</p>
         <p class="cp-note">Cut list columns: Project, Drawing No., Spool No., Item Code, Length, Group, Bevel (optional: Qty).<br>Available pipes columns: Barcode, Item Code, Length, Control No., Heat No. Length is the current remaining length.</p>
         <div class="cp-row"><button class="btn btn--ghost" id="tplCut" type="button">Cut-list template</button><button class="btn btn--ghost" id="tplBar" type="button">Available-pipes template</button></div>
       </div>
+
       <div class="cp-card">
-        <h2>2. Settings</h2>
+        <div class="cp-card__head"><h3>2. Settings</h3><span class="cp-hint">All lengths in mm</span></div>
         <div class="cp-grid">
           <label>Cutting Plan No.<input type="text" id="planNo" placeholder="NE 207-104"></label>
           <label>Date<input type="date" id="date"></label>
@@ -83,21 +104,21 @@
       <div id="warns" class="cp-card" hidden></div>
     </section>
 
+    <!-- ============ PLAN RESULT ============ -->
     <section id="sheet" hidden>
       <div class="cp-card" id="actions"></div>
-      <div class="cp-card"><div class="cp-kpis" id="kpis"></div></div>
+      <section class="kpi-strip cp-kpis" id="kpis" aria-label="Plan summary"></section>
       <div id="mnaBox"></div>
       <div id="bars"></div>
     </section>
-  </section>
-</main>
 
-<footer class="hub-footer"><span>DEE Piping Systems — Thailand · Internal Operations Portal</span></footer>
+  </main>
+</div>
 
 <script src="js/user-menu.js?v=20260920b"></script>
 <script src="vendor/xlsx.core.min.js"></script>
 <script src="vendor/jspdf.umd.min.js"></script>
-<script src="js/cutplan-engine.js?v=20261016"></script>
-<script src="js/cutting-plan.js?v=20261017"></script>
+<script src="js/cutplan-engine.js?v=20261019"></script>
+<script src="js/cutting-plan.js?v=20261019"></script>
 </body>
 </html>

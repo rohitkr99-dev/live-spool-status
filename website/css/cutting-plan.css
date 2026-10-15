@@ -1,45 +1,59 @@
-/* Cutting Plan page. Header/footer come from hub.css; this file is the Coming Soon panel + the tool. */
+/* Cutting Plan page. Layout shell (app-shell, topbar, kpi-card, buttons, tokens) comes from styles.css,
+   so this page looks like the other department pages. This file only adds what the tool itself needs. */
 
-.cp-main { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; }
+#cp-tool { padding-bottom: 20px; }
+.cp-badge { font: 600 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; color: var(--status-warning); background: var(--status-warning-soft); border: 1px solid var(--glass-border); }
+.cp-intro { max-width: 880px; margin: 4px 0 18px; font-size: 14px; line-height: 1.6; color: var(--frost-dim); }
+.cp-intro strong { color: var(--frost); font-weight: 700; }
+.cp-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
 
-/* ---------- Coming Soon ---------- */
-.cp-soon { text-align: center; padding: 70px 20px 40px; }
-.cp-soon__mark { width: 76px; height: 76px; padding: 14px; margin: 0 auto 24px; border-radius: var(--radius-lg); background: var(--ember-soft); display: flex; align-items: center; justify-content: center; }
-.cp-soon__mark img { width: 100%; height: 100%; object-fit: contain; }
-.cp-soon__badge { display: inline-block; font: 600 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; color: var(--frost-dim); background: var(--glass-fill); border: 1px solid var(--glass-border); margin-bottom: 18px; }
-.cp-soon h1 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 16px; }
-.cp-soon p { font-size: 15px; line-height: 1.65; color: var(--frost-dim); margin: 0 auto; max-width: 520px; }
+/* glass panels, same look as the dashboards' chart cards (without the hover lift, since these hold forms) */
+.cp-card { position: relative; background: var(--glass-fill); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: var(--blur-glass); -webkit-backdrop-filter: var(--blur-glass); padding: 18px 20px 16px; margin-bottom: 16px; box-shadow: var(--shadow-card); overflow: hidden; }
+.cp-card::after { content: ""; position: absolute; top: 0; left: 14%; right: 14%; height: 1px; background: linear-gradient(90deg, transparent, var(--glass-sheen), transparent); opacity: .9; pointer-events: none; }
+.cp-card[hidden] { display: none; }
+.cp-card__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
+.cp-card__head h3 { font-size: 15px; font-weight: 700; }
+.cp-hint { font-size: 11.5px; color: var(--frost-faint); }
+.cp-mna { border-color: var(--status-warning); }
 
-/* ---------- Tool (shown only with ?preview=1 until launch) ---------- */
-#cp-tool[hidden], .cp-soon[hidden], [hidden].cp-card { display: none; }
-.cp-lead { color: var(--frost-dim); margin: 0 0 16px; font-size: 14px; }
-.cp-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-.cp-tabs .btn[aria-selected="true"] { background: var(--primary); color: #fff; border-color: var(--primary); }
-.cp-card { background: var(--glass-fill-strong); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-card); }
-.cp-card h2 { font-size: 16px; margin: 0 0 12px; }
-.cp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-.cp-card label { display: block; font-size: 12.5px; color: var(--frost-dim); }
-.cp-card input[type=text], .cp-card input[type=number], .cp-card input[type=date], .cp-card input[type=password] { width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--bg-1); color: var(--frost); font: inherit; }
-.cp-card input[type=file] { margin-top: 4px; max-width: 100%; color: var(--frost); }
+.cp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.cp-card label { display: block; font-size: 12px; color: var(--frost-dim); }
+.cp-card input[type=text], .cp-card input[type=number], .cp-card input[type=date], .cp-card input[type=password], .cp-card textarea {
+  width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--bg-2); color: var(--frost); font: inherit; font-size: 13.5px;
+}
+.cp-card input:focus-visible, .cp-card textarea:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; }
+.cp-card input[type=file] { margin-top: 4px; max-width: 100%; color: var(--frost); font-size: 12.5px; }
+.cp-card textarea { font: 12.5px/1.4 var(--font-mono); white-space: pre; overflow: auto; resize: vertical; }
+.cp-or { margin-top: 10px; }
+.cp-clear { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
 .cp-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
-.cp-note { color: var(--frost-dim); font-size: 12.5px; margin: 10px 0 0; }
+.cp-inline { display: inline; }
+.cp-note { color: var(--frost-dim); font-size: 12.5px; line-height: 1.55; margin: 10px 0 0; }
 .cp-warn { color: var(--status-warning); } .cp-ok { color: var(--status-complete); } .cp-bad { color: var(--status-critical); }
-.cp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-.cp-kpi { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; }
-.cp-kpi b { display: block; font-size: 19px; } .cp-kpi span { font-size: 11.5px; color: var(--frost-dim); }
+
+/* result KPIs reuse .kpi-strip / .kpi-card; auto-fit because there are 8 tiles */
+.cp-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 18px; }
+.cp-kpis .kpi-card { padding: 14px 16px 12px; }
+.cp-kpis .kpi-card__value { font-size: 26px; }
+
 .cp-tw { overflow-x: auto; }
 .cp-card table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
-.cp-card th, .cp-card td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-.cp-card th { color: var(--frost-dim); font-weight: 600; } .cp-card .n { text-align: right; }
-.cp-bar { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; }
+.cp-card th, .cp-card td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cp-card th { font: 600 10.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--frost-faint); }
+.cp-card .n { text-align: right; }
+
+/* one block per pipe */
 .cp-barhd { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; margin-bottom: 8px; }
-.cp-barhd h3 { font-size: 14px; margin: 0; } .cp-barhd small { color: var(--frost-dim); }
-.cp-lay { height: 22px; border: 1px solid var(--line-strong); border-radius: 3px; display: flex; overflow: hidden; margin-bottom: 8px; }
+.cp-barhd h3 { font-size: 15px; font-weight: 700; margin: 0; } .cp-barhd small { color: var(--frost-dim); }
+.cp-lay { height: 22px; border: 1px solid var(--glass-border-strong); border-radius: 3px; display: flex; overflow: hidden; margin-bottom: 8px; }
 .cp-lay i { display: flex; align-items: center; justify-content: center; height: 100%; border-right: 2px solid #fff; color: #fff; font: 600 11px var(--font-body); font-style: normal; overflow: hidden; }
 .cp-lay i.rem { border-right: 0; background: repeating-linear-gradient(135deg, var(--line-strong) 0 4px, var(--tint-weak) 4px 8px); }
 .cp-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
-.cp-mna { border-color: var(--status-warning); }
+
+/* save-to-Drive message */
 .cp-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; gap: 14px; max-width: min(92vw, 560px); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; color: #fff; box-shadow: var(--shadow-raised); }
 .cp-toast[hidden] { display: none; }
 .cp-toast--ok { background: #15803D; } .cp-toast--bad { background: #B91C1C; }
 .cp-toast button { background: transparent; border: 0; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }
+
+@media (max-width: 760px) { .cp-card { padding: 14px 14px 12px; } .cp-kpis { grid-template-columns: repeat(2, 1fr); } }
