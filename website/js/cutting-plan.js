@@ -147,38 +147,53 @@
     return wb;
   }
 
-  /* ---------- PDF (A4 portrait, drawn with jsPDF) ---------- */
+  /* ---------- PDF (A4 portrait, drawn with jsPDF) ----------
+     Large print for the shop floor: at most 3 pipes per page (fewer when a pipe has many pieces),
+     and a "Cut box" square on every piece row for the cutter to tick. */
   function buildPdf(rec) {
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    var L = 12, W = 186, H = 297, B = 14, y = 0;
-    var cols = [['#', 10, 'l'], ['Project', 30, 'l'], ['Drawing No.', 48, 'l'], ['Spool No.', 41, 'l'], ['Group', 22, 'l'], ['Bevel', 15, 'l'], ['Length', 20, 'r']];
-    function fit(t, w) { t = String(t == null ? '' : t); while (t.length > 1 && doc.getTextWidth(t) > w - 1.5) t = t.slice(0, -1); return t; }
-    function ensure(h) { if (y + h > H - B) { doc.addPage(); y = 14; } }
-    function row(vals, bold, dot) {
-      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(8);
-      var x = L;
-      if (dot) { doc.setFillColor(dot); doc.circle(L + 2, y - 1, 1.1, 'F'); }
-      cols.forEach(function (c, i) { var t = fit(vals[i], c[1]); doc.text(t, c[2] === 'r' ? x + c[1] - 1 : x + (i === 0 && dot ? 4.2 : 0.8), y, { align: c[2] === 'r' ? 'right' : 'left' }); x += c[1]; });
-      doc.setDrawColor(200); doc.line(L, y + 1.3, L + W, y + 1.3); y += 4.6;
+    var L = 12, W = 186, H = 297, TOP = 14, BOT = 16, RH = 7.6, MAXBARS = 3;
+    var cols = [['#', 10, 'l'], ['Project', 24, 'l'], ['Drawing No.', 41, 'l'], ['Spool No.', 41, 'l'], ['Group', 20, 'l'], ['Bevel', 15, 'l'], ['Length', 16, 'r'], ['Cut box', 19, 'c']];
+    var y = 0, barsOnPage = 0;
+    // long values shrink (down to 7 pt) before they are cut, so drawing/spool numbers stay readable
+    function fit(t, w, size) { t = String(t == null ? '' : t); doc.setFontSize(size); while (size > 7 && doc.getTextWidth(t) > w - 1.5) { size -= 0.5; doc.setFontSize(size); } while (t.length > 1 && doc.getTextWidth(t) > w - 1.5) t = t.slice(0, -1); return t; }
+    function newPage() {
+      doc.addPage(); y = TOP; barsOnPage = 0;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
+      doc.text('Cutting Plan ' + rec.planNo + '   |   Project ' + (rec.project || '-') + '   |   ' + rec.date, L, y); doc.setTextColor(0, 0, 0); y += 8;
     }
-    y = 14;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text('DEE Piping Systems - Cutting Plan ' + rec.planNo, L, y); y += 6;
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text('Project ' + (rec.project || '-') + '   |   Date ' + rec.date + '   |   Cutting allowance ' + rec.kerf + ' mm   |   Trim ' + rec.trim + ' mm', L, y); y += 5;
-    var s = rec.summary;
-    doc.text('Pieces ' + s.pieces + '   Planned ' + s.placed + '   MNA ' + s.unplaced + '   Pipes used ' + s.bars + '   Pipe length ' + (s.startMm / 1000).toFixed(2) + ' m   Net cut ' + (s.netMm / 1000).toFixed(2) + ' m   Yield ' + s.yieldPct.toFixed(1) + '%', L, y); y += 8;
-
-    rec.bars.forEach(function (b, i) {
-      ensure(9 + 8 + 4.6 * (b.pieces.length + 1) + 6);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(barId(i) + '   ' + barLabel(b), L, y);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
-      doc.text('Barcode ' + b.barcode + '   Heat ' + b.heat + '   Length ' + b.startLength + '   Remain ' + b.remain, L + W, y, { align: 'right' }); y += 3;
-      var x = L, BH = 6;
+    function tableHead() {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      var x = L;
+      cols.forEach(function (c) { var ax = c[2] === 'r' ? x + c[1] - 1 : c[2] === 'c' ? x + c[1] : x + 0.8; doc.text(c[0], ax, y, { align: c[2] === 'l' ? 'left' : 'right' }); x += c[1]; });
+      doc.setDrawColor(120); doc.setLineWidth(0.4); doc.line(L, y + 1.8, L + W, y + 1.8); y += 7;
+    }
+    // vals aligned with cols; dot = piece colour; box = draw the tick square
+    function row(vals, dot, box) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+      var x = L;
+      if (dot) { doc.setFillColor(dot); doc.circle(L + 2.2, y - 1.4, 1.5, 'F'); }
+      cols.forEach(function (c, i) {
+        if (c[2] === 'c') { if (box) { doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(x + c[1] - 6, y - 5, 6, 6); } }
+        else { var t = fit(vals[i], c[1], 10.5); doc.text(t, c[2] === 'r' ? x + c[1] - 1 : x + (i === 0 && dot ? 5.2 : 0.8), y, { align: c[2] === 'r' ? 'right' : 'left' }); }
+        x += c[1];
+      });
+      doc.setDrawColor(200); doc.setLineWidth(0.2); doc.line(L, y + 2.2, L + W, y + 2.2); y += RH;
+    }
+    function barHead(b, i, cont) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text(barId(i) + '   ' + barLabel(b) + (cont ? '   (continued)' : ''), L, y); y += 6;
+      var base = 'Barcode ' + b.barcode + '    Heat ' + b.heat + '    Length ' + b.startLength + '    ';
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.text(base, L, y);
+      var wBase = doc.getTextWidth(base);
+      doc.setFont('helvetica', 'bold'); doc.text('Remain ' + b.remain, L + wBase, y); y += 4.5;
+    }
+    function barGraphic(b) {
+      var x = L, BH = 9;
       b.pieces.forEach(function (p, j) {
         var w = (p.length + rec.kerf) / b.startLength * W;
         doc.setFillColor(colorOf(j)); doc.rect(x, y, w, BH, 'F');
-        doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.4); doc.line(x + w, y, x + w, y + BH);
-        if (w >= 4.5) { doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(255, 255, 255); doc.text(String(j + 1), x + w / 2, y + 4.1, { align: 'center' }); doc.setTextColor(0, 0, 0); }
+        doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.5); doc.line(x + w, y, x + w, y + BH);
+        if (w >= 6) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.text(String(j + 1), x + w / 2, y + 6.2, { align: 'center' }); doc.setTextColor(0, 0, 0); }
         x += w;
       });
       var rw = L + W - x;                                  // remain: light grey with diagonal hatch
@@ -186,19 +201,41 @@
         doc.setFillColor(238, 238, 242); doc.rect(x, y, rw, BH, 'F'); doc.setDrawColor(190, 190, 200); doc.setLineWidth(0.2);
         for (var hx = 0; hx < rw; hx += 1.8) { var run = Math.min(BH, rw - hx); doc.line(x + hx, y + BH, x + hx + run, y + BH - run); }
       }
-      doc.setDrawColor(150); doc.setLineWidth(0.2); doc.rect(L, y, W, BH); doc.setLineWidth(0.2); y += BH + 4;
-      row(cols.map(function (c) { return c[0]; }), true);
-      b.pieces.forEach(function (p, j) { row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length], false, colorOf(j)); });
-      y += 4;
+      doc.setDrawColor(150); doc.setLineWidth(0.2); doc.rect(L, y, W, BH); y += BH + 5;
+    }
+
+    // first page header
+    y = TOP;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.text('DEE Piping Systems - Cutting Plan ' + rec.planNo, L, y); y += 7;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+    doc.text('Project ' + (rec.project || '-') + '   |   Date ' + rec.date + '   |   Cutting allowance ' + rec.kerf + ' mm   |   Trim ' + rec.trim + ' mm', L, y); y += 5.5;
+    var s = rec.summary;
+    doc.text('Pieces ' + s.pieces + '   Planned ' + s.placed + '   MNA ' + s.unplaced + '   Pipes ' + s.bars + '   Pipe length ' + (s.startMm / 1000).toFixed(2) + ' m   Net cut ' + (s.netMm / 1000).toFixed(2) + ' m   Yield ' + s.yieldPct.toFixed(1) + '%', L, y); y += 9;
+
+    var sep = null;
+    rec.bars.forEach(function (b, i) {
+      var need = 6 + 4.5 + 9 + 5 + 7 + b.pieces.length * RH + 6;   // whole pipe block
+      if (barsOnPage > 0 && (barsOnPage >= MAXBARS || y + need > H - BOT)) newPage();
+      if (sep && sep.page === doc.getNumberOfPages()) { doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.7); doc.line(L, sep.y, L + W, sep.y); }
+      sep = null;
+      barsOnPage++;
+      barHead(b, i, false); barGraphic(b); tableHead();
+      b.pieces.forEach(function (p, j) {
+        if (y + RH > H - BOT) { newPage(); barsOnPage = 1; barHead(b, i, true); tableHead(); }   // very long pipe: continue on next page
+        row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length, ''], colorOf(j), true);
+      });
+      sep = { page: doc.getNumberOfPages(), y: y - RH + 7.4 };   // divider goes in the gap below the last row, drawn only if another pipe follows on this page
+      y += 10;
     });
 
     if (rec.unplaced.length) {
-      ensure(14); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('MNA - no pipe available (' + rec.unplaced.length + ')', L, y); y += 5;
-      row(['', 'Project', 'Drawing No.', 'Spool No.', 'Group', 'Bevel', 'Length'], true);
-      rec.unplaced.forEach(function (p) { ensure(6); row(['', p.project, p.drawing, p.spool, p.group, p.bevel, p.length], false); });
+      if (y + 30 > H - BOT) newPage();
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text('MNA - no pipe available (' + rec.unplaced.length + ')', L, y); y += 7;
+      tableHead();
+      rec.unplaced.forEach(function (p) { if (y + RH > H - BOT) { newPage(); tableHead(); } row(['', p.project, p.drawing, p.spool, p.group, p.bevel, p.length, ''], null, false); });
     }
     var n = doc.getNumberOfPages();
-    for (var pg = 1; pg <= n; pg++) { doc.setPage(pg); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Plan ' + rec.planNo + '  -  page ' + pg + ' of ' + n, L + W, H - 7, { align: 'right' }); }
+    for (var pg = 1; pg <= n; pg++) { doc.setPage(pg); doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90, 90, 90); doc.text('Plan ' + rec.planNo + '  -  page ' + pg + ' of ' + n, L + W, H - 7, { align: 'right' }); doc.setTextColor(0, 0, 0); }
     return doc;
   }
 
