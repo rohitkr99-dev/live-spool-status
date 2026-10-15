@@ -40,25 +40,89 @@
       return mapRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' }));
     });
   }
-  // Pasted text (copied from Excel = tab separated). With a heading row it is read like a file; without one the template's column order is assumed.
-  var DEFAULT_COLS = { cut: ['Project', 'Drawing No.', 'Spool No.', 'Item Code', 'Length', 'Group', 'Bevel'], bar: ['Barcode', 'Item Code', 'Length', 'Control No.', 'Heat No.'] };
-  function parsePasted(text, kind) {
+  /* ---------- pasted data ----------
+     Copy cells from Excel (tab separated) including the heading row. Columns are matched by their heading, in any
+     order; extra columns are ignored. A small preview under the box shows how every pasted column was read, and
+     each column has a dropdown so a heading that was not recognised can be assigned by hand. */
+  var FIELDS = {
+    cut: [['project', 'Project'], ['drawing', 'Drawing No.'], ['spool', 'Spool No.'], ['item', 'Item Code', 1], ['length', 'Length', 1], ['group', 'Group'], ['bevel', 'Bevel'], ['qty', 'Qty']],
+    bar: [['barcode', 'Barcode', 1], ['item', 'Item Code', 1], ['length', 'Length', 1], ['control', 'Control No.'], ['heat', 'Heat No.']]
+  };
+  var KIND_LABEL = { cut: 'cut list', bar: 'available pipes' };
+  var paste = { cut: null, bar: null };
+  function hnorm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[.:]/g, '').replace(/\s+/g, ' ').trim(); }
+  function fieldOf(heading, kind) {
+    var n = hnorm(heading), hit = '';
+    FIELDS[kind].some(function (f) { if (SYN[f[0]].some(function (s) { return hnorm(s) === n; })) { hit = f[0]; return true; } return false; });
+    return hit;
+  }
+  function parsePaste(text, kind) {
     var wb = XLSX.read(text.replace(/\r\n?/g, '\n').trim(), { type: 'string', raw: true });
     var aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', blankrows: false })
       .filter(function (row) { return row.some(function (c) { return String(c).trim() !== ''; }); });
-    if (!aoa.length) return [];
-    var known = {}; Object.keys(SYN).forEach(function (f) { SYN[f].forEach(function (n) { known[n] = 1; }); });
-    var hits = aoa[0].filter(function (c) { return known[String(c).trim().toLowerCase()]; }).length;
-    var head = hits >= 2 ? aoa.shift().map(String) : DEFAULT_COLS[kind];
-    return mapRows(aoa.map(function (row) { var o = {}; head.forEach(function (h, i) { if (h && !(h in o)) o[h] = row[i] == null ? '' : row[i]; }); return o; }));
+    if (!aoa.length) return null;
+    var head = aoa.shift().map(function (c) { return String(c == null ? '' : c).trim(); });
+    var map = [], taken = {}, dups = [];
+    head.forEach(function (h) {
+      var f = fieldOf(h, kind);
+      if (f && taken[f]) { dups.push(h); map.push(''); } else { if (f) taken[f] = 1; map.push(f); }
+    });
+    return { text: text, head: head, rows: aoa, map: map, dups: dups };
   }
+  function missingFields(st, kind) {
+    return FIELDS[kind].filter(function (f) { return f[2] && st.map.indexOf(f[0]) < 0; }).map(function (f) { return f[1]; });
+  }
+  function renderMap(kind) {
+    var el = $(kind + 'Map'), st = paste[kind];
+    if (!st) { el.innerHTML = ''; return; }
+    var opts = '<option value="">- ignore -</option>' + FIELDS[kind].map(function (f) { return '<option value="' + f[0] + '">' + esc(f[1]) + (f[2] ? ' *' : '') + '</option>'; }).join('');
+    var th = st.head.map(function (h, i) { return '<th><select data-k="' + kind + '" data-i="' + i + '" aria-label="Field for pasted column ' + esc(h || i + 1) + '">' + opts + '</select><div class="cp-asp">pasted heading: ' + esc(h || '(empty)') + '</div></th>'; }).join('');
+    var show = st.rows.slice(0, 4);
+    var tr = show.map(function (r) { return '<tr>' + st.head.map(function (h, i) { return '<td>' + esc(r[i] == null ? '' : r[i]) + '</td>'; }).join('') + '</tr>'; }).join('');
+    var miss = missingFields(st, kind), unknown = st.head.filter(function (h, i) { return !st.map[i] && h && st.dups.indexOf(h) < 0; });
+    var recognised = st.map.filter(Boolean).length, msg = '';
+    if (!recognised) msg += '<p class="cp-bad">No heading row found. Copy the heading row from Excel together with the data. If your headings use other names, pick the field for each column below (the first pasted row is always read as the headings).</p>';
+    else if (miss.length) msg += '<p class="cp-bad">Choose a column for: ' + miss.map(esc).join(', ') + ' (required, marked *).</p>';
+    if (st.dups.length) msg += '<p class="cp-warn">More than one column looks like the same field; only the first is used: ' + st.dups.map(esc).join(', ') + '. Change the dropdowns if the wrong one was picked.</p>';
+    if (recognised && unknown.length) msg += '<p class="cp-note">Not used: ' + unknown.map(esc).join(', ') + '. Pick a field in its dropdown if it is needed.</p>';
+    if (recognised && !miss.length) msg = '<p class="cp-ok">' + st.rows.length + ' rows ready.</p>' + msg;
+    el.innerHTML = msg + '<div class="cp-tw"><table class="cp-maptbl"><tr>' + th + '</tr>' + tr + '</table></div>' + (st.rows.length > 4 ? '<p class="cp-note">... and ' + (st.rows.length - 4) + ' more rows</p>' : '');
+    Array.prototype.forEach.call(el.querySelectorAll('select'), function (sel) {
+      sel.value = st.map[+sel.dataset.i] || '';
+      sel.onchange = function () {                       // a field can belong to one column only
+        var i = +sel.dataset.i, v = sel.value;
+        if (v) st.map.forEach(function (x, j) { if (j !== i && x === v) st.map[j] = ''; });
+        st.map[i] = v; st.dups = []; renderMap(kind);
+      };
+    });
+  }
+  ['cut', 'bar'].forEach(function (kind) {
+    $(kind + 'Paste').addEventListener('input', function () {
+      var t = $(kind + 'Paste').value;
+      paste[kind] = t.trim() ? parsePaste(t, kind) : null; renderMap(kind);
+    });
+  });
   function readInput(kind) {          // pasted text wins over an uploaded file
     var txt = $(kind + 'Paste').value.trim(), f = $(kind + 'File').files[0];
-    if (txt) return Promise.resolve(parsePasted(txt, kind));
+    if (txt) {
+      var st = paste[kind];
+      if (!st || st.text.trim() !== txt) { st = paste[kind] = parsePaste($(kind + 'Paste').value, kind); renderMap(kind); }
+      if (!st) return Promise.reject(new Error('The pasted ' + KIND_LABEL[kind] + ' is empty.'));
+      var miss = missingFields(st, kind);
+      if (miss.length) return Promise.reject(new Error('Pasted ' + KIND_LABEL[kind] + ': choose a column for ' + miss.join(' and ') + ' (see the column boxes under the paste area).'));
+      return Promise.resolve(st.rows.map(function (r) {
+        var o = {}; FIELDS[kind].forEach(function (fl) { o[fl[0]] = ''; });
+        st.map.forEach(function (fld, i) { if (fld) o[fld] = r[i] == null ? '' : r[i]; });
+        if ('barcode' in o) o.barcode = String(o.barcode).trim();
+        return o;
+      }));
+    }
     if (f) return readFile(f);
-    return Promise.reject(new Error('Add the ' + (kind === 'cut' ? 'cut list' : 'available pipes') + ': upload a file or paste the rows.'));
+    return Promise.reject(new Error('Add the ' + KIND_LABEL[kind] + ': upload a file or paste the rows.'));
   }
-  Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'), function (b) { b.onclick = function () { $(b.dataset.clear).value = ''; }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-clear]'), function (b) {
+    b.onclick = function () { var k = b.dataset.clear.slice(0, 3); $(b.dataset.clear).value = ''; paste[k] = null; renderMap(k); };
+  });
   function template(h, n) { var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([h]), 'Sheet1'); XLSX.writeFile(wb, n); }
   $('tplCut').onclick = function () { template(['Project', 'Drawing No.', 'Spool No.', 'Item Code', 'Length', 'Group', 'Bevel'], 'cut-list-template.xlsx'); };
   $('tplBar').onclick = function () { template(['Barcode', 'Item Code', 'Length', 'Control No.', 'Heat No.'], 'available-pipes-template.xlsx'); };

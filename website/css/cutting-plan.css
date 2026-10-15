@@ -25,6 +25,10 @@
 .cp-card input[type=file] { margin-top: 4px; max-width: 100%; color: var(--frost); font-size: 12.5px; }
 .cp-card textarea { font: 12.5px/1.4 var(--font-mono); white-space: pre; overflow: auto; resize: vertical; }
 .cp-or { margin-top: 10px; }
+.cp-map { margin-top: 8px; }
+.cp-maptbl select { width: 100%; min-width: 118px; font: inherit; font-size: 12px; padding: 3px 4px; border-radius: 7px; border: 1px solid var(--glass-border-strong); background: var(--bg-2); color: var(--frost); }
+.cp-asp { font-size: 10.5px; font-weight: 400; color: var(--frost-faint); margin-top: 3px; text-transform: none; letter-spacing: 0; }
+.cp-maptbl th { vertical-align: top; }
 .cp-clear { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
 .cp-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
 .cp-inline { display: inline; }

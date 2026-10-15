@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261019">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261020">
 </head>
 <body class="is-ready">
 <div class="ambient" aria-hidden="true">
@@ -77,16 +77,18 @@
         <div class="cp-grid">
           <div>
             <label>Cut list: upload a file (.xlsx / .csv)<input type="file" id="cutFile" accept=".xlsx,.xls,.csv"></label>
-            <label class="cp-or">or paste the rows copied from Excel<textarea id="cutPaste" rows="6" spellcheck="false" placeholder="Project &#9;Drawing No. &#9;Spool No. &#9;Item Code &#9;Length &#9;Group &#9;Bevel"></textarea></label>
+            <label class="cp-or">or paste the rows copied from Excel<textarea id="cutPaste" rows="6" spellcheck="false" placeholder="Paste here, including the heading row (any column order, e.g. Project, Drawing No., Spool No., Item Code, Length, Group, Bevel)"></textarea></label>
+            <div class="cp-map" id="cutMap"></div>
             <button class="btn btn--ghost cp-clear" type="button" data-clear="cutPaste">Clear pasted data</button>
           </div>
           <div>
             <label>Available pipes: upload a file (.xlsx / .csv)<input type="file" id="barFile" accept=".xlsx,.xls,.csv"></label>
-            <label class="cp-or">or paste the rows copied from Excel<textarea id="barPaste" rows="6" spellcheck="false" placeholder="Barcode &#9;Item Code &#9;Length &#9;Control No. &#9;Heat No."></textarea></label>
+            <label class="cp-or">or paste the rows copied from Excel<textarea id="barPaste" rows="6" spellcheck="false" placeholder="Paste here, including the heading row (any column order, e.g. Barcode, Item Code, Length, Control No., Heat No.)"></textarea></label>
+            <div class="cp-map" id="barMap"></div>
             <button class="btn btn--ghost cp-clear" type="button" data-clear="barPaste">Clear pasted data</button>
           </div>
         </div>
-        <p class="cp-note">Pasting: copy the cells in Excel (with or without the heading row) and paste them in the box. If there is no heading row, the columns must be in the order shown in the box. If you both upload and paste, the pasted rows are used.</p>
+        <p class="cp-note">Pasting: copy the cells in Excel <strong>with the heading row</strong>. The columns can be in any order, and extra columns are ignored. After you paste, a preview shows how each column was read; if a heading is not recognised, choose the right field in the dropdown above that column. Fields marked * are required. If you both upload and paste, the pasted rows are used.</p>
         <p class="cp-note">Cut list columns: Project, Drawing No., Spool No., Item Code, Length, Group, Bevel (optional: Qty).<br>Available pipes columns: Barcode, Item Code, Length, Control No., Heat No. Length is the current remaining length.</p>
         <div class="cp-row"><button class="btn btn--ghost" id="tplCut" type="button">Cut-list template</button><button class="btn btn--ghost" id="tplBar" type="button">Available-pipes template</button></div>
       </div>
@@ -118,7 +120,7 @@
 <script src="js/user-menu.js?v=20260920b"></script>
 <script src="vendor/xlsx.core.min.js"></script>
 <script src="vendor/jspdf.umd.min.js"></script>
-<script src="js/cutplan-engine.js?v=20261019"></script>
-<script src="js/cutting-plan.js?v=20261019"></script>
+<script src="js/cutplan-engine.js?v=20261020"></script>
+<script src="js/cutting-plan.js?v=20261020"></script>
 </body>
 </html>
