@@ -94,3 +94,10 @@
 .cp-dlg input[type=radio] { width: 18px; height: 18px; accent-color: var(--ember); }
 .cp-fs { margin: 14px 0 0; padding: 10px 12px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); } .cp-fs legend { padding: 0 6px; font-size: 13px; }
 .cp-card .btn[disabled] { opacity: .4; cursor: not-allowed; }
+/* item-level material handover */
+.cp-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.cp-badge--ok { background: #DCFCE7; color: #166534; } .cp-badge--part { background: #FEF3C7; color: #92400E; } .cp-badge--bal { background: #FEE2E2; color: #991B1B; } .cp-badge--none { background: var(--bg-2); color: var(--frost-dim); }
+.cp-sttbl tr.cp-sprow td { cursor: default; } .cp-exp { border: 0; background: transparent; color: var(--frost); font-size: 16px; cursor: pointer; padding: 2px 8px; }
+.cp-sttbl tr.cp-detail > td { background: var(--bg-2); padding: 8px 10px 14px; } .cp-sttbl .cp-sub { margin: 0; width: 100%; } .cp-sub th { font-size: 11.5px; }
+.cp-detailhead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 8px; } .cp-detailhead input { width: 12em !important; margin: 0 !important; }
+.cp-pipe-ok { color: #15803D; font-weight: 600; } .cp-pipe-no { color: var(--frost-dim); }

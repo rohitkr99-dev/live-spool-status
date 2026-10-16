@@ -1,193 +1,288 @@
-/*
- * material-handover.js - "Material Handover" section of the Cutting Station page.
- * One tick per spool. The spool list comes from the tracker's published spool data (shared download in cutting-status.js);
- * the saved state lives in the "Material Handover - MASTER" Google Sheet, reached through the Drive script with the user's site login.
- * Received By starts as the spool's Group; the date starts as today. Saving warns (but never blocks) when a spool's pipe pieces are
- * not all cut and bevelled in the Cutting and Beveling master.
+/* Material Handover section (item level): every spool shows its BOM items; the user ticks what was RECEIVED (from store / cutting station)
+ * and what was HANDED OVER to the groups. Pipes are filled in from the Cutting & Beveling Status (a pipe line counts as received when its
+ * pieces are cut AND bevelled), everything else is ticked by the user.
+ *
+ * Only one project is loaded at a time, after the user picks the filters and presses Load data. The BOM comes from small per-project
+ * files in Drive (built daily from the Drawing Line List by scripts/build_bom.py); only ticked items are saved, to the private
+ * "Material Handover - MASTER" sheet in Drive (sheet Items), through the Apps Script (Firebase login check).
  */
 (function () {
   'use strict';
   var CS = window.CutStation;
   if (!CS || !CS.spools) return;
   var $ = CS.el, esc = CS.esc, api = CS.api, toast = CS.toast, D = CS.D;
-  var PAGE = 100;
+  var PAGE = 50, CHUNK = 2000;
 
-  var spools = null;      // tracker spool list
-  var saved = {};         // key -> saved handover row (from the master)
-  var cutSum = {};        // normalised key -> [pieces, cut, bevelled]
-  var edits = {};         // key -> edited handover state (only for spools the user touched)
-  var filtered = [], shown = PAGE, loading = false;
-
-  var today = D.todayIso;
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
-  var keyOf = function (s) { return s.project + '|' + s.drawing + '|' + s.spool; };
-  var baseOf = function (s) {
-    var r = saved[keyOf(s)];
-    return r ? { handed: !!r.handed, date: r.handed ? D.iso(r.date) : '', receivedBy: r.receivedBy || '', remark: r.remark || '' } : { handed: false, date: '', receivedBy: '', remark: '' };
-  };
-  var stateOf = function (s) { return edits[keyOf(s)] || baseOf(s); };
-  var differs = function (a, b) { return a.handed !== b.handed || a.date !== b.date || a.receivedBy !== b.receivedBy || a.remark !== b.remark; };
-  var dirtyKeys = function () { return Object.keys(edits).filter(function (k) { var s = specOf[k]; return s && differs(edits[k], baseOf(s)); }); };
-  var specOf = {};        // key -> spool
+  var pn = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ''); };
+  var fmtN = function (n) { return Number(n).toLocaleString('en-US'); };
+  var today = D.todayIso;
 
+  var manifest = null;
+  var spoolsList = [];     // [{key, drawing, spool, week, group, lines:[line]}] of the loaded project
+  var project = '';        // loaded project code
+  var base = {};           // item key -> saved state
+  var edits = {};          // item key -> changed state (not saved yet)
+  var pipeAuto = {};       // item key -> true when the pipe line is cut AND bevelled
+  var lineByKey = {}, spoolByKey = {}, toOf = {};
+  var filtered = [], shown = PAGE, open = {};
+  var loadingNow = false;
+
+  var blank = { recv: false, recvDate: '', hand: false, handDate: '', handTo: '' };
+  var stateOf = function (l) { return edits[l.k] || base[l.k] || blank; };
+  var differs = function (a, b) { return a.recv !== b.recv || a.recvDate !== b.recvDate || a.hand !== b.hand || a.handDate !== b.handDate || a.handTo !== b.handTo; };
+  var dirtyKeys = function () { return Object.keys(edits).filter(function (k) { return differs(edits[k], base[k] || blank); }); };
   CS.dirtyFns.push(function () { return dirtyKeys().length > 0; });
   CS.sectionHooks.handover = init;
 
-  /* ---------- loading ---------- */
+  var isRecv = function (l) { return l.pipe ? !!pipeAuto[l.k] : stateOf(l).recv; };
+  var tickDate = function () { return D.iso($('hDate').value) || today(); };
+
+  /* ---------- start: only the (small) list of projects is loaded ---------- */
   function init() {
-    if (spools || loading) return;
-    loading = true;
-    $('hNote').className = 'cp-note'; $('hNote').textContent = 'Loading the spool list (a large file, the first time only) and the saved handovers...';
-    Promise.all([CS.spools(), api('getHandover'), api('getCutSummary')]).then(function (r) {
-      spools = r[0];
-      spools.forEach(function (s) { specOf[keyOf(s)] = s; });
-      r[1].rows.forEach(function (x) { saved[x.project + '|' + x.drawing + '|' + x.spool] = x; });
-      indexCut(r[2].summary);
-      fillFilters(); loading = false; $('hNote').textContent = ''; apply();
-    }).catch(function (e) {
-      loading = false; $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load: ' + e.message;
-    });
+    if (manifest || loadingNow) return;
+    if (!$('hDate').value) $('hDate').value = D.dmy(today());
+    loadingNow = true;
+    $('hNote').className = 'cp-note'; $('hNote').textContent = 'Loading the list of projects...';
+    api('getBomManifest').then(function (r) {
+      manifest = r.manifest;
+      var ps = Object.keys(manifest.projects || {}).sort();
+      $('hProject').innerHTML = '<option value="">- choose a project -</option>' + ps.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + ' (' + fmtN(manifest.projects[p].spools) + ' spools)</option>'; }).join('');
+      $('hBomInfo').textContent = 'BOM: ' + manifest.source + ' (built ' + D.fromMs(Date.parse(manifest.built)) + ')';
+      $('hNote').textContent = '';
+    }).catch(function (e) { $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load the project list: ' + e.message; })
+      .then(function () { loadingNow = false; });
   }
-  function indexCut(summary) {   // cut-list names may differ a little from the tracker's, so also match on Project + Spool
-    cutSum = {};
-    Object.keys(summary).forEach(function (k) {
-      var p = k.split('|'), v = summary[k];
-      [nk(p[0]) + '|' + nk(p[1]) + '|' + nk(p[2]), nk(p[0]) + '|' + nk(p[2])].forEach(function (nkk) {
-        var o = cutSum[nkk] || (cutSum[nkk] = [0, 0, 0]); o[0] += v[0]; o[1] += v[1]; o[2] += v[2];
+
+  /* ---------- Load data ---------- */
+  $('hLoad').onclick = function () {
+    var p = $('hProject').value;
+    if (!p) { $('hNote').className = 'cp-note cp-warn'; $('hNote').textContent = 'Choose a project first.'; return; }
+    if (dirtyKeys().length && !confirm('You have unsaved ticks. Load again and lose them?')) return;
+    var btn = $('hLoad');
+    btn.disabled = true; btn.textContent = 'Loading...'; $('hNote').className = 'cp-note'; $('hNote').textContent = 'Loading the BOM, saved ticks and cutting status of ' + p + '...';
+    Promise.all([api('getBomProject', { project: p }), api('getItemStates', { project: p }), api('getPipeStatus', { project: p }), CS.spools()]).then(function (r) {
+      build(p, r[0].bom, r[1].rows, r[2].pieces, r[3]);
+      $('hNote').textContent = ''; $('hBody').hidden = false; shown = PAGE; open = {}; apply();
+    }).catch(function (e) { $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load: ' + e.message; })
+      .then(function () { btn.disabled = false; btn.textContent = 'Load data'; });
+  };
+
+  function build(p, bom, stateRows, pieces, tracker) {
+    project = p; edits = {}; base = {}; pipeAuto = {}; lineByKey = {}; spoolByKey = {}; toOf = {}; spoolsList = [];
+    var wk = {};
+    tracker.forEach(function (t) { if (pn(t.project) === pn(p)) wk[nk(t.drawing) + '|' + nk(t.spool)] = t; });
+    var pcs = {};
+    pieces.forEach(function (x) { (pcs[nk(x[0]) + '|' + nk(x[1])] = pcs[nk(x[0]) + '|' + nk(x[1])] || []).push({ code: nk(x[2]), len: x[3], done: !!x[4], used: false }); });
+    var weeks = {}, groups = {};
+    Object.keys(bom.spools).forEach(function (sk) {
+      var parts = sk.split('|'), drawing = parts[0], spool = parts.slice(1).join('|'), t = wk[nk(drawing) + '|' + nk(spool)] || {}, seen = {}, lines = [];
+      bom.spools[sk].forEach(function (a) {
+        var code = a[1] || a[2] || 'NOCODE', n = (seen[code] = (seen[code] || 0) + 1);
+        var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], pipe: a[4] === 'MM', sk: sk };
+        lines.push(l); lineByKey[l.k] = l;
+      });
+      var sp = { key: sk, drawing: drawing, spool: spool, week: t.week || '', group: t.group || '', lines: lines };
+      lines.forEach(function (l) { l.sp = sp; });
+      spoolsList.push(sp); spoolByKey[sk] = sp; toOf[sk] = sp.group;
+      if (sp.week) weeks[sp.week] = 1;
+      if (sp.group) groups[sp.group] = 1;
+      // pipes: match each BOM pipe line to a planned piece (same item code and length, else same code) and use its cut + bevel result
+      var list = pcs[nk(drawing) + '|' + nk(spool)] || [];
+      lines.forEach(function (l) {
+        if (!l.pipe) return;
+        var q = Number(l.qty), hit = null;
+        list.forEach(function (x) { if (!hit && !x.used && x.code === nk(l.code) && Math.abs(x.len - q) < 0.5) hit = x; });
+        if (!hit) list.forEach(function (x) { if (!hit && !x.used && x.code === nk(l.code)) hit = x; });
+        if (hit) { hit.used = true; if (hit.done) pipeAuto[l.k] = true; }
       });
     });
+    spoolsList.sort(function (a, b) { return a.drawing.localeCompare(b.drawing, undefined, { numeric: true }) || a.spool.localeCompare(b.spool, undefined, { numeric: true }); });
+    stateRows.forEach(function (r) {
+      base[r[0]] = { recv: r[5] === 'Yes', recvDate: D.iso(r[6]), hand: r[8] === 'Yes', handDate: D.iso(r[9]), handTo: r[10] || '' };
+      var l = lineByKey[r[0]]; if (l && r[10]) toOf[l.sk] = r[10];
+    });
+    var num = function (w) { var m = /(\d+)/.exec(w); return m ? +m[1] : 9999; };
+    $('hWeekList').innerHTML = Object.keys(weeks).sort(function (a, b) { return num(a) - num(b) || a.localeCompare(b); }).map(function (w) { return '<option value="' + esc(w) + '">'; }).join('');
+    $('hGroupList').innerHTML = Object.keys(groups).sort().map(function (g) { return '<option value="' + esc(g) + '">'; }).join('');
   }
-  function cutOf(s) { return cutSum[nk(s.project) + '|' + nk(s.drawing) + '|' + nk(s.spool)] || cutSum[nk(s.project) + '|' + nk(s.spool)] || null; }
+
+  /* ---------- status ---------- */
+  function statusOf(sp) {
+    var n = sp.lines.length, r = 0;
+    sp.lines.forEach(function (l) { if (isRecv(l)) r++; });
+    if (!n) return { cls: 'none', text: 'No BOM items', r: 0, n: 0, key: 'none' };
+    if (r === n) return { cls: 'ok', text: 'Complete material available', r: r, n: n, key: 'complete' };
+    if (r === 0) return { cls: 'bal', text: 'Material balance', r: r, n: n, key: 'balance' };
+    return { cls: 'part', text: 'Partial MNA', r: r, n: n, key: 'partial' };
+  }
 
   /* ---------- filters ---------- */
-  function uniq(list, f) { var m = {}; list.forEach(function (s) { var v = f(s); if (v) m[v] = 1; }); return Object.keys(m); }
-  function fillFilters() {
-    var projects = {};
-    spools.forEach(function (s) { if (s.project) projects[s.project] = s.projectName || ''; });
-    $('hProject').innerHTML = '<option value="">All projects</option>' + Object.keys(projects).sort().map(function (p) { return '<option value="' + esc(p) + '">' + esc(p + (projects[p] ? ' - ' + projects[p] : '')) + '</option>'; }).join('');
-    var num = function (w) { var m = /(\d+)/.exec(w); return m ? +m[1] : 9999; };
-    $('hWeek').innerHTML = '<option value="">All weeks</option>' + uniq(spools, function (s) { return s.week; }).sort(function (a, b) { return num(a) - num(b) || a.localeCompare(b); }).map(function (w) { return '<option value="' + esc(w) + '">' + esc(w) + '</option>'; }).join('');
-    $('hGroup').innerHTML = '<option value="">All groups</option>' + uniq(spools, function (s) { return s.group; }).sort().map(function (g) { return '<option value="' + esc(g) + '">' + esc(g) + '</option>'; }).join('');
-  }
   var timer = null;
-  ['hProject', 'hWeek', 'hGroup', 'hStatus'].forEach(function (id) { $(id).addEventListener('change', function () { shown = PAGE; apply(); }); });
-  ['hDrawing', 'hSpool'].forEach(function (id) { $(id).addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { shown = PAGE; apply(); }, 250); }); });
+  ['hWeek', 'hGroup', 'hDrawing', 'hSpool', 'hItem'].forEach(function (id) { $(id).addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { shown = PAGE; if (spoolsList.length) apply(); }, 250); }); });
+  ['hStatus', 'hLines'].forEach(function (id) { $(id).addEventListener('change', function () { shown = PAGE; apply(); }); });
 
+  function lineVisible(l) {
+    var it = nk($('hItem').value), lf = $('hLines').value, st = stateOf(l), r = isRecv(l);
+    if (it && (nk(l.code).indexOf(it) < 0 && nk(l.desc).indexOf(it) < 0 && nk(l.size).indexOf(it) < 0)) return false;
+    if (lf === 'norecv' && r) return false;
+    if (lf === 'recvonly' && !(r && !st.hand)) return false;
+    if (lf === 'handed' && !st.hand) return false;
+    return true;
+  }
+  function visLines(sp) { return sp.lines.filter(lineVisible); }
   function apply() {
-    if (!spools) return;
-    var p = $('hProject').value, w = $('hWeek').value, g = $('hGroup').value, st = $('hStatus').value, d = nk($('hDrawing').value), sp = nk($('hSpool').value);
-    filtered = spools.filter(function (s) {
-      if (p && s.project !== p) return false;
-      if (w && s.week !== w) return false;
-      if (g && s.group !== g) return false;
-      if (d && nk(s.drawing).indexOf(d) < 0) return false;
-      if (sp && nk(s.spool).indexOf(sp) < 0) return false;
-      if (st && (stateOf(s).handed ? 'yes' : 'no') !== st) return false;
+    var w = nk($('hWeek').value), g = nk($('hGroup').value), d = nk($('hDrawing').value), s = nk($('hSpool').value), st = $('hStatus').value;
+    var lineFilter = $('hItem').value.trim() || $('hLines').value;
+    filtered = spoolsList.filter(function (sp) {
+      if (w && nk(sp.week).indexOf(w) < 0) return false;
+      if (g && nk(sp.group).indexOf(g) < 0) return false;
+      if (d && nk(sp.drawing).indexOf(d) < 0) return false;
+      if (s && nk(sp.spool).indexOf(s) < 0) return false;
+      if (st && statusOf(sp).key !== st) return false;
+      if (lineFilter && !visLines(sp).length) return false;
       return true;
     });
     render();
   }
 
   /* ---------- table ---------- */
-  function cutCell(s) {
-    var c = cutOf(s);
-    if (!c) return '<span class="cp-note" style="margin:0">no cutting record</span>';
-    var done = c[1] === c[0] && c[2] === c[0];
-    return '<span class="' + (done ? 'cp-ok' : 'cp-warn') + '">' + c[1] + '/' + c[0] + ' cut &middot; ' + c[2] + '/' + c[0] + ' bevelled</span>';
+  function tri(c, n) { return (n && c === n ? ' checked' : '') + (c > 0 && c < n ? ' data-partial="1"' : ''); }
+  function spoolRow(sp) {
+    var vl = visLines(sp), stt = statusOf(sp), isOpen = !!open[sp.key], k = esc(sp.key);
+    var rc = 0, rn = 0, hc = 0;
+    vl.forEach(function (l) { if (!l.pipe) { rn++; if (stateOf(l).recv) rc++; } if (stateOf(l).hand) hc++; });
+    var pipesOnly = sp.lines.filter(function (l) { return !l.pipe; }).length === 0;
+    var dirty = sp.lines.some(function (l) { return edits[l.k] && differs(edits[l.k], base[l.k] || blank); });
+    var out = '<tr class="cp-sprow' + (dirty ? ' cp-dirtyrow' : '') + '"><td><button class="cp-exp" data-exp="' + k + '" type="button" aria-label="Show items">' + (isOpen ? '&#9662;' : '&#9656;') + '</button></td>' +
+      '<td>' + esc(sp.drawing) + '</td><td>' + esc(sp.spool) + '</td><td>' + esc(sp.week) + '</td><td>' + esc(sp.group) + '</td>' +
+      '<td class="n">' + vl.length + (vl.length !== sp.lines.length ? ' / ' + sp.lines.length : '') + '</td>' +
+      '<td class="cp-tick">' + (pipesOnly ? '<span class="cp-note" style="margin:0">pipes only</span>' : '<input type="checkbox" data-sr="' + k + '"' + tri(rc, rn) + (rn ? '' : ' disabled') + ' aria-label="Received: all items of this spool"> <small>' + rc + '/' + rn + '</small>') + '</td>' +
+      '<td class="cp-tick"><input type="checkbox" data-sh="' + k + '"' + tri(hc, vl.length) + (vl.length ? '' : ' disabled') + ' aria-label="Handed over: all items of this spool"> <small>' + hc + '/' + vl.length + '</small></td>' +
+      '<td><span class="cp-badge cp-badge--' + stt.cls + '">' + esc(stt.text) + '</span> <small>' + stt.r + '/' + stt.n + '</small></td></tr>';
+    if (isOpen) out += detailRow(sp, vl);
+    return out;
   }
-  function rowHtml(s, i) {
-    var st = stateOf(s), dirty = differs(st, baseOf(s)), k = esc(keyOf(s));
-    return '<tr data-i="' + i + '"' + (dirty ? ' class="cp-dirtyrow"' : '') + '><td class="cp-tick"><input type="checkbox" data-f="handed" data-k="' + k + '"' + (st.handed ? ' checked' : '') + ' aria-label="Handed over: ' + esc(s.spool) + '"></td>' +
-      '<td>' + esc(s.project) + '</td><td>' + esc(s.drawing) + '</td><td>' + esc(s.spool) + '</td><td>' + esc(s.week) + '</td><td>' + esc(s.group) + '</td><td>' + cutCell(s) + '</td>' +
-      '<td>' + esc(s.oldHandover ? D.dmy(D.iso(s.oldHandover)) || String(s.oldHandover).slice(0, 10) : '') + '</td>' +
-      '<td>' + (st.handed ? '<input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-f="date" data-k="' + k + '" value="' + esc(D.dmy(st.date)) + '">' : '') + '</td>' +
-      '<td><input type="text" class="cp-cell" data-f="receivedBy" data-k="' + k + '" value="' + esc(st.receivedBy) + '" placeholder="' + esc(s.group) + '"' + (st.handed ? '' : ' disabled') + '></td>' +
-      '<td><input type="text" class="cp-cell" data-f="remark" data-k="' + k + '" value="' + esc(st.remark) + '" placeholder="Remark"></td></tr>';
+  function detailRow(sp, vl) {
+    var rows = vl.map(function (l) {
+      var st = stateOf(l), k = esc(l.k), dirty = edits[l.k] && differs(edits[l.k], base[l.k] || blank);
+      var recvCell = l.pipe
+        ? (pipeAuto[l.k] ? '<span class="cp-pipe-ok">&#10003; cut &amp; bevelled</span>' : '<span class="cp-pipe-no">waiting for cutting &amp; beveling</span>')
+        : '<input type="checkbox" data-r="' + k + '"' + (st.recv ? ' checked' : '') + ' aria-label="Received: ' + esc(l.code) + '">' + (st.recv ? ' <input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-rd="' + k + '" value="' + esc(D.dmy(st.recvDate)) + '">' : '');
+      var handCell = '<input type="checkbox" data-h="' + k + '"' + (st.hand ? ' checked' : '') + ' aria-label="Handed over: ' + esc(l.code) + '">' + (st.hand ? ' <input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-hd="' + k + '" value="' + esc(D.dmy(st.handDate)) + '">' : '');
+      return '<tr' + (dirty ? ' class="cp-dirtyrow"' : '') + '><td>' + esc(l.code) + '</td><td>' + esc(l.desc) + (l.size ? ' <small>' + esc(l.size) + '</small>' : '') + '</td><td class="n">' + esc(l.qty) + ' ' + esc(l.uom) + '</td>' +
+        '<td class="cp-tick">' + recvCell + '</td><td class="cp-tick">' + handCell + '</td></tr>';
+    }).join('');
+    return '<tr class="cp-detail"><td colspan="9"><div class="cp-detailhead"><label>Handed over to <input type="text" data-to="' + esc(sp.key) + '" value="' + esc(toOf[sp.key] || '') + '" placeholder="' + esc(sp.group) + '"></label></div>' +
+      '<div class="cp-tw"><table class="cp-sttbl cp-sub"><tr><th>Item code</th><th>Description</th><th class="n">Qty</th><th>Received (store / cutting)</th><th>Handed over</th></tr>' + (rows || '<tr><td colspan="5" class="cp-note">No items match the filters.</td></tr>') + '</table></div></td></tr>';
   }
   function render() {
-    $('hListCard').hidden = false;
     var rows = filtered.slice(0, shown);
-    $('hTable').innerHTML = '<tr><th class="cp-tick"><input type="checkbox" id="hAll" aria-label="Tick all shown spools"></th><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Week</th><th>Group</th><th>Cutting &amp; beveling</th><th title="Date in the old Material Handover workbook">Old sheet</th><th>Handover date</th><th>Received by</th><th>Remark</th></tr>' +
-      (rows.length ? rows.map(rowHtml).join('') : '<tr><td colspan="11" class="cp-note">No spools match these filters.</td></tr>');
-    $('hCount').textContent = 'Showing ' + rows.length + ' of ' + filtered.length + ' spools';
+    $('hTable').innerHTML = '<tr><th></th><th>Drawing No.</th><th>Spool No.</th><th>Week</th><th>Group</th><th class="n">Items</th><th>Received</th><th>Handed over</th><th>Status</th></tr>' +
+      (rows.length ? rows.map(spoolRow).join('') : '<tr><td colspan="9" class="cp-note">No spools match these filters.</td></tr>');
+    Array.prototype.forEach.call($('hTable').querySelectorAll('[data-partial]'), function (c) { c.indeterminate = true; });
     $('hMore').hidden = filtered.length <= shown; $('hMore').textContent = 'Show ' + Math.min(PAGE, filtered.length - shown) + ' more';
-    var all = $('hAll'); if (all) { var n = rows.filter(function (s) { return stateOf(s).handed; }).length; all.checked = rows.length > 0 && n === rows.length; all.indeterminate = n > 0 && n < rows.length; }
-    updateBar();
+    var tot = { complete: 0, partial: 0, balance: 0 };
+    spoolsList.forEach(function (sp) { var k = statusOf(sp).key; if (tot[k] != null) tot[k]++; });
+    $('hCount').textContent = project + ' - showing ' + fmtN(Math.min(shown, filtered.length)) + ' of ' + fmtN(filtered.length) + ' spools';
+    $('hSummary').textContent = 'All ' + fmtN(spoolsList.length) + ' spools: ' + tot.complete + ' complete, ' + tot.partial + ' partial MNA, ' + tot.balance + ' material balance';
+    globalBoxes(); updateBar();
+  }
+  function globalBoxes() {
+    var rc = 0, rn = 0, hc = 0, hn = 0;
+    filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { hn++; if (stateOf(l).hand) hc++; if (!l.pipe) { rn++; if (stateOf(l).recv) rc++; } }); });
+    var set = function (id, c, n) { var b = $(id); b.checked = n > 0 && c === n; b.indeterminate = c > 0 && c < n; b.disabled = n === 0; };
+    set('hAllRecv', rc, rn); set('hAllHand', hc, hn);
+    $('hAllRecvLbl').textContent = 'Received: all shown items (' + fmtN(rc) + '/' + fmtN(rn) + ')'; $('hAllHandLbl').textContent = 'Handed over: all shown items (' + fmtN(hc) + '/' + fmtN(hn) + ')';
   }
   $('hMore').onclick = function () { shown += PAGE; render(); };
 
-  function setHanded(s, on) {
-    var st = Object.assign({}, stateOf(s));
-    st.handed = on;
-    if (on) { if (!st.date) st.date = today(); if (!st.receivedBy) st.receivedBy = s.group || ''; } else { st.date = ''; st.receivedBy = ''; }
-    edits[keyOf(s)] = st;
+  /* ---------- ticking ---------- */
+  function store(l, st) { if (differs(st, base[l.k] || blank)) edits[l.k] = st; else delete edits[l.k]; }
+  function setRecv(l, on) {
+    if (l.pipe) return;
+    var st = Object.assign({}, stateOf(l));
+    st.recv = on; st.recvDate = on ? (st.recvDate || tickDate()) : '';
+    store(l, st);
   }
+  function setHand(l, on) {
+    var st = Object.assign({}, stateOf(l));
+    st.hand = on; st.handDate = on ? (st.handDate || tickDate()) : ''; st.handTo = on ? (toOf[l.sk] || l.sp.group || '') : '';
+    store(l, st);
+  }
+  var vlOf = function (sk) { return visLines(spoolByKey[sk]); };
+
+  $('hAllRecv').onchange = function () { var on = this.checked; filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { setRecv(l, on); }); }); render(); };
+  $('hAllHand').onchange = function () { var on = this.checked; filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { setHand(l, on); }); }); render(); };
+
+  $('hTable').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-exp]'); if (!b) return;
+    var k = b.dataset.exp; open[k] = !open[k]; render();
+  });
   $('hTable').addEventListener('change', function (e) {
-    var t = e.target;
-    if (t.id === 'hAll') { filtered.slice(0, shown).forEach(function (s) { setHanded(s, t.checked); }); render(); return; }
-    var k = t.dataset.k, s = k && specOf[k];
-    if (!s) return;
-    if (t.dataset.f === 'handed') { setHanded(s, t.checked); render(); }
-    else if (t.dataset.f === 'date') {
-      var iso = D.iso(t.value);
-      if (iso || !t.value.trim()) edits[k] = Object.assign({}, stateOf(s), { date: iso || today() }); else toast(false, 'Type the date as DD-MM-YYYY, for example ' + D.dmy(today()) + '.');
+    var t = e.target, d = t.dataset, l;
+    if (d.sr) { var on = t.checked; vlOf(d.sr).forEach(function (x) { setRecv(x, on); }); render(); }
+    else if (d.sh) { var on2 = t.checked; vlOf(d.sh).forEach(function (x) { setHand(x, on2); }); render(); }
+    else if (d.r) { setRecv(lineByKey[d.r], t.checked); render(); }
+    else if (d.h) { setHand(lineByKey[d.h], t.checked); render(); }
+    else if (d.rd || d.hd) {
+      l = lineByKey[d.rd || d.hd]; var iso = D.iso(t.value), st = Object.assign({}, stateOf(l));
+      if (!iso) { toast(false, 'Type the date as DD-MM-YYYY, for example ' + D.dmy(today()) + '.'); render(); return; }
+      if (d.rd) st.recvDate = iso; else st.handDate = iso;
+      store(l, st); render();
+    } else if (d.to) {
+      toOf[d.to] = t.value.trim();
+      spoolByKey[d.to].lines.forEach(function (x) { var st2 = stateOf(x); if (st2.hand) store(x, Object.assign({}, st2, { handTo: toOf[d.to] })); });
       render();
     }
   });
-  $('hTable').addEventListener('input', function (e) {       // typing: update the state without redrawing (keeps the cursor)
-    var t = e.target, k = t.dataset.k, s = k && specOf[k];
-    if (!s || (t.dataset.f !== 'receivedBy' && t.dataset.f !== 'remark')) return;
-    var st = Object.assign({}, stateOf(s)); st[t.dataset.f] = t.value; edits[k] = st;
-    var tr = t.closest('tr'); if (tr) tr.className = differs(st, baseOf(s)) ? 'cp-dirtyrow' : '';
-    updateBar();
-  });
-  function updateBar() { var n = dirtyKeys().length; $('hSaveBar').hidden = n === 0; $('hDirty').textContent = n + ' unsaved change' + (n === 1 ? '' : 's'); }
 
   /* ---------- save ---------- */
+  function updateBar() {
+    var n = dirtyKeys().length;
+    $('hSaveBar').hidden = n === 0; $('hDirty').textContent = fmtN(n) + ' unsaved change' + (n === 1 ? '' : 's');
+  }
   $('hDiscard').onclick = function () { edits = {}; render(); };
   $('hSave').onclick = function () {
-    var keys = dirtyKeys();
-    if (!keys.length) return;
-    var warn = [];
-    keys.forEach(function (k) {
-      var s = specOf[k], st = edits[k];
-      if (st.handed && !baseOf(s).handed) { var c = cutOf(s); if (c && (c[1] < c[0] || c[2] < c[0])) warn.push(s.spool + ': ' + c[1] + '/' + c[0] + ' cut, ' + c[2] + '/' + c[0] + ' bevelled'); }
-    });
-    if (warn.length && !confirm('Not all pipe pieces are cut and bevelled for ' + warn.length + ' spool' + (warn.length === 1 ? '' : 's') + ':\n\n' + warn.slice(0, 8).join('\n') + (warn.length > 8 ? '\n...and ' + (warn.length - 8) + ' more' : '') + '\n\nSave the handover anyway?')) return;
-    var rows = keys.map(function (k) {
-      var s = specOf[k], st = edits[k];
-      return { project: s.project, drawing: s.drawing, spool: s.spool, week: s.week, group: s.group, handed: st.handed, date: st.date, receivedBy: st.receivedBy, remark: st.remark };
-    });
+    var keys = dirtyKeys(); if (!keys.length) return;
+    var unreceived = keys.filter(function (k) { return edits[k].hand && !isRecv(lineByKey[k]); }).length;
+    if (unreceived && !confirm(fmtN(unreceived) + ' item(s) are marked handed over but not received yet. Save anyway?')) return;
     var btn = $('hSave'); btn.disabled = true; btn.textContent = 'Saving...';
-    var reset = function () { btn.disabled = false; btn.textContent = 'Save changes'; };
-    api('saveHandover', { rows: rows }).then(function (r) {
-      toast(true, 'Saved: ' + r.changed + ' handover change' + (r.changed === 1 ? '' : 's') + '.');
-      return api('getHandover');
-    }).then(function (r) {
-      saved = {}; r.rows.forEach(function (x) { saved[x.project + '|' + x.drawing + '|' + x.spool] = x; });
-      edits = {}; reset(); apply();
-    }).catch(function (e) { reset(); toast(false, 'NOT saved: ' + e.message); });
+    var rows = keys.map(function (k) {
+      var l = lineByKey[k], st = edits[k];
+      return { project: project, drawing: l.sp.drawing, spool: l.sp.spool, code: l.code, n: l.n, recv: st.recv, recvDate: st.recvDate, hand: st.hand, handDate: st.handDate, handTo: st.handTo };
+    });
+    var done = 0, chain = Promise.resolve();
+    for (var i = 0; i < rows.length; i += CHUNK) {
+      (function (part) { chain = chain.then(function () { return api('saveItemStates', { rows: part }).then(function () { done += part.length; btn.textContent = 'Saving ' + fmtN(done) + '/' + fmtN(rows.length) + '...'; }); }); })(rows.slice(i, i + CHUNK));
+    }
+    chain.then(function () { return api('getItemStates', { project: project }); }).then(function (r) {
+      base = {}; edits = {};
+      r.rows.forEach(function (x) { base[x[0]] = { recv: x[5] === 'Yes', recvDate: D.iso(x[6]), hand: x[8] === 'Yes', handDate: D.iso(x[9]), handTo: x[10] || '' }; });
+      toast(true, 'Saved ' + fmtN(rows.length) + ' item change' + (rows.length === 1 ? '' : 's') + '.'); render();
+    }).catch(function (e) { toast(false, 'NOT saved (' + fmtN(done) + ' of ' + fmtN(rows.length) + ' went through): ' + e.message); })
+      .then(function () { btn.disabled = false; btn.textContent = 'Save changes'; });
   };
   window.addEventListener('beforeunload', function (e) { if (dirtyKeys().length) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- report ---------- */
-  $('hrDownload').onclick = function () {
-    var btn = $('hrDownload'), msg = $('hrMsg');
-    var f = { project: $('hrProject').value.trim(), week: $('hrWeek').value.trim(), from: D.field('hrFrom'), to: D.field('hrTo') };
-    if (f.from === null || f.to === null) { msg.textContent = 'Type the dates as DD-MM-YYYY, for example ' + D.dmy(today()) + '.'; msg.className = 'cp-note cp-bad'; return; }
-    btn.disabled = true; btn.textContent = 'Preparing...'; msg.textContent = ''; msg.className = 'cp-note';
-    var done = function () { btn.disabled = false; btn.textContent = 'Download report (Excel)'; };
-    api('getReport', { type: 'handover', project: f.project, week: f.week, from: f.from, to: f.to, history: $('hrHist').checked }).then(function (r) {
-      done();
-      if (!r.rows.length) { msg.textContent = 'No spools match these filters.'; msg.className = 'cp-note cp-warn'; return; }
-      var sheet = function (h, rows) { var ws = D.fixDates(XLSX.utils.aoa_to_sheet([h].concat(rows.map(function (r) { return r.map(function (v) { return typeof v === 'string' ? D.dmy(v) : v; }); })))); ws['!cols'] = h.map(function (x) { return { wch: Math.max(11, String(x).length + 2) }; }); return ws; };
-      var wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, sheet(r.headers, r.rows), 'Material Handover');
-      if (r.history) XLSX.utils.book_append_sheet(wb, sheet(r.historyHeaders, r.history), 'History');
-      XLSX.utils.book_append_sheet(wb, D.fixDates(XLSX.utils.aoa_to_sheet([['Report', 'Material Handover'], ['Generated', D.now()], ['Project', f.project || 'All'], ['Week', f.week || 'All'],
-        ['Handover date from', D.dmy(f.from) || '-'], ['Handover date to', D.dmy(f.to) || '-'], ['Spools', r.rows.length], ['Note', 'The date filter matches the Handover Date. Spools never handed over have no date and appear only when no dates are set.']])), 'Report info');
-      XLSX.writeFile(wb, 'material-handover-' + D.dmy(today()) + '.xlsx');
-      msg.textContent = r.rows.length + ' spools downloaded.'; msg.className = 'cp-note cp-ok';
-    }).catch(function (e) { done(); msg.textContent = 'Could not prepare the report: ' + e.message; msg.className = 'cp-note cp-bad'; });
+  $('hReport').onclick = function () {
+    if (!filtered.length) return toast(false, 'Nothing to download. Check the filters.');
+    var items = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Received', 'Received Date', 'Handed Over', 'Handover Date', 'Handed Over To']];
+    var spl = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Items', 'Received', 'Handed Over', 'Status']];
+    filtered.forEach(function (sp) {
+      var stt = statusOf(sp), hc = 0;
+      sp.lines.forEach(function (l) { if (stateOf(l).hand) hc++; });
+      spl.push([project, sp.drawing, sp.spool, sp.week, sp.group, sp.lines.length, stt.r, hc, stt.text]);
+      visLines(sp).forEach(function (l) {
+        var st = stateOf(l), q = Number(l.qty);
+        items.push([project, sp.drawing, sp.spool, sp.week, sp.group, l.code, l.desc, l.size, isNaN(q) ? l.qty : q, l.uom, isRecv(l) ? (l.pipe ? 'Yes (cutting)' : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo]);
+      });
+    });
+    var wb = XLSX.utils.book_new();
+    [['Items', items], ['Spools', spl], ['Report info', [['Report', 'Material Handover (items)'], ['Generated', D.now()], ['Project', project], ['BOM', manifest ? manifest.source : ''], ['Note', 'Unsaved ticks on the page are included.']]]].forEach(function (x) {
+      var ws = D.fixDates(XLSX.utils.aoa_to_sheet(x[1])); ws['!cols'] = x[1][0].map(function (h) { return { wch: Math.max(11, String(h).length + 2) }; }); XLSX.utils.book_append_sheet(wb, ws, x[0]);
+    });
+    XLSX.writeFile(wb, 'material-handover-' + project.replace(/[^\w-]+/g, '_') + '-' + D.dmy(today()) + '.xlsx');
   };
 })();

@@ -1,0 +1,40 @@
+name: Build BOM data
+
+# Turns the newest "Drawing Line List DD-MM-YYYY.xlsx" in the Drive BOM/ folder into small per-project files
+# (Drive BOM/data/*.json) for the Material Handover section. Nothing is committed to this (public) repo.
+# The Drive service account needs EDITOR access on the BOM folder (it writes BOM/data there).
+
+on:
+  schedule:
+    # Every hour at :20. It only downloads and converts when a new/changed BOM file is found.
+    - cron: "20 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bom-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-api-python-client google-auth
+
+      - name: Build BOM files in Drive
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: python3 scripts/build_bom.py
