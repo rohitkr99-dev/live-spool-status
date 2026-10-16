@@ -2416,3 +2416,7 @@ Files: `website/js/material-handover.js` (rewritten), `website/cutting-plan.html
 ### 2026-10-24 (cont'd) - Material Handover: Project list shows only the code; Week and Group accept pasted lists
 
 Per the person. The Project dropdown now shows only the project code. Week and Group are multi-line boxes: type one value or paste a list copied from Excel (one per line, or separated by commas, semicolons or tabs); a spool is kept if it matches ANY value. Week matches by number ("27", "W27" and "Week 27" are the same week, and "1" does not match "Week 12"); Group matches the exact name (case does not matter). After loading, a line lists the weeks and groups found in that project to copy from. File: `website/js/material-handover.js`, `website/cutting-plan.html`, `website/css/cutting-plan.css`.
+
+### 2026-10-24 (cont'd) - Material Handover: Week and Group are pick-list dropdowns (plus type / paste)
+
+Per the person. Week and Group are now dropdowns with a tick box per value (the weeks and groups of the chosen project, with spool counts, from the tracker data), and each dropdown also has a box above the list to type or paste values. A spool is kept if it matches any ticked or typed value. The list is read only when a dropdown is first opened (it is the tracker's published spool file, downloaded once and shared with Load data); a Clear button empties the selection; changing the project resets both. Files: `website/js/material-handover.js`, `website/cutting-plan.html`, `website/css/cutting-plan.css`.

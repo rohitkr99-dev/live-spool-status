@@ -105,7 +105,7 @@
     });
     var num = function (w) { var m = /(\d+)/.exec(w); return m ? +m[1] : 9999; };
     var wl = Object.keys(weeks).sort(function (a, b) { return num(a) - num(b) || a.localeCompare(b); }), gl = Object.keys(groups).sort();
-    $('hAvail').textContent = 'In ' + p + ' - Weeks: ' + (wl.join(', ') || 'none known') + '. Groups: ' + (gl.join(', ') || 'none known') + '.';
+    refreshDD();
   }
 
   /* ---------- status ---------- */
@@ -144,8 +144,53 @@
     return toks.some(function (t) { var tn = weekNo(t); return tn != null && sn != null ? tn === sn : nk(spWeek).indexOf(nk(t)) >= 0 && nk(spWeek) !== ''; });
   }
   function groupMatch(spGroup, toks) { return toks.some(function (t) { return nk(spGroup) === nk(t); }); }
+  /* ---------- Week / Group: tick values in a dropdown, or type / paste a list ---------- */
+  var sel = { week: {}, group: {} };
+  var DD = { week: { box: 'hWeek', opts: 'hWeekOpts', sum: 'hWeekSum', dd: 'hWeekDD', all: 'All weeks' }, group: { box: 'hGroup', opts: 'hGroupOpts', sum: 'hGroupSum', dd: 'hGroupDD', all: 'All groups' } };
+  function ddTokens(kind) { return Object.keys(sel[kind]).concat(tokens($(DD[kind].box).value)); }
+  function ddSummary(kind) {
+    var t = ddTokens(kind);
+    $(DD[kind].sum).textContent = t.length ? (t.length > 3 ? t.length + ' selected' : t.join(', ')) : DD[kind].all;
+  }
+  function fillOpts(kind) {
+    var p = $('hProject').value, el = $(DD[kind].opts);
+    if (!p) { el.innerHTML = '<span class="cp-note">Choose a project first.</span>'; return; }
+    el.innerHTML = '<span class="cp-note">Loading the list...</span>';
+    CS.spools().then(function (list) {
+      var cnt = {}, num = function (w) { var m = /(\d+)/.exec(w); return m ? +m[1] : 9999; };
+      list.forEach(function (s) { if (pn(s.project) === pn(p)) { var v = kind === 'week' ? s.week : s.group; if (v) cnt[v] = (cnt[v] || 0) + 1; } });
+      var keys = Object.keys(cnt).sort(kind === 'week' ? function (a, b) { return num(a) - num(b) || a.localeCompare(b); } : function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
+      el.innerHTML = keys.length ? keys.map(function (v) { return '<label class="cp-opt"><input type="checkbox" data-dd="' + kind + '" value="' + esc(v) + '"' + (sel[kind][v] ? ' checked' : '') + '> ' + esc(v) + ' <small>(' + cnt[v] + ')</small></label>'; }).join('') : '<span class="cp-note">No ' + kind + 's known for this project. You can type or paste them above.</span>';
+    }).catch(function (e) { el.innerHTML = '<span class="cp-note cp-bad">Could not load the list: ' + esc(e.message) + '</span>'; });
+  }
+  function refreshDD() { fillOpts('week'); fillOpts('group'); }
+  function ddChanged() { shown = PAGE; if (spoolsList.length) apply(); }
+  Object.keys(DD).forEach(function (kind) {
+    var d = DD[kind];
+    $(d.dd).addEventListener('toggle', function () { if (this.open) fillOpts(kind); });          // the list is read only when the dropdown is opened
+    $(d.opts).addEventListener('change', function (e) {
+      var t = e.target; if (!t.dataset.dd) return;
+      if (t.checked) sel[kind][t.value] = 1; else delete sel[kind][t.value];
+      ddSummary(kind); ddChanged();
+    });
+    $(d.box).addEventListener('input', function () { ddSummary(kind); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ddclear]'), function (b) {
+    b.onclick = function () {
+      var kind = b.dataset.ddclear; sel[kind] = {}; $(DD[kind].box).value = '';
+      Array.prototype.forEach.call($(DD[kind].opts).querySelectorAll('input'), function (c) { c.checked = false; });
+      ddSummary(kind); ddChanged();
+    };
+  });
+  $('hProject').addEventListener('change', function () {            // a new project has its own weeks and groups
+    ['week', 'group'].forEach(function (kind) { sel[kind] = {}; $(DD[kind].box).value = ''; ddSummary(kind); if ($(DD[kind].dd).open) fillOpts(kind); else $(DD[kind].opts).innerHTML = '<span class="cp-note">Loading the list when opened...</span>'; });
+  });
+  document.addEventListener('click', function (e) {                 // click outside closes an open dropdown
+    Object.keys(DD).forEach(function (kind) { var el = $(DD[kind].dd); if (el.open && !el.contains(e.target)) el.open = false; });
+  });
+
   function apply() {
-    var wt = tokens($('hWeek').value), gt = tokens($('hGroup').value), d = nk($('hDrawing').value), s = nk($('hSpool').value), st = $('hStatus').value;
+    var wt = ddTokens('week'), gt = ddTokens('group'), d = nk($('hDrawing').value), s = nk($('hSpool').value), st = $('hStatus').value;
     var lineFilter = $('hItem').value.trim() || $('hLines').value;
     filtered = spoolsList.filter(function (sp) {
       if (wt.length && !weekMatch(sp.week, wt)) return false;
