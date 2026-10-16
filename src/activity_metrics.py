@@ -14,6 +14,11 @@ charts:
                                 DPR fabrication sheet (grouped by PDI
                                 / Painting date)
 
+Since 2026-10-16 every record is one day FOR ONE PROJECT
+(project_code), so the Projects page's global project filter can show a
+single project's activity; the page sums records per bucket, so the
+all-projects view is unchanged.
+
 Each day is also tagged with its fiscal week number/label (Week 1 =
 30 March, per utils.fiscal_week_info) and calendar month, so the
 dashboard can group the same underlying daily numbers by Day, Week,
@@ -35,7 +40,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from constants import PDI
+from constants import PDI, PROJECT_CODE
 from logger import logger
 from utils import fiscal_week_info, parse_date, to_json_safe
 
@@ -62,8 +67,10 @@ class ActivityMetricsEngine:
         value_field: str,
     ) -> dict:
         """
-        Sum value_field per calendar day (date_field), skipping rows
-        where either field is missing. Returns {date: total}.
+        Sum value_field per calendar day and project (date_field,
+        Project Code), skipping rows where either field is missing.
+        Returns {(date, project_code): total}; a row with no Project Code
+        is kept under "" so the all-projects total still includes it.
         """
 
         if date_field not in dataframe.columns:
@@ -82,6 +89,10 @@ class ActivityMetricsEngine:
             return {}
 
         working = dataframe[[date_field, value_field]].copy()
+        if PROJECT_CODE in dataframe.columns:
+            working["_project"] = dataframe[PROJECT_CODE].fillna("").astype(str).str.strip()
+        else:
+            working["_project"] = ""
         working["_date"] = working[date_field].apply(parse_date)
         working["_value"] = pd.to_numeric(
             working[value_field], errors="coerce"
@@ -92,9 +103,9 @@ class ActivityMetricsEngine:
         if working.empty:
             return {}
 
-        totals = working.groupby("_date")["_value"].sum()
+        totals = working.groupby(["_date", "_project"])["_value"].sum()
 
-        return {day: float(total) for day, total in totals.items()}
+        return {key: float(total) for key, total in totals.items()}
 
     # -----------------------------------------------------
 
@@ -124,9 +135,9 @@ class ActivityMetricsEngine:
         Returns
         -------
         list[dict]
-            One record per calendar day that has at least one of the
-            three metrics, sorted by date, each tagged with its
-            fiscal week and month.
+            One record per calendar day and project that has at least
+            one of the three metrics, sorted by date, each tagged with
+            its fiscal week and month.
         """
 
         logger.info("Activity Metrics Engine started.")
@@ -141,32 +152,34 @@ class ActivityMetricsEngine:
             fabrication, PDI, SURFACE_AREA_OUT_FIELD
         )
 
-        all_days = sorted(
+        all_keys = sorted(
             set(fitup_totals) | set(welding_totals) | set(painting_totals)
         )
 
         records = []
 
-        for day in all_days:
+        for key in all_keys:
 
+            day, project_code = key
             week_info = fiscal_week_info(day)
 
             records.append({
                 "date": to_json_safe(day),
+                "project_code": project_code,
                 "week_number": week_info["week_number"],
                 "week_label": week_info["week_label"],
                 "week_start": to_json_safe(week_info["week_start"]),
                 "month_label": day.strftime("%b %Y"),
-                "fitup_inch_dia": round(fitup_totals.get(day, 0.0), 2),
-                "welding_inch_dia": round(welding_totals.get(day, 0.0), 2),
+                "fitup_inch_dia": round(fitup_totals.get(key, 0.0), 2),
+                "welding_inch_dia": round(welding_totals.get(key, 0.0), 2),
                 "painting_surface_area_out": round(
-                    painting_totals.get(day, 0.0), 2
+                    painting_totals.get(key, 0.0), 2
                 ),
             })
 
         logger.info(
             f"Activity Metrics Engine completed. {len(records)} "
-            "day(s) with activity data."
+            "day/project record(s) with activity data."
         )
 
         return records

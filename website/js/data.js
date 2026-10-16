@@ -268,8 +268,8 @@ const SpoolData = {
    * Oldest N spools, sorted by Total Age descending.
    * A plain re-sort of already-computed data - not a calculation.
    */
-  oldestSpools(limit = 25) {
-    return [...this.store.masterSpools]
+  oldestSpools(limit = 25, rows = this.store.masterSpools) {
+    return [...rows]
       .sort((a, b) => (b["Total Age"] || 0) - (a["Total Age"] || 0))
       .slice(0, limit);
   },
@@ -277,9 +277,9 @@ const SpoolData = {
   /**
    * Distinct values for a field, for populating filter dropdowns.
    */
-  distinctValues(field) {
+  distinctValues(field, rows = this.store.masterSpools) {
     const values = new Set();
-    for (const row of this.store.masterSpools) {
+    for (const row of rows) {
       const value = row[field];
       if (value !== null && value !== undefined && value !== "") {
         values.add(value);

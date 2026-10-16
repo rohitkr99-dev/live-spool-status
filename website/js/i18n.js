@@ -117,6 +117,8 @@
     "dashboard.kpiVariance": { en: "Planning Variance", th: "ส่วนต่างจากแผน" },
     "dashboard.kpiVarianceSub": { en: "avg. start vs. plan (− = ahead, + = behind)", th: "เริ่มงานจริงเทียบแผนเฉลี่ย (− = เร็วกว่าแผน, + = ช้ากว่าแผน)" },
     "dashboard.fablineEyebrow": { en: "The Shop Floor, Right Now", th: "หน้างานผลิต ณ ขณะนี้" },
+    "dashboard.projectFilterLabel": { en: "Project", th: "โปรเจกต์" },
+    "dashboard.projectFilterNote": { en: "Applies to everything below. The key metrics above always show all projects.", th: "ใช้กับทุกส่วนด้านล่าง ตัวชี้วัดหลักด้านบนแสดงทุกโปรเจกต์เสมอ" },
     "dashboard.fablineHeading": { en: "Fabrication Line", th: "สายการผลิต" },
     "dashboard.fablineNote": { en: "Each block is a stage and shows how many spools are sitting there right now. The busiest stage is flagged Bottleneck.", th: "แต่ละบล็อกคือขั้นตอนหนึ่ง แสดงจำนวนสปูลที่อยู่ในขั้นตอนนั้น ณ ขณะนี้ ขั้นตอนที่มีงานค้างมากที่สุดจะถูกทำเครื่องหมายว่าคอขวด" },
     "dashboard.chartProjectProgress": { en: "Project Progress", th: "ความคืบหน้าโปรเจกต์" },

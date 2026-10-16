@@ -596,6 +596,39 @@ a { color: inherit; }
    glowing rail tying them together as one line.
    ===================================================== */
 
+/* Global project filter (2026-10-16): sits between the KPI cards and the
+   Fabrication Line. */
+.project-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 20px;
+  margin: 0 0 20px;
+  padding: 14px 20px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.project-filter .filter-field select {
+  min-width: 220px;
+  max-width: 340px;
+}
+
+.project-filter__note {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--frost-dim);
+  font-size: 12px;
+}
+
+.project-filter__warn { color: var(--status-warning); }
+
+@media (max-width: 600px) {
+  .project-filter .filter-field,
+  .project-filter .filter-field select { width: 100%; max-width: none; }
+}
+
 .fabline-section {
   position: relative;
   background: var(--glass-fill);
