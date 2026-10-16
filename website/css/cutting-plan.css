@@ -101,3 +101,4 @@
 .cp-sttbl tr.cp-detail > td { background: var(--bg-2); padding: 8px 10px 14px; } .cp-sttbl .cp-sub { margin: 0; width: 100%; } .cp-sub th { font-size: 11.5px; }
 .cp-detailhead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 8px; } .cp-detailhead input { width: 12em !important; margin: 0 !important; }
 .cp-pipe-ok { color: #15803D; font-weight: 600; } .cp-pipe-no { color: var(--frost-dim); }
+.cp-card textarea.cp-multi { font: inherit; font-size: 13.5px; white-space: pre-wrap; resize: vertical; min-height: 2.6em; }

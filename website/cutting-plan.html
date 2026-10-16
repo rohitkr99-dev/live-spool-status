@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261026">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261028">
 </head>
 <body class="is-ready">
 <div class="ambient" aria-hidden="true">
@@ -201,13 +201,13 @@
         <div class="cp-card__head"><h3>Choose what to load</h3><span class="cp-hint" id="hBomInfo"></span></div>
         <div class="cp-grid">
           <label>Project (required)<select id="hProject"><option value="">- choose a project -</option></select></label>
-          <label>Week<input type="text" id="hWeek" list="hWeekList" placeholder="optional, e.g. Week 27"></label>
-          <label>Group<input type="text" id="hGroup" list="hGroupList" placeholder="optional"></label>
+          <label>Week (one or many)<textarea id="hWeek" class="cp-multi" rows="2" spellcheck="false" placeholder="optional: Week 27, or paste a list (one per line or comma separated)"></textarea></label>
+          <label>Group (one or many)<textarea id="hGroup" class="cp-multi" rows="2" spellcheck="false" placeholder="optional: DP1, or paste a list (one per line or comma separated)"></textarea></label>
           <label>Drawing contains<input type="search" id="hDrawing" placeholder="optional"></label>
           <label>Spool contains<input type="search" id="hSpool" placeholder="optional"></label>
           <label>Date for my ticks<input type="text" id="hDate" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
         </div>
-        <datalist id="hWeekList"></datalist><datalist id="hGroupList"></datalist>
+        <p class="cp-note" id="hAvail" style="margin-top:8px"></p>
         <div class="cp-row"><button class="btn btn--primary" id="hLoad" type="button">Load data</button><span id="hNote" class="cp-note" style="margin:0" role="status"></span></div>
         <p class="cp-note">Pick the project (and, if you like, week, group or drawing), then press <b>Load data</b>. Only that project is loaded, so the page stays fast. Pipes are filled in automatically from the Cutting &amp; Beveling Status; you only tick the fittings and other items you receive.</p>
       </div>
@@ -251,6 +251,6 @@
 <script src="js/config.js?v=20261021"></script>
 <script src="js/cutting-plan.js?v=20261025"></script>
 <script src="js/cutting-status.js?v=20261025"></script>
-<script src="js/material-handover.js?v=20261027"></script>
+<script src="js/material-handover.js?v=20261028"></script>
 </body>
 </html>

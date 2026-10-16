@@ -47,7 +47,7 @@
     api('getBomManifest').then(function (r) {
       manifest = r.manifest;
       var ps = Object.keys(manifest.projects || {}).sort();
-      $('hProject').innerHTML = '<option value="">- choose a project -</option>' + ps.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + ' (' + fmtN(manifest.projects[p].spools) + ' spools)</option>'; }).join('');
+      $('hProject').innerHTML = '<option value="">- choose a project -</option>' + ps.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('');
       $('hBomInfo').textContent = 'Newest BOM file: ' + manifest.source + ' (built ' + D.fromMs(Date.parse(manifest.built)) + ')';
       $('hNote').textContent = '';
     }).catch(function (e) { $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load the project list: ' + e.message; })
@@ -104,8 +104,8 @@
       var l = lineByKey[r[0]]; if (l && r[10]) toOf[l.sk] = r[10];
     });
     var num = function (w) { var m = /(\d+)/.exec(w); return m ? +m[1] : 9999; };
-    $('hWeekList').innerHTML = Object.keys(weeks).sort(function (a, b) { return num(a) - num(b) || a.localeCompare(b); }).map(function (w) { return '<option value="' + esc(w) + '">'; }).join('');
-    $('hGroupList').innerHTML = Object.keys(groups).sort().map(function (g) { return '<option value="' + esc(g) + '">'; }).join('');
+    var wl = Object.keys(weeks).sort(function (a, b) { return num(a) - num(b) || a.localeCompare(b); }), gl = Object.keys(groups).sort();
+    $('hAvail').textContent = 'In ' + p + ' - Weeks: ' + (wl.join(', ') || 'none known') + '. Groups: ' + (gl.join(', ') || 'none known') + '.';
   }
 
   /* ---------- status ---------- */
@@ -132,12 +132,24 @@
     return true;
   }
   function visLines(sp) { return sp.lines.filter(lineVisible); }
+  // Week / Group accept one value or a pasted list (one per line, or separated by commas, semicolons or tabs). A spool matches if it matches ANY value.
+  function tokens(text) {
+    var parts = String(text || '').split(/[\n\r\t,;]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (parts.length === 1 && /^[\d\s]+$/.test(parts[0])) parts = parts[0].split(/\s+/);   // "27 28 29"
+    return parts;
+  }
+  var weekNo = function (x) { var m = /^(?:week|wk|w)?\s*-?\s*(\d+)$/i.exec(String(x).trim()); return m ? +m[1] : null; };
+  function weekMatch(spWeek, toks) {
+    var sn = weekNo(spWeek);
+    return toks.some(function (t) { var tn = weekNo(t); return tn != null && sn != null ? tn === sn : nk(spWeek).indexOf(nk(t)) >= 0 && nk(spWeek) !== ''; });
+  }
+  function groupMatch(spGroup, toks) { return toks.some(function (t) { return nk(spGroup) === nk(t); }); }
   function apply() {
-    var w = nk($('hWeek').value), g = nk($('hGroup').value), d = nk($('hDrawing').value), s = nk($('hSpool').value), st = $('hStatus').value;
+    var wt = tokens($('hWeek').value), gt = tokens($('hGroup').value), d = nk($('hDrawing').value), s = nk($('hSpool').value), st = $('hStatus').value;
     var lineFilter = $('hItem').value.trim() || $('hLines').value;
     filtered = spoolsList.filter(function (sp) {
-      if (w && nk(sp.week).indexOf(w) < 0) return false;
-      if (g && nk(sp.group).indexOf(g) < 0) return false;
+      if (wt.length && !weekMatch(sp.week, wt)) return false;
+      if (gt.length && !groupMatch(sp.group, gt)) return false;
       if (d && nk(sp.drawing).indexOf(d) < 0) return false;
       if (s && nk(sp.spool).indexOf(s) < 0) return false;
       if (st && statusOf(sp).key !== st) return false;
