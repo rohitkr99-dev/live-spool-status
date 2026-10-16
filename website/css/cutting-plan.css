@@ -107,7 +107,7 @@
 .cp-dd { position: relative; margin-top: 4px; }
 .cp-dd > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--bg-2); color: var(--frost); font-size: 13.5px; }
 .cp-dd > summary::-webkit-details-marker { display: none; } .cp-dd > summary::after { content: '\25BE'; color: var(--frost-dim); }
-.cp-ddpanel { position: absolute; z-index: 60; left: 0; right: 0; top: calc(100% + 4px); min-width: 240px; padding: 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--surface-solid, #fff); box-shadow: var(--shadow-raised); }
+.cp-ddpanel { margin-top: 4px; padding: 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--surface-solid, #fff); box-shadow: var(--shadow-raised); }
 :root[data-theme="dark"] .cp-ddpanel { background: #1c1b2e; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cp-ddpanel { background: #1c1b2e; } }
 .cp-opts { max-height: 220px; overflow: auto; margin: 8px 0; display: grid; gap: 2px; }
