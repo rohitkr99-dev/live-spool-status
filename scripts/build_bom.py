@@ -189,6 +189,7 @@ def run_drive():
     data_f = _find(svc, bom_id, "data", folder=True)
     data_id = data_f[0]["id"] if data_f else svc.files().create(body={"name": "data", "parents": [bom_id], "mimeType": "application/vnd.google-apps.folder"}, fields="id", supportsAllDrives=True).execute()["id"]
     man = _find(svc, data_id, "_manifest.json")
+    old = {}
     if man:
         old = json.loads(svc.files().get_media(fileId=man[0]["id"]).execute().decode("utf-8"))
         if old.get("source") == src["name"] and old.get("size") == src.get("size"):
@@ -203,7 +204,10 @@ def run_drive():
             _, done = dl.next_chunk()
     data = convert(tmp)
     built = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    manifest = {"source": src["name"], "size": src.get("size"), "built": built, "projects": {}}
+    # Projects missing from today's BOM are left exactly as they are: their files are never deleted or changed, and they stay in the
+    # manifest (project list of the page) with the source/date of the BOM they came from. Only projects present in the BOM are updated.
+    old_projects = old.get("projects") if isinstance(old.get("projects"), dict) else {}
+    manifest = {"source": src["name"], "size": src.get("size"), "built": built, "projects": dict(old_projects)}
     missing = []
     for project, body in data.items():
         payload = {"project": project, "source": src["name"], "built": built, "spools": body["spools"]}
@@ -213,7 +217,7 @@ def run_drive():
             missing.append(safe_name(project))
             continue
         _upload(svc, data_id, safe_name(project), text, ex[0]["id"])
-        manifest["projects"][project] = {"file": safe_name(project), "spools": len(body["spools"]), "items": sum(len(v) for v in body["spools"].values()), "bytes": len(text.encode("utf-8"))}
+        manifest["projects"][project] = {"file": safe_name(project), "spools": len(body["spools"]), "items": sum(len(v) for v in body["spools"].values()), "bytes": len(text.encode("utf-8")), "source": src["name"], "built": built}
         print("  - %s: %d spools, %d items, %.0f KB" % (project, manifest["projects"][project]["spools"], manifest["projects"][project]["items"], len(text.encode("utf-8")) / 1024))
     if missing or not man:
         print("\nACTION NEEDED: create an EMPTY text file with each of these names inside Drive BOM/data (as a normal user, e.g. upload a file containing {}), then run this job again:")
@@ -221,7 +225,8 @@ def run_drive():
             print("   " + m)
         return 1
     _upload(svc, data_id, "_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=1), man[0]["id"])
-    print("Done: %d projects." % len(data))
+    kept = [p for p in old_projects if p not in data]
+    print("Done: %d projects updated%s." % (len(data), ("; kept untouched (not in this BOM): " + ", ".join(kept)) if kept else ""))
     return 0
 
 

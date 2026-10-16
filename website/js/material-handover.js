@@ -48,7 +48,7 @@
       manifest = r.manifest;
       var ps = Object.keys(manifest.projects || {}).sort();
       $('hProject').innerHTML = '<option value="">- choose a project -</option>' + ps.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + ' (' + fmtN(manifest.projects[p].spools) + ' spools)</option>'; }).join('');
-      $('hBomInfo').textContent = 'BOM: ' + manifest.source + ' (built ' + D.fromMs(Date.parse(manifest.built)) + ')';
+      $('hBomInfo').textContent = 'Newest BOM file: ' + manifest.source + ' (built ' + D.fromMs(Date.parse(manifest.built)) + ')';
       $('hNote').textContent = '';
     }).catch(function (e) { $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load the project list: ' + e.message; })
       .then(function () { loadingNow = false; });
@@ -63,6 +63,7 @@
     btn.disabled = true; btn.textContent = 'Loading...'; $('hNote').className = 'cp-note'; $('hNote').textContent = 'Loading the BOM, saved ticks and cutting status of ' + p + '...';
     Promise.all([api('getBomProject', { project: p }), api('getItemStates', { project: p }), api('getPipeStatus', { project: p }), CS.spools()]).then(function (r) {
       build(p, r[0].bom, r[1].rows, r[2].pieces, r[3]);
+      $('hBomInfo').textContent = 'BOM of ' + p + ': ' + r[0].bom.source + ' (built ' + D.fromMs(Date.parse(r[0].bom.built)) + ')';
       $('hNote').textContent = ''; $('hBody').hidden = false; shown = PAGE; open = {}; apply();
     }).catch(function (e) { $('hNote').className = 'cp-note cp-bad'; $('hNote').textContent = 'Could not load: ' + e.message; })
       .then(function () { btn.disabled = false; btn.textContent = 'Load data'; });
