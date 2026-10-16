@@ -16,7 +16,7 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 ## Cutting Station build (2026-10-21)
 
-Plan agreed with the owner: page becomes **Cutting Station and Material Handover** (still Testing). Step 1 (Drive script v2 with login check + two Google Sheet masters) and step 2 (Cutting & Beveling Status section + report) are built. **Next: step 3 Material Handover section** (spool list from the tracker's `master_spools`, one tick per spool, Received By defaults to the spool's Group, date default today, warning if the spool's pipe pieces are not all cut and bevelled, report download), then step 4 (rename page/hub card, remove the PASSCODE script property, clean ZZ-TEST data: `ZZ TEST` Drive folder + test rows/masters, then clear CUT_SHEET_ID / MH_SHEET_ID script properties so fresh masters are created).
+Plan agreed with the owner: page becomes **Cutting Station and Material Handover** (still Testing). Steps 1 (Drive script v3 with Firebase login check + two private Google Sheet masters), 2 (Cutting & Beveling Status + Excel report) and 3 (Material Handover + Excel report) are built and live. **Next: step 4** - rename the page/hub card to Cutting Station and Material Handover, delete the PASSCODE script property (savePlan now uses the login), clean any ZZ-TEST data created while testing (trash the test masters + `ZZ TEST` folder via a temporary Apps Script function, then clear CUT_SHEET_ID / MH_SHEET_ID so fresh masters are made), and have the owner try it with the cutting team. Later: switch the tracker to the new Material Handover master and retire the old workbook in Drive/production.
 
 ## Where things stand (as of 2026-10-12) - Cutting Plan page
 
