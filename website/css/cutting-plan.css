@@ -18,7 +18,7 @@
 
 .cp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
 .cp-card label { display: block; font-size: 12px; color: var(--frost-dim); }
-.cp-card input[type=text], .cp-card input[type=number], .cp-card input[type=date], .cp-card input[type=password], .cp-card textarea {
+.cp-card input[type=text], .cp-card input[type=number], .cp-card input[type=date], .cp-card input[type=password], .cp-card input[type=search], .cp-card textarea {
   width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--bg-2); color: var(--frost); font: inherit; font-size: 13.5px;
 }
 .cp-card input:focus-visible, .cp-card textarea:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; }
