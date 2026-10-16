@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-16T10:43:40.253386",
+  "generated_at": "2026-10-16T10:55:57.916068",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -593765,7 +593765,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-10-16T10:43:35.952504",
+    "generated_at": "2026-10-16T10:55:51.933920",
     "kpis": {
       "total_spools": 14482,
       "planned": 11212,
@@ -593840,6 +593840,23 @@
         "rework_quantum": {
           "rework": 10,
           "hold": 2
+        },
+        "kpis": {
+          "total_spools": 1691,
+          "planned": 925,
+          "unplanned": 766,
+          "completed": 0,
+          "average_total_age_days": 13.9,
+          "oldest_spool": {
+            "composite_key": "TE/25-26/196|20EKT30BR002|20EKT30BR002_SP3",
+            "project_code": "TE/25-26/196",
+            "project_name": "Siemens",
+            "drawing_no": "20EKT30BR002",
+            "spool_no": "20EKT30BR002_SP3",
+            "total_age": 33,
+            "current_stage": "PDQC"
+          },
+          "planning_variance_days": 1.6
         }
       },
       "TJ/22-23/097": {
@@ -593858,6 +593875,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 39,
+          "planned": 39,
+          "unplanned": 0,
+          "completed": 39,
+          "average_total_age_days": 8.0,
+          "oldest_spool": {
+            "composite_key": "TJ/22-23/097|403202-28-HM-0014-01|28-HM-0014-01-01",
+            "project_code": "TJ/22-23/097",
+            "project_name": "Tilenga",
+            "drawing_no": "403202-28-HM-0014-01",
+            "spool_no": "28-HM-0014-01-01",
+            "total_age": 8,
+            "current_stage": "Completed"
+          },
+          "planning_variance_days": 1.4
         }
       },
       "TJ/25-26/172": {
@@ -593875,6 +593909,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 1138,
+          "planned": 1138,
+          "unplanned": 0,
+          "completed": 1138,
+          "average_total_age_days": 54.0,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
+            "project_code": "TJ/25-26/172",
+            "project_name": "VOGT FP",
+            "drawing_no": "1-V17556-PIND-0314",
+            "spool_no": "V17556-PIND-0314-01",
+            "total_age": 153,
+            "current_stage": "Dispatch"
+          },
+          "planning_variance_days": -37.2
         }
       },
       "TJ/25-26/182": {
@@ -593893,6 +593944,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 1024,
+          "planned": 1024,
+          "unplanned": 0,
+          "completed": 1024,
+          "average_total_age_days": 33.9,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/182|241535_1A_LP001_039|241535-1A-LP-039-01",
+            "project_code": "TJ/25-26/182",
+            "project_name": "NE Vicksburg",
+            "drawing_no": "241535_1A_LP001_039",
+            "spool_no": "241535-1A-LP-039-01",
+            "total_age": 75,
+            "current_stage": "Completed"
+          },
+          "planning_variance_days": -3.1
         }
       },
       "TJ/25-26/183": {
@@ -593911,6 +593979,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 2082,
+          "planned": 2082,
+          "unplanned": 0,
+          "completed": 2075,
+          "average_total_age_days": 36.0,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/183|251135_1A_HP001_002|251135-1A-HP-002-08",
+            "project_code": "TJ/25-26/183",
+            "project_name": "NE Franklin Farms",
+            "drawing_no": "251135_1A_HP001_002",
+            "spool_no": "251135-1A-HP-002-08",
+            "total_age": 99,
+            "current_stage": "Completed"
+          },
+          "planning_variance_days": 2.5
         }
       },
       "TJ/25-26/184": {
@@ -593929,6 +594014,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 1314,
+          "planned": 1314,
+          "unplanned": 0,
+          "completed": 1314,
+          "average_total_age_days": 38.2,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/184|V17551-PIND-0114|V17551-PIND-0114-10",
+            "project_code": "TJ/25-26/184",
+            "project_name": "VOGT CB",
+            "drawing_no": "V17551-PIND-0114",
+            "spool_no": "V17551-PIND-0114-10",
+            "total_age": 134,
+            "current_stage": "Completed"
+          },
+          "planning_variance_days": -13.5
         }
       },
       "TJ/25-26/188": {
@@ -593948,6 +594050,23 @@
         "rework_quantum": {
           "rework": 2,
           "hold": 4
+        },
+        "kpis": {
+          "total_spools": 2904,
+          "planned": 2775,
+          "unplanned": 129,
+          "completed": 1860,
+          "average_total_age_days": 26.4,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/188|1-V17565-PIND-0129|V17565-PIND-0129-05",
+            "project_code": "TJ/25-26/188",
+            "project_name": "VOGT Bison",
+            "drawing_no": "1-V17565-PIND-0129",
+            "spool_no": "V17565-PIND-0129-05",
+            "total_age": 98,
+            "current_stage": "Dispatch"
+          },
+          "planning_variance_days": 0.4
         }
       },
       "TJ/25-26/189": {
@@ -593966,6 +594085,23 @@
         "rework_quantum": {
           "rework": 1,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 721,
+          "planned": 721,
+          "unplanned": 0,
+          "completed": 711,
+          "average_total_age_days": 38.8,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/189|251235_00_LP001_008|251235_00_LP_008-04",
+            "project_code": "TJ/25-26/189",
+            "project_name": "NE Gregory",
+            "drawing_no": "251235_00_LP001_008",
+            "spool_no": "251235_00_LP_008-04",
+            "total_age": 86,
+            "current_stage": "Under Painting"
+          },
+          "planning_variance_days": 2.5
         }
       },
       "TJ/25-26/206": {
@@ -593984,6 +594120,23 @@
         "rework_quantum": {
           "rework": 9,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 1307,
+          "planned": 625,
+          "unplanned": 682,
+          "completed": 364,
+          "average_total_age_days": 30.6,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/206|V17566-PIND-0101|V17566-PIND-0101-01",
+            "project_code": "TJ/25-26/206",
+            "project_name": "VOGT Tallgrass 1",
+            "drawing_no": "V17566-PIND-0101",
+            "spool_no": "V17566-PIND-0101-01",
+            "total_age": 61,
+            "current_stage": "Under Painting"
+          },
+          "planning_variance_days": 2.5
         }
       },
       "TJ/25-26/207": {
@@ -594002,6 +594155,23 @@
         "rework_quantum": {
           "rework": 2,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 955,
+          "planned": 260,
+          "unplanned": 695,
+          "completed": 0,
+          "average_total_age_days": 12.0,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/207|251335_1A_HP001_031|251335-1A-HP-031-01",
+            "project_code": "TJ/25-26/207",
+            "project_name": "NE Viola",
+            "drawing_no": "251335_1A_HP001_031",
+            "spool_no": "251335-1A-HP-031-01",
+            "total_age": 33,
+            "current_stage": "Under Painting"
+          },
+          "planning_variance_days": 3.5
         }
       },
       "TJ/25-26/209": {
@@ -594020,6 +594190,23 @@
         "rework_quantum": {
           "rework": 0,
           "hold": 0
+        },
+        "kpis": {
+          "total_spools": 1307,
+          "planned": 309,
+          "unplanned": 998,
+          "completed": 0,
+          "average_total_age_days": 1.3,
+          "oldest_spool": {
+            "composite_key": "TJ/25-26/209|V17573-PIND-0104|V17573-PIND-0104-05",
+            "project_code": "TJ/25-26/209",
+            "project_name": "VOGT Tallgrass 2",
+            "drawing_no": "V17573-PIND-0104",
+            "spool_no": "V17573-PIND-0104-05",
+            "total_age": 30,
+            "current_stage": "Fit-Up"
+          },
+          "planning_variance_days": -2.6
         }
       }
     }
