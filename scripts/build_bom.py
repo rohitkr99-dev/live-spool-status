@@ -17,6 +17,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -196,7 +197,7 @@ def run_drive():
             print("Up to date: %s (already converted)." % src["name"])
             return 0
     print("Converting %s ..." % src["name"])
-    tmp = "/tmp/bom_source.xlsx"
+    tmp = os.path.join(tempfile.gettempdir(), "bom_source.xlsx")
     with open(tmp, "wb") as fh:
         dl = MediaIoBaseDownload(fh, svc.files().get_media(fileId=src["id"]))
         done = False
