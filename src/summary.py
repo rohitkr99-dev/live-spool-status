@@ -372,45 +372,18 @@ class SummaryEngine:
     # dashboard_summary.json
     # -----------------------------------------------------
 
-    def generate_dashboard_summary(self, dataframe: pd.DataFrame) -> dict:
+    def _fabline_block(self, dataframe: pd.DataFrame):
+        """
+        The Fabrication Line numbers for one set of spools: the per-stage
+        distribution (holds excluded, "planned in future weeks" split out)
+        and the Holds & Reworks strip. Split out of
+        generate_dashboard_summary() (2026-10-16) so the same logic can run
+        once for every spool and once per project - the Projects page's
+        project filter shows a project's own line instead of re-deriving
+        it in the browser (which has no hold flag to work from).
 
-        total_spools = len(dataframe)
-        planned = int(dataframe[PLANNED_FLAG].sum())
-        completed = int(dataframe[COMPLETED_FLAG].sum())
-
-        # Average Age and Oldest Spool exclude spools whose
-        # Production Order hasn't even been released yet (Current
-        # Stage == "Production Order Not Released"). Those spools
-        # have no anchor date at all yet, so Total Age is always 0
-        # for them - including them here would drag the average down
-        # and understate how old the spools actually in progress
-        # really are. Every OTHER KPI/breakdown below still covers
-        # every spool, released or not.
-        ageable = dataframe[
-            dataframe[CURRENT_STAGE] != self.not_released_label
-        ]
-
-        average_total_age = (
-            round(ageable[TOTAL_AGE].mean(), 1) if len(ageable) else 0
-        )
-
-        oldest_spool = None
-        if len(ageable):
-            oldest_row = ageable.loc[ageable[TOTAL_AGE].idxmax()]
-            oldest_spool = {
-                "composite_key": to_json_safe(oldest_row.get(COMPOSITE_KEY)),
-                "project_code": to_json_safe(oldest_row.get(PROJECT_CODE)),
-                "project_name": to_json_safe(oldest_row.get(PROJECT_NAME)),
-                "drawing_no": to_json_safe(oldest_row.get(DRAWING_NO)),
-                "spool_no": to_json_safe(oldest_row.get(SPOOL_NO)),
-                "total_age": to_json_safe(oldest_row.get(TOTAL_AGE)),
-                "current_stage": to_json_safe(oldest_row.get(CURRENT_STAGE)),
-            }
-
-        variances = dataframe[PLANNING_VARIANCE].dropna()
-        planning_variance_days = (
-            round(variances.mean(), 1) if len(variances) else None
-        )
+        Returns (current_stage_distribution, rework_quantum, on_hold_mask).
+        """
 
         # Given by the person (2026-08-21): "The hold spools should
         # not be visible as backlog at any stage" - excluded from
@@ -504,6 +477,65 @@ class SummaryEngine:
                 "hold": int(status_counts.get("Hold", 0)),
             }
 
+        return current_stage_distribution, rework_quantum, on_hold_mask
+
+    def generate_dashboard_summary(self, dataframe: pd.DataFrame) -> dict:
+
+        total_spools = len(dataframe)
+        planned = int(dataframe[PLANNED_FLAG].sum())
+        completed = int(dataframe[COMPLETED_FLAG].sum())
+
+        # Average Age and Oldest Spool exclude spools whose
+        # Production Order hasn't even been released yet (Current
+        # Stage == "Production Order Not Released"). Those spools
+        # have no anchor date at all yet, so Total Age is always 0
+        # for them - including them here would drag the average down
+        # and understate how old the spools actually in progress
+        # really are. Every OTHER KPI/breakdown below still covers
+        # every spool, released or not.
+        ageable = dataframe[
+            dataframe[CURRENT_STAGE] != self.not_released_label
+        ]
+
+        average_total_age = (
+            round(ageable[TOTAL_AGE].mean(), 1) if len(ageable) else 0
+        )
+
+        oldest_spool = None
+        if len(ageable):
+            oldest_row = ageable.loc[ageable[TOTAL_AGE].idxmax()]
+            oldest_spool = {
+                "composite_key": to_json_safe(oldest_row.get(COMPOSITE_KEY)),
+                "project_code": to_json_safe(oldest_row.get(PROJECT_CODE)),
+                "project_name": to_json_safe(oldest_row.get(PROJECT_NAME)),
+                "drawing_no": to_json_safe(oldest_row.get(DRAWING_NO)),
+                "spool_no": to_json_safe(oldest_row.get(SPOOL_NO)),
+                "total_age": to_json_safe(oldest_row.get(TOTAL_AGE)),
+                "current_stage": to_json_safe(oldest_row.get(CURRENT_STAGE)),
+            }
+
+        variances = dataframe[PLANNING_VARIANCE].dropna()
+        planning_variance_days = (
+            round(variances.mean(), 1) if len(variances) else None
+        )
+
+        current_stage_distribution, rework_quantum, on_hold_mask = (
+            self._fabline_block(dataframe)
+        )
+
+        # The same two blocks per project, keyed by Project Code, for the
+        # Projects page's global project filter (2026-10-16).
+        by_project: dict[str, dict] = {}
+        if PROJECT_CODE in dataframe.columns:
+            for project_code, project_df in dataframe.groupby(PROJECT_CODE):
+                if is_empty(project_code):
+                    continue
+                project_distribution, project_quantum, _ = self._fabline_block(project_df)
+                by_project[str(project_code)] = {
+                    "current_stage_distribution": project_distribution,
+                    "rework_quantum": project_quantum,
+                }
+
         # "Currently on Hold, by Project and stage" (2026-08-21, per
         # the person: "insert a separate chart for only Hold spools,
         # where we can show Project wise stage wise current Hold
@@ -563,6 +595,7 @@ class SummaryEngine:
             "rework_quantum": rework_quantum,
             "hold_by_project_stage": hold_by_project_stage,
             "material_hold_by_project": material_hold_by_project,
+            "by_project": by_project,
         }
 
     # -----------------------------------------------------

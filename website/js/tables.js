@@ -487,6 +487,50 @@ const SpoolTables = {
 
   // -----------------------------------------------------
 
+  /**
+   * Re-scope the three tables to a (possibly project-filtered) set of
+   * rows without rebuilding them (2026-10-16, global project filter).
+   * The table filters are reset first - their option lists are
+   * rebuilt from the new rows, so an old selection could not apply.
+   */
+  applyScope(rows, exceptions) {
+    if (!this.dt.all) return;
+
+    const fill = (selectId, values, project) => {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+      if (project) this.populateProjectFilterDropdown(selectId, values);
+      else this.populateFilterDropdown(selectId, values);
+    };
+    fill("filter-project", SpoolData.distinctValues("Project Code", rows), true);
+    fill("filter-week", this.sortedWeeks(SpoolData.distinctValues("Week", rows)));
+    fill("filter-group", SpoolData.distinctValues("Group", rows));
+    fill("filter-material", SpoolData.distinctValues("Material", rows));
+    fill("filter-stage", SPOOL_STATUS_CONFIG.stageOrder.filter(
+      (s) => SpoolData.distinctValues("Current Stage", rows).includes(s)
+    ));
+    fill("filter-material-hold-status", SpoolData.distinctValues("Material Hold Status", rows));
+
+    document.getElementById("filter-planning").value = "";
+    document.getElementById("filter-status").value = "";
+    ["filter-stage-age-min", "filter-stage-age-max", "filter-total-age-min", "filter-total-age-max"]
+      .forEach((id) => { document.getElementById(id).value = ""; });
+    document.getElementById("sort-field").value = "10";
+    document.getElementById("sort-direction").value = "desc";
+
+    this.dt.all.columns().search("");
+    this.dt.all.search("");
+    this.dt.all.clear().rows.add(rows).order([9, "desc"]).draw();
+
+    if (this.dt.oldest) {
+      this.dt.oldest.clear().rows.add(SpoolData.oldestSpools(25, rows)).draw();
+    }
+    if (this.dt.exceptions) {
+      this.dt.exceptions.clear().rows.add(exceptions).draw();
+      document.getElementById("exceptions-count").textContent = exceptions.length;
+    }
+  },
+
   renderAll(store) {
     this.initAllSpoolsTable(store.masterSpools);
     this.initOldestSpoolsTable(store.masterSpools);

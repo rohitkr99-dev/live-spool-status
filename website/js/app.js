@@ -51,18 +51,28 @@ const SpoolApp = {
   /** Render every section from an already-loaded store - shared by
    * both a fresh upload and loading a published/restored one. */
   renderAll(store, isReload) {
+    this.store = store;
+    SpoolProjectFilter.setup(store);
+    const view = SpoolProjectFilter.view(store);
+
+    // KPI cards stay on all projects; everything below the project
+    // filter reads the filtered view.
     SpoolKPI.render(store.dashboardSummary);
-    SpoolFabline.render(store.dashboardSummary);
-    SpoolCharts.render(store);
-    SpoolStageThroughput.render(store);
+    SpoolFabline.render(view.dashboardSummary);
+    SpoolCharts.render(view);
+    SpoolStageThroughput.render(view);
     SpoolStageAgeing.render(store);
     SpoolSCurve.render(store);
-    SpoolMaterialHold.render(store.dashboardSummary);
+    SpoolProjectFilter.syncStageSections();
+    SpoolMaterialHold.render(view.dashboardSummary);
 
     if (isReload) {
       SpoolTables.destroyAll();
     }
     SpoolTables.renderAll(store);
+    if (SpoolProjectFilter.selected) {
+      SpoolTables.applyScope(view.masterSpools, view.exceptions);
+    }
 
     document.getElementById("last-updated").textContent =
       SpoolKPI.formatTimestamp(store.dashboardSummary.generated_at);
@@ -73,6 +83,19 @@ const SpoolApp = {
     // entrance animation on the KPI/fabline/chart cards once real
     // data is on screen, instead of on the empty shell.
     document.body.classList.add("is-ready");
+  },
+
+  /** The project filter changed: redraw only what sits below it. */
+  renderScoped() {
+    if (!this.store) return;
+    const view = SpoolProjectFilter.view(this.store);
+
+    SpoolFabline.render(view.dashboardSummary);
+    SpoolCharts.render(view);
+    SpoolStageThroughput.render(view);
+    SpoolProjectFilter.syncStageSections();
+    SpoolMaterialHold.render(view.dashboardSummary);
+    SpoolTables.applyScope(view.masterSpools, view.exceptions);
   },
 
   async loadInitialData() {
