@@ -204,14 +204,23 @@ def run_drive():
     data = convert(tmp)
     built = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     manifest = {"source": src["name"], "size": src.get("size"), "built": built, "projects": {}}
+    missing = []
     for project, body in data.items():
         payload = {"project": project, "source": src["name"], "built": built, "spools": body["spools"]}
         text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         ex = _find(svc, data_id, safe_name(project))
-        _upload(svc, data_id, safe_name(project), text, ex[0]["id"] if ex else None)
+        if not ex:   # a service account cannot create files in a personal Drive (no storage quota); it can only update files that exist
+            missing.append(safe_name(project))
+            continue
+        _upload(svc, data_id, safe_name(project), text, ex[0]["id"])
         manifest["projects"][project] = {"file": safe_name(project), "spools": len(body["spools"]), "items": sum(len(v) for v in body["spools"].values()), "bytes": len(text.encode("utf-8"))}
         print("  - %s: %d spools, %d items, %.0f KB" % (project, manifest["projects"][project]["spools"], manifest["projects"][project]["items"], len(text.encode("utf-8")) / 1024))
-    _upload(svc, data_id, "_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=1), man[0]["id"] if man else None)
+    if missing or not man:
+        print("\nACTION NEEDED: create an EMPTY text file with each of these names inside Drive BOM/data (as a normal user, e.g. upload a file containing {}), then run this job again:")
+        for m in (["_manifest.json"] if not man else []) + missing:
+            print("   " + m)
+        return 1
+    _upload(svc, data_id, "_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=1), man[0]["id"])
     print("Done: %d projects." % len(data))
     return 0
 
