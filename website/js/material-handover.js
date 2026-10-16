@@ -9,7 +9,7 @@
   'use strict';
   var CS = window.CutStation;
   if (!CS || !CS.spools) return;
-  var $ = CS.el, esc = CS.esc, api = CS.api, toast = CS.toast;
+  var $ = CS.el, esc = CS.esc, api = CS.api, toast = CS.toast, D = CS.D;
   var PAGE = 100;
 
   var spools = null;      // tracker spool list
@@ -18,12 +18,12 @@
   var edits = {};         // key -> edited handover state (only for spools the user touched)
   var filtered = [], shown = PAGE, loading = false;
 
-  var today = function () { return new Date().toISOString().slice(0, 10); };
+  var today = D.todayIso;
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
   var keyOf = function (s) { return s.project + '|' + s.drawing + '|' + s.spool; };
   var baseOf = function (s) {
     var r = saved[keyOf(s)];
-    return r ? { handed: !!r.handed, date: r.handed ? r.date || '' : '', receivedBy: r.receivedBy || '', remark: r.remark || '' } : { handed: false, date: '', receivedBy: '', remark: '' };
+    return r ? { handed: !!r.handed, date: r.handed ? D.iso(r.date) : '', receivedBy: r.receivedBy || '', remark: r.remark || '' } : { handed: false, date: '', receivedBy: '', remark: '' };
   };
   var stateOf = function (s) { return edits[keyOf(s)] || baseOf(s); };
   var differs = function (a, b) { return a.handed !== b.handed || a.date !== b.date || a.receivedBy !== b.receivedBy || a.remark !== b.remark; };
@@ -99,8 +99,8 @@
     var st = stateOf(s), dirty = differs(st, baseOf(s)), k = esc(keyOf(s));
     return '<tr data-i="' + i + '"' + (dirty ? ' class="cp-dirtyrow"' : '') + '><td class="cp-tick"><input type="checkbox" data-f="handed" data-k="' + k + '"' + (st.handed ? ' checked' : '') + ' aria-label="Handed over: ' + esc(s.spool) + '"></td>' +
       '<td>' + esc(s.project) + '</td><td>' + esc(s.drawing) + '</td><td>' + esc(s.spool) + '</td><td>' + esc(s.week) + '</td><td>' + esc(s.group) + '</td><td>' + cutCell(s) + '</td>' +
-      '<td>' + esc(s.oldHandover ? String(s.oldHandover).slice(0, 10) : '') + '</td>' +
-      '<td>' + (st.handed ? '<input type="date" class="cp-date" data-f="date" data-k="' + k + '" value="' + esc(st.date) + '">' : '') + '</td>' +
+      '<td>' + esc(s.oldHandover ? D.dmy(D.iso(s.oldHandover)) || String(s.oldHandover).slice(0, 10) : '') + '</td>' +
+      '<td>' + (st.handed ? '<input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-f="date" data-k="' + k + '" value="' + esc(D.dmy(st.date)) + '">' : '') + '</td>' +
       '<td><input type="text" class="cp-cell" data-f="receivedBy" data-k="' + k + '" value="' + esc(st.receivedBy) + '" placeholder="' + esc(s.group) + '"' + (st.handed ? '' : ' disabled') + '></td>' +
       '<td><input type="text" class="cp-cell" data-f="remark" data-k="' + k + '" value="' + esc(st.remark) + '" placeholder="Remark"></td></tr>';
   }
@@ -128,7 +128,11 @@
     var k = t.dataset.k, s = k && specOf[k];
     if (!s) return;
     if (t.dataset.f === 'handed') { setHanded(s, t.checked); render(); }
-    else if (t.dataset.f === 'date') { edits[k] = Object.assign({}, stateOf(s), { date: t.value || today() }); render(); }
+    else if (t.dataset.f === 'date') {
+      var iso = D.iso(t.value);
+      if (iso || !t.value.trim()) edits[k] = Object.assign({}, stateOf(s), { date: iso || today() }); else toast(false, 'Type the date as DD-MM-YYYY, for example ' + D.dmy(today()) + '.');
+      render();
+    }
   });
   $('hTable').addEventListener('input', function (e) {       // typing: update the state without redrawing (keeps the cursor)
     var t = e.target, k = t.dataset.k, s = k && specOf[k];
@@ -169,19 +173,20 @@
   /* ---------- report ---------- */
   $('hrDownload').onclick = function () {
     var btn = $('hrDownload'), msg = $('hrMsg');
-    var f = { project: $('hrProject').value.trim(), week: $('hrWeek').value.trim(), from: $('hrFrom').value, to: $('hrTo').value };
+    var f = { project: $('hrProject').value.trim(), week: $('hrWeek').value.trim(), from: D.field('hrFrom'), to: D.field('hrTo') };
+    if (f.from === null || f.to === null) { msg.textContent = 'Type the dates as DD-MM-YYYY, for example ' + D.dmy(today()) + '.'; msg.className = 'cp-note cp-bad'; return; }
     btn.disabled = true; btn.textContent = 'Preparing...'; msg.textContent = ''; msg.className = 'cp-note';
     var done = function () { btn.disabled = false; btn.textContent = 'Download report (Excel)'; };
     api('getReport', { type: 'handover', project: f.project, week: f.week, from: f.from, to: f.to, history: $('hrHist').checked }).then(function (r) {
       done();
       if (!r.rows.length) { msg.textContent = 'No spools match these filters.'; msg.className = 'cp-note cp-warn'; return; }
-      var sheet = function (h, rows) { var ws = XLSX.utils.aoa_to_sheet([h].concat(rows)); ws['!cols'] = h.map(function (x) { return { wch: Math.max(11, String(x).length + 2) }; }); return ws; };
+      var sheet = function (h, rows) { var ws = D.fixDates(XLSX.utils.aoa_to_sheet([h].concat(rows.map(function (r) { return r.map(function (v) { return typeof v === 'string' ? D.dmy(v) : v; }); })))); ws['!cols'] = h.map(function (x) { return { wch: Math.max(11, String(x).length + 2) }; }); return ws; };
       var wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, sheet(r.headers, r.rows), 'Material Handover');
       if (r.history) XLSX.utils.book_append_sheet(wb, sheet(r.historyHeaders, r.history), 'History');
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Report', 'Material Handover'], ['Generated', new Date().toLocaleString()], ['Project', f.project || 'All'], ['Week', f.week || 'All'],
-        ['Handover date from', f.from || '-'], ['Handover date to', f.to || '-'], ['Spools', r.rows.length], ['Note', 'The date filter matches the Handover Date. Spools never handed over have no date and appear only when no dates are set.']]), 'Report info');
-      XLSX.writeFile(wb, 'material-handover-' + today() + '.xlsx');
+      XLSX.utils.book_append_sheet(wb, D.fixDates(XLSX.utils.aoa_to_sheet([['Report', 'Material Handover'], ['Generated', D.now()], ['Project', f.project || 'All'], ['Week', f.week || 'All'],
+        ['Handover date from', D.dmy(f.from) || '-'], ['Handover date to', D.dmy(f.to) || '-'], ['Spools', r.rows.length], ['Note', 'The date filter matches the Handover Date. Spools never handed over have no date and appear only when no dates are set.']])), 'Report info');
+      XLSX.writeFile(wb, 'material-handover-' + D.dmy(today()) + '.xlsx');
       msg.textContent = r.rows.length + ' spools downloaded.'; msg.className = 'cp-note cp-ok';
     }).catch(function (e) { done(); msg.textContent = 'Could not prepare the report: ' + e.message; msg.className = 'cp-note cp-bad'; });
   };

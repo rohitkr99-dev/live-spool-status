@@ -14,10 +14,41 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
 
+  /* Dates: shown and stored as DD-MM-YYYY. Internally (state, wire to the Drive script) ISO YYYY-MM-DD is used, and both forms are accepted. */
+  var D = (function () {
+    var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    var d = {
+      todayIso: function () { var t = new Date(); return t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()); },
+      dmy: function (s) { return String(s == null ? '' : s).trim().replace(/^(\d{4})-(\d{2})-(\d{2})(?=$| \d{2}:\d{2})/, '$3-$2-$1'); },
+      iso: function (s) {   // DD-MM-YYYY (or / or . separators) or YYYY-MM-DD -> YYYY-MM-DD; '' when it is not a real date
+        s = String(s == null ? '' : s).trim();
+        var m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s), y, mo, da;
+        if (m) { y = +m[1]; mo = +m[2]; da = +m[3]; } else { m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/.exec(s); if (!m) return ''; da = +m[1]; mo = +m[2]; y = +m[3]; }
+        var t = new Date(Date.UTC(y, mo - 1, da));
+        return t.getUTCFullYear() === y && t.getUTCMonth() === mo - 1 && t.getUTCDate() === da ? y + '-' + p2(mo) + '-' + p2(da) : '';
+      },
+      fromMs: function (ms) { var t = new Date(ms); return p2(t.getDate()) + '-' + p2(t.getMonth() + 1) + '-' + t.getFullYear(); },
+      now: function () { var t = new Date(); return d.fromMs(+t) + ' ' + p2(t.getHours()) + ':' + p2(t.getMinutes()) + ':' + p2(t.getSeconds()); },
+      field: function (id) { var v = document.getElementById(id).value.trim(); return v ? (d.iso(v) || null) : ''; },   // '' empty, null invalid, else ISO
+      // Turn DD-MM-YYYY (and DD-MM-YYYY HH:MM:SS) text cells into real Excel dates shown as dd-mm-yyyy
+      fixDates: function (ws) {
+        Object.keys(ws).forEach(function (a) {
+          if (a.charAt(0) === '!') return;
+          var c = ws[a], m = c && c.t === 's' && /^(\d{2})-(\d{2})-(\d{4})(?: (\d{2}):(\d{2}):(\d{2}))?$/.exec(c.v);
+          if (!m || !d.iso(m[1] + '-' + m[2] + '-' + m[3])) return;
+          c.t = 'n'; c.z = m[4] ? 'dd-mm-yyyy hh:mm:ss' : 'dd-mm-yyyy'; delete c.w;
+          c.v = (Date.UTC(+m[3], +m[2] - 1, +m[1]) - Date.UTC(1899, 11, 30)) / 864e5 + (m[4] ? (+m[4] * 3600 + +m[5] * 60 + +m[6]) / 86400 : 0);
+        });
+        return ws;
+      }
+    };
+    return d;
+  })();
+
   var KEY = 'cutplan.records.v1';
   function loadRecs() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
   function saveRecs(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); return true; } catch (e) { return false; } }
-  $('date').value = new Date().toISOString().slice(0, 10);
+  $('date').value = D.dmy(D.todayIso());
 
   /* ---------- reading files ---------- */
   var SYN = {
@@ -151,11 +182,13 @@
     var planNo = $('planNo').value.trim();
     var fail = function (m) { msg.textContent = m; msg.className = 'cp-bad'; };
     if (!planNo) return fail('Enter the Cutting Plan No.');
+    var planDate = D.iso($('date').value);
+    if (!planDate) return fail('Enter the date as DD-MM-YYYY, for example ' + D.dmy(D.todayIso()) + '.');
     if (loadRecs().some(function (r) { return r.planNo.toLowerCase() === planNo.toLowerCase(); })) return fail('Plan No. ' + planNo + ' is already accepted. Use a new number, or undo it first.');
     Promise.all([readInput('cut'), readInput('bar')]).then(function (r) {
       var pieces = r[0], bars = r[1];
       var res = CutPlan.plan(pieces, bars, { kerf: +$('kerf').value || 0, trim: +$('trim').value || 0 });
-      draft = { planNo: planNo, project: topProject(pieces), date: $('date').value, kerf: res.opts.kerf, trim: res.opts.trim, createdAt: Date.now(), bars: res.bars.map(slimBar), unplaced: res.unplaced.map(slimPiece), summary: res.summary };
+      draft = { planNo: planNo, project: topProject(pieces), date: D.dmy(planDate), kerf: res.opts.kerf, trim: res.opts.trim, createdAt: Date.now(), bars: res.bars.map(slimBar), unplaced: res.unplaced.map(slimPiece), summary: res.summary };
       var w = res.errors.slice(), recs = loadRecs().sort(function (a, c) { return c.createdAt - a.createdAt; });
       bars.forEach(function (b) { // ledger check: uploaded length vs the last recorded remain
         var last = null;
@@ -216,17 +249,17 @@
       b.pieces.forEach(function (p) {
         tot += p.length;
         plan.push([barId(i), b.item, b.control, b.barcode, b.heat, p.project, p.drawing, p.spool, p.group, p.bevel, p.length, b.startLength, b.remain]);
-        sp.push([p.project, p.drawing, p.spool, b.item, p.length, p.group, p.bevel, rec.planNo, 'CUTTING PLAN OK', b.control, b.barcode, rec.date]);
+        sp.push([p.project, p.drawing, p.spool, b.item, p.length, p.group, p.bevel, rec.planNo, 'CUTTING PLAN OK', b.control, b.barcode, D.dmy(rec.date)]);
       });
       pipes.push([b.barcode, b.item, b.control, b.heat, b.startLength, b.pieces.length, tot, b.remain]);
       st.push([b.barcode, b.item, b.control, b.heat, b.startLength, 'USED', rec.planNo, b.remain]);
     });
     rec.unplaced.forEach(function (p) {
       mna.push([p.project, p.drawing, p.spool, p.item, p.group, p.bevel, p.length, p.reason]);
-      sp.push([p.project, p.drawing, p.spool, p.item, p.length, p.group, p.bevel, rec.planNo, 'MNA', '', '', rec.date]);
+      sp.push([p.project, p.drawing, p.spool, p.item, p.length, p.group, p.bevel, rec.planNo, 'MNA', '', '', D.dmy(rec.date)]);
     });
     var wb = XLSX.utils.book_new();
-    [['Cutting Plan', plan], ['Pipes (remain)', pipes], ['MNA', mna], ['SPOOL updates', sp], ['STORE updates', st]].forEach(function (x) { XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(x[1]), x[0]); });
+    [['Cutting Plan', plan], ['Pipes (remain)', pipes], ['MNA', mna], ['SPOOL updates', sp], ['STORE updates', st]].forEach(function (x) { XLSX.utils.book_append_sheet(wb, D.fixDates(XLSX.utils.aoa_to_sheet(x[1])), x[0]); });
     return wb;
   }
 
@@ -243,7 +276,7 @@
     function newPage() {
       doc.addPage(); y = TOP; barsOnPage = 0;
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
-      doc.text('Cutting Plan ' + rec.planNo + '   |   Project ' + (rec.project || '-') + '   |   ' + rec.date, L, y); doc.setTextColor(0, 0, 0); y += 8;
+      doc.text('Cutting Plan ' + rec.planNo + '   |   Project ' + (rec.project || '-') + '   |   ' + D.dmy(rec.date), L, y); doc.setTextColor(0, 0, 0); y += 8;
     }
     function tableHead() {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
@@ -252,12 +285,15 @@
       doc.setDrawColor(120); doc.setLineWidth(0.4); doc.line(L, y + 1.8, L + W, y + 1.8); y += 7;
     }
     // vals aligned with cols; dot = piece colour; box = draw the tick square
-    function row(vals, dot, box) {
+    function row(vals, dot, box, tag) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
       var x = L;
       if (dot) { doc.setFillColor(dot); doc.circle(L + 2.2, y - 1.4, 1.5, 'F'); }
       cols.forEach(function (c, i) {
-        if (c[2] === 'c') { if (box) { doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(x + c[1] - 6, y - 5, 6, 6); } }
+        if (c[2] === 'c') {
+          if (box) { doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(x + c[1] - 6, y - 5, 6, 6); }
+          else if (tag) { doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(185, 28, 28); doc.text(tag, x + c[1], y, { align: 'right' }); doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal'); }
+        }
         else { var t = fit(vals[i], c[1], 10.5); doc.text(t, c[2] === 'r' ? x + c[1] - 1 : x + (i === 0 && dot ? 5.2 : 0.8), y, { align: c[2] === 'r' ? 'right' : 'left' }); }
         x += c[1];
       });
@@ -274,7 +310,7 @@
       var x = L, BH = 9;
       b.pieces.forEach(function (p, j) {
         var w = (p.length + rec.kerf) / b.startLength * W;
-        doc.setFillColor(colorOf(j)); doc.rect(x, y, w, BH, 'F');
+        doc.setFillColor(p.released ? '#B8BCC6' : colorOf(j)); doc.rect(x, y, w, BH, 'F');
         doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.5); doc.line(x + w, y, x + w, y + BH);
         if (w >= 6) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.text(String(j + 1), x + w / 2, y + 6.2, { align: 'center' }); doc.setTextColor(0, 0, 0); }
         x += w;
@@ -291,9 +327,10 @@
     y = TOP;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.text('DEE Piping Systems - Cutting Plan ' + rec.planNo, L, y); y += 7;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
-    doc.text('Project ' + (rec.project || '-') + '   |   Date ' + rec.date + '   |   Cutting allowance ' + rec.kerf + ' mm   |   Trim ' + rec.trim + ' mm', L, y); y += 5.5;
+    doc.text('Project ' + (rec.project || '-') + '   |   Date ' + D.dmy(rec.date) + '   |   Cutting allowance ' + rec.kerf + ' mm   |   Trim ' + rec.trim + ' mm', L, y); y += 5.5;
     var s = rec.summary;
-    doc.text('Pieces ' + s.pieces + '   Planned ' + s.placed + '   MNA ' + s.unplaced + '   Pipes ' + s.bars + '   Pipe length ' + (s.startMm / 1000).toFixed(2) + ' m   Net cut ' + (s.netMm / 1000).toFixed(2) + ' m   Yield ' + s.yieldPct.toFixed(1) + '%', L, y); y += 9;
+    doc.text('Pieces ' + s.pieces + '   Planned ' + s.placed + '   MNA ' + s.unplaced + '   Pipes ' + s.bars + '   Pipe length ' + (s.startMm / 1000).toFixed(2) + ' m   Net cut ' + (s.netMm / 1000).toFixed(2) + ' m   Yield ' + s.yieldPct.toFixed(1) + '%', L, y); y += rec.relCount ? 5.5 : 9;
+    if (rec.relCount) { doc.setFont('helvetica', 'bold'); doc.setTextColor(185, 28, 28); doc.text('REVISED: ' + rec.relCount + ' piece' + (rec.relCount === 1 ? '' : 's') + ' released (shown in grey, marked RELEASED) - do not cut. Remain shows the pipe length after release.', L, y); doc.setTextColor(0, 0, 0); y += 9; }
 
     var sep = null;
     rec.bars.forEach(function (b, i) {
@@ -305,7 +342,7 @@
       barHead(b, i, false); barGraphic(b); tableHead();
       b.pieces.forEach(function (p, j) {
         if (y + RH > H - BOT) { newPage(); barsOnPage = 1; barHead(b, i, true); tableHead(); }   // very long pipe: continue on next page
-        row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length, ''], colorOf(j), true);
+        row([j + 1, p.project, p.drawing, p.spool, p.group, p.bevel, p.length, ''], p.released ? '#B8BCC6' : colorOf(j), !p.released, p.released ? 'RELEASED' : '');
       });
       sep = { page: doc.getNumberOfPages(), y: y - RH + 7.4 };   // divider goes in the gap below the last row, drawn only if another pipe follows on this page
       y += 10;
@@ -358,7 +395,7 @@
       files: [{ name: base + '.xlsx', b64: xl }, { name: base + '.pdf', b64: pdf }, { name: base + '.json', b64: json }] }).then(function (r) {
       done();
       var all = loadRecs(); all.forEach(function (x) { if (x.createdAt === rec.createdAt) x.driveSavedAt = Date.now(); }); saveRecs(all);
-      note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + new Date().toLocaleString() + '.'; note.className = 'cp-note cp-ok';
+      note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + D.now() + '.'; note.className = 'cp-note cp-ok';
       toast(true, 'Saved to Drive: plan ' + rec.planNo + ' (' + r.saved + ' files).');
       if (rowBtn) renderRecs();
     }).catch(function (e) {
@@ -366,7 +403,15 @@
       toast(false, 'NOT saved to Drive: ' + e.message);
     });
   }
-  window.CutStation = { api: api, esc: esc, toast: toast, el: $ };
+  // PDF of a saved plan with the released pieces greyed out and each pipe's remain corrected (released: pieceId -> {returned})
+  function pdfFor(rec, released) {
+    var c = JSON.parse(JSON.stringify(rec)); c.relCount = 0;
+    c.bars.forEach(function (b) {
+      b.pieces.forEach(function (p, j) { var r = released && released[c.planNo + '|' + b.barcode + '|' + (j + 1)]; if (r) { p.released = r.reason || true; b.remain += Number(r.returned) || 0; c.relCount++; } });
+    });
+    return buildPdf(c);
+  }
+  window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor };
 
   /* ---------- accepted plans ---------- */
   function undoBlock(rec, recs) { // a plan can be undone only if no later plan used any of its pipes
@@ -374,12 +419,25 @@
     var later = recs.filter(function (r) { return r.createdAt > rec.createdAt && r.bars.some(function (b) { return mine[b.barcode]; }); });
     return later.length ? 'Used by later plan ' + later.map(function (r) { return r.planNo; }).join(', ') : '';
   }
+  function recFiltered(recs) {
+    var q = $('recQ').value.trim().toLowerCase(), pr = $('recProj').value, dv = $('recDrv').value, f = D.field('recFrom'), t = D.field('recTo');
+    return recs.filter(function (r) {
+      var di = D.iso(r.date);
+      return (!q || r.planNo.toLowerCase().indexOf(q) >= 0) && (!pr || (r.project || '') === pr) && (!dv || (dv === 'saved') === !!r.driveSavedAt) &&
+        (!f || (di && di >= f)) && (!t || (di && di <= t));
+    });
+  }
   function renderRecs() {
     var recs = loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; });
-    $('recEmpty').hidden = !!recs.length;
-    $('recTbl').innerHTML = recs.length ? '<tr><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + recs.map(function (r, i) {
-      var blk = undoBlock(r, recs);
-      return '<tr><td>' + esc(r.planNo) + '</td><td>' + esc(r.date) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(new Date(r.driveSavedAt).toLocaleDateString()) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
+    var sel = $('recProj'), cur = sel.value, seen = {}, opts = '<option value="">All projects</option>';
+    recs.forEach(function (r) { var p = r.project || ''; if (p && !seen[p]) { seen[p] = 1; opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>'; } });
+    sel.innerHTML = opts; sel.value = seen[cur] ? cur : '';
+    var rows = recFiltered(recs);
+    $('recEmpty').hidden = !!recs.length; $('recFilters').hidden = !recs.length;
+    $('recCount').textContent = recs.length ? 'Showing ' + rows.length + ' of ' + recs.length + ' plans' : '';
+    $('recTbl').innerHTML = rows.length ? '<tr><th>Project Code</th><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + rows.map(function (r) {
+      var i = recs.indexOf(r), blk = undoBlock(r, recs);
+      return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
         '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () { $('paneRec').hidden = true; show(recs[b.dataset.v], true); window.scrollTo(0, 0); }; });
@@ -392,9 +450,22 @@
       };
     });
   }
+  ['recQ', 'recFrom', 'recTo'].forEach(function (id) { $(id).oninput = renderRecs; });
+  ['recProj', 'recDrv'].forEach(function (id) { $(id).onchange = renderRecs; });
+  $('recClear').onclick = function () { ['recQ', 'recFrom', 'recTo'].forEach(function (id) { $(id).value = ''; }); $('recProj').value = ''; $('recDrv').value = ''; renderRecs(); };
+  $('recXl').onclick = function () {
+    var rows = recFiltered(loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; }));
+    if (!rows.length) return toast(false, 'No plans to download. Check the filters.');
+    var aoa = [['Project Code', 'Plan No.', 'Plan Date', 'Pipes', 'Pieces planned', 'MNA', 'Accepted on', 'Saved to Drive']].concat(rows.map(function (r) {
+      return [r.project || '', r.planNo, D.dmy(r.date), r.bars.length, r.summary.placed, r.summary.unplaced, D.fromMs(r.createdAt), r.driveSavedAt ? D.fromMs(r.driveSavedAt) : 'Not saved'];
+    }));
+    var ws = D.fixDates(XLSX.utils.aoa_to_sheet(aoa)); ws['!cols'] = [14, 18, 12, 8, 14, 8, 13, 14].map(function (w) { return { wch: w }; });
+    var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Accepted plans');
+    XLSX.writeFile(wb, 'accepted-plans-' + D.dmy(D.todayIso()) + '.xlsx');
+  };
   $('exp').onclick = function () {
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(loadRecs(), null, 1)], { type: 'application/json' }));
-    a.download = 'cutting-records-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); URL.revokeObjectURL(a.href);
+    a.download = 'cutting-records-' + D.dmy(D.todayIso()) + '.json'; a.click(); URL.revokeObjectURL(a.href);
   };
   $('imp').onchange = function (e) {
     var f = e.target.files[0]; if (!f) return;

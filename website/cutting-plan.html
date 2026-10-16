@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261020">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261025">
 </head>
 <body class="is-ready">
 <div class="ambient" aria-hidden="true">
@@ -71,6 +71,16 @@
     <section id="paneRec" hidden>
       <div class="cp-card">
         <div class="cp-card__head"><h3>Accepted plans</h3><span class="cp-hint">Newest first. A plan can be undone only if no later plan used the same pipe.</span></div>
+        <div id="recFilters" hidden>
+          <div class="cp-grid">
+            <label>Search Plan No.<input type="text" id="recQ" placeholder="Type part of the plan number"></label>
+            <label>Project Code<select id="recProj"><option value="">All projects</option></select></label>
+            <label>Drive<select id="recDrv"><option value="">All</option><option value="saved">Saved to Drive</option><option value="not">Not saved</option></select></label>
+            <label>Plan date from<input type="text" id="recFrom" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
+            <label>Plan date to<input type="text" id="recTo" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
+          </div>
+          <div class="cp-row"><button class="btn btn--primary" id="recXl" type="button">Download list (Excel)</button><button class="btn btn--ghost" id="recClear" type="button">Clear filters</button><span id="recCount" class="cp-note" style="margin:0"></span></div>
+        </div>
         <div class="cp-tw"><table id="recTbl"></table></div>
         <p id="recEmpty" class="cp-note">No accepted plans yet.</p>
         <div class="cp-row"><button class="btn btn--ghost" id="exp" type="button">Export records (.json)</button><label class="cp-inline">Import records <input type="file" id="imp" accept=".json"></label></div>
@@ -105,7 +115,7 @@
         <div class="cp-card__head"><h3>2. Settings</h3><span class="cp-hint">All lengths in mm</span></div>
         <div class="cp-grid">
           <label>Cutting Plan No.<input type="text" id="planNo" placeholder="NE 207-104"></label>
-          <label>Date<input type="date" id="date"></label>
+          <label>Date<input type="text" id="date" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
           <label>Cutting allowance per piece (mm)<input type="number" id="kerf" value="8" min="0" step="0.5"></label>
           <label>Trim at pipe start (mm)<input type="number" id="trim" value="0" min="0"></label>
         </div>
@@ -136,6 +146,30 @@
         <p id="stListNote" class="cp-note"></p>
       </div>
 
+      <div class="cp-card" id="stRelBox">
+        <div class="cp-card__head"><h3>Released pieces</h3><span class="cp-hint">Pieces that could not be cut. Download the list to re-plan them and to correct your master workbook.</span></div>
+        <div class="cp-row" style="margin-top:0">
+          <input type="search" id="stRelQ" class="cp-search" placeholder="Search plan, drawing or spool" aria-label="Search released pieces">
+          <button class="btn btn--primary" id="stRelXl" type="button">Download released pieces (Excel)</button>
+        </div>
+        <div class="cp-tw"><table id="stRelTbl"></table></div>
+        <p id="stRelNote" class="cp-note"></p>
+      </div>
+
+      <dialog id="relDlg" class="cp-dlg" aria-labelledby="relTitle">
+        <h3 id="relTitle">Release this piece</h3>
+        <p id="relWhat" class="cp-note"></p>
+        <label>Reason<select id="relReason"><option value="">- choose -</option><option>Pipe end damaged</option><option>Rusted</option><option>Pipe too short</option><option>Wrong pipe found</option><option>Other</option></select></label>
+        <label>Remark (optional)<input type="text" id="relRemark" maxlength="300"></label>
+        <fieldset class="cp-fs"><legend>What happens to the pipe length?</legend>
+          <label class="cp-inline"><input type="radio" name="relDisp" id="relBack" checked> Goes back to the pipe (can be used for another spool)</label>
+          <label class="cp-inline"><input type="radio" name="relDisp" id="relScrap"> Scrap (written off)</label>
+          <label>Length returned to the pipe (mm)<input type="number" id="relRet" min="0" step="1"></label>
+          <p id="relRemain" class="cp-note"></p>
+        </fieldset>
+        <div class="cp-row"><button class="btn btn--primary" id="relOk" type="button">Release piece</button><button class="btn btn--ghost" id="relCancel" type="button">Cancel</button></div>
+      </dialog>
+
       <div id="stView" hidden>
         <div class="cp-card" id="stHead"></div>
         <div id="stBars"></div>
@@ -152,8 +186,8 @@
         <div class="cp-grid">
           <label>Project<select id="rpProject"><option value="">All projects</option></select></label>
           <label>Week (as in the tracker, e.g. Week 27)<input type="text" id="rpWeek" placeholder="All weeks"></label>
-          <label>Date from<input type="date" id="rpFrom"></label>
-          <label>Date to<input type="date" id="rpTo"></label>
+          <label>Date from<input type="text" id="rpFrom" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
+          <label>Date to<input type="text" id="rpTo" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
         </div>
         <div class="cp-row"><label class="cp-inline"><input type="checkbox" id="rpHist" checked> Include the history sheet (every tick and untick)</label></div>
         <div class="cp-row"><button class="btn btn--primary" id="rpDownload" type="button">Download report (Excel)</button><span id="rpMsg" role="status"></span></div>
@@ -193,8 +227,8 @@
         <div class="cp-grid">
           <label>Project (code)<input type="text" id="hrProject" placeholder="All projects, or e.g. TJ/25-26/209"></label>
           <label>Week (as in the tracker)<input type="text" id="hrWeek" placeholder="All weeks"></label>
-          <label>Handover date from<input type="date" id="hrFrom"></label>
-          <label>Handover date to<input type="date" id="hrTo"></label>
+          <label>Handover date from<input type="text" id="hrFrom" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
+          <label>Handover date to<input type="text" id="hrTo" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
         </div>
         <div class="cp-row"><label class="cp-inline"><input type="checkbox" id="hrHist" checked> Include the history sheet (every handover and clearing)</label></div>
         <div class="cp-row"><button class="btn btn--primary" id="hrDownload" type="button">Download report (Excel)</button><span id="hrMsg" role="status"></span></div>
@@ -209,8 +243,8 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261021"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261024"></script>
-<script src="js/cutting-status.js?v=20261023"></script>
-<script src="js/material-handover.js?v=20261023"></script>
+<script src="js/cutting-plan.js?v=20261025"></script>
+<script src="js/cutting-status.js?v=20261025"></script>
+<script src="js/material-handover.js?v=20261025"></script>
 </body>
 </html>

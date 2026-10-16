@@ -83,3 +83,14 @@
 .cp-cell { width: 150px; margin: 0 !important; padding: 5px 7px !important; font-size: 12.5px !important; }
 .cp-cell:disabled { opacity: .55; }
 .cp-card th.cp-tick, .cp-card td.cp-tick { width: 1%; }
+/* released pieces */
+.cp-sttbl tr.cp-rel td { background: var(--bg-2); color: var(--frost-dim); }
+.cp-sttbl tr.cp-rel td:not(.cp-relcell) { text-decoration: line-through; }
+.cp-dlg { width: min(92vw, 520px); padding: 20px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-md); background: var(--bg-1, var(--bg-2)); color: var(--frost); box-shadow: var(--shadow-raised); }
+.cp-dlg::backdrop { background: rgba(0, 0, 0, .45); }
+.cp-dlg h3 { margin: 0 0 6px; } .cp-dlg label { display: block; margin-top: 12px; font-size: 13px; }
+.cp-dlg input[type=text], .cp-dlg input[type=number], .cp-dlg select { width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); background: var(--bg-2); color: var(--frost); font: inherit; }
+.cp-dlg label.cp-inline { display: flex; gap: 8px; align-items: center; }
+.cp-dlg input[type=radio] { width: 18px; height: 18px; accent-color: var(--ember); }
+.cp-fs { margin: 14px 0 0; padding: 10px 12px; border: 1px solid var(--glass-border-strong); border-radius: var(--radius-sm); } .cp-fs legend { padding: 0 6px; font-size: 13px; }
+.cp-card .btn[disabled] { opacity: .4; cursor: not-allowed; }
