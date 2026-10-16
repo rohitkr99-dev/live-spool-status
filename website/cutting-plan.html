@@ -55,6 +55,7 @@
     <div class="cp-tabs cp-sections" role="tablist" aria-label="Sections">
       <button class="btn btn--primary" id="secBtnPlan" type="button">Cutting Plan</button>
       <button class="btn btn--ghost" id="secBtnStatus" type="button">Cutting &amp; Beveling Status</button>
+      <button class="btn btn--ghost" id="secBtnHandover" type="button">Material Handover</button>
     </div>
 
     <div id="secPlan">
@@ -160,6 +161,46 @@
       </div>
     </section>
 
+    <!-- ============ MATERIAL HANDOVER ============ -->
+    <section id="secHandover" hidden>
+      <div class="cp-card">
+        <div class="cp-card__head"><h3>Find spools</h3><span class="cp-hint">Spools come from the tracker's published data</span></div>
+        <div class="cp-grid">
+          <label>Project<select id="hProject"><option value="">All projects</option></select></label>
+          <label>Week<select id="hWeek"><option value="">All weeks</option></select></label>
+          <label>Group<select id="hGroup"><option value="">All groups</option></select></label>
+          <label>Status<select id="hStatus"><option value="">All</option><option value="no">Not handed over</option><option value="yes">Handed over</option></select></label>
+          <label>Drawing contains<input type="search" id="hDrawing" placeholder="e.g. HP001_080"></label>
+          <label>Spool contains<input type="search" id="hSpool" placeholder="e.g. HP-080-02"></label>
+        </div>
+        <p id="hNote" class="cp-note"></p>
+      </div>
+
+      <div class="cp-card" id="hListCard" hidden>
+        <div class="cp-card__head"><h3>Spools</h3><span class="cp-hint" id="hCount"></span></div>
+        <div class="cp-tw"><table class="cp-sttbl" id="hTable"></table></div>
+        <div class="cp-row"><button class="btn btn--ghost" id="hMore" type="button" hidden>Show more</button></div>
+        <p class="cp-note">Tick <b>Handed over</b> for each spool. The date starts as today and can be changed, and <b>Received by</b> starts as the spool's Group and can be edited. Nothing is saved until you press <b>Save changes</b>. A warning appears if a spool's pipe pieces are not all cut and bevelled yet, but you can still save.</p>
+        <div class="cp-savebar" id="hSaveBar" hidden>
+          <span id="hDirty"></span>
+          <button class="btn btn--ghost" id="hDiscard" type="button">Discard</button>
+          <button class="btn btn--primary" id="hSave" type="button">Save changes</button>
+        </div>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card__head"><h3>Download handover report</h3><span class="cp-hint">Excel file made from the master sheet in Drive</span></div>
+        <div class="cp-grid">
+          <label>Project (code)<input type="text" id="hrProject" placeholder="All projects, or e.g. TJ/25-26/209"></label>
+          <label>Week (as in the tracker)<input type="text" id="hrWeek" placeholder="All weeks"></label>
+          <label>Handover date from<input type="date" id="hrFrom"></label>
+          <label>Handover date to<input type="date" id="hrTo"></label>
+        </div>
+        <div class="cp-row"><label class="cp-inline"><input type="checkbox" id="hrHist" checked> Include the history sheet (every handover and clearing)</label></div>
+        <div class="cp-row"><button class="btn btn--primary" id="hrDownload" type="button">Download report (Excel)</button><span id="hrMsg" role="status"></span></div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -168,7 +209,8 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261021"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261021"></script>
-<script src="js/cutting-status.js?v=20261021"></script>
+<script src="js/cutting-plan.js?v=20261023"></script>
+<script src="js/cutting-status.js?v=20261023"></script>
+<script src="js/material-handover.js?v=20261023"></script>
 </body>
 </html>

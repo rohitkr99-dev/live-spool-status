@@ -18,16 +18,29 @@
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
   var pid = function (rec, b, j) { return rec.planNo + '|' + b.barcode + '|' + (j + 1); };
 
-  /* ---------- Week lookup from the tracker's published spool data (loaded once, only when a plan is opened) ---------- */
+  /* ---------- tracker's published spool data: downloaded once (large), shared with the Material Handover section ---------- */
+  var spoolsPromise = null;
+  CS.spools = function () {
+    if (spoolsPromise) return spoolsPromise;
+    if (typeof SPOOL_STATUS_CONFIG === 'undefined') return Promise.reject(new Error('The tracker data is not available on this page.'));
+    spoolsPromise = fetch(SPOOL_STATUS_CONFIG.publishedDataUrl).then(function (r) { return r.json(); }).then(function (d) {
+      return (d.master_spools || []).map(function (s) {
+        return { project: s['Project Code'], projectName: s['Project Name'], drawing: s['Drawing No'], spool: s['Spool No'], week: s.Week || '', group: s.Group || '', oldHandover: s['Material Handover'] || '' };
+      });
+    });
+    spoolsPromise.catch(function () { spoolsPromise = null; });
+    return spoolsPromise;
+  };
+  /* Week lookup (Project + Drawing + Spool, falling back to Project + Spool) */
   function loadWeekIdx() {
-    if (weekIdx || weekLoading || typeof SPOOL_STATUS_CONFIG === 'undefined') return;
+    if (weekIdx || weekLoading) return;
     weekLoading = true;
-    fetch(SPOOL_STATUS_CONFIG.publishedDataUrl).then(function (r) { return r.json(); }).then(function (d) {
+    CS.spools().then(function (list) {
       var full = {}, ps = {};
-      (d.master_spools || []).forEach(function (s) {
-        if (!s.Week) return;
-        var proj = nk(s['Project Code']), sp = nk(s['Spool No']);
-        full[proj + '|' + nk(s['Drawing No']) + '|' + sp] = s.Week; ps[proj + '|' + sp] = s.Week;
+      list.forEach(function (s) {
+        if (!s.week) return;
+        var proj = nk(s.project), sp = nk(s.spool);
+        full[proj + '|' + nk(s.drawing) + '|' + sp] = s.week; ps[proj + '|' + sp] = s.week;
       });
       weekIdx = { full: full, ps: ps };
     }).catch(function () { weekIdx = { full: {}, ps: {} }; });
@@ -38,16 +51,23 @@
     return weekIdx.full[proj + '|' + nk(p.drawing) + '|' + sp] || weekIdx.ps[proj + '|' + sp] || '';
   }
 
-  /* ---------- section switch (Cutting Plan <-> Cutting & Beveling Status) ---------- */
+  /* ---------- sections: Cutting Plan / Cutting & Beveling Status / Material Handover ---------- */
+  var curSec = 'plan';
+  CS.dirtyFns = [function () { return changes().length > 0; }];
+  CS.sectionHooks = { status: function () { if (!plans.length) loadPlans(); } };
   function section(name) {
-    if (name !== 'status' && changes().length && !confirm('You have unsaved ticks in Cutting & Beveling Status. Leave without saving?')) return;
-    $('secPlan').hidden = name !== 'plan'; $('secStatus').hidden = name !== 'status';
-    $('secBtnPlan').className = 'btn ' + (name === 'plan' ? 'btn--primary' : 'btn--ghost');
-    $('secBtnStatus').className = 'btn ' + (name === 'status' ? 'btn--primary' : 'btn--ghost');
-    if (name === 'status' && !plans.length) loadPlans();
+    if (name === curSec) return;
+    if (CS.dirtyFns.some(function (f) { return f(); }) && !confirm('You have unsaved ticks. Leave without saving?')) return;
+    curSec = name;
+    ['plan', 'status', 'handover'].forEach(function (n) {
+      var cap = n.charAt(0).toUpperCase() + n.slice(1);
+      $('sec' + cap).hidden = n !== name; $('secBtn' + cap).className = 'btn ' + (n === name ? 'btn--primary' : 'btn--ghost');
+    });
+    if (CS.sectionHooks[name]) CS.sectionHooks[name]();
   }
   $('secBtnPlan').onclick = function () { section('plan'); };
   $('secBtnStatus').onclick = function () { section('status'); };
+  $('secBtnHandover').onclick = function () { section('handover'); };
 
   /* ---------- plan list ---------- */
   function loadPlans() {
