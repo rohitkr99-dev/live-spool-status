@@ -345,10 +345,10 @@
       return r;
     }, function () { throw new Error('Could not reach Google. Check your internet and try again.'); });
   }
-  function saveToDrive(rec) {
-    var note = $('actnote'), btn = $('drv');
+  function saveToDrive(rec, rowBtn) {
+    var note = rowBtn ? document.createElement('p') : $('actnote'), btn = rowBtn || $('drv'), label = rowBtn ? 'Save to Drive' : btn.textContent;
     note.className = 'cp-note'; note.textContent = 'Saving to Drive...'; btn.disabled = true; btn.textContent = 'Saving...';
-    var done = function () { btn.disabled = false; btn.textContent = 'Save to Drive'; };
+    var done = function () { btn.disabled = false; btn.textContent = label; };
     var b64 = function (u) { return u.split(',')[1]; };
     var xl = XLSX.write(buildWorkbook(rec), { type: 'base64', bookType: 'xlsx' });
     var pdf = b64(buildPdf(rec).output('datauristring'));
@@ -360,6 +360,7 @@
       var all = loadRecs(); all.forEach(function (x) { if (x.createdAt === rec.createdAt) x.driveSavedAt = Date.now(); }); saveRecs(all);
       note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + new Date().toLocaleString() + '.'; note.className = 'cp-note cp-ok';
       toast(true, 'Saved to Drive: plan ' + rec.planNo + ' (' + r.saved + ' files).');
+      if (rowBtn) renderRecs();
     }).catch(function (e) {
       done(); note.textContent = 'Not saved: ' + e.message; note.className = 'cp-note cp-bad';
       toast(false, 'NOT saved to Drive: ' + e.message);
@@ -379,9 +380,10 @@
     $('recTbl').innerHTML = recs.length ? '<tr><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + recs.map(function (r, i) {
       var blk = undoBlock(r, recs);
       return '<tr><td>' + esc(r.planNo) + '</td><td>' + esc(r.date) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(new Date(r.driveSavedAt).toLocaleDateString()) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
-        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> <button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
+        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () { $('paneRec').hidden = true; show(recs[b.dataset.v], true); window.scrollTo(0, 0); }; });
+    Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-d]'), function (b) { b.onclick = function () { saveToDrive(recs[b.dataset.d], b); }; });
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-u]'), function (b) {
       b.onclick = function () {
         var r = recs[b.dataset.u];
