@@ -55,9 +55,9 @@ const SpoolApp = {
     SpoolProjectFilter.setup(store);
     const view = SpoolProjectFilter.view(store);
 
-    // KPI cards stay on all projects; everything below the project
-    // filter reads the filtered view.
-    SpoolKPI.render(store.dashboardSummary);
+    // The KPI cards and everything below the project filter read the
+    // filtered view.
+    SpoolKPI.render(view.dashboardSummary);
     SpoolFabline.render(view.dashboardSummary);
     SpoolCharts.render(view);
     SpoolStageThroughput.render(view);
@@ -85,11 +85,12 @@ const SpoolApp = {
     document.body.classList.add("is-ready");
   },
 
-  /** The project filter changed: redraw only what sits below it. */
+  /** The project filter changed: redraw the KPI cards and everything below. */
   renderScoped() {
     if (!this.store) return;
     const view = SpoolProjectFilter.view(this.store);
 
+    SpoolKPI.render(view.dashboardSummary);
     SpoolFabline.render(view.dashboardSummary);
     SpoolCharts.render(view);
     SpoolStageThroughput.render(view);

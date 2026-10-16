@@ -8,11 +8,12 @@
  * It never calculates anything. It hands each section a "view" of
  * the loaded store - the same shape, with the spool rows, exceptions,
  * activity rows and the per-project figures the pipeline already
- * published (dashboard_summary.by_project, activity_metrics'
- * project_code, the name-keyed hold charts) narrowed to the chosen
- * project. Stage Ageing and the S-Curve already had their own
- * project selector; the filter drives that one instead of duplicating
- * it. The KPI cards deliberately stay on all projects.
+ * published (dashboard_summary.by_project - KPIs and Fabrication
+ * Line - activity_metrics' project_code, the name-keyed hold charts)
+ * narrowed to the chosen project. Stage Ageing and the S-Curve
+ * already had their own project selector; the filter drives that one
+ * instead of duplicating it. The KPI cards follow the filter too
+ * (2026-10-16, per the person).
  */
 
 const SpoolProjectFilter = {
@@ -69,11 +70,12 @@ const SpoolProjectFilter = {
     if (own) {
       scopedSummary.current_stage_distribution = own.current_stage_distribution;
       scopedSummary.rework_quantum = own.rework_quantum;
+      if (own.kpis) scopedSummary.kpis = own.kpis;
     } else {
       // An older data file (e.g. a cached or uploaded copy) has no
       // per-project line; say so rather than show all-project numbers
       // under a project's name.
-      this.notice = "Fabrication Line is not available per project in this data file yet.";
+      this.notice = "Per-project key metrics and Fabrication Line are not in this data file yet.";
     }
 
     // The two hold charts are keyed by Project Name, not Code.

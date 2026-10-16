@@ -20,6 +20,8 @@ The page is now **Cutting Station & Material Handover** (still Testing; hub card
 
 ## Where things stand (as of 2026-10-12) - Cutting Plan page
 
+**Project filter drives the KPI cards (2026-10-16)** - in a PR; needs a sync after merge for the per-project KPI values (`by_project[code].kpis`). See `CHANGELOG.md`.
+
 **Packing & Dispatch All Spools headers fixed (2026-10-16)** - one header cell was missing for the hidden Project Code column; see `CHANGELOG.md`.
 
 **Projects page global project filter (2026-10-16)** - in a PR: a Project select between the KPI cards and the Fabrication Line filters everything below it. Needs the pipeline change (per-project Fabrication Line in `dashboard_summary.by_project`, per-project `activity_metrics`), so merge, then run the sync; see `CHANGELOG.md`.

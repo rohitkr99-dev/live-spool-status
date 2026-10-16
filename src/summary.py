@@ -479,7 +479,12 @@ class SummaryEngine:
 
         return current_stage_distribution, rework_quantum, on_hold_mask
 
-    def generate_dashboard_summary(self, dataframe: pd.DataFrame) -> dict:
+    def _kpis(self, dataframe: pd.DataFrame) -> dict:
+        """
+        The KPI-card figures for one set of spools. Split out of
+        generate_dashboard_summary() (2026-10-16) so the same numbers can be
+        published per project for the Projects page's project filter.
+        """
 
         total_spools = len(dataframe)
         planned = int(dataframe[PLANNED_FLAG].sum())
@@ -519,6 +524,20 @@ class SummaryEngine:
             round(variances.mean(), 1) if len(variances) else None
         )
 
+        return {
+            "total_spools": total_spools,
+            "planned": planned,
+            "unplanned": total_spools - planned,
+            "completed": completed,
+            "average_total_age_days": average_total_age,
+            "oldest_spool": oldest_spool,
+            "planning_variance_days": planning_variance_days,
+        }
+
+    def generate_dashboard_summary(self, dataframe: pd.DataFrame) -> dict:
+
+        kpis = self._kpis(dataframe)
+
         current_stage_distribution, rework_quantum, on_hold_mask = (
             self._fabline_block(dataframe)
         )
@@ -534,6 +553,7 @@ class SummaryEngine:
                 by_project[str(project_code)] = {
                     "current_stage_distribution": project_distribution,
                     "rework_quantum": project_quantum,
+                    "kpis": self._kpis(project_df),
                 }
 
         # "Currently on Hold, by Project and stage" (2026-08-21, per
@@ -582,15 +602,7 @@ class SummaryEngine:
 
         return {
             "generated_at": datetime.now().isoformat(),
-            "kpis": {
-                "total_spools": total_spools,
-                "planned": planned,
-                "unplanned": total_spools - planned,
-                "completed": completed,
-                "average_total_age_days": average_total_age,
-                "oldest_spool": oldest_spool,
-                "planning_variance_days": planning_variance_days,
-            },
+            "kpis": kpis,
             "current_stage_distribution": current_stage_distribution,
             "rework_quantum": rework_quantum,
             "hold_by_project_stage": hold_by_project_stage,

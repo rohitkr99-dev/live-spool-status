@@ -82,3 +82,13 @@ def test_activity_records_are_per_day_and_project():
     assert by_key[("2026-01-06", "P1")]["welding_inch_dia"] == 3.0
     # Summing every project for a day gives the old all-projects figure.
     assert sum(r["fitup_inch_dia"] for r in records if r["date"] == "2026-01-05") == 16.0
+
+
+def test_by_project_kpis_match_each_projects_spools(summary):
+    kpis = {code: v["kpis"] for code, v in summary["by_project"].items()}
+
+    assert kpis["P1"]["total_spools"] == 3      # held spools still count in the KPI cards
+    assert kpis["P2"]["total_spools"] == 1
+    assert sum(k["total_spools"] for k in kpis.values()) == summary["kpis"]["total_spools"]
+    assert kpis["P1"]["oldest_spool"]["project_code"] == "P1"
+    assert kpis["P2"]["oldest_spool"]["project_code"] == "P2"
