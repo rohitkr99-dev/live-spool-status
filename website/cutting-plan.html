@@ -52,6 +52,13 @@
 
   <main id="cp-tool">
 
+    <div class="cp-tabs cp-sections" role="tablist" aria-label="Sections">
+      <button class="btn btn--primary" id="secBtnPlan" type="button">Cutting Plan</button>
+      <button class="btn btn--ghost" id="secBtnStatus" type="button">Cutting &amp; Beveling Status</button>
+    </div>
+
+    <div id="secPlan">
+
     <p class="cp-intro">Pipes and structural profiles. Upload or paste the cut list and the available lengths, review the plan, then accept it. The calculation runs in your browser. <strong>Testing:</strong> keep using your master workbook as usual and check each plan before cutting.</p>
 
     <div class="cp-tabs" role="tablist">
@@ -114,13 +121,54 @@
       <div id="bars"></div>
     </section>
 
+    </div><!-- /secPlan -->
+
+    <!-- ============ CUTTING & BEVELING STATUS ============ -->
+    <section id="secStatus" hidden>
+      <div class="cp-card" id="stPickBox">
+        <div class="cp-card__head"><h3>Select a cutting plan</h3><span class="cp-hint">Plans saved to Drive from the Cutting Plan section</span></div>
+        <div class="cp-row" style="margin-top:0">
+          <input type="search" id="stSearch" class="cp-search" placeholder="Search plan no. or project" aria-label="Search plans">
+          <button class="btn btn--ghost" id="stRefresh" type="button">Refresh list</button>
+        </div>
+        <div class="cp-tw"><table id="stPlans"></table></div>
+        <p id="stListNote" class="cp-note"></p>
+      </div>
+
+      <div id="stView" hidden>
+        <div class="cp-card" id="stHead"></div>
+        <div id="stBars"></div>
+        <div class="cp-savebar" id="stSaveBar" hidden>
+          <span id="stDirty"></span>
+          <button class="btn btn--ghost" id="stDiscard" type="button">Discard</button>
+          <button class="btn btn--primary" id="stSave" type="button">Save changes</button>
+        </div>
+        <button id="stBack" type="button" hidden></button>
+      </div>
+
+      <div class="cp-card" id="stReport">
+        <div class="cp-card__head"><h3>Download status report</h3><span class="cp-hint">Excel file made from the master sheet in Drive</span></div>
+        <div class="cp-grid">
+          <label>Project<select id="rpProject"><option value="">All projects</option></select></label>
+          <label>Week (as in the tracker, e.g. Week 27)<input type="text" id="rpWeek" placeholder="All weeks"></label>
+          <label>Date from<input type="date" id="rpFrom"></label>
+          <label>Date to<input type="date" id="rpTo"></label>
+        </div>
+        <div class="cp-row"><label class="cp-inline"><input type="checkbox" id="rpHist" checked> Include the history sheet (every tick and untick)</label></div>
+        <div class="cp-row"><button class="btn btn--primary" id="rpDownload" type="button">Download report (Excel)</button><span id="rpMsg" role="status"></span></div>
+        <p class="cp-note">The date range matches pieces whose Cutting Date or Beveling Date falls inside it. Leave the dates empty to get everything.</p>
+      </div>
+    </section>
+
   </main>
 </div>
 
 <script src="js/user-menu.js?v=20260920b"></script>
 <script src="vendor/xlsx.core.min.js"></script>
 <script src="vendor/jspdf.umd.min.js"></script>
-<script src="js/cutplan-engine.js?v=20261020"></script>
-<script src="js/cutting-plan.js?v=20261020"></script>
+<script src="js/cutplan-engine.js?v=20261021"></script>
+<script src="js/config.js?v=20261021"></script>
+<script src="js/cutting-plan.js?v=20261021"></script>
+<script src="js/cutting-status.js?v=20261021"></script>
 </body>
 </html>

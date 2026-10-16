@@ -173,7 +173,7 @@
     var s = rec.summary, m = function (v) { return (v / 1000).toFixed(2); };
     $('actions').innerHTML = (accepted ? '' : '<button class="btn btn--primary" id="acc" type="button">Accept plan</button> ') +
       '<button class="btn btn--ghost" id="pdf" type="button">Download plan (PDF)</button> <button class="btn btn--ghost" id="xl" type="button">Download plan &amp; updates (Excel)</button>' +
-      (accepted && DRIVE_URL ? ' <button class="btn btn--ghost" id="drv" type="button">Save to Drive</button> <input type="password" id="pass" placeholder="Passcode" autocomplete="off" style="width:140px">' : '') +
+      (accepted && DRIVE_URL ? ' <button class="btn btn--ghost" id="drv" type="button">Save to Drive</button>' : '') +
       '<p class="cp-note" id="actnote">' + (accepted ? '' : 'Nothing is recorded until you accept.') + '</p>';
     var k = [['Pieces', s.pieces], ['Planned', s.placed], ['MNA (no pipe)', s.unplaced], ['Pipes used', s.bars], ['Pipe length used (m)', m(s.startMm)], ['Net cut (m)', m(s.netMm)], ['Remain after (m)', m(s.remainMm)], ['Yield %', s.yieldPct.toFixed(1)]];
     $('kpis').innerHTML = k.map(function (x) { return '<div class="kpi-card"><span class="kpi-card__label">' + esc(x[0]) + '</span><span class="kpi-card__value">' + esc(x[1]) + '</span></div>'; }).join('');
@@ -334,9 +334,19 @@
     t.hidden = false; clearTimeout(toastTimer);
     if (ok) toastTimer = setTimeout(function () { t.hidden = true; }, 10000);
   }
+  // Every request to the Drive script carries the signed-in user's site login proof; the script checks it with Google.
+  function api(action, body) {
+    var u = window.firebase && firebase.auth().currentUser;
+    if (!u) return Promise.reject(new Error('You are signed out. Sign in again.'));
+    return u.getIdToken().then(function (tok) {
+      return fetch(DRIVE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: action, idToken: tok }, body || {})) });
+    }).then(function (r) { return r.json(); }).then(function (r) {
+      if (!r.ok) throw new Error(r.error || 'Request failed');
+      return r;
+    }, function () { throw new Error('Could not reach Google. Check your internet and try again.'); });
+  }
   function saveToDrive(rec) {
-    var note = $('actnote'), pass = $('pass').value, btn = $('drv');
-    if (!pass) { note.textContent = 'Enter the passcode.'; note.className = 'cp-note cp-bad'; toast(false, 'Enter the passcode first.'); return; }
+    var note = $('actnote'), btn = $('drv');
     note.className = 'cp-note'; note.textContent = 'Saving to Drive...'; btn.disabled = true; btn.textContent = 'Saving...';
     var done = function () { btn.disabled = false; btn.textContent = 'Save to Drive'; };
     var b64 = function (u) { return u.split(',')[1]; };
@@ -344,25 +354,18 @@
     var pdf = b64(buildPdf(rec).output('datauristring'));
     var json = btoa(unescape(encodeURIComponent(JSON.stringify(rec))));
     var base = fileBase(rec);
-    fetch(DRIVE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({
-      passcode: pass, planNo: rec.planNo, project: rec.project || 'Unassigned',
-      files: [{ name: base + '.xlsx', b64: xl }, { name: base + '.pdf', b64: pdf }, { name: base + '.json', b64: json }]
-    }) }).then(function (r) { return r.json(); }).then(function (r) {
+    api('savePlan', { planNo: rec.planNo, project: rec.project || 'Unassigned',
+      files: [{ name: base + '.xlsx', b64: xl }, { name: base + '.pdf', b64: pdf }, { name: base + '.json', b64: json }] }).then(function (r) {
       done();
-      if (r.ok) {
-        $('pass').value = '';                                  // never leave the passcode sitting in the box
-        var all = loadRecs(); all.forEach(function (x) { if (x.createdAt === rec.createdAt) x.driveSavedAt = Date.now(); }); saveRecs(all);
-        note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + new Date().toLocaleString() + '.'; note.className = 'cp-note cp-ok';
-        toast(true, 'Saved to Drive: plan ' + rec.planNo + ' (' + r.saved + ' files).');
-      } else {
-        note.textContent = 'Drive refused: ' + (r.error || 'unknown error'); note.className = 'cp-note cp-bad';
-        toast(false, 'NOT saved to Drive: ' + (r.error || 'unknown error'));
-      }
-    }).catch(function () {
-      done(); note.textContent = 'Could not reach Drive. Download the files and check the setup.'; note.className = 'cp-note cp-bad';
-      toast(false, 'NOT saved to Drive: could not reach Google. Check your internet and try again.');
+      var all = loadRecs(); all.forEach(function (x) { if (x.createdAt === rec.createdAt) x.driveSavedAt = Date.now(); }); saveRecs(all);
+      note.textContent = 'Saved to Drive (' + r.saved + ' files) on ' + new Date().toLocaleString() + '.'; note.className = 'cp-note cp-ok';
+      toast(true, 'Saved to Drive: plan ' + rec.planNo + ' (' + r.saved + ' files).');
+    }).catch(function (e) {
+      done(); note.textContent = 'Not saved: ' + e.message; note.className = 'cp-note cp-bad';
+      toast(false, 'NOT saved to Drive: ' + e.message);
     });
   }
+  window.CutStation = { api: api, esc: esc, toast: toast, el: $ };
 
   /* ---------- accepted plans ---------- */
   function undoBlock(rec, recs) { // a plan can be undone only if no later plan used any of its pipes
