@@ -126,7 +126,7 @@ One-time setup, so anyone with the link can view the dashboard without running a
 2. Repo **Settings → Pages → Build and deployment → Source**: choose **"GitHub Actions"**.
 3. That's it. `.github/workflows/deploy-pages.yml` (already in this repo) publishes the `website/` folder to Pages automatically on every push to `main`.
 
-Your GitHub Pages URL will look like `https://<username>.github.io/<repo-name>/`. On a **free personal GitHub plan, this requires the repository to be public** - the published site (and the data file inside `website/data/`) is reachable by anyone with the link, though it isn't search-indexed or linked from anywhere. If that's not acceptable for your data, you'd need a paid plan (for a private Pages site) or a different host entirely.
+Your GitHub Pages URL will look like `https://rohitchoubey.dpdns.org/live-spool-status/login.html`. On a **free personal GitHub plan, this requires the repository to be public** - the published site (and the data file inside `website/data/`) is reachable by anyone with the link, though it isn't search-indexed or linked from anywhere. If that's not acceptable for your data, you'd need a paid plan (for a private Pages site) or a different host entirely.
 
 To update what everyone sees, from then on:
 
