@@ -1,0 +1,450 @@
+/* =====================================================================
+   STUDIO SKIN - DEE Maroon (tonal)
+   Always on: every page carries <html data-skin="studio">. It only overrides
+   the design tokens and the look of the cards: no markup, data or
+   behaviour changes, so every chart, filter and table works as before.
+
+   Language taken from the Studio Kit cards: flat surfaces (no glass, no
+   shadow), 21px corners, large bold numerals, small pill badges, and text
+   in three strengths (100% / 60% / 40%), all in the DEE maroon family.
+   The kit's own typeface is not licensed here, so Manrope (already on
+   the site) stands in for it.
+   ===================================================================== */
+
+html[data-skin="studio"] {
+  /* Palette tokens (DEE maroon, tonal: every colour block is a shade of the brand maroon). */
+  --studio-accent: #A82E30;
+  --studio-accent-bright: #E2585B;   /* the accent as seen on a dark surface */
+  --studio-accent-dark: #7E2224;     /* the accent for text and focus on light */
+  --studio-ink: #3A1214;
+  --studio-soft: #F6E3E3;
+  --studio-on-accent: #FFFFFF;       /* text sitting on the accent colour */
+  --studio-pill-bg: #3A1214;
+  --studio-pill-fg: #FFFFFF;
+  /* Colour blocks that differ per variant */
+  --studio-hero-bg: var(--studio-accent);      /* Total Spools + first card of each strip */
+  --studio-hero-fg: var(--studio-on-accent);
+  --studio-secondary: #5C1A1C;                 /* Planned / Unplanned card */
+  --studio-secondary-fg: #FFFFFF;
+  --studio-planned-num: #FFFFFF;
+  --studio-completed-bg: #F6E3E3;              /* Completed card + its pill */
+  --studio-completed-fg: #3A1214;
+  --studio-completed-pill-bg: #A82E30;
+  --studio-completed-pill-fg: #FFFFFF;
+  --studio-oldest-bg: #F3E6D4;                 /* Oldest Spool card */
+  --studio-oldest-fg: #3A1214;
+  --studio-done-bg: #5C1A1C;                   /* "Shipment Complete" stage card */
+  --studio-done-fg: #F6E3E3;
+
+  --bg-1: #F2F4F3;
+  --bg-2: #FFFFFF;
+  --bg-3: #E7EAE9;
+
+  --glass-fill: #FFFFFF;
+  --glass-fill-strong: #FFFFFF;
+  --glass-border: transparent;
+  --glass-border-strong: rgba(41, 41, 41, 0.14);
+  --glass-sheen: transparent;
+
+  --frost: #292929;
+  --frost-dim: rgba(41, 41, 41, 0.62);
+  --frost-faint: rgba(41, 41, 41, 0.55);
+
+  --line: rgba(41, 41, 41, 0.08);
+  --line-strong: rgba(41, 41, 41, 0.16);
+  --tint-weak: rgba(41, 41, 41, 0.03);
+
+  --ember: var(--studio-accent-dark);
+  --ember-dark: var(--studio-accent-dark);
+  --ember-soft: color-mix(in srgb, var(--studio-accent) 14%, transparent);
+  --status-warning: var(--studio-accent-dark);
+  --status-warning-soft: color-mix(in srgb, var(--studio-accent) 16%, transparent);
+
+  --radius-sm: 10px;
+  --radius-md: 21px;
+  --radius-lg: 26px;
+
+  --shadow-card: none;
+  --shadow-raised: 0 18px 40px -22px rgba(41, 41, 41, 0.35);
+  --blur-glass: none;
+}
+
+
+
+/* Dark mode for the colour blocks (same values under both dark selectors). */
+@media (prefers-color-scheme: dark) {
+  html[data-skin="studio"]:not([data-theme="light"]) {
+    --studio-oldest-bg: #3B3424; --studio-oldest-fg: #F2F4F3;
+  }
+  html[data-skin="studio"]:not([data-theme="light"]) {
+    --studio-completed-bg: #4A2325; --studio-completed-fg: #F6E3E3;
+    --studio-completed-pill-bg: #E2585B; --studio-completed-pill-fg: #3A1214;
+    --studio-done-bg: #4A2325;
+  }
+}
+html[data-skin="studio"][data-theme="dark"] {
+  --studio-oldest-bg: #3B3424; --studio-oldest-fg: #F2F4F3;
+}
+html[data-skin="studio"][data-theme="dark"] {
+  --studio-completed-bg: #4A2325; --studio-completed-fg: #F6E3E3;
+  --studio-completed-pill-bg: #E2585B; --studio-completed-pill-fg: #3A1214;
+  --studio-done-bg: #4A2325;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-skin="studio"]:not([data-theme="light"]) {
+    --bg-1: #1B1B1B;
+    --bg-2: #292929;
+    --bg-3: #323232;
+    --glass-fill: #292929;
+    --glass-fill-strong: #292929;
+    --glass-border: transparent;
+    --glass-border-strong: rgba(255, 255, 255, 0.18);
+    --frost: #F2F4F3;
+    --frost-dim: rgba(242, 244, 243, 0.64);
+    --frost-faint: rgba(242, 244, 243, 0.56);
+    --line: rgba(255, 255, 255, 0.09);
+    --line-strong: rgba(255, 255, 255, 0.18);
+    --tint-weak: rgba(255, 255, 255, 0.04);
+    --ember: var(--studio-accent-bright);
+    --ember-soft: color-mix(in srgb, var(--studio-accent-bright) 20%, transparent);
+    --status-warning: var(--studio-accent-bright);
+    --status-warning-soft: color-mix(in srgb, var(--studio-accent-bright) 22%, transparent);
+    --studio-pill-bg: #F2F4F3;
+    --studio-pill-fg: #1B1B1B;
+  }
+}
+html[data-skin="studio"][data-theme="dark"] {
+  --bg-1: #1B1B1B;
+  --bg-2: #292929;
+  --bg-3: #323232;
+  --glass-fill: #292929;
+  --glass-fill-strong: #292929;
+  --glass-border: transparent;
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --frost: #F2F4F3;
+  --frost-dim: rgba(242, 244, 243, 0.64);
+  --frost-faint: rgba(242, 244, 243, 0.56);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --tint-weak: rgba(255, 255, 255, 0.04);
+  --ember: var(--studio-accent-bright);
+  --ember-soft: color-mix(in srgb, var(--studio-accent-bright) 20%, transparent);
+  --status-warning: var(--studio-accent-bright);
+  --status-warning-soft: color-mix(in srgb, var(--studio-accent-bright) 22%, transparent);
+  --studio-pill-bg: #F2F4F3;
+  --studio-pill-fg: #1B1B1B;
+}
+
+
+/* ---- flat surfaces: no ambient glow, no glass, no hover lift ---------- */
+html[data-skin="studio"] .ambient { display: none; }
+
+html[data-skin="studio"] .topbar,
+html[data-skin="studio"] .project-filter,
+html[data-skin="studio"] .chart-card,
+html[data-skin="studio"] .tables-section,
+html[data-skin="studio"] .fabline-section {
+  background: var(--glass-fill);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-skin="studio"] .chart-card:hover,
+html[data-skin="studio"] .kpi-card:hover { transform: none; box-shadow: none; }
+html[data-skin="studio"] .fabline-section::before { display: none; }
+
+html[data-skin="studio"] .chart-card { padding: 22px 24px 18px; }
+html[data-skin="studio"] .chart-card__head h3,
+html[data-skin="studio"] .charts-grid__head h3 {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+html[data-skin="studio"] .chart-card__hint { color: var(--frost-faint); }
+
+/* ---- KPI cards ---------------------------------------------------------
+   One colour block per card, like the kit's Progress / Total Stats cards:
+   title on top, the big number at the bottom, a pill for the secondary
+   figure. */
+html[data-skin="studio"] .kpi-strip { gap: 14px; }
+
+html[data-skin="studio"] .kpi-card {
+  min-height: 176px;
+  padding: 20px 20px 18px;
+  justify-content: space-between;
+  gap: 4px;
+  background: var(--glass-fill);
+  border: 0;
+  box-shadow: none;
+  color: var(--frost);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-skin="studio"] .kpi-card::before,
+html[data-skin="studio"] .kpi-card::after { display: none; }
+
+/* Numbers scale with the card (not the window) so a long figure such as
+   "11,212 / 3,270" can never spill out of a narrow card. */
+html[data-skin="studio"] .kpi-card { container-type: inline-size; container-name: kpi; }
+
+html[data-skin="studio"] .kpi-card__label {
+  order: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: inherit;
+}
+html[data-skin="studio"] .kpi-card__value {
+  order: 1;
+  margin-top: auto;
+  font-family: var(--font-body);
+  font-size: clamp(26px, 17cqi, 52px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: inherit;
+}
+html[data-skin="studio"] .kpi-card__value--split {
+  font-size: clamp(22px, 12.5cqi, 38px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.18em;
+}
+html[data-skin="studio"] .kpi-card__value--split > span { white-space: nowrap; }
+/* In a narrow card the two figures stack: planned on top, "/ unplanned" below. */
+@container kpi (max-width: 235px) {
+  html[data-skin="studio"] .kpi-card__value--split { flex-direction: column; row-gap: 0.06em; }
+  html[data-skin="studio"] .kpi-card__value--split .kpi-card__slash { display: none; }
+  html[data-skin="studio"] .kpi-card__value--split #kpi-unplanned::before { content: "/ "; opacity: 0.55; }
+}
+html[data-skin="studio"] .kpi-card__sub {
+  order: 2;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.62;
+  overflow-wrap: anywhere;
+}
+html[data-skin="studio"] .kpi-card--complete .kpi-card__value,
+html[data-skin="studio"] .kpi-card--warning .kpi-card__value { color: inherit; }
+
+html[data-skin="studio"] .kpi-card[data-kpi="total"] { background: var(--studio-hero-bg); color: var(--studio-hero-fg); }
+html[data-skin="studio"] .kpi-card[data-kpi="planned"] { background: var(--studio-secondary); color: var(--studio-secondary-fg); }
+html[data-skin="studio"] .kpi-card[data-kpi="planned"] #kpi-planned { color: var(--studio-planned-num); }
+html[data-skin="studio"] .kpi-card[data-kpi="planned"] #kpi-unplanned,
+html[data-skin="studio"] .kpi-card[data-kpi="planned"] .kpi-card__slash { color: color-mix(in srgb, var(--studio-secondary-fg) 55%, transparent); }
+html[data-skin="studio"] .kpi-card[data-kpi="completed"] { background: var(--studio-completed-bg); color: var(--studio-completed-fg); }
+html[data-skin="studio"] .kpi-card[data-kpi="oldest"] { background: var(--studio-oldest-bg); color: var(--studio-oldest-fg); }
+
+/* "% completed" as a charcoal pill in the card's top-right corner */
+html[data-skin="studio"] .kpi-card[data-kpi="completed"] .kpi-card__sub {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--studio-completed-pill-bg);
+  color: var(--studio-completed-pill-fg);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* In a narrow card the pill drops under the title instead of overlapping it */
+@container kpi (max-width: 235px) {
+  html[data-skin="studio"] .kpi-card[data-kpi="completed"] .kpi-card__sub {
+    position: static;
+    order: 0;
+    align-self: flex-start;
+    margin-top: 6px;
+  }
+}
+
+html[data-skin="studio"][data-theme="dark"] .kpi-card[data-kpi="avg-age"],
+html[data-skin="studio"][data-theme="dark"] .kpi-card[data-kpi="variance"] { background: #292929; color: #F2F4F3; }
+@media (prefers-color-scheme: dark) {
+  html[data-skin="studio"]:not([data-theme="light"]) .kpi-card[data-kpi="avg-age"],
+  html[data-skin="studio"]:not([data-theme="light"]) .kpi-card[data-kpi="variance"] { background: #292929; color: #F2F4F3; }
+}
+
+/* ---- other pages' KPI strips ------------------------------------------
+   The first card of a strip is the headline figure (accent colour); cards
+   the pages already flag as "complete" or "warning" take the same green and
+   amber blocks as the Projects page. */
+html[data-skin="studio"] .kpi-strip > .kpi-card:first-child:not([data-kpi]),
+html[data-skin="studio"] .kpi-strip > .kpi-card[data-kpi="total-spools"],
+html[data-skin="studio"] .kpi-strip > .kpi-card[data-kpi="total-qty"] { background: var(--studio-hero-bg); color: var(--studio-hero-fg); }
+html[data-skin="studio"] .kpi-card--complete { background: var(--studio-completed-bg); color: var(--studio-completed-fg); }
+html[data-skin="studio"] .kpi-card--warning { background: var(--studio-oldest-bg); color: var(--studio-oldest-fg); }
+
+/* ---- project filter ---------------------------------------------------- */
+html[data-skin="studio"] .project-filter { padding: 16px 22px; }
+html[data-skin="studio"] .project-filter .filter-field label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+html[data-skin="studio"] .project-filter .filter-field select {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--studio-pill-bg);
+  color: var(--studio-pill-fg);
+  font-weight: 600;
+}
+html[data-skin="studio"] .project-filter .filter-field select:focus-visible { outline: 2px solid var(--studio-accent); outline-offset: 2px; }
+
+/* ---- Fabrication Line --------------------------------------------------
+   Flat stage cards, the stage colour kept as a small dot (so the colours
+   in the charts below still read), the busiest stage in the accent colour. */
+html[data-skin="studio"] .fabline-section { padding: 26px 26px 22px; }
+html[data-skin="studio"] .fabline { gap: 12px; padding-bottom: 6px; }
+html[data-skin="studio"] .fabline::after { display: none; }
+
+html[data-skin="studio"] .fabline__stage {
+  height: 144px;
+  padding: 16px 16px 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--bg-1);
+  box-shadow: none;
+}
+html[data-skin="studio"] .fabline__stage:hover { transform: none; }
+html[data-skin="studio"] .fabline__stage::before { display: none; }
+html[data-skin="studio"] .fabline__stage::after {
+  left: auto; right: 14px; top: 14px; bottom: auto;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  box-shadow: none;
+}
+html[data-skin="studio"] .fabline__stage-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  color: var(--frost-dim);
+  padding-right: 22px;
+}
+html[data-skin="studio"] .fabline__stage-count {
+  font-family: var(--font-body);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--frost);
+}
+
+html[data-skin="studio"] .fabline__stage--bottleneck {
+  background: var(--studio-accent);
+  animation: none;
+}
+html[data-skin="studio"] .fabline__stage--bottleneck .fabline__stage-name,
+html[data-skin="studio"] .fabline__stage--bottleneck .fabline__stage-count { color: var(--studio-on-accent); }
+html[data-skin="studio"] .fabline__stage--bottleneck::after { background: var(--studio-on-accent); }
+html[data-skin="studio"] .fabline__stage-badge {
+  /* in the flow, between the name and the number, so it can never sit on the digits */
+  position: static;
+  align-self: flex-start;
+  margin: 2px 0;
+  padding: 2px 8px;
+  line-height: 1.4;
+  background: var(--studio-pill-bg);
+  color: var(--studio-pill-fg);
+  border: 0;
+  border-radius: 999px;
+}
+
+html[data-skin="studio"] .fabline__stage--complete { background: var(--studio-done-bg); }
+html[data-skin="studio"] .fabline__stage--complete .fabline__stage-name { color: var(--studio-done-fg); opacity: 0.75; }
+html[data-skin="studio"] .fabline__stage--complete .fabline__stage-count { color: var(--studio-done-fg); }
+html[data-skin="studio"] .fabline-bottleneck strong { color: var(--studio-accent); }
+
+/* ---- header buttons, tabs, filters -------------------------------------- */
+html[data-skin="studio"] .btn { border-radius: 999px; }
+html[data-skin="studio"] .btn--primary {
+  background: var(--studio-accent);
+  color: var(--studio-on-accent);
+  border-color: var(--studio-accent);
+  font-weight: 700;
+}
+html[data-skin="studio"] .btn--primary:hover { box-shadow: 0 10px 26px -10px var(--studio-accent); }
+html[data-skin="studio"] .tab { border-radius: 999px; }
+html[data-skin="studio"] .tab.is-active { background: var(--studio-pill-bg); color: var(--studio-pill-fg); border-color: var(--studio-pill-bg); }
+
+html[data-skin="studio"] .activity-filter__btn { border-radius: 999px; }
+html[data-skin="studio"] .activity-filter__btn.is-active { background: var(--studio-pill-bg); color: var(--studio-pill-fg); }
+
+/* ---- Spool Traveler -------------------------------------------------- */
+html[data-skin="studio"] .st-topbar,
+html[data-skin="studio"] .st-lookup,
+html[data-skin="studio"] .st-trail,
+html[data-skin="studio"] .st-joints { border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+html[data-skin="studio"] .st-search-row input { border-radius: 999px; padding: 0 20px; border: 0; background: var(--bg-1); }
+html[data-skin="studio"] .st-search-row button {
+  border-radius: 999px;
+  background: var(--studio-accent);
+  color: var(--studio-on-accent);
+}
+html[data-skin="studio"] .st-candidate { border: 0; background: var(--bg-1); border-radius: 18px; }
+html[data-skin="studio"] .st-candidate[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--studio-accent); }
+html[data-skin="studio"] .st-summary { border: 0; background: var(--bg-1); border-radius: 18px; }
+html[data-skin="studio"] .st-lookup-qr,
+html[data-skin="studio"] .st-empty-tag { border: 0; background: var(--bg-1); }
+html[data-skin="studio"] .st-stage-list li.is-current .st-stage-dot { background: var(--studio-accent); border-color: var(--studio-accent); }
+html[data-skin="studio"] .st-stage-list li.is-current .st-stage-name { color: var(--studio-accent-dark); }
+
+/* ---- landing page tiles (and the Testing / Coming Soon tiles) --------- */
+html[data-skin="studio"] .dept-card { border: 0; }
+html[data-skin="studio"] .dept-card:hover { box-shadow: var(--shadow-raised); }
+html[data-skin="studio"] .dept-card:nth-child(even) .dept-card__mark { background: var(--ember-soft); }
+html[data-skin="studio"] .dept-card:nth-child(even) .dept-card__cta { color: var(--ember); }
+html[data-skin="studio"] .dept-card__status {
+  border: 0;
+  color: var(--ember);
+  background: var(--ember-soft);
+}
+html[data-skin="studio"] .dept-card__status--live {
+  color: var(--studio-pill-fg);
+  background: var(--studio-pill-bg);
+}
+
+/* ---- page header: keep the brand hairline in maroon only, drop the corner flag */
+html[data-skin="studio"] .topbar::before { background: var(--ember); }
+html[data-skin="studio"] .topbar::after { display: none; }
+html[data-skin="studio"] .login-card::before { background: var(--ember); }
+
+/* ---- Coming Soon pages (Work Queues, Spool Traveler): tonal, flat -------- */
+/* These pages read their own fallbacks (--bg-0, --surface, --ink) and the indigo
+   --ice token; point them at the skin so they match the rest of the site. */
+html[data-skin="studio"] body.work-queues,
+html[data-skin="studio"] body.spool-traveler {
+  --bg-0: var(--bg-1);
+  --surface: var(--glass-fill);
+  --ink: var(--frost);
+  --ice: var(--ember);
+  --ice-dark: var(--ember-dark);
+  --ice-soft: var(--ember-soft);
+}
+html[data-skin="studio"] .wq-topbar,
+html[data-skin="studio"] .wq-panel,
+html[data-skin="studio"] .wq-kpis { border: 0; box-shadow: none; border-radius: var(--radius-md); }
+html[data-skin="studio"] .wq-topbar { border-top: 0; }
+html[data-skin="studio"] .wq-data-status { border: 0; border-radius: 999px; background: var(--bg-3); color: var(--frost-dim); }
+html[data-skin="studio"] .wq-data-status[data-state="error"] { background: var(--status-critical-soft); color: var(--status-critical); }
+html[data-skin="studio"] .wq-dept-tab,
+html[data-skin="studio"] .wq-button,
+html[data-skin="studio"] .wq-secondary,
+html[data-skin="studio"] .wq-primary { border: 0; background: var(--glass-fill); }
+html[data-skin="studio"] .wq-dept-tab[aria-pressed="true"] { background: var(--studio-pill-bg); color: var(--studio-pill-fg); box-shadow: none; }
+html[data-skin="studio"] .wq-button--primary,
+html[data-skin="studio"] .wq-primary { background: var(--studio-accent); color: var(--studio-on-accent); }
+html[data-skin="studio"] .wq-views { border: 0; background: var(--bg-3); }
+html[data-skin="studio"] .wq-views button[aria-pressed="true"] { background: var(--glass-fill); color: var(--frost); box-shadow: none; }
+html[data-skin="studio"] .wq-stage { background: var(--ember-soft); color: var(--ember); }
+html[data-skin="studio"] .wq-table-wrap th { background: var(--bg-1); }
+html[data-skin="studio"] .wq-table-wrap td { border-top-color: var(--line); }
+html[data-skin="studio"] .wq-table-wrap tr:hover { background: var(--tint-weak); }
