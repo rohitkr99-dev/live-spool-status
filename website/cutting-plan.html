@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261030">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261031">
 </head>
 <body class="is-ready">
 <div class="ambient" aria-hidden="true">
@@ -217,12 +217,10 @@
                 <button class="btn btn--ghost" type="button" data-ddclear="group">Clear</button>
               </div>
             </details></div>
-          <label>Drawing contains<input type="search" id="hDrawing" placeholder="optional"></label>
-          <label>Spool contains<input type="search" id="hSpool" placeholder="optional"></label>
           <label>Date for my ticks<input type="text" id="hDate" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
         </div>
         <div class="cp-row"><button class="btn btn--primary" id="hLoad" type="button">Load data</button><span id="hNote" class="cp-note" style="margin:0" role="status"></span></div>
-        <p class="cp-note">Pick the project (and, if you like, week, group or drawing), then press <b>Load data</b>. Only that project is loaded, so the page stays fast. Pipes are filled in automatically from the Cutting &amp; Beveling Status; you only tick the fittings and other items you receive.</p>
+        <p class="cp-note">Pick the project (and, if you like, week or group), then press <b>Load data</b>. Only that project is loaded, so the page stays fast. Pipes are filled in automatically from the Cutting &amp; Beveling Status; you only tick the fittings and other items you receive.</p>
       </div>
 
       <div id="hBody" hidden>
@@ -230,27 +228,44 @@
           <div class="cp-card__head"><h3>Filter and tick</h3><span class="cp-hint" id="hCount"></span></div>
           <div class="cp-grid">
             <label>Spool status<select id="hStatus"><option value="">All</option><option value="complete">Complete material available</option><option value="partial">Partial MNA</option><option value="balance">Material balance</option></select></label>
-            <label>Show items<select id="hLines"><option value="">All items</option><option value="norecv">Not received yet</option><option value="recvonly">Received, not handed over</option><option value="handed">Handed over</option></select></label>
-            <label>Item contains<input type="search" id="hItem" placeholder="e.g. elbow, flange, EC0103160"></label>
+            <label>Drawing No. (one or many)<textarea id="hDrawing" class="cp-multi" rows="2" spellcheck="false" placeholder="e.g. 2-V17565-PIND-0420, or paste a list"></textarea></label>
+            <label>Spool No. (one or many)<textarea id="hSpool" class="cp-multi" rows="2" spellcheck="false" placeholder="e.g. V17565-PIND-0420-03, or paste a list"></textarea></label>
+            <label>Show items<select id="hLines"><option value="">All items</option><option value="norecv">Not received yet</option><option value="recvonly">Received, not handed over</option><option value="handed">Handed over</option><option value="returned">Returned</option></select></label>
+            <label>ICD / item contains (one or many)<textarea id="hItem" class="cp-multi" rows="2" spellcheck="false" placeholder="e.g. 0303160, EC03, elbow, or paste a list"></textarea></label>
           </div>
           <div class="cp-row">
             <label class="cp-allbox"><input type="checkbox" id="hAllRecv"> <span id="hAllRecvLbl">Received: all shown items</span></label>
             <label class="cp-allbox"><input type="checkbox" id="hAllHand"> <span id="hAllHandLbl">Handed over: all shown items</span></label>
           </div>
-          <p class="cp-note">The two boxes above tick every item that is currently shown (all spools matching the filters, not only this page). Pipes cannot be ticked as received; they follow the Cutting &amp; Beveling Status.</p>
+          <p class="cp-note">The two boxes above tick every item that is currently shown (all spools matching the filters, not only this page). Pipes cannot be ticked as received; they follow the Cutting &amp; Beveling Status. Drawing No., Spool No. and ICD each accept one value or a pasted list, and part of a number is enough: anything matching <b>any</b> of the values is shown.</p>
         </div>
 
         <div class="cp-card">
           <div class="cp-card__head"><h3>Spools</h3><span class="cp-hint" id="hSummary"></span></div>
           <div class="cp-tw"><table class="cp-sttbl" id="hTable"></table></div>
-          <div class="cp-row"><button class="btn btn--ghost" id="hMore" type="button" hidden>Show more</button><button class="btn btn--ghost" id="hReport" type="button">Download shown items (Excel)</button></div>
-          <p class="cp-note">Open a spool with the arrow to see its items. Ticking <b>Received</b> or <b>Handed over</b> on a spool row ticks all its shown items. Dates start as the date above and can be changed. <b>Handed over to</b> starts as the spool's Group. Nothing is saved until you press <b>Save changes</b>; a warning appears if you hand over items that were not received, and you can still save.</p>
+          <div class="cp-row"><button class="btn btn--ghost" id="hMore" type="button" hidden>Show more</button><button class="btn btn--primary" id="hReport" type="button">Download shown items (Excel)</button><button class="btn btn--primary" id="hMna" type="button">Download MNA list (Excel)</button></div>
+          <p class="cp-note">Open a spool with the arrow to see its items. Ticking <b>Received</b> or <b>Handed over</b> on a spool row ticks all its shown items. Dates start as the date above and can be changed. The <b>Group</b> of a spool can be changed on its row (it is saved with the data, and items handed over go to that group). Type a <b>Remark</b> on an item, for example why it is MNA: it goes into both Excel files. <b>Return</b> (next to a received fitting) sends a dented or wrong-ICD item back and makes it not received again. <b>Download MNA list</b> lists every item of the project that is not received, with its remark. Nothing is saved until you press <b>Save changes</b>; a warning appears if you hand over items that were not received, and you can still save.</p>
           <div class="cp-savebar" id="hSaveBar" hidden>
             <span id="hDirty"></span>
             <button class="btn btn--ghost" id="hDiscard" type="button">Discard</button>
             <button class="btn btn--primary" id="hSave" type="button">Save changes</button>
           </div>
         </div>
+
+        <div class="cp-card" id="hRetCard" hidden>
+          <div class="cp-card__head"><h3>Returned items</h3><span class="cp-hint">Items sent back to the store or vendor (dent, wrong ICD). Receiving the replacement closes the return.</span></div>
+          <div class="cp-row" style="margin-top:0"><button class="btn btn--primary" id="hRetXl" type="button">Download returned items (Excel)</button></div>
+          <div class="cp-tw"><table class="cp-sttbl" id="hRetTbl"></table></div>
+        </div>
+
+        <dialog id="hRetDlg" class="cp-dlg" aria-labelledby="hRetTitle">
+          <h3 id="hRetTitle">Return this item</h3>
+          <p id="hRetWhat" class="cp-note"></p>
+          <label>Reason<select id="hRetReason"><option value="">- choose -</option><option>Dent</option><option>Wrong ICD</option><option>Other</option></select></label>
+          <label>Remark (optional)<input type="text" id="hRetRemark" maxlength="300"></label>
+          <p class="cp-note">The item goes back to "not received" (and not handed over), the spool status updates, and it is listed under Returned items. When the replacement arrives, tick Received again.</p>
+          <div class="cp-row"><button class="btn btn--primary" id="hRetOk" type="button">Return item</button><button class="btn btn--ghost" id="hRetCancel" type="button">Cancel</button></div>
+        </dialog>
       </div>
     </section>
 
@@ -264,6 +279,6 @@
 <script src="js/config.js?v=20261021"></script>
 <script src="js/cutting-plan.js?v=20261025"></script>
 <script src="js/cutting-status.js?v=20261025"></script>
-<script src="js/material-handover.js?v=20261029"></script>
+<script src="js/material-handover.js?v=20261033"></script>
 </body>
 </html>
