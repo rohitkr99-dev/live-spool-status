@@ -165,6 +165,12 @@ SIOP_PLANNED = "siop_planned"
 REWORK = "rework"
 MATERIAL_HANDOVER = "material_handover"
 
+# "RFP Spools Latest" workbook (Drive quality/ folder, 2026-10-21): QC's record of
+# the date each spool's PDI was actually ACCEPTED - see
+# reader.py -> read_pdi_accept_dates().
+PDI_ACCEPT = "pdi_accept"
+PDI_ACCEPT_DATE = "PDI Accept Date"
+
 # QC's continuous PDQC Inspection Data log (2026-09-02) - see
 # reader.py -> read_inspection_data() and src/quality/summary.py.
 # Its own "Final Status" column is unrelated to REWORK_FINAL_STATUS/

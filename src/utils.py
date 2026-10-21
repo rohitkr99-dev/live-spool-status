@@ -455,6 +455,38 @@ def resolve_multi_date_text_cells(
     return dataframe
 
 
+def latest_date_in_mixed_cell(value):
+    """
+    One date from a cell that may hold an Excel serial number, a real
+    date, or text with one or more DD-MM-YYYY dates separated by "/"
+    (e.g. "12-11-2025/14-11-2025/17-11-2025" -> 17-Nov-2025). The
+    LATEST date in the cell wins. Anything else (blank, a note such as
+    "Spool deleted") gives NaT. Day-first throughout.
+
+    Unlike resolve_multi_date_text_cells() + convert_excel_serial_dates(),
+    this copes with ONE column that mixes serial numbers and text, which
+    the PDI Accept date column of the RFP Spools Latest workbook does.
+    """
+
+    if value is None:
+        return pd.NaT
+    if isinstance(value, str):
+        pieces = [p.strip() for p in value.split("/") if p.strip()]
+        parsed = [
+            pd.to_datetime(p, dayfirst=True, errors="coerce") for p in pieces
+        ]
+        parsed = [p for p in parsed if pd.notna(p)]
+        return max(parsed) if parsed else pd.NaT
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if pd.isna(value):
+            return pd.NaT
+        try:
+            return pd.Timestamp("1899-12-30") + pd.Timedelta(days=float(value))
+        except (OverflowError, ValueError):
+            return pd.NaT
+    return pd.to_datetime(value, errors="coerce")
+
+
 def convert_excel_serial_dates(
     dataframe: pd.DataFrame,
     columns: list[str]

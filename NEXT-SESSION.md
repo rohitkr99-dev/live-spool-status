@@ -14,6 +14,10 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
+## PDI Accept date from the RFP Spools Latest file (2026-10-21) - in a PR
+
+The PDI date on the site is now the **PDI Accept date** from `RFP Spools Latest.xlsb` (Drive `quality/` folder, uploaded daily by the person) wherever that file has one; the file wins over the DPR. Spools it does not cover keep the old logic. RFP is untouched. Needs a sync after merge. **Check after the first sync:** about 6,100 PDI dates move earlier, 12 later, and ~68 spools move from Under Painting to Packing. See the CHANGELOG entry of 2026-10-21.
+
 ## New look shipped: DEE Maroon (tonal) Studio skin (2026-10-19)
 
 The whole site now uses the "Studio" skin (flat cards, pill controls, maroon colour blocks, flat 4px-corner bars with a hairline between stacked segments). It is **front end only**: `website/css/studio.css` (everything scoped to `html[data-skin="studio"]`) plus `website/js/studio-theme.js` on the five chart pages; each page has `data-skin="studio"` on `<html>`. See the CHANGELOG entry of 2026-10-19 for the full list and how to undo it. **Next (only if asked):** check Quality / Painting / Packing in dark mode and the wide-desktop layout on a real screen; the department PNG icons are still red/blue line art; Thai labels were not touched. Gotcha for edits: `website/index.html` has mixed CRLF/LF line endings, so stage it with `git -c core.autocrlf=false add website/index.html` or the diff shows ~300 changed lines.

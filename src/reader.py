@@ -38,6 +38,9 @@ from constants import (
     MH_EXPECTED_DATE,
     MH_FIRST_STATUS,
     MH_HANDOVER_DATE,
+    PDI,
+    PDI_ACCEPT,
+    PDI_ACCEPT_DATE,
     PLANNING,
     PROJECT_CODE,
     PROJECT_MASTER,
@@ -54,7 +57,9 @@ from constants import (
 )
 from utils import (
     convert_excel_serial_dates,
+    create_composite_key,
     extract_file_period,
+    latest_date_in_mixed_cell,
     normalize_material_grade,
     normalize_month_name,
     resolve_multi_date_text_cells,
@@ -375,6 +380,11 @@ class ExcelReader:
         # through this one method) already sees the merged grade.
         if MATERIAL in dataframe.columns:
             dataframe[MATERIAL] = dataframe[MATERIAL].apply(normalize_material_grade)
+
+        # PDI Accept date (2026-10-21): the "RFP Spools Latest" workbook
+        # overrides the DPR's PDI for every spool it has a date for. Done
+        # here, once, so every department sees the same PDI date.
+        dataframe = self._apply_pdi_accept_dates(dataframe)
 
         return dataframe
 
@@ -709,6 +719,167 @@ class ExcelReader:
                 f"Merged {len(files)} SIOP Planned Spools workbook(s): "
                 f"{len(dataframe)} spool row(s) after latest-file-wins "
                 "de-duplication."
+            )
+
+        return dataframe
+
+    # -----------------------------------------------------
+
+    def read_pdi_accept_dates(self) -> Optional[pd.DataFrame]:
+        """
+        Read the "RFP Spools Latest" workbook's PDI Accept date: the
+        date Painting's PDI was actually ACCEPTED (the DPR's own PDI
+        column holds the later Packing release date instead). One row
+        per spool is returned: Project Code, Drawing No, Spool No and
+        "PDI Accept Date".
+
+        A cell can hold several dates typed into it ("12-11-2025/
+        14-11-2025/17-11-2025", DD-MM-YYYY) and a spool can appear on
+        more than one row; in both cases the LATEST date wins. Blank
+        cells and notes such as "Spool deleted" are treated as no date.
+        The RFP column in the same sheet is deliberately not read.
+
+        OPTIONAL and best-effort, same contract as the other optional
+        sources: a missing/unreadable file (or the feature being
+        disabled) only logs a warning and returns None, and every
+        spool then keeps the DPR / Packing & Dispatch PDI as before.
+        """
+
+        config = self.settings["input_files"].get("pdi_accept", {})
+
+        if not config.get("enabled", False):
+            return None
+
+        folder = Path(
+            self.settings["paths"].get(
+                "quality_upload_folder", "data/upload/quality"
+            )
+        )
+
+        files = self._matching_files_oldest_first(
+            folder, config["file_pattern"]
+        )
+
+        if not files:
+            logger.warning(
+                "RFP Spools Latest workbook (PDI Accept date) not found "
+                f"(looked for '{config['file_pattern']}' in {folder}). "
+                "Every spool keeps its DPR / Packing & Dispatch PDI date."
+            )
+            return None
+
+        key_columns = self.schema_composite_key()
+        frames = []
+
+        for file in files:
+
+            logger.info(f"Reading {file.name}")
+
+            frame = self._read_excel_sheet_or_none(
+                file,
+                sheet_name=config["sheet_name"],
+                header=config.get("header_row", 0),
+                engine="pyxlsb",
+                source_label="RFP Spools Latest workbook",
+                standardize_key=PDI_ACCEPT,
+                required_columns=[PDI_ACCEPT_DATE],
+            )
+            if frame is None:
+                continue
+
+            frame = standardize_columns(frame, PDI_ACCEPT)
+
+            # The column mixes Excel serial numbers and "/"-separated
+            # DD-MM-YYYY text; each cell resolves to its latest date.
+            frame[PDI_ACCEPT_DATE] = pd.to_datetime(
+                frame[PDI_ACCEPT_DATE].apply(latest_date_in_mixed_cell),
+                errors="coerce",
+            )
+
+            frame = frame[key_columns + [PDI_ACCEPT_DATE]].dropna(
+                subset=[PDI_ACCEPT_DATE]
+            )
+
+            # A spool on several rows: latest date across the rows.
+            frame = frame.groupby(key_columns, as_index=False)[
+                PDI_ACCEPT_DATE
+            ].max()
+
+            logger.info(
+                f"Loaded {len(frame)} spool(s) with a PDI Accept date "
+                f"from {file.name}."
+            )
+
+            frames.append(frame)
+
+        if not frames:
+            logger.warning(
+                "RFP Spools Latest workbook: no matching file could be "
+                "read this run. Every spool keeps its DPR / Packing & "
+                "Dispatch PDI date."
+            )
+            return None
+
+        return self._merge_latest_wins(frames, key_columns)
+
+    # -----------------------------------------------------
+
+    def _apply_pdi_accept_dates(
+        self, dataframe: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Replace the DPR's PDI date with the PDI Accept date from the
+        "RFP Spools Latest" workbook (read_pdi_accept_dates()) for
+        every spool that workbook has a date for - the file wins even
+        when its date differs from the DPR's. Spools it does not list,
+        or lists without a date, are left exactly as they were (the
+        DPR value, then merge.py -> apply_packing_dates() filling a
+        blank from the Packing & Dispatch workbook).
+
+        Never raises: any problem only logs a warning and returns the
+        DPR frame unchanged.
+        """
+
+        try:
+            accept = self.read_pdi_accept_dates()
+
+            if accept is None or accept.empty:
+                return dataframe
+
+            key_columns = self.schema_composite_key()
+            if not all(column in dataframe.columns for column in key_columns):
+                return dataframe
+
+            lookup = {
+                create_composite_key(*row[:3]): row[3]
+                for row in accept[key_columns + [PDI_ACCEPT_DATE]].itertuples(
+                    index=False, name=None
+                )
+            }
+
+            keys = dataframe[key_columns].apply(
+                lambda row: create_composite_key(*row), axis=1
+            )
+            accepted = keys.map(lookup)
+            has_accept = accepted.notna()
+
+            if PDI not in dataframe.columns:
+                dataframe[PDI] = pd.NaT
+
+            previous = pd.to_datetime(dataframe.loc[has_accept, PDI], errors="coerce")
+            dataframe.loc[has_accept, PDI] = pd.to_datetime(accepted[has_accept])
+            changed = int((previous != dataframe.loc[has_accept, PDI]).sum())
+
+            logger.info(
+                f"PDI Accept date: {int(has_accept.sum())} spool(s) take "
+                f"their PDI date from the RFP Spools Latest workbook "
+                f"({changed} differ from the DPR's PDI)."
+            )
+
+        except Exception as error:
+            logger.warning(
+                f"Could not apply the PDI Accept dates ({error}). Every "
+                "spool keeps its DPR / Packing & Dispatch PDI date."
             )
 
         return dataframe

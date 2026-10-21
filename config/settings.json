@@ -46,6 +46,14 @@
 "header_row": 1,
 "comment": "Optional fallback source of Planned Start for spools not found in the Weekly Production Planning workbook - see merge.py -> apply_siop_fallback(). Filename is inconsistent; this pattern just requires SIOP, then Planned, then Spools to appear in that order."
 },
+"pdi_accept": {
+"enabled": true,
+"file_pattern": "*RFP*Spools*Latest*.xlsb",
+"sheet_name": "Sheet1",
+"header_row": 0,
+"comment": "RFP Spools Latest workbook (2026-10-21) - lives in paths.quality_upload_folder (data/upload/quality/), uploaded daily by the person to the Drive quality/ folder. Its PDI Accept date column is the actual date Painting's PDI was accepted, and it OVERRIDES the DPR's PDI (\"8. Painting\") for every spool it has a date for - the DPR value was the Packing release date, not the acceptance date. Spools it does not list (or lists with a blank date) keep the existing logic: DPR PDI, then the Packing & Dispatch workbook fills a blank. A cell may hold several \"/\"-separated DD-MM-YYYY dates; the LATEST wins. Only the PDI Accept date is read (the RFP column is deliberately ignored). Optional and best-effort - see reader.py -> read_pdi_accept_dates() and ExcelReader._apply_pdi_accept_dates()."
+},
+
 "rework": {
 "enabled": true,
 "file_pattern": "*Rework*.xlsx",
