@@ -62,9 +62,11 @@
       var o = {};
       for (var f in SYN) { var hit = SYN[f].find(function (n) { return n in low; }); o[f] = hit ? low[hit] : ''; }
       o.barcode = String(o.barcode).trim();
+      o.group = noSlash(o.group); o.bevel = noSlash(o.bevel);
       return o;
     });
   }
+  function noSlash(v) { return String(v == null ? '' : v).trim().replace(/^\/+/, ''); }      // Group / Bevel come as /NPA11, /1F+1B: the leading slash is dropped
   function readFile(f) {
     return f.arrayBuffer().then(function (buf) {
       var wb = XLSX.read(buf, { type: 'array' });
@@ -145,6 +147,7 @@
         var o = {}; FIELDS[kind].forEach(function (fl) { o[fl[0]] = ''; });
         st.map.forEach(function (fld, i) { if (fld) o[fld] = r[i] == null ? '' : r[i]; });
         if ('barcode' in o) o.barcode = String(o.barcode).trim();
+        if ('group' in o) { o.group = noSlash(o.group); o.bevel = noSlash(o.bevel); }
         return o;
       }));
     }
