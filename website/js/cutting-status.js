@@ -59,12 +59,13 @@
     if (name === curSec) return;
     if (CS.dirtyFns.some(function (f) { return f(); }) && !confirm('You have unsaved ticks. Leave without saving?')) return;
     curSec = name;
-    ['plan', 'status', 'handover'].forEach(function (n) {
+    CS.secNames.forEach(function (n) {
       var cap = n.charAt(0).toUpperCase() + n.slice(1);
       $('sec' + cap).hidden = n !== name; $('secBtn' + cap).className = 'btn ' + (n === name ? 'btn--primary' : 'btn--ghost');
     });
     if (CS.sectionHooks[name]) CS.sectionHooks[name]();
   }
+  CS.secNames = ['plan', 'status', 'handover']; CS.section = section;      // the admin-only Daily summary adds itself to this list
   $('secBtnPlan').onclick = function () { section('plan'); };
   $('secBtnStatus').onclick = function () { section('status'); };
   $('secBtnHandover').onclick = function () { section('handover'); };

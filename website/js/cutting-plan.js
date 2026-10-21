@@ -416,7 +416,12 @@
   }
   // who may save in the Cutting Station is decided by the script (sheet "Allowed"); here we only show it
   if (window.firebase) firebase.auth().onAuthStateChanged(function (u) {
-    if (u) api('getAccess').then(function (r) { document.body.classList.toggle('cp-viewonly', !r.allowed); }, function () {});
+    if (u) api('getAccess').then(function (r) {
+      document.body.classList.toggle('cp-viewonly', !r.allowed);
+      window.CutStation.access = r;
+      window.dispatchEvent(new CustomEvent('cutaccess', { detail: r }));
+      api('logVisit').catch(function () {});          // one row per person per day, for the admin's Daily summary
+    }, function () {});
   });
   window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor };
 
