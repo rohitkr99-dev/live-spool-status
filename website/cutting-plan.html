@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261031">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261035">
 <link rel="stylesheet" href="css/studio.css?v=20261019">
 </head>
 <body class="is-ready">
@@ -60,6 +60,7 @@
     </div>
 
     <div id="secPlan">
+      <p class="cp-lock" role="status">You can view plans and reports, but your login is not allowed to save in the Cutting Station. Ask the administrator to add your login email.</p>
 
     <p class="cp-intro">Pipes and structural profiles. Upload or paste the cut list and the available lengths, review the plan, then accept it. The calculation runs in your browser. <strong>Testing:</strong> keep using your master workbook as usual and check each plan before cutting.</p>
 
@@ -137,6 +138,7 @@
 
     <!-- ============ CUTTING & BEVELING STATUS ============ -->
     <section id="secStatus" hidden>
+      <p class="cp-lock" role="status">You can view plans and reports, but your login is not allowed to save in the Cutting Station. Ask the administrator to add your login email.</p>
       <div class="cp-card" id="stPickBox">
         <div class="cp-card__head"><h3>Select a cutting plan</h3><span class="cp-hint">Plans saved to Drive from the Cutting Plan section</span></div>
         <div class="cp-row" style="margin-top:0">
@@ -278,7 +280,7 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261021"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261034"></script>
+<script src="js/cutting-plan.js?v=20261035"></script>
 <script src="js/cutting-status.js?v=20261025"></script>
 <script src="js/material-handover.js?v=20261033"></script>
 </body>

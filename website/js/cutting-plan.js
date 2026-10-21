@@ -414,6 +414,10 @@
     });
     return buildPdf(c);
   }
+  // who may save in the Cutting Station is decided by the script (sheet "Allowed"); here we only show it
+  if (window.firebase) firebase.auth().onAuthStateChanged(function (u) {
+    if (u) api('getAccess').then(function (r) { document.body.classList.toggle('cp-viewonly', !r.allowed); }, function () {});
+  });
   window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor };
 
   /* ---------- accepted plans ---------- */
