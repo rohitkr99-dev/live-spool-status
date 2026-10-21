@@ -113,3 +113,11 @@
 .cp-opts { max-height: 220px; overflow: auto; margin: 8px 0; display: grid; gap: 2px; }
 .cp-card label.cp-opt { display: flex; align-items: center; gap: 8px; color: var(--frost); font-size: 13.5px; cursor: pointer; padding: 3px 2px; }
 .cp-card label.cp-opt input[type=checkbox] { width: 18px; height: 18px; }
+/* group / remark inputs, returned tag, status suffix */
+.cp-sttbl input.cp-grp { width: 7em; margin: 0; padding: 4px 6px; font-size: 13px; }
+.cp-sttbl input.cp-remark { width: 100%; min-width: 11em; margin: 0; padding: 5px 8px; font-size: 13px; }
+.cp-sfx { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 700; color: #1E3A8A; }
+.cp-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; }
+.cp-small { padding: 3px 10px; font-size: 12.5px; }
+:root[data-theme="dark"] .cp-sfx { color: #93C5FD; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cp-sfx { color: #93C5FD; } }

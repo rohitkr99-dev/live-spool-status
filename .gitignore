@@ -13,3 +13,6 @@ processed/
 
 # Optional: log lines mention workbook filenames, keep them local too
 logs/*.log
+
+__pycache__/
+*.pyc
