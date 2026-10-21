@@ -72,6 +72,13 @@
     "Spool No": "Spool No",
     "Planned Start Date": "SIOP Planned Start"
   },
+  "pdi_accept": {
+    "Project Code": "Project Code",
+    "Drawing No.": "Drawing No",
+    "Drawing No": "Drawing No",
+    "Spool No": "Spool No",
+    "PDI Accept date": "PDI Accept Date"
+  },
   "rework": {
     "Project Code": "Project Code",
     "Drawing No.": "Drawing No",
