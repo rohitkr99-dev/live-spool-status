@@ -49,6 +49,21 @@ firebase.auth().onAuthStateChanged(function(user) {
 
     revealPage();
 
+    // once a day per person (and browser): tell the Cutting Station script that this person is on the website; it only feeds the admin's daily summary
+    try {
+        const day = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        if (localStorage.getItem("siteSeen") !== user.uid + "|" + day) {
+            user.getIdToken().then(function (tok) {
+                return fetch("https://script.google.com/macros/s/AKfycbzcxLVu9YxbFQKQzK56zZyzdFihEnfG3QrhRZEA-ESM89cxlqQ8lPHCPz2ZRKr4UgVZ/exec", {
+                    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "logVisit", area: "site", idToken: tok })
+                });
+            }).then(function (r) { return r.json(); }).then(function (r) {
+                if (r && r.ok) localStorage.setItem("siteSeen", user.uid + "|" + day);
+            }).catch(function () {});
+        }
+    } catch (e) {}
+
     ["click","mousemove","keydown","touchstart"].forEach(function(event){
 
         document.addEventListener(event, updateActivity, { passive: true });

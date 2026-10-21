@@ -418,9 +418,7 @@
   if (window.firebase) firebase.auth().onAuthStateChanged(function (u) {
     if (u) api('getAccess').then(function (r) {
       document.body.classList.toggle('cp-viewonly', !r.allowed);
-      window.CutStation.access = r;
-      window.dispatchEvent(new CustomEvent('cutaccess', { detail: r }));
-      api('logVisit').catch(function () {});          // one row per person per day, for the admin's Daily summary
+      api('logVisit').catch(function () {});          // one row per person per day, for the admin's Daily summary (home page)
     }, function () {});
   });
   window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor };
