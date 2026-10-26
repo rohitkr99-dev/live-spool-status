@@ -1,6 +1,6 @@
 name: Build BOM data
 
-# Turns the newest "Drawing Line List DD-MM-YYYY.xlsx" in the Drive BOM/ folder into small per-project files
+# Turns the newest "Drawing Line List DD-MM-YYYY" (any Excel format) in the Drive BOM/ folder into small per-project files
 # (Drive BOM/data/*.json) for the Material Handover section. Nothing is committed to this (public) repo.
 # The Drive service account needs EDITOR access on the BOM folder (it writes BOM/data there).
 
@@ -31,7 +31,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install google-api-python-client google-auth
+        run: pip install google-api-python-client google-auth pyxlsb
 
       - name: Build BOM files in Drive
         env:

@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 FORMAT = 2   # 2 = item lines carry the surface area; bump it to force a rebuild of every project file
-NAME_RE = re.compile(r"^Drawing Line List\s*(\d{2})-(\d{2})-(\d{4})\.xlsx$", re.I)
+NAME_RE = re.compile(r"^Drawing Line List\s*(\d{2})-(\d{2})-(\d{4})\.xls[xmb]$", re.I)   # any Excel format
 
 # BOM column -> short key used in the per-spool item arrays
 # item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM)]
@@ -56,8 +56,36 @@ def _num(s: str):
     return int(f) if f == int(f) else round(f, 3)
 
 
+def _cell_text(v):
+    if v is None:
+        return ""
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    return str(v)
+
+
+def iter_rows_xlsb(path):
+    """The same rows from an .xlsb workbook: the first sheet whose header row has a Project Code column."""
+    from pyxlsb import open_workbook
+    with open_workbook(str(path)) as wb:
+        for name in wb.sheets:
+            with wb.get_sheet(name) as sheet:
+                rows = sheet.rows()
+                first = next(rows, None)
+                if first is None or "Project Code" not in [_cell_text(c.v).strip() for c in first]:
+                    continue
+                yield [_cell_text(c.v) for c in first]
+                for row in rows:
+                    yield [_cell_text(c.v) for c in row]
+                return
+    raise RuntimeError("no sheet with a 'Project Code' column found in " + str(path))
+
+
 def iter_rows(xlsx_path):
     """Streams the biggest worksheet row by row as lists of strings (handles inline and shared strings)."""
+    if str(xlsx_path).lower().endswith(".xlsb"):
+        yield from iter_rows_xlsb(xlsx_path)
+        return
     z = zipfile.ZipFile(xlsx_path)
     sheets = [i for i in z.infolist() if re.match(r"xl/worksheets/sheet\d+\.xml$", i.filename)]
     if not sheets:
@@ -186,7 +214,7 @@ def run_drive():
     bom_id = bom[0]["id"]
     src = _newest_source(svc, bom_id)
     if not src:
-        print("No 'Drawing Line List DD-MM-YYYY.xlsx' in BOM/ - nothing to do.")
+        print("No 'Drawing Line List DD-MM-YYYY' Excel file in BOM/ - nothing to do.")
         return 0
     data_f = _find(svc, bom_id, "data", folder=True)
     data_id = data_f[0]["id"] if data_f else svc.files().create(body={"name": "data", "parents": [bom_id], "mimeType": "application/vnd.google-apps.folder"}, fields="id", supportsAllDrives=True).execute()["id"]
@@ -198,7 +226,7 @@ def run_drive():
             print("Up to date: %s (already converted)." % src["name"])
             return 0
     print("Converting %s ..." % src["name"])
-    tmp = os.path.join(tempfile.gettempdir(), "bom_source.xlsx")
+    tmp = os.path.join(tempfile.gettempdir(), "bom_source" + os.path.splitext(src["name"])[1].lower())
     with open(tmp, "wb") as fh:
         dl = MediaIoBaseDownload(fh, svc.files().get_media(fileId=src["id"]))
         done = False

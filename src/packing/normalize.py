@@ -125,6 +125,10 @@ def to_date(value: Any) -> str | None:
         return value.date().isoformat()
     if isinstance(value, dt.date):
         return value.isoformat()
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if 20000 <= value <= 80000:
+            return (dt.date(1899, 12, 30) + dt.timedelta(days=int(value))).isoformat()
+        return None
     text = str(value).strip()
     if not text or text.upper() in {"N/A", "#N/A"}:
         return None
