@@ -25,8 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import openpyxl
-
+from excel_compat import glob_excel, load_workbook_any
 from painting.logger import logger
 from painting.normalize import (
     SPOOL_COLUMN_ALIASES,
@@ -49,8 +48,13 @@ def _find_header_row(ws, marker: str, max_scan_rows: int = 5) -> tuple[int, list
 
 
 def _find_spool_list_sheet(wb):
+    # By name first (the usual "Spool List"), otherwise by content: the
+    # first sheet that has the "Project Code" header row.
     for ws in wb.worksheets:
         if "spool" in ws.title.lower():
+            return ws
+    for ws in wb.worksheets:
+        if _find_header_row(ws, "Project Code"):
             return ws
     return None
 
@@ -116,12 +120,12 @@ def read_workbook(filepath: Path) -> list[dict[str, Any]]:
     # src/packing/reader.py -> read_workbook() uses the same two-pass
     # header-scan-then-iterate technique and also skips read_only for
     # it, so this stays consistent with that rather than risk it.
-    wb = openpyxl.load_workbook(filepath, data_only=True)
+    wb = load_workbook_any(filepath)
     source_file = filepath.name
 
     sheet = _find_spool_list_sheet(wb)
     if sheet is None:
-        logger.warning(f"{source_file}: no 'Spool List' sheet found.")
+        logger.warning(f"{source_file}: no sheet with a 'Project Code' header found.")
         return []
 
     rows = read_spool_rows(sheet, source_file)
@@ -129,8 +133,8 @@ def read_workbook(filepath: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def read_all_workbooks(upload_folder: Path, file_pattern: str = "*.xlsx") -> list[dict[str, Any]]:
-    filepaths = sorted(upload_folder.glob(file_pattern))
+def read_all_workbooks(upload_folder: Path, file_pattern: str = "*") -> list[dict[str, Any]]:
+    filepaths = sorted(glob_excel(upload_folder, file_pattern))
     if not filepaths:
         logger.warning(f"No workbooks found in {upload_folder} matching {file_pattern}.")
     rows: list[dict[str, Any]] = []

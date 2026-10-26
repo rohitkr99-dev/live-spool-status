@@ -25,6 +25,7 @@ from config_loader import (
     load_stages,
 )
 from column_mapper import standardize_columns
+from excel_compat import excel_engine_for, glob_excel
 from logger import logger
 from constants import (
     FABRICATION,
@@ -95,7 +96,6 @@ class ExcelReader:
         file: Path,
         sheet_name: str,
         header: int,
-        engine: str,
         source_label: str,
         standardize_key: Optional[str] = None,
         required_columns: Optional[list[str]] = None,
@@ -140,6 +140,9 @@ class ExcelReader:
         this), only the exact configured sheet_name is tried, and a
         miss is a plain skip with a diagnostic of the sheets found.
         """
+
+        # The engine follows the file, not a configured file type.
+        engine = excel_engine_for(file)
 
         if standardize_key is None or required_columns is None:
             try:
@@ -231,7 +234,7 @@ class ExcelReader:
         oldest) rather than raising - see extract_file_period().
         """
 
-        files = list(folder.glob(pattern))
+        files = glob_excel(folder, pattern)
         files.sort(key=lambda file: extract_file_period(file.name))
         return files
 
@@ -344,7 +347,7 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb"
+                engine=excel_engine_for(file)
             )
 
             frame = standardize_columns(
@@ -465,7 +468,7 @@ class ExcelReader:
                     file,
                     sheet_name=config[key],
                     header=config.get(spec["header_key"], 0),
-                    engine="pyxlsb"
+                    engine=excel_engine_for(file),
                 )
 
                 df = standardize_columns(
@@ -567,7 +570,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb",
                 source_label="Line History Sheet",
                 standardize_key=LINE_HISTORY,
                 required_columns=[
@@ -676,7 +678,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb",
                 source_label="SIOP Planned Spools workbook",
                 standardize_key=SIOP_PLANNED,
                 required_columns=[SIOP_PLANNED_START],
@@ -779,7 +780,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="pyxlsb",
                 source_label="RFP Spools Latest workbook",
                 standardize_key=PDI_ACCEPT,
                 required_columns=[PDI_ACCEPT_DATE],
@@ -946,7 +946,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl",
                 source_label="Rework workbook",
                 standardize_key=REWORK,
                 required_columns=[REWORK_OFFER_DATE, REWORK_PACKING_STATUS],
@@ -1061,7 +1060,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl",
                 source_label="Material Handover workbook",
                 standardize_key=MATERIAL_HANDOVER,
                 required_columns=[
@@ -1179,7 +1177,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl",
                 source_label="Welder Performance workbook",
                 standardize_key=WELDER_PERFORMANCE,
                 required_columns=[
@@ -1292,7 +1289,6 @@ class ExcelReader:
                 file,
                 sheet_name=config["sheet_name"],
                 header=config.get("header_row", 0),
-                engine="openpyxl",
                 source_label="Project Master workbook",
                 standardize_key=PROJECT_MASTER,
                 required_columns=[PROJECT_CODE, PROJECT_NAME],
@@ -1406,7 +1402,7 @@ class ExcelReader:
             # per sheet (as a naive per-sheet loop would) is minutes
             # slower than parsing an already-loaded ExcelFile.
             try:
-                excel_file = pd.ExcelFile(file, engine="openpyxl")
+                excel_file = pd.ExcelFile(file, engine=excel_engine_for(file))
             except Exception as error:
                 logger.warning(
                     f"Could not open {file.name} at all for "

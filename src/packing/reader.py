@@ -1,7 +1,7 @@
 """
 src/packing/reader.py
 ---------------------------------------------------------
-Reads every .xlsx workbook in data/upload/packing/ and extracts two
+Reads every Excel workbook (.xlsx / .xlsm / .xlsb) in data/upload/packing/ and extracts two
 row-level tables per workbook:
 
   - "spool rows"  - from the sheet whose name contains "spool"
@@ -20,8 +20,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-import openpyxl
-
+from excel_compat import glob_excel, load_workbook_any
 from packing.logger import logger
 from packing.normalize import (
     BOX_COLUMN_ALIASES,
@@ -47,15 +46,25 @@ def _find_header_row(ws, marker: str, max_scan_rows: int = 6) -> tuple[int, list
 
 
 def _find_spool_sheet(wb):
+    # By name first, otherwise by content: the first sheet with the
+    # spool table's "Project Code" header row.
     for ws in wb.worksheets:
         if "spool" in ws.title.lower():
+            return ws
+    for ws in wb.worksheets:
+        if _find_header_row(ws, "Project Code"):
             return ws
     return None
 
 
 def _find_summary_sheet(wb):
+    # By name first, otherwise by content: the sheet with the box table's
+    # "Box No." header row.
     for ws in wb.worksheets:
         if ws.title.strip().lower() == "summary":
+            return ws
+    for ws in wb.worksheets:
+        if any(_find_header_row(ws, marker) for marker in ("Box No.", "Box No", "Box no")):
             return ws
     return None
 
@@ -197,7 +206,7 @@ def read_box_rows(ws, source_file: str, fallback_project_code: str | None) -> li
 
 def read_workbook(filepath: Path) -> dict[str, Any]:
     """Read one workbook and return {'spools': [...], 'boxes': [...], 'project_name': str|None}."""
-    wb = openpyxl.load_workbook(filepath, data_only=True)
+    wb = load_workbook_any(filepath)
     source_file = filepath.name
     bore_type = _guess_bore_type(source_file)
 
@@ -223,8 +232,8 @@ def read_workbook(filepath: Path) -> dict[str, Any]:
     return {"spools": spools, "boxes": boxes, "project_name": project_name, "source_file": source_file}
 
 
-def read_all_workbooks(upload_folder: Path, file_pattern: str = "*.xlsx") -> list[dict[str, Any]]:
-    filepaths = sorted(upload_folder.glob(file_pattern))
+def read_all_workbooks(upload_folder: Path, file_pattern: str = "*") -> list[dict[str, Any]]:
+    filepaths = sorted(glob_excel(upload_folder, file_pattern))
     if not filepaths:
         logger.warning(f"No workbooks found in {upload_folder} matching {file_pattern}.")
     results = []
