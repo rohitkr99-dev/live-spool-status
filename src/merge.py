@@ -57,7 +57,9 @@ from constants import (
     PLANNED_START,
     PROJECT_CODE,
     SIOP_PLANNED_START,
+    SIOP_WEEK,
     SPOOL_NO,
+    WEEK,
     WELDING_FINISH,
 )
 from welding_finish import (
@@ -75,6 +77,13 @@ from utils import (
     today,
     working_day_variance,
 )
+
+
+def _week_label(value) -> str:
+    """The Week as the Weekly workbook writes it (Week 31); a bare number 31 becomes Week 31."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and float(value).is_integer():
+        return f"Week {int(value)}"
+    return str(value).strip()
 
 
 class MergeEngine:
@@ -615,6 +624,15 @@ class MergeEngine:
         missing, never overwrite one the Weekly file already
         provided.
 
+        Week fallback (2026-10-30, per the person): the same rule
+        applies to the Week - for a spool the Weekly workbook does not
+        have (or has with a blank Week), the Week comes from the SIOP
+        Planned Spools workbook's "Week No." column. The workbook's
+        name changes every month (e.g. "November SIOP Planned
+        Spools"); every file matching *SIOP*Planned*Spools* is read
+        and the latest file's row wins per spool. A Week the Weekly
+        workbook provided is never overwritten.
+
         No-op (returns master unchanged) if the SIOP workbook wasn't
         uploaded this run, or didn't yield a usable Planned Start
         column - see reader.py -> read_siop_planned(), which already
@@ -625,50 +643,65 @@ class MergeEngine:
         if siop_planned is None or siop_planned.empty:
             return master
 
+        # (SIOP column, master column) pairs this workbook can fill.
+        pairs = [
+            (source, target)
+            for source, target in (
+                (SIOP_PLANNED_START, PLANNED_START),
+                (SIOP_WEEK, WEEK),
+            )
+            if source in siop_planned.columns
+        ]
+
         if SIOP_PLANNED_START not in siop_planned.columns:
             logger.warning(
                 "SIOP Planned Spools workbook has no usable Planned "
                 "Start Date column; skipping the Planned Start "
                 "fallback for this run."
             )
+
+        if not pairs:
             return master
 
-        if PLANNED_START not in master.columns:
-            master = master.copy()
-            master[PLANNED_START] = None
-
+        master = master.copy()
         siop_planned = self.add_composite_key(siop_planned)
 
-        siop_lookup = (
-            siop_planned[[COMPOSITE_KEY, SIOP_PLANNED_START]]
-            .dropna(subset=[SIOP_PLANNED_START])
-            .drop_duplicates(subset=[COMPOSITE_KEY], keep="first")
-        )
+        for source, target in pairs:
 
-        master = master.merge(
-            siop_lookup,
-            on=COMPOSITE_KEY,
-            how="left",
-        )
+            if target not in master.columns:
+                master[target] = None
 
-        needs_fallback = master[PLANNED_START].apply(is_empty)
-        has_siop_value = ~master[SIOP_PLANNED_START].apply(is_empty)
-        fillable = needs_fallback & has_siop_value
-
-        master.loc[fillable, PLANNED_START] = master.loc[
-            fillable, SIOP_PLANNED_START
-        ]
-
-        filled = int(fillable.sum())
-
-        master = master.drop(columns=[SIOP_PLANNED_START])
-
-        if filled:
-            logger.info(
-                f"SIOP Planned Spools fallback: filled Planned "
-                f"Start for {filled} spool(s) not found (or blank) "
-                "in the Weekly Production Planning workbook."
+            lookup = (
+                siop_planned[[COMPOSITE_KEY, source]]
+                .dropna(subset=[source])
+                .drop_duplicates(subset=[COMPOSITE_KEY], keep="first")
             )
+
+            master = master.merge(
+                lookup,
+                on=COMPOSITE_KEY,
+                how="left",
+            )
+
+            fillable = (
+                master[target].apply(is_empty)
+                & ~master[source].apply(is_empty)
+            )
+
+            values = master.loc[fillable, source]
+            if target == WEEK:
+                values = values.apply(_week_label)
+            master.loc[fillable, target] = values
+
+            master = master.drop(columns=[source])
+
+            filled = int(fillable.sum())
+            if filled:
+                logger.info(
+                    f"SIOP Planned Spools fallback: filled {target} "
+                    f"for {filled} spool(s) not found (or blank) "
+                    "in the Weekly Production Planning workbook."
+                )
 
         return master
 

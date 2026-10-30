@@ -70,7 +70,9 @@
     "Drawing No.": "Drawing No",
     "Drawing No": "Drawing No",
     "Spool No": "Spool No",
-    "Planned Start Date": "SIOP Planned Start"
+    "Planned Start Date": "SIOP Planned Start",
+    "Week No.": "SIOP Week",
+    "Week No": "SIOP Week"
   },
   "pdi_accept": {
     "Project Code": "Project Code",
