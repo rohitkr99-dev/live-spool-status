@@ -105,6 +105,7 @@ PROJECT_MASTER = "project_master"
 LH_LAST_WELDING_FRUN = "LH Last Welding FRun Date"
 
 SIOP_PLANNED_START = "SIOP Planned Start"
+SIOP_WEEK = "SIOP Week"
 
 REWORK_OFFER_DATE = "Prod Offer Date"
 REWORK_FINAL_STATUS = "Final Status"

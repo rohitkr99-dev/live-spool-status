@@ -631,7 +631,8 @@ def extract_file_period(
          2- or 4-digit year (e.g. "July'26", "July_26", "August" with
          no year at all). A month with no year defaults to the
          current year - or the previous year, if that would make the
-         file look like it's from the future - since these workbooks
+         file look like it's more than two months in the future
+         (a file named for next month is normal) - since these workbooks
          are essentially always recent. A filename that spells out
          the year is always more reliable than this guess.
 
@@ -672,11 +673,14 @@ def extract_file_period(
                 year += 2000
         else:
             year = reference_date.year
-            if (year, month, 1) > (
-                reference_date.year,
-                reference_date.month,
-                reference_date.day,
-            ):
+            # A planning workbook is often named for the NEXT month
+            # ("November SIOP Planned Spools" uploaded at the end of
+            # October), so a month up to two months ahead still belongs
+            # to the current year; anything further ahead is last year's.
+            months_ahead = (year * 12 + month) - (
+                reference_date.year * 12 + reference_date.month
+            )
+            if months_ahead > 2:
                 year -= 1
 
         return (year, month, 1)

@@ -14,6 +14,10 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
+## Week from the SIOP Planned Spools file (2026-10-30) - in a PR
+
+A spool the Weekly Production Planning workbook does not have (or has with a blank Week) now takes its Week from the SIOP Planned Spools workbook's "Week No." column; the Weekly value always wins. Month-only filenames for next month ("November SIOP...") are now dated correctly. Needs a sync after merge; check the log for "filled Week for N spool(s)". See the CHANGELOG entry of 2026-10-30.
+
 ## Any Excel format for every source file (2026-10-26) - in a PR
 
 The Painting Weekly Plan arrived as .xlsb and the Painting pipeline (it only looked for .xlsx) found nothing. Every source workbook is now found by name only and read by its data, in .xlsx / .xlsm / .xlsb (not legacy .xls); see the CHANGELOG entry of 2026-10-26 and `src/excel_compat.py`. **After merge, run the sync and check the Painting pipeline step logs "read N spool row(s)"** - the new Painting file's layout had not been seen.
