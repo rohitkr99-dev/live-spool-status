@@ -23,14 +23,14 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
-FORMAT = 2   # 2 = item lines carry the surface area; bump it to force a rebuild of every project file
+FORMAT = 3   # 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
 NAME_RE = re.compile(r"^Drawing Line List\s*(\d{2})-(\d{2})-(\d{4})\.xls[xmb]$", re.I)   # any Excel format
 
 # BOM column -> short key used in the per-spool item arrays
-# item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM)]
+# item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM), schedule]
 COLS = {
     "project": "Project Code", "drawing": "Drawing No.", "spool": "Spool No", "serial": "S.No.", "icd": "ICD", "aicd": "Current AICD",
-    "desc": "Description", "qty": "Quantity", "uom": "Unit of Measure", "cat": "Item Category Code", "size": "Normal Size", "area": "Surface Area Out",
+    "desc": "Description", "qty": "Quantity", "uom": "Unit of Measure", "cat": "Item Category Code", "size": "Normal Size", "area": "Surface Area Out", "sched": "Schedule",
 }
 
 
@@ -137,7 +137,7 @@ def convert(xlsx_path):
         if not project or not spool or _clean(desc).lower() == "spool":
             continue
         code = (g(COLS["aicd"]) or g(COLS["icd"])).strip()
-        line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"]))]
+        line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"])), _clean(g(COLS["sched"]))]
         out.setdefault(project, {}).setdefault(drawing + "|" + spool, []).append(line)
     return {p: {"spools": s} for p, s in out.items()}
 

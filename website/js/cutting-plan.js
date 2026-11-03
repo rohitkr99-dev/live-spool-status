@@ -224,8 +224,46 @@
     }).catch(function (e) { fail(e.message || 'Could not read the data.'); });
   };
 
+  /* ---------- pipe description from the Drawing Line List (BOM) ----------
+     Description, Item Category Code, Nominal Size, Schedule of the pipe's Item Code, shown in front of each pipe and printed in the PDF.
+     It is looked up in the background after a plan is shown (nothing waits for it) and kept in the plan, so saved plans carry it. */
+  var specCache = {}, shown = null;
+  function bomSpecs(project) {          // -> Promise of {ITEM CODE: 'Description, Category, Size, Schedule'}, null when the BOM is not available
+    if (!specCache[project]) specCache[project] = api('getBomProject', { project: project }).then(function (r) {
+      var map = {};
+      Object.keys((r.bom && r.bom.spools) || {}).forEach(function (k) {
+        r.bom.spools[k].forEach(function (l) {
+          var code = String(l[1] || '').trim().toUpperCase();
+          if (code && !map[code]) map[code] = [l[2], l[5], l[6], l[8]].map(function (v) { return String(v == null ? '' : v).trim(); }).filter(Boolean).join(', ');
+        });
+      });
+      return map;
+    }).catch(function () { delete specCache[project]; return null; });
+    return specCache[project];
+  }
+  function fillSpecs(rec) {
+    if (!DRIVE_URL) return;
+    var byProject = {};
+    rec.bars.forEach(function (b, i) {
+      if (typeof b.spec === 'string') return;
+      var p = (b.pieces[0] && b.pieces[0].project) || rec.project || '';
+      if (p) (byProject[p] = byProject[p] || []).push(i);
+    });
+    Object.keys(byProject).forEach(function (p) {
+      bomSpecs(p).then(function (map) {
+        if (!map) return;
+        byProject[p].forEach(function (i) {
+          var b = rec.bars[i]; b.spec = map[String(b.item || '').trim().toUpperCase()] || '';
+          var el = shown === rec && document.querySelector('[data-spec="' + i + '"]');
+          if (el) el.textContent = b.spec;
+        });
+      });
+    });
+  }
+
   /* ---------- plan view ---------- */
   function show(rec, accepted) {
+    shown = rec;
     $('sheet').hidden = false;
     var s = rec.summary, m = function (v) { return (v / 1000).toFixed(2); };
     $('actions').innerHTML = (accepted ? '' : '<button class="btn btn--primary" id="acc" type="button">Accept plan</button> ') +
@@ -239,13 +277,14 @@
     $('bars').innerHTML = rec.bars.map(function (b, i) {
       var seg = b.pieces.map(function (p, j) { var w = (p.length + rec.kerf) / b.startLength * 100; return '<i style="width:' + w + '%;background:' + colorOf(j) + '" title="#' + (j + 1) + ': ' + p.length + '">' + (w >= 3.5 ? j + 1 : '') + '</i>'; }).join('') + '<i class="rem" style="flex:1"></i>';
       var rows = b.pieces.map(function (p, j) { return '<tr><td><span class="cp-dot" style="background:' + colorOf(j) + '"></span>' + (j + 1) + '</td><td>' + esc(p.project) + '</td><td>' + esc(p.drawing) + '</td><td>' + esc(p.spool) + '</td><td>' + esc(p.group) + '</td><td>' + esc(p.bevel) + '</td><td class="n">' + p.length + '</td></tr>'; }).join('');
-      return '<div class="cp-card cp-bar"><div class="cp-barhd"><h3>' + barTitle(b, i) + '</h3><small>Barcode ' + esc(b.barcode) + '</small><small>Heat ' + esc(b.heat) + '</small><small>Length ' + b.startLength + '</small><b>Remain ' + b.remain + '</b></div>' +
+      return '<div class="cp-card cp-bar"><div class="cp-barhd"><h3>' + barTitle(b, i) + '</h3><small>Barcode ' + esc(b.barcode) + '</small><small>Heat ' + esc(b.heat) + '</small><small>Length ' + b.startLength + '</small><b>Remain ' + b.remain + '</b></div><div class="cp-spec" data-spec="' + i + '">' + esc(b.spec || '') + '</div>' +
         '<div class="cp-lay">' + seg + '</div><div class="cp-tw"><table><tr><th>#</th><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Group</th><th>Bevel</th><th class="n">Length</th></tr>' + rows + '</table></div></div>';
     }).join('');
     $('pdf').onclick = function () { buildPdf(rec).save(fileBase(rec) + '.pdf'); };
     $('xl').onclick = function () { XLSX.writeFile(buildWorkbook(rec), fileBase(rec) + '.xlsx'); };
     if (!accepted) $('acc').onclick = accept;
     if (accepted && DRIVE_URL && $('drv')) $('drv').onclick = function () { saveToDrive(rec); };
+    fillSpecs(rec);
   }
   // Piece colours cycle through six; neighbours always differ and each piece also carries its number.
   var COLORS = ['#1F4E9E', '#C2410C', '#15803D', '#7E22CE', '#BE123C', '#0E7490'];
@@ -323,12 +362,18 @@
       });
       doc.setDrawColor(200); doc.setLineWidth(0.2); doc.line(L, y + 2.2, L + W, y + 2.2); y += RH;
     }
+    function specLines(b) {
+      if (!b.spec) return [];
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+      return doc.splitTextToSize(String(b.spec), W).slice(0, 2);
+    }
     function barHead(b, i, cont) {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.text(barId(i) + '   ' + barLabel(b) + (cont ? '   (continued)' : ''), L, y); y += 6;
       var base = 'Barcode ' + b.barcode + '    Heat ' + b.heat + '    Length ' + b.startLength + '    ';
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.text(base, L, y);
       var wBase = doc.getTextWidth(base);
       doc.setFont('helvetica', 'bold'); doc.text('Remain ' + b.remain, L + wBase, y); y += 4.5;
+      specLines(b).forEach(function (t) { doc.text(t, L, y + 0.5); y += 4.5; });      // Description, Category, Size, Schedule
     }
     function barGraphic(b) {
       var x = L, BH = 9;
@@ -358,7 +403,7 @@
 
     var sep = null;
     rec.bars.forEach(function (b, i) {
-      var need = 6 + 4.5 + 9 + 5 + 7 + b.pieces.length * RH + 6;   // whole pipe block
+      var need = 6 + 4.5 + specLines(b).length * 4.5 + 9 + 5 + 7 + b.pieces.length * RH + 6;   // whole pipe block
       if (barsOnPage > 0 && y + need > H - BOT) newPage();
       if (sep && sep.page === doc.getNumberOfPages()) { doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.7); doc.line(L, sep.y, L + W, sep.y); }
       sep = null;
