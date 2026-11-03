@@ -4,7 +4,7 @@
 // the last one, which reproduces the remain figures in the existing cutting-plan PDFs. Exception: when a piece fits
 // the pipe only without its kerf (for example a 6000 piece on a 6000 pipe, or 5995 on 6000) it is still placed, because
 // the saw cut after the last piece runs through the leftover end; it then takes no kerf and the remain is what is left.
-// That looser rule (and an exact search) only runs when the original rule leaves pieces over.
+// The shortest pipes are used first; the looser rule and an exact search only run when pieces would be left over.
 (function (root) {
   const norm = (v) => String(v == null ? '' : v).trim().toUpperCase();
 
@@ -87,18 +87,44 @@
       return { open, miss };
     }
 
+    // Short pipes (leftovers) first: take the pipes from the shortest up and, for each, the combination of the pieces still
+    // to cut that leaves the least waste (subset-sum on piece + kerf against pipe length + kerf, so the last piece needs no
+    // kerf). Long pipes are only opened once the shorter ones cannot take anything more.
+    function remnantFirst(item, g) {
+      const K = o.kerf, left = g.pieces.slice().sort((a, b) => b.length - a.length), open = [];
+      const bs = g.bars.slice().sort((a, b) => a.length - b.length || String(a.barcode).localeCompare(String(b.barcode)));
+      if (left.length * Math.max(1, ...bs.map((b) => b.length)) * bs.length > 4e8) return null;      // too big for this pass
+      for (const b of bs) {
+        if (!left.length) break;
+        const C = b.length - o.trim + K;
+        if (C <= 0) continue;
+        const at = new Int32Array(C + 1).fill(-1);          // at[s] = index of the piece that first reached the weight s
+        at[0] = left.length;
+        left.forEach((p, i) => { const w = p.length + K; for (let s2 = C; s2 >= w; s2--) if (at[s2] < 0 && at[s2 - w] >= 0) at[s2] = i; });
+        let best = C;
+        while (best > 0 && at[best] < 0) best--;
+        if (best <= 0) continue;
+        const take = [];
+        for (let s2 = best; s2 > 0;) { const i = at[s2]; take.push(i); s2 -= left[i].length + K; }
+        const pieces = take.sort((a, b) => a - b).map((i) => left[i]);
+        take.sort((a, b) => b - a).forEach((i) => left.splice(i, 1));
+        const S = pieces.reduce((a, p) => a + p.length, 0), cap = b.length - o.trim, rest = cap - S - K * pieces.length;
+        open.push({ ...b, item, startLength: b.length, remain: rest >= 0 ? rest : cap - S, pieces });
+      }
+      return { open, miss: left.map((p) => ({ ...p, item, reason: g.bars.length ? 'No pipe long enough' : 'No pipe of this Item Code' })) };
+    }
+
     const used = [];
     for (const [item, g] of byItem) {
-      // the original rule decides whenever it places everything, so existing plans do not change; only when pieces are
-      // left over the looser rule, and then the exact search, are tried (the one that leaves the fewest pieces wins)
-      let r = greedy(item, g, false);
-      if (r.miss.length) {
-        const t = greedy(item, g, true);
-        if (t.miss.length < r.miss.length) r = t;
-      }
+      // candidates, best (fewest pieces left over) wins; on a tie the earlier one: leftovers first, then the original
+      // first-fit rule, then the looser rule (a piece that fits only without kerf), then an exact search
+      let r = g.bars.length ? remnantFirst(item, g) : null;
+      const better = (c) => { if (c && (!r || c.miss.length < r.miss.length)) r = c; };
+      if (!r || r.miss.length) better(greedy(item, g, false));
+      if (!r || r.miss.length) better(greedy(item, g, true));
       if (r.miss.length && g.bars.length) {
         const found = search(g.pieces, g.bars, o);
-        if (found) r = { open: found.map((b) => ({ ...b, item })), miss: [] };
+        if (found) better({ open: found.map((b) => ({ ...b, item })), miss: [] });
       }
       unplaced.push(...r.miss);
       used.push(...r.open);
