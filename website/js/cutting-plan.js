@@ -47,6 +47,27 @@
 
   var KEY = 'cutplan.records.v1';
   function loadRecs() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  /* Plans saved to Drive by anybody (Apps Script listPlans) are listed in Accepted plans too, so a plan accepted on another
+     computer can still be found. A plan that is also in this browser shows the browser's own row. */
+  var drivePlans = [];
+  function stampMs(t) {              // 'DD-MM-YYYY HH:MM:SS' or 'YYYY-MM-DD HH:MM:SS' -> ms (0 when unknown)
+    var m = /^(\S+)(?: (\d\d:\d\d:\d\d))?/.exec(String(t || '').trim()), d = m && D.iso(m[1]);
+    return d ? Date.parse(d + 'T' + (m[2] || '00:00:00')) : 0;
+  }
+  function projCode(p) { p = String(p || ''); return /^[A-Za-z]+_\d\d-\d\d_\d+$/.test(p) ? p.replace(/_/g, '/') : p; }   // Drive folders are named TJ_25-26_209
+  function allPlans() {
+    var local = loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; }), have = {};
+    local.forEach(function (r) { have[String(r.planNo).toLowerCase()] = 1; });
+    var drive = drivePlans.filter(function (p) { return !have[String(p.planNo).toLowerCase()]; }).map(function (p) {
+      var ms = stampMs(p.savedAt);
+      return { fromDrive: true, planNo: p.planNo, project: projCode(p.project), date: p.date, pipes: p.pipes, pieces: p.pieces, savedBy: p.savedBy, createdAt: ms, driveSavedAt: ms || 1 };
+    });
+    return { local: local, all: local.concat(drive).sort(function (a, b) { return b.createdAt - a.createdAt; }) };
+  }
+  function loadDrivePlans() {
+    if (!DRIVE_URL) return;
+    api('listPlans').then(function (r) { drivePlans = r.plans || []; if (!$('paneRec').hidden) renderRecs(); }).catch(function () {});
+  }
   function saveRecs(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); return true; } catch (e) { return false; } }
   $('date').value = D.dmy(D.todayIso());
 
@@ -166,7 +187,7 @@
     $('tabPlan').setAttribute('aria-selected', String(!rec)); $('tabRec').setAttribute('aria-selected', String(rec));
     $('tabPlan').className = 'btn ' + (rec ? 'btn--ghost' : 'btn--primary'); $('tabRec').className = 'btn ' + (rec ? 'btn--primary' : 'btn--ghost');
     $('panePlan').hidden = rec; $('paneRec').hidden = !rec; $('sheet').hidden = true;
-    if (rec) renderRecs();
+    if (rec) { renderRecs(); loadDrivePlans(); }
   }
   $('tabPlan').onclick = function () { tab(false); }; $('tabRec').onclick = function () { tab(true); };
 
@@ -438,7 +459,7 @@
     });
   }
   function renderRecs() {
-    var recs = loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var ap = allPlans(), recs = ap.all, local = ap.local;
     var sel = $('recProj'), cur = sel.value, seen = {}, opts = '<option value="">All projects</option>';
     recs.forEach(function (r) { var p = r.project || ''; if (p && !seen[p]) { seen[p] = 1; opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>'; } });
     sel.innerHTML = opts; sel.value = seen[cur] ? cur : '';
@@ -446,11 +467,20 @@
     $('recEmpty').hidden = !!recs.length; $('recFilters').hidden = !recs.length;
     $('recCount').textContent = recs.length ? 'Showing ' + rows.length + ' of ' + recs.length + ' plans' : '';
     $('recTbl').innerHTML = rows.length ? '<tr><th>Project Code</th><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + rows.map(function (r) {
-      var i = recs.indexOf(r), blk = undoBlock(r, recs);
+      var i = recs.indexOf(r);
+      if (r.fromDrive) return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.pipes + '</td><td class="n">' + r.pieces + '</td><td class="n">-</td><td><span class="cp-ok">Saved ' + esc(r.createdAt ? D.fromMs(r.createdAt) : '') + '</span> <small class="cp-note">by ' + esc(String(r.savedBy || '').split('@')[0]) + '</small></td><td>' +
+        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> <small class="cp-note">from Drive</small></td></tr>';
+      var blk = undoBlock(r, local);
       return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
         '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
-    Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () { $('paneRec').hidden = true; show(recs[b.dataset.v], true); window.scrollTo(0, 0); }; });
+    Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () {
+        var r = recs[b.dataset.v];
+        if (!r.fromDrive) { $('paneRec').hidden = true; show(r, true); window.scrollTo(0, 0); return; }
+        b.disabled = true;
+        api('openPlan', { planNo: r.planNo }).then(function (x) { $('paneRec').hidden = true; show(x.rec, true); window.scrollTo(0, 0); })
+          .catch(function (e) { toast(false, 'Could not open the plan from Drive: ' + e.message); }).then(function () { b.disabled = false; });
+      }; });
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-d]'), function (b) { b.onclick = function () { saveToDrive(recs[b.dataset.d], b); }; });
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-u]'), function (b) {
       b.onclick = function () {
@@ -464,9 +494,10 @@
   ['recProj', 'recDrv'].forEach(function (id) { $(id).onchange = renderRecs; });
   $('recClear').onclick = function () { ['recQ', 'recFrom', 'recTo'].forEach(function (id) { $(id).value = ''; }); $('recProj').value = ''; $('recDrv').value = ''; renderRecs(); };
   $('recXl').onclick = function () {
-    var rows = recFiltered(loadRecs().sort(function (a, b) { return b.createdAt - a.createdAt; }));
+    var rows = recFiltered(allPlans().all);
     if (!rows.length) return toast(false, 'No plans to download. Check the filters.');
     var aoa = [['Project Code', 'Plan No.', 'Plan Date', 'Pipes', 'Pieces planned', 'MNA', 'Accepted on', 'Saved to Drive']].concat(rows.map(function (r) {
+      if (r.fromDrive) return [r.project || '', r.planNo, D.dmy(r.date), r.pipes, r.pieces, '', r.createdAt ? D.fromMs(r.createdAt) : '', r.createdAt ? D.fromMs(r.createdAt) : 'Saved'];
       return [r.project || '', r.planNo, D.dmy(r.date), r.bars.length, r.summary.placed, r.summary.unplaced, D.fromMs(r.createdAt), r.driveSavedAt ? D.fromMs(r.driveSavedAt) : 'Not saved'];
     }));
     var ws = D.fixDates(XLSX.utils.aoa_to_sheet(aoa)); ws['!cols'] = [14, 18, 12, 8, 14, 8, 13, 14].map(function (w) { return { wch: w }; });
