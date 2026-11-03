@@ -267,11 +267,11 @@
   }
 
   /* ---------- PDF (A4 portrait, drawn with jsPDF) ----------
-     Large print for the shop floor: at most 3 pipes per page (fewer when a pipe has many pieces),
-     and a "Cut box" square on every piece row for the cutter to tick. */
+     Large print for the shop floor: as many pipes per page as fit (a pipe is never split across two pages, it moves to
+     the next page; only a pipe taller than a page continues), and a "Cut box" square on every piece row for the cutter to tick. */
   function buildPdf(rec) {
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    var L = 12, W = 186, H = 297, TOP = 14, BOT = 16, RH = 7.6, MAXBARS = 3;
+    var L = 12, W = 186, H = 297, TOP = 14, BOT = 16, RH = 7.6;
     var cols = [['#', 10, 'l'], ['Project', 24, 'l'], ['Drawing No.', 41, 'l'], ['Spool No.', 41, 'l'], ['Group', 20, 'l'], ['Bevel', 15, 'l'], ['Length', 16, 'r'], ['Cut box', 19, 'c']];
     var y = 0, barsOnPage = 0;
     // long values shrink (down to 7 pt) before they are cut, so drawing/spool numbers stay readable
@@ -338,7 +338,7 @@
     var sep = null;
     rec.bars.forEach(function (b, i) {
       var need = 6 + 4.5 + 9 + 5 + 7 + b.pieces.length * RH + 6;   // whole pipe block
-      if (barsOnPage > 0 && (barsOnPage >= MAXBARS || y + need > H - BOT)) newPage();
+      if (barsOnPage > 0 && y + need > H - BOT) newPage();
       if (sep && sep.page === doc.getNumberOfPages()) { doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.7); doc.line(L, sep.y, L + W, sep.y); }
       sep = null;
       barsOnPage++;
