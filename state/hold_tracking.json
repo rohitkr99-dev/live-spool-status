@@ -31,6 +31,22 @@
       }
     ]
   },
+  "TE/25-26/196|20LDK01BR002|20LDK01BR002_SP2": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-02"
+      }
+    ]
+  },
+  "TE/25-26/196|20LDK02BR002|20LDK02BR002_SP2": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-02"
+      }
+    ]
+  },
   "TE/25-26/196|20LDK02BR019|20LDK02BR019_SP1": {
     "hold_periods": [
       {
@@ -47,11 +63,27 @@
       }
     ]
   },
+  "TE/25-26/196|20MAW20BR003|20MAW20BR003_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-02"
+      }
+    ]
+  },
   "TE/25-26/196|21LBA85BR010|21LBA85BR010_SP1": {
     "hold_periods": [
       {
         "hold_removed": null,
         "hold_start": "2026-10-05"
+      }
+    ]
+  },
+  "TE/25-26/196|22LBG10BR003|22LBG10BR003_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-10-27"
       }
     ]
   },
@@ -412,6 +444,14 @@
       {
         "hold_removed": null,
         "hold_start": "2026-10-26"
+      }
+    ]
+  },
+  "TJ/25-26/207|251335_1A_LP001_044|251335-1A-LP-044-01": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-02"
       }
     ]
   }
