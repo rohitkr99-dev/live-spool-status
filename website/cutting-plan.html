@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261109">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261111">
 <link rel="stylesheet" href="css/studio.css?v=20261019">
 </head>
 <body class="is-ready">
@@ -288,6 +288,11 @@
         </div>
         <p class="cp-note" id="invCount"></p>
         <div class="cp-tw"><table class="cp-sttbl" id="invTbl"></table></div>
+        <div class="cp-savebar" id="invSaveBar" hidden>
+          <span id="invDirty"></span>
+          <button class="btn btn--ghost" id="invDiscard" type="button">Discard</button>
+          <button class="btn btn--primary" id="invSave" type="button">Save changes</button>
+        </div>
       </div>
       <div class="cp-card" id="invHist" hidden></div>
     </section>
@@ -303,6 +308,6 @@
 <script src="js/cutting-plan.js?v=20261108"></script>
 <script src="js/cutting-status.js?v=20261108"></script>
 <script src="js/material-handover.js?v=20261033"></script>
-<script src="js/remain-inventory.js?v=20261110"></script>
+<script src="js/remain-inventory.js?v=20261111"></script>
 </body>
 </html>

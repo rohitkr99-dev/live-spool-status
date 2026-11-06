@@ -2,7 +2,8 @@
  * remain-inventory.js - "Remain inventory" section of the Cutting Station page: the leftover pieces of pipes (latest remain after the
  * newest plan saved to Drive), a Scrap tick box per piece, and a separate Scrap list with Bring back. List only: nothing here changes
  * the Cutting Plan. The data lives in the sheet "Inventory" of the Cutting master (Apps Script getInventory / setScrap); only people on
- * the Allowed list can tick Scrap or Bring back (the script checks it; the page only greys the controls out).
+ * the Allowed list can tick Scrap or Bring back (the script checks it; the page only greys the controls out). Columns sort by click; ticks are
+ * collected and saved together with one Save (like the Material Handover section).
  * History of a pipe (its main length): a History button on every row (getPipeHistory) shows every plan that used the pipe
  * (length before, pieces cut, remain after) and its other events (release, scrap, bring back).
  */
@@ -24,9 +25,31 @@
       var n = Number(r[C.remain]);
       return inView(r) && (!it || String(r[C.item]).toLowerCase().indexOf(it) >= 0) && (!bc || String(r[C.code]).toLowerCase().indexOf(bc) >= 0) &&
         (!pr || r[C.project] === pr) && (isNaN(from) || n >= from) && (isNaN(to) || n <= to);
-    }).sort(function (a, b) { return String(a[C.item]).localeCompare(String(b[C.item])) || Number(b[C.remain]) - Number(a[C.remain]) || String(a[C.code]).localeCompare(String(b[C.code])); });
+    }).sort(cmp);
   }
   function dayOf(t) { return D.dmy(String(t || '').slice(0, 10)); }
+
+  // ---- sorting (click a column heading; click again to reverse) and ticking several pipes before one Save ----
+  var sortKey = '', sortDir = 1, pend = {};
+  var COLS = {      // view -> [heading, sort key, type: t text, n number, d date]
+    remain: [['Item Code', 'item', 't'], ['Description', 'desc', 't'], ['Barcode', 'code', 't'], ['Control No', 'control', 't'], ['Heat No', 'heat', 't'], ['Original length', 'orig', 'n'], ['Remain (mm)', 'remain', 'n'], ['Last plan', 'plan', 't'], ['Plan date', 'date', 'd']],
+    scrap: [['Item Code', 'item', 't'], ['Description', 'desc', 't'], ['Barcode', 'code', 't'], ['Remain (mm)', 'remain', 'n'], ['Marked scrap by', 'by', 't'], ['On', 'at', 'd']]
+  };
+  function typeOf(key) { var t = 't'; COLS[view].forEach(function (c) { if (c[1] === key) t = c[2]; }); return t; }
+  function sortVal(r, key, t) { var v = r[C[key]]; return t === 'n' ? Number(v) || 0 : t === 'd' ? (D.iso(String(v || '').slice(0, 10)) || '') : String(v == null ? '' : v).toLowerCase(); }
+  function cmp(a, b) {
+    if (!sortKey) return String(a[C.item]).localeCompare(String(b[C.item])) || Number(b[C.remain]) - Number(a[C.remain]) || String(a[C.code]).localeCompare(String(b[C.code]));
+    var t = typeOf(sortKey), x = sortVal(a, sortKey, t), y = sortVal(b, sortKey, t), d = t === 't' ? x.localeCompare(y, undefined, { numeric: true }) : (x < y ? -1 : x > y ? 1 : 0);
+    return d ? d * sortDir : String(a[C.code]).localeCompare(String(b[C.code]));
+  }
+  function pendCount() { return Object.keys(pend).length; }
+  function th(c) { return '<th class="cp-sort' + (c[2] === 'n' ? ' n' : '') + '" data-sort="' + c[1] + '" title="Click to sort">' + esc(c[0]) + (sortKey === c[1] ? (sortDir > 0 ? ' \u25B2' : ' \u25BC') : '') + '</th>'; }
+  function syncBar(list) {
+    var n = pendCount();
+    $('invSaveBar').hidden = !n;
+    $('invDirty').textContent = n + (n === 1 ? ' pipe' : ' pipes') + (view === 'remain' ? ' will move to the Scrap list' : ' will be brought back to the cut piece remain list') + '. Not saved yet.';
+    var all = $('invAll'); if (all) all.checked = !!list.length && list.every(function (r) { return pend[r[C.code]]; });
+  }
 
   function render() {
     var nRemain = rows.filter(function (r) { return !isScrap(r) && Number(r[C.remain]) > 0; }).length, nScrap = rows.filter(isScrap).length;
@@ -36,36 +59,52 @@
     rows.forEach(function (r) { var p = r[C.project]; if (p && !seen[p]) { seen[p] = 1; opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>'; } });
     sel.innerHTML = opts; sel.value = seen[cur] ? cur : '';
     var list = filtered();
-    $('invCount').textContent = 'Showing ' + list.length + ' of ' + (view === 'scrap' ? nScrap : nRemain) + ' pipes' + (view === 'remain' ? ', sorted by item code, then longest remain first' : '');
-    $('invHint').textContent = view === 'scrap' ? 'Pieces marked as scrap. They are not in the cut piece remain list. Press Bring back to return a piece to it.' :
-      'Leftover pieces of pipes, updated when a plan is saved to Drive. Tick Scrap on a row to move that piece to the Scrap list.';
+    $('invCount').textContent = 'Showing ' + list.length + ' of ' + (view === 'scrap' ? nScrap : nRemain) + ' pipes' + (sortKey ? '' : (view === 'remain' ? ', sorted by item code, then longest remain first' : '')) + '. Click a column heading to sort.';
+    $('invHint').textContent = view === 'scrap' ? 'Pieces marked as scrap. Tick the pipes to bring back (or tick all shown), then press Save changes.' :
+      'Leftover pieces of pipes, updated when a plan is saved to Drive. Tick the pipes to scrap (or tick all shown), then press Save changes.';
     var hb = function (r) { return '<button class="btn btn--ghost cp-small" type="button" data-hist="' + esc(r[C.code]) + '">History</button>'; };
+    var box = function (r, attr) { var c = r[C.code]; return '<td><input type="checkbox" data-tick="' + esc(c) + '" ' + attr + '="' + esc(c) + '"' + (pend[c] ? ' checked' : '') + ' aria-label="' + esc(c) + '"></td>'; };
+    var tr = function (r, inner) { return '<tr' + (pend[r[C.code]] ? ' class="cp-pend"' : '') + '>' + inner + '</tr>'; };
     if (view === 'remain') {
-      $('invTbl').innerHTML = '<tr><th>Item Code</th><th>Description</th><th>Barcode</th><th>Control No</th><th>Heat No</th><th class="n">Original length</th><th class="n">Remain (mm)</th><th>Last plan</th><th>Plan date</th><th>Scrap</th><th></th></tr>' +
+      $('invTbl').innerHTML = '<tr>' + COLS.remain.map(th).join('') + '<th><label class="cp-allbox"><input type="checkbox" id="invAll" data-all> Scrap</label></th><th></th></tr>' +
         list.map(function (r) {
-          return '<tr><td><b>' + esc(r[C.item]) + '</b></td><td>' + esc(r[C.desc]) + '</td><td>' + esc(r[C.code]) + '</td><td>' + esc(r[C.control]) + '</td><td>' + esc(r[C.heat]) + '</td><td class="n">' + esc(r[C.orig]) +
-            '</td><td class="n"><b>' + esc(r[C.remain]) + '</b></td><td>' + esc(r[C.plan]) + '</td><td>' + esc(D.dmy(r[C.date])) + '</td><td><input type="checkbox" data-scrap="' + esc(r[C.code]) + '" aria-label="Scrap ' + esc(r[C.code]) + '"></td><td>' + hb(r) + '</td></tr>';
+          return tr(r, '<td><b>' + esc(r[C.item]) + '</b></td><td>' + esc(r[C.desc]) + '</td><td>' + esc(r[C.code]) + '</td><td>' + esc(r[C.control]) + '</td><td>' + esc(r[C.heat]) + '</td><td class="n">' + esc(r[C.orig]) +
+            '</td><td class="n"><b>' + esc(r[C.remain]) + '</b></td><td>' + esc(r[C.plan]) + '</td><td>' + esc(D.dmy(r[C.date])) + '</td>' + box(r, 'data-scrap') + '<td>' + hb(r) + '</td>');
         }).join('');
     } else {
-      $('invTbl').innerHTML = '<tr><th>Item Code</th><th>Description</th><th>Barcode</th><th class="n">Remain (mm)</th><th>Marked scrap by</th><th>On</th><th></th><th></th></tr>' +
+      $('invTbl').innerHTML = '<tr>' + COLS.scrap.map(th).join('') + '<th><label class="cp-allbox"><input type="checkbox" id="invAll" data-all> Bring back</label></th><th></th></tr>' +
         list.map(function (r) {
-          return '<tr><td><b>' + esc(r[C.item]) + '</b></td><td>' + esc(r[C.desc]) + '</td><td>' + esc(r[C.code]) + '</td><td class="n"><b>' + esc(r[C.remain]) + '</b></td><td>' + esc(r[C.by]) + '</td><td>' + esc(dayOf(r[C.at])) +
-            '</td><td><button class="btn btn--ghost" type="button" data-bring="' + esc(r[C.code]) + '">Bring back</button></td><td>' + hb(r) + '</td></tr>';
+          return tr(r, '<td><b>' + esc(r[C.item]) + '</b></td><td>' + esc(r[C.desc]) + '</td><td>' + esc(r[C.code]) + '</td><td class="n"><b>' + esc(r[C.remain]) + '</b></td><td>' + esc(r[C.by]) + '</td><td>' + esc(dayOf(r[C.at])) +
+            '</td>' + box(r, 'data-bring') + '<td>' + hb(r) + '</td>');
         }).join('');
     }
-    Array.prototype.forEach.call($('invTbl').querySelectorAll('[data-scrap]'), function (b) { b.onchange = function () { setScrap(b.dataset.scrap, true, b); }; });
-    Array.prototype.forEach.call($('invTbl').querySelectorAll('[data-bring]'), function (b) { b.onclick = function () { setScrap(b.dataset.bring, false, b); }; });
+    Array.prototype.forEach.call($('invTbl').querySelectorAll('[data-sort]'), function (h) {
+      h.onclick = function () { if (sortKey === h.dataset.sort) sortDir = -sortDir; else { sortKey = h.dataset.sort; sortDir = 1; } render(); };
+    });
+    Array.prototype.forEach.call($('invTbl').querySelectorAll('[data-tick]'), function (b) {
+      b.onchange = function () { if (b.checked) pend[b.dataset.tick] = 1; else delete pend[b.dataset.tick]; b.closest('tr').classList.toggle('cp-pend', b.checked); syncBar(list); };
+    });
+    $('invAll').onchange = function () { var on = this.checked; list.forEach(function (r) { if (on) pend[r[C.code]] = 1; else delete pend[r[C.code]]; }); render(); };
     Array.prototype.forEach.call($('invTbl').querySelectorAll('[data-hist]'), function (b) { b.onclick = function () { openHistory(b.dataset.hist); }; });
+    syncBar(list);
   }
 
-  function setScrap(code, scrap, el) {
-    if (scrap && !confirm('Move pipe ' + code + ' to the Scrap list?')) { el.checked = false; return; }
-    el.disabled = true;
-    CS.api('setScrap', { barcode: code, scrap: scrap }).then(function () {
-      rows.forEach(function (r) { if (r[C.code] === code) { r[C.scrap] = scrap ? 'Yes' : 'No'; r[C.by] = scrap ? 'you' : ''; r[C.at] = scrap ? D.todayIso() : ''; } });
-      toast(true, scrap ? 'Pipe ' + code + ' moved to the Scrap list.' : 'Pipe ' + code + ' brought back to the cut piece remain list.');
+  // one Save for all ticked pipes: one request, one message
+  function saveChanges() {
+    var codes = Object.keys(pend), scrap = view === 'remain';
+    if (!codes.length) return;
+    $('invSave').disabled = true;
+    CS.api('setScrap', { barcodes: codes, scrap: scrap }).then(function () {
+      rows.forEach(function (r) { if (pend[r[C.code]]) { r[C.scrap] = scrap ? 'Yes' : 'No'; r[C.by] = scrap ? 'you' : ''; r[C.at] = scrap ? D.todayIso() : ''; } });
+      pend = {};
+      toast(true, codes.length + (codes.length === 1 ? ' pipe' : ' pipes') + (scrap ? ' moved to the Scrap list.' : ' brought back to the cut piece remain list.'));
       render(); load(true);
-    }).catch(function (e) { toast(false, 'NOT saved: ' + e.message); el.disabled = false; if (el.type === 'checkbox') el.checked = false; });
+    }).catch(function (e) { toast(false, 'NOT saved: ' + e.message); }).then(function () { $('invSave').disabled = false; });
+  }
+  function switchView(v) {
+    if (v === view) return;
+    if (pendCount() && !confirm('You have unsaved ticks. Leave without saving?')) return;
+    pend = {}; view = v; sortKey = ''; sortDir = 1; $('invHist').hidden = true; render();
   }
 
   // descriptions of plans saved before the description existed are filled in from the BOM in the background
@@ -148,8 +187,11 @@
     });
     XLSX.writeFile(wb, 'pipe-history-' + h.code + '-' + D.dmy(D.todayIso()) + '.xlsx');
   }
-  $('invTabRemain').onclick = function () { view = 'remain'; $('invHist').hidden = true; render(); };
-  $('invTabScrap').onclick = function () { view = 'scrap'; $('invHist').hidden = true; render(); };
+  $('invTabRemain').onclick = function () { switchView('remain'); };
+  $('invTabScrap').onclick = function () { switchView('scrap'); };
+  $('invSave').onclick = saveChanges;
+  $('invDiscard').onclick = function () { pend = {}; render(); };
+  CS.dirtyFns.push(function () { return pendCount() > 0; });
   ['invItem', 'invBar', 'invFrom', 'invTo'].forEach(function (id) { $(id).oninput = render; });
   $('invProj').onchange = render;
   $('invClear').onclick = function () { ['invItem', 'invBar', 'invFrom', 'invTo'].forEach(function (id) { $(id).value = ''; }); $('invProj').value = ''; render(); };
