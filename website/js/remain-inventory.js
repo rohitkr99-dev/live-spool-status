@@ -3,8 +3,8 @@
  * newest plan saved to Drive), a Scrap tick box per piece, and a separate Scrap list with Bring back. List only: nothing here changes
  * the Cutting Plan. The data lives in the sheet "Inventory" of the Cutting master (Apps Script getInventory / setScrap); only people on
  * the Allowed list can tick Scrap or Bring back (the script checks it; the page only greys the controls out).
- * History of a pipe (its main length): a History button on every row and a "Barcode history" tab (getPipeHistory / findPipes) show every
- * plan that used the pipe (length before, pieces cut, remain after) and its other events (release, scrap, bring back).
+ * History of a pipe (its main length): a History button on every row (getPipeHistory) shows every plan that used the pipe
+ * (length before, pieces cut, remain after) and its other events (release, scrap, bring back).
  */
 (function () {
   'use strict';
@@ -31,9 +31,7 @@
   function render() {
     var nRemain = rows.filter(function (r) { return !isScrap(r) && Number(r[C.remain]) > 0; }).length, nScrap = rows.filter(isScrap).length;
     $('invTabRemain').textContent = 'Cut piece remain list (' + nRemain + ')'; $('invTabScrap').textContent = 'Scrap list (' + nScrap + ')';
-    ['Remain', 'Scrap', 'Hist'].forEach(function (k) { $('invTab' + k).className = 'btn ' + (view === k.toLowerCase() ? 'btn--primary' : 'btn--ghost'); });
-    $('invListBox').hidden = view === 'hist'; $('invSearch').hidden = view !== 'hist';
-    if (view === 'hist') { $('invHint').textContent = 'Type a barcode to see everything that happened to that pipe: every plan that used it and its other events.'; return; }
+    ['Remain', 'Scrap'].forEach(function (k) { $('invTab' + k).className = 'btn ' + (view === k.toLowerCase() ? 'btn--primary' : 'btn--ghost'); });
     var sel = $('invProj'), cur = sel.value, seen = {}, opts = '<option value="">All projects</option>';
     rows.forEach(function (r) { var p = r[C.project]; if (p && !seen[p]) { seen[p] = 1; opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>'; } });
     sel.innerHTML = opts; sel.value = seen[cur] ? cur : '';
@@ -150,26 +148,8 @@
     });
     XLSX.writeFile(wb, 'pipe-history-' + h.code + '-' + D.dmy(D.todayIso()) + '.xlsx');
   }
-  // Barcode history tab: find a pipe by (part of) its barcode, also pipes with nothing left
-  function searchPipe() {
-    var q = $('invHistQ').value.trim(), pick = $('invPick');
-    if (q.length < 3) { pick.hidden = false; pick.innerHTML = '<p class="cp-note">Type at least 3 characters of the barcode.</p>'; return; }
-    pick.hidden = false; pick.innerHTML = '<p class="cp-note">Searching...</p>';
-    CS.api('findPipes', { q: q }).then(function (r) {
-      var f = r.rows || [];
-      if (!f.length) { pick.innerHTML = '<p class="cp-note">No pipe found with this barcode. Only pipes that were in a plan saved to Drive are known.</p>'; $('invHist').hidden = true; return; }
-      if (f.length === 1) { pick.hidden = true; openHistory(f[0][0]); return; }
-      pick.innerHTML = '<p class="cp-note">' + f.length + ' pipes match. Choose one:</p><div class="cp-tw"><table class="cp-sttbl"><tr><th>Barcode</th><th>Item Code</th><th class="n">Remain (mm)</th><th></th></tr>' +
-        f.map(function (x) { return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td class="n">' + esc(x[2]) + (x[3] === 'Yes' ? ' (scrap)' : '') + '</td><td><button class="btn btn--ghost cp-small" type="button" data-pick="' + esc(x[0]) + '">History</button></td></tr>'; }).join('') + '</table></div>';
-      Array.prototype.forEach.call(pick.querySelectorAll('[data-pick]'), function (b) { b.onclick = function () { openHistory(b.dataset.pick); }; });
-    }).catch(function (e) { pick.innerHTML = '<p class="cp-note cp-bad">' + esc(e.message) + '</p>'; });
-  }
-
   $('invTabRemain').onclick = function () { view = 'remain'; $('invHist').hidden = true; render(); };
   $('invTabScrap').onclick = function () { view = 'scrap'; $('invHist').hidden = true; render(); };
-  $('invTabHist').onclick = function () { view = 'hist'; $('invHist').hidden = true; render(); $('invHistQ').focus(); };
-  $('invHistGo').onclick = searchPipe;
-  $('invHistQ').onkeydown = function (e) { if (e.key === 'Enter') searchPipe(); };
   ['invItem', 'invBar', 'invFrom', 'invTo'].forEach(function (id) { $(id).oninput = render; });
   $('invProj').onchange = render;
   $('invClear').onclick = function () { ['invItem', 'invBar', 'invFrom', 'invTo'].forEach(function (id) { $(id).value = ''; }); $('invProj').value = ''; render(); };

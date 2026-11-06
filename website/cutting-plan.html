@@ -277,8 +277,7 @@
       <p class="cp-lock" role="status">You can view the lists, but your login is not allowed to change them in the Cutting Station. Ask the administrator to add your login email.</p>
       <div class="cp-card">
         <div class="cp-card__head"><h3>Remain inventory</h3><span class="cp-hint" id="invHint"></span></div>
-        <div class="cp-tabs"><button class="btn btn--primary" id="invTabRemain" type="button">Cut piece remain list</button><button class="btn btn--ghost" id="invTabScrap" type="button">Scrap list</button><button class="btn btn--ghost" id="invTabHist" type="button">Barcode history</button></div>
-        <div id="invListBox">
+        <div class="cp-tabs"><button class="btn btn--primary" id="invTabRemain" type="button">Cut piece remain list</button><button class="btn btn--ghost" id="invTabScrap" type="button">Scrap list</button></div>
         <div class="cp-row">
           <label>Item Code<input type="search" id="invItem" placeholder="e.g. SP010440" autocomplete="off"></label>
           <label>Barcode<input type="search" id="invBar" placeholder="type part of the barcode" autocomplete="off"></label>
@@ -289,11 +288,6 @@
         </div>
         <p class="cp-note" id="invCount"></p>
         <div class="cp-tw"><table class="cp-sttbl" id="invTbl"></table></div>
-        </div>
-        <div id="invSearch" hidden>
-          <div class="cp-row"><label>Barcode<input type="search" id="invHistQ" placeholder="type or paste a barcode, or part of it" autocomplete="off"></label><button class="btn btn--primary" id="invHistGo" type="button">Show history</button><span class="cp-hint">at least 3 characters; also finds pipes with nothing left</span></div>
-          <div id="invPick" hidden></div>
-        </div>
       </div>
       <div class="cp-card" id="invHist" hidden></div>
     </section>
@@ -309,6 +303,6 @@
 <script src="js/cutting-plan.js?v=20261108"></script>
 <script src="js/cutting-status.js?v=20261108"></script>
 <script src="js/material-handover.js?v=20261033"></script>
-<script src="js/remain-inventory.js?v=20261109"></script>
+<script src="js/remain-inventory.js?v=20261110"></script>
 </body>
 </html>
