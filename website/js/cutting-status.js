@@ -59,7 +59,7 @@
     if (name === curSec) return;
     if (CS.dirtyFns.some(function (f) { return f(); }) && !confirm('You have unsaved ticks. Leave without saving?')) return;
     curSec = name;
-    ['plan', 'status', 'handover'].forEach(function (n) {
+    ['plan', 'status', 'handover', 'inventory'].forEach(function (n) {
       var cap = n.charAt(0).toUpperCase() + n.slice(1);
       $('sec' + cap).hidden = n !== name; $('secBtn' + cap).className = 'btn ' + (n === name ? 'btn--primary' : 'btn--ghost');
     });
@@ -68,6 +68,7 @@
   $('secBtnPlan').onclick = function () { section('plan'); };
   $('secBtnStatus').onclick = function () { section('status'); };
   $('secBtnHandover').onclick = function () { section('handover'); };
+  $('secBtnInventory').onclick = function () { section('inventory'); };
 
   /* ---------- plan list ---------- */
   function loadPlans() {

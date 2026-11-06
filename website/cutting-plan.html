@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261107">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261108">
 <link rel="stylesheet" href="css/studio.css?v=20261019">
 </head>
 <body class="is-ready">
@@ -57,6 +57,7 @@
       <button class="btn btn--primary" id="secBtnPlan" type="button">Cutting Plan</button>
       <button class="btn btn--ghost" id="secBtnStatus" type="button">Cutting &amp; Beveling Status</button>
       <button class="btn btn--ghost" id="secBtnHandover" type="button">Material Handover</button>
+      <button class="btn btn--ghost" id="secBtnInventory" type="button">Remain inventory</button>
     </div>
 
     <div id="secPlan">
@@ -272,6 +273,24 @@
       </div>
     </section>
 
+    <section id="secInventory" hidden>
+      <p class="cp-lock" role="status">You can view the lists, but your login is not allowed to change them in the Cutting Station. Ask the administrator to add your login email.</p>
+      <div class="cp-card">
+        <div class="cp-card__head"><h3>Remain inventory</h3><span class="cp-hint" id="invHint"></span></div>
+        <div class="cp-tabs"><button class="btn btn--primary" id="invTabRemain" type="button">Cut piece remain list</button><button class="btn btn--ghost" id="invTabScrap" type="button">Scrap list</button></div>
+        <div class="cp-row">
+          <label>Item Code<input type="search" id="invItem" placeholder="e.g. SP010440" autocomplete="off"></label>
+          <label>Barcode<input type="search" id="invBar" placeholder="type part of the barcode" autocomplete="off"></label>
+          <label>Project<select id="invProj"><option value="">All projects</option></select></label>
+          <label>Remain from (mm)<input type="number" id="invFrom" min="0" placeholder="e.g. 500"></label>
+          <label>Remain to (mm)<input type="number" id="invTo" min="0" placeholder="e.g. 3000"></label>
+          <button class="btn btn--primary" id="invXl" type="button">Download (Excel)</button><button class="btn btn--ghost" id="invClear" type="button">Clear filters</button>
+        </div>
+        <p class="cp-note" id="invCount"></p>
+        <div class="cp-tw"><table class="cp-sttbl" id="invTbl"></table></div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -280,8 +299,9 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261104"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261107"></script>
-<script src="js/cutting-status.js?v=20261037"></script>
+<script src="js/cutting-plan.js?v=20261108"></script>
+<script src="js/cutting-status.js?v=20261108"></script>
 <script src="js/material-handover.js?v=20261033"></script>
+<script src="js/remain-inventory.js?v=20261108"></script>
 </body>
 </html>

@@ -487,7 +487,7 @@
       api('logVisit').catch(function () {});          // one row per person per day, for the admin's Daily summary (home page)
     }, function () {});
   });
-  window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor };
+  window.CutStation = { api: api, esc: esc, toast: toast, el: $, D: D, pdfFor: pdfFor, bomSpecs: bomSpecs };
 
   /* ---------- accepted plans ---------- */
   function undoBlock(rec, recs) { // a plan can be undone only if no later plan used any of its pipes

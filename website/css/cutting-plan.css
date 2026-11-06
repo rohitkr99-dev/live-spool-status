@@ -124,6 +124,6 @@
 /* people who are not on the Cutting Station "Allowed" list can look but not save */
 .cp-lock { display: none; margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #FEF3C7; color: #78350F; font-weight: 600; }
 .cp-viewonly .cp-lock { display: block; }
-.cp-viewonly #drv, .cp-viewonly [data-d], .cp-viewonly #stSave, .cp-viewonly #relOk, .cp-viewonly [data-rel], .cp-viewonly [data-unrel] { opacity: .45; pointer-events: none; }
+.cp-viewonly #drv, .cp-viewonly [data-d], .cp-viewonly #stSave, .cp-viewonly #relOk, .cp-viewonly [data-rel], .cp-viewonly [data-unrel], .cp-viewonly [data-scrap], .cp-viewonly [data-bring] { opacity: .45; pointer-events: none; }
 .cp-spec { margin: -2px 0 8px; font-size: 13px; color: var(--frost-dim); }
 .cp-spec:empty { display: none; }
