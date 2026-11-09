@@ -39,6 +39,14 @@
       }
     ]
   },
+  "TE/25-26/196|20LDK01BR019|20LDK01BR019_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-04"
+      }
+    ]
+  },
   "TE/25-26/196|20LDK02BR002|20LDK02BR002_SP2": {
     "hold_periods": [
       {
@@ -63,10 +71,26 @@
       }
     ]
   },
-  "TE/25-26/196|20MAW20BR003|20MAW20BR003_SP1": {
+  "TE/25-26/196|20MAG10BR042|20MAG10BR042_SP2": {
     "hold_periods": [
       {
         "hold_removed": null,
+        "hold_start": "2026-11-05"
+      }
+    ]
+  },
+  "TE/25-26/196|20MAL01BR401|20MAL01BR401_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-05"
+      }
+    ]
+  },
+  "TE/25-26/196|20MAW20BR003|20MAW20BR003_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": "2026-11-04",
         "hold_start": "2026-11-02"
       }
     ]
@@ -442,7 +466,7 @@
   "TJ/25-26/207|251335_1A_IP001_019|251335-1A-IP-019-03": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-10-26",
         "hold_start": "2026-10-26"
       }
     ]
@@ -450,8 +474,32 @@
   "TJ/25-26/207|251335_1A_LP001_044|251335-1A-LP-044-01": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-11-02",
         "hold_start": "2026-11-02"
+      }
+    ]
+  },
+  "TJ/26-27/212|254435_11_HP001_001|254435-11-HP001-04": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-05"
+      }
+    ]
+  },
+  "TJ/26-27/212|254435_11_LP001_068|254435-11-LP068-011": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-04"
+      }
+    ]
+  },
+  "TJ/26-27/212|254435_11_RP001_001|254435-11-RP001-04": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-04"
       }
     ]
   }
