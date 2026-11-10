@@ -204,12 +204,12 @@
       <div class="cp-card">
         <div class="cp-card__head"><h3>Choose what to load</h3><span class="cp-hint" id="hBomInfo"></span></div>
         <div class="cp-grid">
-          <label>Project (required)<select id="hProject"><option value="">- choose a project -</option></select></label>
+          <label>Project<select id="hProject"><option value="">- choose a project (or a week) -</option></select></label>
           <div class="cp-field"><span class="cp-lbl">Week</span>
             <details class="cp-dd" id="hWeekDD"><summary id="hWeekSum">All weeks</summary>
               <div class="cp-ddpanel">
                 <textarea id="hWeek" class="cp-multi" rows="2" spellcheck="false" placeholder="Or type / paste weeks (one per line or comma separated)"></textarea>
-                <div class="cp-opts" id="hWeekOpts"><span class="cp-note">Choose a project first.</span></div>
+                <div class="cp-opts" id="hWeekOpts"><span class="cp-note">Loading the list when opened...</span></div>
                 <button class="btn btn--ghost" type="button" data-ddclear="week">Clear</button>
               </div>
             </details></div>
@@ -217,14 +217,14 @@
             <details class="cp-dd" id="hGroupDD"><summary id="hGroupSum">All groups</summary>
               <div class="cp-ddpanel">
                 <textarea id="hGroup" class="cp-multi" rows="2" spellcheck="false" placeholder="Or type / paste groups (one per line or comma separated)"></textarea>
-                <div class="cp-opts" id="hGroupOpts"><span class="cp-note">Choose a project first.</span></div>
+                <div class="cp-opts" id="hGroupOpts"><span class="cp-note">Choose a project or a week first.</span></div>
                 <button class="btn btn--ghost" type="button" data-ddclear="group">Clear</button>
               </div>
             </details></div>
           <label>Date for my ticks<input type="text" id="hDate" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
         </div>
         <div class="cp-row"><button class="btn btn--primary" id="hLoad" type="button">Load data</button><span id="hNote" class="cp-note" style="margin:0" role="status"></span></div>
-        <p class="cp-note">Pick the project (and, if you like, week or group), then press <b>Load data</b>. Only that project is loaded, so the page stays fast. Pipes are filled in automatically from the Cutting &amp; Beveling Status; you only tick the fittings and other items you receive.</p>
+        <p class="cp-note">Pick a <b>project</b> or a <b>week</b> (or both), then press <b>Load data</b>. Pick a project and the Week list shows only its weeks; pick a week first and the Project list shows only the projects planned in that week. A week on its own loads all the projects of that week, so the page stays fast. Pipes are filled in automatically from the Cutting &amp; Beveling Status; you only tick the fittings and other items you receive.</p>
       </div>
 
       <div id="hBody" hidden>
@@ -307,7 +307,7 @@
 <script src="js/config.js?v=20261021"></script>
 <script src="js/cutting-plan.js?v=20261108"></script>
 <script src="js/cutting-status.js?v=20261108"></script>
-<script src="js/material-handover.js?v=20261033"></script>
+<script src="js/material-handover.js?v=20261112"></script>
 <script src="js/remain-inventory.js?v=20261111"></script>
 </body>
 </html>

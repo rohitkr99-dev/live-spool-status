@@ -14,6 +14,10 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
+## Material Handover: week-first / project-first (2026-11-11) - LIVE
+
+Pushed to main (`website/js/material-handover.js`, `website/cutting-plan.html`): Load data needs a project or a week; a week alone loads all projects of that week (fetched together); picking weeks narrows the Project list, picking a project narrows the Weeks. A preview copy is in `%TEMP%\prevx` (server `cutting-preview`, port 8794) with a fetch mock; the user approved it and it was made live; the Drive script is unchanged. Open points: none. Earlier today the BOM job change (any file name) was pushed and the BOM workflow run (14 projects from `Drawing Line List  06-11-26.xlsx`).
+
 ## Week from the SIOP Planned Spools file (2026-10-30) - in a PR
 
 A spool the Weekly Production Planning workbook does not have (or has with a blank Week) now takes its Week from the SIOP Planned Spools workbook's "Week No." column; the Weekly value always wins. Month-only filenames for next month ("November SIOP...") are now dated correctly. Needs a sync after merge; check the log for "filled Week for N spool(s)". See the CHANGELOG entry of 2026-10-30.
