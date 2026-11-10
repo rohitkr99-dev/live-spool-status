@@ -1,10 +1,10 @@
-"""Turns the daily "Drawing Line List DD-MM-YYYY.xlsx" (BOM) into small per-project JSON files.
+"""Turns the newest "Drawing Line List" workbook (BOM) in the Drive BOM folder, whatever its file name, into small per-project JSON files.
 
 Why: the BOM workbook is ~28 MB (about 390 MB of sheet XML), far too big for the web page or for
 Google Apps Script. The Material Handover section only needs, per project, the item lines of each spool.
 
 Drive layout (inside the tracker's shared root folder, GDRIVE_FOLDER_ID):
-    BOM/                                   <- you upload "Drawing Line List DD-MM-YYYY.xlsx" here
+    BOM/                                   <- you upload the Drawing Line List here (any file name; see _newest_source)
     BOM/data/<project>.json                <- written by this script (private, Drive only - never the public repo)
     BOM/data/_manifest.json                <- which source file the data came from
 
@@ -24,7 +24,23 @@ from datetime import datetime, timezone
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 FORMAT = 3   # 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
-NAME_RE = re.compile(r"^Drawing Line List\s*(\d{2})-(\d{2})-(\d{4})\.xls[xmb]$", re.I)   # any Excel format
+EXT_RE = re.compile(r"\.xls[xmb]$", re.I)                                  # any Excel format
+BOM_NAME_RE = re.compile(r"line[\s_.-]*list|bom", re.I)                          # "Drawing Line List ...", "Drawing_Line_List", "BOM ..." - the exact wording does not matter
+DATE_RE = re.compile(r"(?<!\d)(\d{1,2})[-./_ ](\d{1,2})[-./_ ](\d{4}|\d{2})(?!\d)")   # first date in the name: 06-11-2026, 6.11.26, 06_11_26 ...
+
+
+def _name_date(name):
+    """The date written in a file name (DD-MM-YYYY or DD-MM-YY), or None."""
+    from datetime import date
+    m = DATE_RE.search(name)
+    if not m:
+        return None
+    d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    y = y + 2000 if y < 100 else y
+    try:
+        return date(y, mo, d)
+    except ValueError:
+        return None
 
 # BOM column -> short key used in the per-spool item arrays
 # item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM), schedule]
@@ -182,16 +198,30 @@ def _find(svc, parent, name, folder=False):
 
 
 def _newest_source(svc, bom_id):
-    r = svc.files().list(q="'%s' in parents and trashed = false and name contains 'Drawing Line List'" % bom_id, fields="files(id,name,size)", pageSize=200,
-                         supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
-    best = None
+    """The newest BOM workbook in BOM/, whatever it is called. Any Excel file whose name mentions "Line List" or "BOM" counts (temporary
+    "~$" files and anything that is not Excel are ignored). Newest = the date written in the name; a file without a readable date counts
+    from the day it was last modified in Drive; ties go to the file modified last. Every file seen is printed so a surprise is visible."""
+    r = svc.files().list(q="'%s' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'" % bom_id,
+                         fields="files(id,name,size,modifiedTime)", pageSize=200, supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+    cands, skipped = [], []
     for f in r.get("files", []):
-        m = NAME_RE.match(f["name"].strip())
-        if m:
-            d = (int(m.group(3)), int(m.group(2)), int(m.group(1)))
-            if best is None or d > best[0]:
-                best = (d, f)
-    return best[1] if best else None
+        name = f["name"].strip()
+        if name.startswith("~$") or not EXT_RE.search(name) or not BOM_NAME_RE.search(name):
+            skipped.append(name)
+            continue
+        mod = f.get("modifiedTime") or ""
+        nd = _name_date(name)
+        eff = nd or (datetime.strptime(mod[:10], "%Y-%m-%d").date() if mod[:10] else None)
+        if eff is None:
+            skipped.append(name)
+            continue
+        cands.append(((eff, mod), f, nd))
+    cands.sort(key=lambda c: c[0])
+    for key, f, nd in cands:
+        print("  BOM file: %-50s date %s (%s)" % (f["name"].strip(), key[0], "from the name" if nd else "from the Drive modified date"))
+    if skipped:
+        print("  ignored (not a BOM workbook): " + ", ".join(skipped))
+    return cands[-1][1] if cands else None
 
 
 def _upload(svc, parent, name, text, existing_id=None):
@@ -214,15 +244,15 @@ def run_drive():
     bom_id = bom[0]["id"]
     src = _newest_source(svc, bom_id)
     if not src:
-        print("No 'Drawing Line List DD-MM-YYYY' Excel file in BOM/ - nothing to do.")
-        return 0
+        print("ACTION NEEDED: no BOM workbook (an Excel file with 'Line List' or 'BOM' in its name) found in the Drive BOM folder.")
+        return 1
     data_f = _find(svc, bom_id, "data", folder=True)
     data_id = data_f[0]["id"] if data_f else svc.files().create(body={"name": "data", "parents": [bom_id], "mimeType": "application/vnd.google-apps.folder"}, fields="id", supportsAllDrives=True).execute()["id"]
     man = _find(svc, data_id, "_manifest.json")
     old = {}
     if man:
         old = json.loads(svc.files().get_media(fileId=man[0]["id"]).execute().decode("utf-8"))
-        if old.get("source") == src["name"] and old.get("size") == src.get("size") and old.get("format") == FORMAT:
+        if old.get("source") == src["name"] and old.get("size") == src.get("size") and old.get("modified") == src.get("modifiedTime") and old.get("format") == FORMAT:
             print("Up to date: %s (already converted)." % src["name"])
             return 0
     print("Converting %s ..." % src["name"])
@@ -237,7 +267,7 @@ def run_drive():
     # Projects missing from today's BOM are left exactly as they are: their files are never deleted or changed, and they stay in the
     # manifest (project list of the page) with the source/date of the BOM they came from. Only projects present in the BOM are updated.
     old_projects = old.get("projects") if isinstance(old.get("projects"), dict) else {}
-    manifest = {"source": src["name"], "size": src.get("size"), "format": FORMAT, "built": built, "projects": dict(old_projects)}
+    manifest = {"source": src["name"], "size": src.get("size"), "modified": src.get("modifiedTime"), "format": FORMAT, "built": built, "projects": dict(old_projects)}
     missing = []
     for project, body in data.items():
         payload = {"project": project, "source": src["name"], "built": built, "spools": body["spools"]}
