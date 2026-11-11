@@ -1,0 +1,26 @@
+{
+  "application": {
+    "name": "SIOP Meeting Tracker",
+    "version": "1.0.0"
+  },
+
+  "paths": {
+    "upload_folder": "data/upload/projects",
+    "processed_folder": "processed",
+    "website_data_folder": "website/data"
+  },
+
+  "input_files": {
+    "comment": "The SIOP MoM Tracker workbook in the Drive Projects folder. Only the substring 'MoM Tracker' is relied on (any Excel format). Its sheets are found by their column headers, not by position: the 'Current Open Cases' sheet (headers 'Case ID' + 'Latest Remarks') gives the actions from the last meeting, the 'Weekly Log' sheet (headers 'Meeting Date' + 'Remarks / Update' + 'Case ID') gives the history. Cached cell values are read - no formula is evaluated.",
+    "file_pattern": "*MoM*Tracker*"
+  },
+
+  "output_files": {
+    "bundle": "c7d41e98ab.json"
+  },
+
+  "publishing": {
+    "publish_to_website": true,
+    "comment": "When true, every run also copies the bundle into paths.website_data_folder - the file website/mom.html auto-loads, same pattern as config/painting_settings.json."
+  }
+}

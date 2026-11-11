@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-skin="studio" class="auth-pending">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3F4F9">
+<meta name="robots" content="noindex, nofollow">
+<title>DEE Piping Systems — SIOP Meeting Tracker</title>
+<script src="js/theme.js?v=20260920"></script>
+<style>html.auth-pending body{visibility:hidden}</style>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="auth-guard.js"></script>
+<link rel="icon" href="assets/dee-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=20260921">
+<link rel="stylesheet" href="css/work-queues.css?v=20261007">
+<link rel="stylesheet" href="css/mom.css?v=20261111">
+<link rel="stylesheet" href="css/studio.css?v=20261019">
+</head>
+<body class="work-queues">
+<div class="ambient" aria-hidden="true"><span class="ambient__orb ambient__orb--ember"></span><span class="ambient__orb ambient__orb--ice"></span><span class="ambient__orb ambient__orb--deep"></span><div class="ambient__grid"></div></div>
+<div class="wq-shell">
+  <header class="wq-topbar">
+    <a class="wq-brand" href="index.html"><img src="assets/dee-mark.png" alt=""><span><small>DEE Piping Systems · Operations</small><strong>SIOP Meeting Tracker</strong></span></a>
+    <nav class="wq-nav" aria-label="Main navigation"><a href="index.html">Operations hub</a><a href="dashboard.html">Spool dashboard</a><div id="user-menu"></div></nav>
+  </header>
+  <div class="wq-data-status" id="data-status" role="status">Loading the latest SIOP meeting notes…</div>
+  <main>
+    <section class="wq-heading"><div><p class="eyebrow">WEEKLY SIOP MEETING</p><h1>Actions from the last meeting.</h1><p>Open cases discussed at the latest SIOP meeting, and the full history of every case by project.</p></div><div class="wq-updated" id="data-updated">—</div></section>
+    <section class="wq-kpis" aria-label="Meeting summary">
+      <article><span>Open actions</span><strong id="kpi-open">—</strong></article>
+      <article><span>On hold</span><strong id="kpi-hold">—</strong></article>
+      <article class="is-handoff"><span>Raised at last meeting</span><strong id="kpi-new">—</strong></article>
+      <article class="is-critical"><span>Closed at last meeting</span><strong id="kpi-closed">—</strong></article>
+    </section>
+    <section class="wq-controls" aria-label="Choose view">
+      <div class="wq-views" role="group" aria-label="Choose view"><button type="button" data-view="current" aria-pressed="true">Current actions</button><button type="button" data-view="history" aria-pressed="false">History by project</button></div>
+      <div class="wq-filters" id="current-filters"><label class="sr-only" for="search">Search actions</label><input id="search" type="search" placeholder="Search case, project, remarks…"><label class="sr-only" for="dept-filter">Department</label><select id="dept-filter"><option value="">All departments</option></select></div>
+    </section>
+
+    <section id="view-current">
+      <article class="wq-panel" aria-labelledby="current-title"><header><h2 id="current-title">Current open cases</h2><span id="current-count">—</span></header><div class="wq-table-wrap"><table><thead><tr><th>Case</th><th>Project</th><th>Department</th><th>Status</th><th>Latest remarks</th><th>Last update</th><th>Open for</th><th></th></tr></thead><tbody id="current-body"></tbody></table><div class="wq-empty" id="current-empty" hidden>No open cases match these filters.</div></div><footer>Read from the SIOP MoM Tracker's "Current Open Cases" sheet. Closed and cancelled cases are not listed here; they stay in the history.</footer></article>
+    </section>
+
+    <section id="view-history" class="wq-columns mom-history" hidden>
+      <aside class="wq-panel" aria-labelledby="projects-title"><header><h2 id="projects-title">Projects</h2><span id="projects-count">—</span></header><div class="mom-projects" id="project-list"></div></aside>
+      <article class="wq-panel" aria-labelledby="history-title"><header><h2 id="history-title">Select a project</h2><span id="history-count">—</span></header><div class="mom-cases" id="case-list"><p class="wq-muted">Pick a project to see every case raised for it, newest first.</p></div><footer>Built from the "Weekly Log" sheet, one entry per meeting update. A case's status is the one on its latest update.</footer></article>
+    </section>
+  </main>
+  <footer class="wq-footer">DEE Piping Systems — Thailand · Internal operations portal · <span id="footer-year"></span></footer>
+</div>
+<script src="js/user-menu.js?v=20260920b"></script>
+<script src="js/mom.js?v=20261111"></script>
+</body>
+</html>

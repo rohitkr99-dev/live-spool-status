@@ -1,0 +1,28 @@
+/* SIOP Meeting Tracker - extras on top of work-queues.css */
+/* work-queues.css sets display:grid / flex on these, which would beat the hidden attribute */
+.mom-history[hidden], .wq-filters[hidden] { display:none; }
+.mom-chip { display:inline-block; padding:3px 8px; border-radius:6px; font-size:9px; font-weight:800; white-space:nowrap; background:#eeecfa; color:#352779; }
+.mom-chip--hold { background:#fdf1d8; color:#8a5b0d; }
+.mom-chip--closed { background:#e6f4ea; color:#245c3d; }
+.mom-chip--cancelled { background:#ececf2; color:#55566e; }
+.mom-remarks { min-width:260px; max-width:520px; color:var(--ink,#1b1a2e); font-size:11px; line-height:1.5; white-space:pre-line; }
+.mom-case { font:700 10px var(--font-mono,"IBM Plex Mono",monospace); color:var(--ink,#1b1a2e); white-space:nowrap; }
+.mom-projects { display:flex; flex-direction:column; padding:6px; max-height:70vh; overflow:auto; }
+.mom-project { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 10px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--ink,#1b1a2e); cursor:pointer; text-align:left; font:700 11px var(--font-body,"Manrope",sans-serif); }
+.mom-project:hover { background:#f6f6fb; }
+.mom-project[aria-pressed="true"] { border-color:var(--ice,#4333a5); background:var(--ice-soft,#eeecfa); color:#302478; }
+.mom-project small { color:var(--frost-dim,#55566e); font:500 9px var(--font-mono,"IBM Plex Mono",monospace); white-space:nowrap; }
+.mom-cases { max-height:70vh; overflow:auto; padding:6px 14px; }
+.mom-case-item { border-bottom:1px solid var(--line,#e4e4ed); }
+.mom-case-item:last-child { border-bottom:0; }
+.mom-case-item summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:12px 2px; cursor:pointer; list-style:none; }
+.mom-case-item summary::-webkit-details-marker { display:none; }
+.mom-case-item summary:focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-case-meta { color:var(--frost-dim,#55566e); font-size:10px; }
+.mom-case-latest { flex-basis:100%; color:var(--ink,#1b1a2e); font-size:11px; line-height:1.45; white-space:pre-line; }
+.mom-timeline { margin:0 0 12px 6px; padding:0 0 0 14px; border-left:2px solid var(--line,#e4e4ed); list-style:none; }
+.mom-timeline li { position:relative; padding:0 0 10px; }
+.mom-timeline li::before { content:""; position:absolute; left:-20px; top:4px; width:8px; height:8px; border-radius:50%; background:var(--ice,#4333a5); }
+.mom-timeline time { display:inline-block; margin-right:6px; color:var(--frost-dim,#55566e); font:600 10px var(--font-mono,"IBM Plex Mono",monospace); }
+.mom-timeline p { margin:4px 0 0; color:var(--ink,#1b1a2e); font-size:11px; line-height:1.5; white-space:pre-line; }
+@media(max-width:1080px) { .mom-projects { flex-direction:row; flex-wrap:wrap; max-height:none; } }
