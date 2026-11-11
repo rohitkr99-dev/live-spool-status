@@ -77,6 +77,8 @@
         <div id="recFilters" hidden>
           <div class="cp-grid">
             <label>Search Plan No.<input type="text" id="recQ" placeholder="Type part of the plan number"></label>
+            <label>Drawing No.<input type="text" id="recDwg" placeholder="Part of a drawing no., or several with commas" autocomplete="off"></label>
+            <label>Spool No.<input type="text" id="recSpl" placeholder="Part of a spool no., or several with commas" autocomplete="off"></label>
             <label>Project Code<select id="recProj"><option value="">All projects</option></select></label>
             <label>Drive<select id="recDrv"><option value="">All</option><option value="saved">Saved to Drive</option><option value="not">Not saved</option></select></label>
             <label>Plan date from<input type="text" id="recFrom" placeholder="DD-MM-YYYY" inputmode="numeric" maxlength="10"></label>
@@ -305,7 +307,7 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261104"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261108"></script>
+<script src="js/cutting-plan.js?v=20261112"></script>
 <script src="js/cutting-status.js?v=20261108"></script>
 <script src="js/material-handover.js?v=20261112"></script>
 <script src="js/remain-inventory.js?v=20261111"></script>

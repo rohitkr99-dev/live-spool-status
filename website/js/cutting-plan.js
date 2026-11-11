@@ -495,13 +495,46 @@
     var later = recs.filter(function (r) { return r.createdAt > rec.createdAt && r.bars.some(function (b) { return mine[b.barcode]; }); });
     return later.length ? 'Used by later plan ' + later.map(function (r) { return r.planNo; }).join(', ') : '';
   }
+  /* Find plans by Drawing No. / Spool No. (part of a number is enough, several separated by commas). Plans in this browser are searched here; plans
+     saved to Drive are searched by the Drive script (findPlans, from its Status sheet), so a plan made on another computer is found too. */
+  var findKey = '', findHits = null, findState = '', findErr = '', findTimer = null;
+  function tok(v) { return String(v || '').split(/[\n\r,;\t]+/).map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean); }
+  function searchKey() { return $('recDwg').value.trim() + '\n' + $('recSpl').value.trim(); }
+  function searching() { return !!(tok($('recDwg').value).length || tok($('recSpl').value).length); }
+  function spoolsOf(r) {             // the spools of this plan that match the Drawing / Spool boxes
+    var dt = tok($('recDwg').value), st = tok($('recSpl').value), seen = {}, out = [];
+    var add = function (sp) { if (sp && !seen[sp]) { seen[sp] = 1; out.push(sp); } };
+    (r.bars || []).forEach(function (b) { (b.pieces || []).forEach(function (p) {
+      var d = String(p.drawing).toLowerCase(), s = String(p.spool).toLowerCase();
+      if ((!dt.length || dt.some(function (t) { return d.indexOf(t) >= 0; })) && (!st.length || st.some(function (t) { return s.indexOf(t) >= 0; }))) add(p.spool);
+    }); });
+    var h = findKey === searchKey() && findHits && findHits[String(r.planNo).toLowerCase()];
+    if (h) h.spools.forEach(add);
+    return out;
+  }
+  function runFind() {
+    var key = searchKey();
+    if (!searching()) { findKey = ''; findHits = null; findState = ''; renderRecs(); return; }
+    if (key === findKey || !DRIVE_URL) return;
+    findKey = key; findHits = null; findState = 'searching'; renderRecs();
+    api('findPlans', { drawing: $('recDwg').value.trim(), spool: $('recSpl').value.trim() }).then(function (r) {
+      if (key !== findKey) return;
+      findHits = {}; Object.keys(r.plans || {}).forEach(function (k) { findHits[k.toLowerCase()] = r.plans[k]; });
+      findState = 'done'; renderRecs();
+    }).catch(function (e) { if (key !== findKey) return; findState = 'error'; findErr = e.message; renderRecs(); });
+  }
   function recFiltered(recs) {
-    var q = $('recQ').value.trim().toLowerCase(), pr = $('recProj').value, dv = $('recDrv').value, f = D.field('recFrom'), t = D.field('recTo');
+    var q = $('recQ').value.trim().toLowerCase(), pr = $('recProj').value, dv = $('recDrv').value, f = D.field('recFrom'), t = D.field('recTo'), sp = searching();
     return recs.filter(function (r) {
       var di = D.iso(r.date);
       return (!q || r.planNo.toLowerCase().indexOf(q) >= 0) && (!pr || (r.project || '') === pr) && (!dv || (dv === 'saved') === !!r.driveSavedAt) &&
-        (!f || (di && di >= f)) && (!t || (di && di <= t));
+        (!f || (di && di >= f)) && (!t || (di && di <= t)) && (!sp || spoolsOf(r).length > 0);
     });
+  }
+  function spoolNote(r) {
+    if (!searching()) return '';
+    var l = spoolsOf(r); if (!l.length) return '';
+    return '<br><small class="cp-note">Spool: ' + l.slice(0, 4).map(esc).join(', ') + (l.length > 4 ? ' +' + (l.length - 4) + ' more' : '') + '</small>';
   }
   function renderRecs() {
     var ap = allPlans(), recs = ap.all, local = ap.local;
@@ -510,13 +543,13 @@
     sel.innerHTML = opts; sel.value = seen[cur] ? cur : '';
     var rows = recFiltered(recs);
     $('recEmpty').hidden = !!recs.length; $('recFilters').hidden = !recs.length;
-    $('recCount').textContent = recs.length ? 'Showing ' + rows.length + ' of ' + recs.length + ' plans' : '';
+    $('recCount').textContent = recs.length ? 'Showing ' + rows.length + ' of ' + recs.length + ' plans' + (searching() ? (findState === 'searching' ? ' - searching the plans saved to Drive...' : findState === 'error' ? ' - could not search the plans saved to Drive (' + findErr + '); only plans in this browser were searched' : '') : '') : '';
     $('recTbl').innerHTML = rows.length ? '<tr><th>Project Code</th><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + rows.map(function (r) {
       var i = recs.indexOf(r);
-      if (r.fromDrive) return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.pipes + '</td><td class="n">' + r.pieces + '</td><td class="n">-</td><td><span class="cp-ok">Saved ' + esc(r.createdAt ? D.fromMs(r.createdAt) : '') + '</span> <small class="cp-note">by ' + esc(String(r.savedBy || '').split('@')[0]) + '</small></td><td>' +
+      if (r.fromDrive) return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + spoolNote(r) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.pipes + '</td><td class="n">' + r.pieces + '</td><td class="n">-</td><td><span class="cp-ok">Saved ' + esc(r.createdAt ? D.fromMs(r.createdAt) : '') + '</span> <small class="cp-note">by ' + esc(String(r.savedBy || '').split('@')[0]) + '</small></td><td>' +
         '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> <small class="cp-note">from Drive</small></td></tr>';
       var blk = undoBlock(r, local);
-      return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
+      return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + spoolNote(r) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
         '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () {
@@ -536,8 +569,9 @@
     });
   }
   ['recQ', 'recFrom', 'recTo'].forEach(function (id) { $(id).oninput = renderRecs; });
+  ['recDwg', 'recSpl'].forEach(function (id) { $(id).oninput = function () { renderRecs(); clearTimeout(findTimer); findTimer = setTimeout(runFind, 400); }; });
   ['recProj', 'recDrv'].forEach(function (id) { $(id).onchange = renderRecs; });
-  $('recClear').onclick = function () { ['recQ', 'recFrom', 'recTo'].forEach(function (id) { $(id).value = ''; }); $('recProj').value = ''; $('recDrv').value = ''; renderRecs(); };
+  $('recClear').onclick = function () { ['recQ', 'recDwg', 'recSpl', 'recFrom', 'recTo'].forEach(function (id) { $(id).value = ''; }); $('recProj').value = ''; $('recDrv').value = ''; runFind(); renderRecs(); };
   $('recXl').onclick = function () {
     var rows = recFiltered(allPlans().all);
     if (!rows.length) return toast(false, 'No plans to download. Check the filters.');
