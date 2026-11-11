@@ -1,6 +1,6 @@
 /* SIOP Meeting Tracker - extras on top of work-queues.css */
 /* work-queues.css sets display:grid / flex on these, which would beat the hidden attribute */
-.mom-history[hidden], .wq-filters[hidden] { display:none; }
+.mom-history[hidden], .mom-entry[hidden], .wq-filters[hidden] { display:none; }
 
 /* Larger, readable text (2026-11-11): work-queues.css uses 8-11px, too small for this page.
    Scoped to body.mom so the Work Queues page itself is unchanged. */
@@ -31,7 +31,48 @@
 .mom-chip--hold { background:#fdf1d8; color:#8a5b0d; }
 .mom-chip--closed { background:#e6f4ea; color:#245c3d; }
 .mom-chip--cancelled { background:#ececf2; color:#55566e; }
-.mom-remarks { min-width:280px; max-width:560px; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.55; white-space:pre-line; }
+.mom-remarks { min-width:400px; max-width:700px; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.55; white-space:pre-line; }
+.mom-remark-block p { margin:0; }
+.mom-summary { padding-left:10px; border-left:3px solid var(--ember,#a82e30); color:var(--ink,#1b1a2e); font-size:16px; font-weight:700; line-height:1.5; }
+.mom-fullcomment { margin-top:8px; }
+.mom-fullcomment > summary { display:inline-block; color:var(--ice,#4333a5); cursor:pointer; font-size:13px; font-weight:700; }
+.mom-fullcomment > summary:focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-fullcomment .mom-full { margin-top:6px; color:var(--frost-dim,#55566e); font-size:14px; line-height:1.55; }
+/* Structured summary table: what / how many (with bar) / by when or why */
+.mom-items { width:100%; border-collapse:collapse; table-layout:fixed; }
+.mom-items th:nth-child(1) { width:38%; }
+.mom-items th:nth-child(2) { width:30%; }
+.mom .mom-items th, .mom .wq-table-wrap .mom-items th { position:static; padding:4px 8px; background:transparent; border-bottom:1px solid var(--line,#e4e4ed); color:var(--frost-dim,#55566e); font-size:11px; font-weight:800; letter-spacing:.05em; text-align:left; text-transform:uppercase; }
+.mom .mom-items td, .mom .wq-table-wrap .mom-items td { padding:8px 8px; border-top:1px solid #efeff4; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.4; vertical-align:middle; }
+.mom .mom-items tbody tr:first-child td { border-top:0; }
+.mom-items__what { min-width:150px; font-weight:700; }
+.mom-dot { display:inline-block; width:10px; height:10px; margin-right:8px; border-radius:50%; background:#8a8ba3; }
+.mom-dot--cf, .mom-bar__fill--cf { background:#4333a5; }
+.mom-dot--hold, .mom-bar__fill--hold { background:#d98a0b; }
+.mom-dot--done, .mom-bar__fill--done { background:#2f7d4f; }
+.mom-dot--late, .mom-bar__fill--late { background:#a82e30; }
+.mom-items__count { white-space:nowrap; }
+.mom-items__figure { display:inline-block; min-width:84px; }
+.mom-items__figure strong { font:700 19px var(--font-mono,"IBM Plex Mono",monospace); }
+.mom-items__figure small { margin-left:5px; color:var(--frost-dim,#55566e); font-size:12px; }
+.mom-bar { display:inline-block; width:72px; height:9px; vertical-align:middle; border-radius:5px; background:#ececf4; overflow:hidden; }
+.mom-bar__fill { display:block; height:100%; border-radius:5px; }
+.mom-bar__fill--info { background:#8a8ba3; }
+.mom-items__none { color:var(--frost-dim,#55566e); }
+.mom-when { display:inline-block; margin:0 6px 2px 0; padding:2px 9px; border:1px solid #d9d9e4; border-radius:999px; background:#fff; font-size:13px; font-weight:700; white-space:nowrap; }
+.mom-items__note { display:block; color:var(--frost-dim,#55566e); font-size:13px; }
+.mom-bar--stack { display:inline-flex; gap:1px; }
+.mom-group td { background:#fafafd; }
+.mom-group .mom-items__what { font-weight:800; }
+.mom .mom-items .mom-child .mom-items__what { padding-left:30px; font-weight:600; }
+.mom-child .mom-dot { width:8px; height:8px; }
+.mom-when--gap { border-color:#e8c97a; background:#fdf1d8; color:#8a5b0d; }
+.mom-when--over { border-color:#e3aaaa; background:#fbe9e9; color:#7e2224; }
+.mom-pill { display:inline-block; margin:0 6px 4px 0; padding:3px 10px; border-radius:999px; background:#ececf2; color:#55566e; font-size:13px; font-weight:700; }
+.mom-pill--cf { background:#eeecfa; color:#352779; }
+.mom-pill--hold { background:#fdf1d8; color:#8a5b0d; }
+.mom-pill--done { background:#e6f4ea; color:#245c3d; }
+.mom-pill--late { background:#fbe9e9; color:#7e2224; }
 .mom-case { font:700 14px var(--font-mono,"IBM Plex Mono",monospace); color:var(--ink,#1b1a2e); white-space:nowrap; }
 .mom-projects { display:flex; flex-direction:column; padding:6px; max-height:70vh; overflow:auto; }
 .mom-project { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 12px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--ink,#1b1a2e); cursor:pointer; text-align:left; font:700 15px var(--font-body,"Manrope",sans-serif); }
@@ -41,9 +82,9 @@
 .mom-cases { max-height:70vh; overflow:auto; padding:6px 16px; }
 .mom-case-item { border-bottom:1px solid var(--line,#e4e4ed); }
 .mom-case-item:last-child { border-bottom:0; }
-.mom-case-item summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:14px 2px; cursor:pointer; list-style:none; }
-.mom-case-item summary::-webkit-details-marker { display:none; }
-.mom-case-item summary:focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-case-item > summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:14px 2px; cursor:pointer; list-style:none; }
+.mom-case-item > summary::-webkit-details-marker { display:none; }
+.mom-case-item > summary:focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
 .mom-case-meta { color:var(--frost-dim,#55566e); font-size:13px; }
 .mom-case-latest { flex-basis:100%; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.55; white-space:pre-line; }
 .mom-timeline { margin:0 0 14px 6px; padding:0 0 0 16px; border-left:2px solid var(--line,#e4e4ed); list-style:none; }
@@ -51,4 +92,45 @@
 .mom-timeline li::before { content:""; position:absolute; left:-22px; top:6px; width:9px; height:9px; border-radius:50%; background:var(--ice,#4333a5); }
 .mom-timeline time { display:inline-block; margin-right:8px; color:var(--frost-dim,#55566e); font:600 13px var(--font-mono,"IBM Plex Mono",monospace); }
 .mom-timeline p { margin:5px 0 0; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.55; white-space:pre-line; }
+/* Add update (meeting entry) screen */
+.mom-entry { grid-template-columns:minmax(280px,.6fr) minmax(0,1.9fr); }
+.mom-entry-new { padding:12px 14px 0; }
+.mom-entry-body { padding:16px 18px 20px; }
+.mom-notice { margin:0 0 14px; padding:11px 14px; border:1px solid #c9dfd0; border-radius:9px; background:#f0faf3; color:#245c3d; font-size:15px; font-weight:700; }
+.mom-last { margin:0 0 18px; padding:12px 14px; border:1px solid var(--line,#e4e4ed); border-radius:12px; background:#fafafd; }
+.mom-last h3 { margin:0 0 8px; color:var(--frost-dim,#55566e); font-size:13px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+.mom-form { display:flex; flex-direction:column; gap:18px; }
+.mom-form__row { display:flex; flex-wrap:wrap; gap:14px; }
+.mom-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.mom-field > label, .mom-label { color:var(--ink,#1b1a2e); font-size:14px; font-weight:800; }
+.mom-field input:not([type="radio"]), .mom-field select, .mom-field textarea { min-height:42px; padding:8px 11px; border:1px solid #d9d9e4; border-radius:8px; background:#fff; color:var(--ink,#1b1a2e); font:15px var(--font-body,"Manrope",sans-serif); }
+.mom-field textarea { resize:vertical; line-height:1.5; }
+.mom-field :focus-visible, .mom-line :focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-hint, .mom-muted { margin:0; color:var(--frost-dim,#55566e); font-size:13px; }
+.mom-seg { display:flex; flex-wrap:wrap; gap:8px; }
+.mom-seg input { position:absolute; opacity:0; width:1px; height:1px; }
+.mom-seg__opt { padding:9px 18px; border:2px solid #d9d9e4; border-radius:999px; background:#fff; color:var(--frost-dim,#55566e); cursor:pointer; font-size:15px; font-weight:800; }
+.mom-seg input:checked + .mom-seg__opt--open { border-color:#4333a5; background:#eeecfa; color:#302478; }
+.mom-seg input:checked + .mom-seg__opt--hold { border-color:#d98a0b; background:#fdf1d8; color:#8a5b0d; }
+.mom-seg input:checked + .mom-seg__opt--closed { border-color:#2f7d4f; background:#e6f4ea; color:#245c3d; }
+.mom-seg input:checked + .mom-seg__opt--cancelled { border-color:#8a8ba3; background:#ececf2; color:#55566e; }
+.mom-seg input:focus-visible + .mom-seg__opt { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-tools { display:flex; flex-wrap:wrap; gap:8px; }
+.mom-lines { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+.mom-line { display:grid; grid-template-columns:minmax(200px,2fr) 120px minmax(170px,1.5fr) auto; gap:8px; align-items:center; }
+.mom-line--head span { color:var(--frost-dim,#55566e); font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+.mom-line input { min-width:0; min-height:44px; padding:6px 10px; border:1px solid #d9d9e4; border-radius:8px; background:#fff; color:var(--ink,#1b1a2e); font:15px var(--font-body,"Manrope",sans-serif); }
+.mom-line--total { padding:6px; border-radius:10px; background:#fafafd; }
+.mom-line--total input:nth-of-type(1) { font-weight:800; }
+.mom-line--part { margin-left:26px; }
+.mom-line__actions { display:flex; gap:6px; }
+.mom-linecheck { margin:0 0 6px 6px; color:var(--frost-dim,#55566e); font-size:13px; font-weight:700; }
+.mom-linecheck--ok { color:#245c3d; }
+.mom-linecheck--gap { color:#8a5b0d; }
+.mom-linecheck--over { color:#7e2224; }
+.mom-error { margin:0; padding:10px 13px; border:1px solid #e3aaaa; border-radius:9px; background:#fff1f1; color:#7e2224; font-size:14px; font-weight:700; }
+.mom-error[hidden] { display:none; }
+.mom-form__actions { display:flex; gap:10px; }
+.mom .wq-primary, .mom .wq-secondary { min-height:44px; padding:9px 20px; font-size:15px; }
+@media(max-width:1280px) { .mom-line { grid-template-columns:1fr 120px; } .mom-line--head { display:none; } .mom-line--part { margin-left:12px; } }
 @media(max-width:1080px) { .mom-projects { flex-direction:row; flex-wrap:wrap; max-height:none; } }
