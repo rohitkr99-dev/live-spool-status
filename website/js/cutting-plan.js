@@ -49,7 +49,9 @@
   function loadRecs() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
   /* Plans saved to Drive by anybody (Apps Script listPlans) are listed in Accepted plans too, so a plan accepted on another
      computer can still be found. A plan that is also in this browser shows the browser's own row. */
-  var drivePlans = [];
+  var drivePlans = [], drivePlansLoaded = false, isAdmin = false;      // isAdmin: the script says this login may cancel plans (the script checks it again)
+  function inDrive(planNo) { var k = String(planNo).toLowerCase(); return drivePlans.some(function (p) { return String(p.planNo).toLowerCase() === k; }); }
+  function cancelledInDrive(r) { return !r.fromDrive && !!r.driveSavedAt && drivePlansLoaded && !inDrive(r.planNo); }   // saved to Drive once, no longer there
   function stampMs(t) {              // 'DD-MM-YYYY HH:MM:SS' or 'YYYY-MM-DD HH:MM:SS' -> ms (0 when unknown)
     var m = /^(\S+)(?: (\d\d:\d\d:\d\d))?/.exec(String(t || '').trim()), d = m && D.iso(m[1]);
     return d ? Date.parse(d + 'T' + (m[2] || '00:00:00')) : 0;
@@ -66,7 +68,7 @@
   }
   function loadDrivePlans() {
     if (!DRIVE_URL) return;
-    api('listPlans').then(function (r) { drivePlans = r.plans || []; if (!$('paneRec').hidden) renderRecs(); }).catch(function () {});
+    api('listPlans').then(function (r) { drivePlans = r.plans || []; drivePlansLoaded = true; if (!$('paneRec').hidden) renderRecs(); }).catch(function () {});
   }
   function saveRecs(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); return true; } catch (e) { return false; } }
   $('date').value = D.dmy(D.todayIso());
@@ -484,6 +486,7 @@
   if (window.firebase) firebase.auth().onAuthStateChanged(function (u) {
     if (u) api('getAccess').then(function (r) {
       document.body.classList.toggle('cp-viewonly', !r.allowed);
+      isAdmin = !!r.admin; if (!$('paneRec').hidden) renderRecs();
       api('logVisit').catch(function () {});          // one row per person per day, for the admin's Daily summary (home page)
     }, function () {});
   });
@@ -536,6 +539,27 @@
     var l = spoolsOf(r); if (!l.length) return '';
     return '<br><small class="cp-note">Spool: ' + l.slice(0, 4).map(esc).join(', ') + (l.length > 4 ? ' +' + (l.length - 4) + ' more' : '') + '</small>';
   }
+  function cancelBtn(i) { return isAdmin ? '<button class="btn btn--ghost" data-x="' + i + '" type="button" title="Admin only: cancel this plan in Drive">Cancel plan</button> ' : ''; }
+  /* Admin only: cancel a plan saved to Drive. A check first (nothing changes), then a confirmation and a reason; the script does the work and
+     refuses while any piece is cut / bevelled or released. */
+  function cancelPlan(r, btn) {
+    btn.disabled = true;
+    api('cancelPlan', { planNo: r.planNo, dryRun: true }).then(function (x) {
+      if (x.blockers.length) { alert('Plan ' + r.planNo + ' cannot be cancelled yet:\n- ' + x.blockers.join('\n- ')); return; }
+      var msg = 'Cancel plan ' + r.planNo + '?\n\n' + x.pieces + ' pieces on ' + x.pipes + ' pipes, ' + x.spools + ' spools. None is cut or bevelled.\nIts files move to the "Cancelled" folder in Drive (nothing is deleted).' +
+        (x.laterPlans.length ? '\n\nThe same pipes are also in later plan(s): ' + x.laterPlans.join(', ') + '. Their lengths stay as planned.' : '') + '\n\nThis cannot be undone from the website.';
+      if (!confirm(msg)) return;
+      var reason = (prompt('Reason for cancelling plan ' + r.planNo + ' (required):', '') || '').trim();
+      if (!reason) return toast(false, 'Not cancelled: a reason is required.');
+      return api('cancelPlan', { planNo: r.planNo, reason: reason }).then(function (y) {
+        var k = String(r.planNo).toLowerCase();
+        saveRecs(loadRecs().filter(function (z) { return String(z.planNo).toLowerCase() !== k; }));        // this browser's own copy
+        drivePlans = drivePlans.filter(function (p) { return String(p.planNo).toLowerCase() !== k; });
+        toast(true, 'Plan ' + r.planNo + ' cancelled' + (y.moved ? ' (' + y.moved + ' files moved to the Cancelled folder in Drive).' : '.'));
+        renderRecs(); loadDrivePlans();
+      });
+    }).catch(function (e) { toast(false, 'NOT cancelled: ' + e.message); }).then(function () { btn.disabled = false; });
+  }
   function renderRecs() {
     var ap = allPlans(), recs = ap.all, local = ap.local;
     var sel = $('recProj'), cur = sel.value, seen = {}, opts = '<option value="">All projects</option>';
@@ -547,10 +571,10 @@
     $('recTbl').innerHTML = rows.length ? '<tr><th>Project Code</th><th>Plan No.</th><th>Date</th><th class="n">Pipes</th><th class="n">Planned</th><th class="n">MNA</th><th>Drive</th><th></th></tr>' + rows.map(function (r) {
       var i = recs.indexOf(r);
       if (r.fromDrive) return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + spoolNote(r) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.pipes + '</td><td class="n">' + r.pieces + '</td><td class="n">-</td><td><span class="cp-ok">Saved ' + esc(r.createdAt ? D.fromMs(r.createdAt) : '') + '</span> <small class="cp-note">by ' + esc(String(r.savedBy || '').split('@')[0]) + '</small></td><td>' +
-        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> <small class="cp-note">from Drive</small></td></tr>';
+        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + cancelBtn(i) + '<small class="cp-note">from Drive</small></td></tr>';
       var blk = undoBlock(r, local);
-      return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + spoolNote(r) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
-        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
+      return '<tr><td>' + esc(r.project) + '</td><td>' + esc(r.planNo) + spoolNote(r) + '</td><td>' + esc(D.dmy(r.date)) + '</td><td class="n">' + r.bars.length + '</td><td class="n">' + r.summary.placed + '</td><td class="n">' + r.summary.unplaced + '</td><td>' + (cancelledInDrive(r) ? '<span class="cp-warn">Cancelled in Drive</span>' : r.driveSavedAt ? '<span class="cp-ok">Saved ' + esc(D.fromMs(r.driveSavedAt)) + '</span>' : '<span class="cp-note">Not saved</span>') + '</td><td>' +
+        '<button class="btn btn--ghost" data-v="' + i + '" type="button">View</button> ' + (DRIVE_URL && !cancelledInDrive(r) ? '<button class="btn btn--ghost" data-d="' + i + '" type="button">' + (r.driveSavedAt ? 'Save again' : 'Save to Drive') + '</button> ' : '') + (r.driveSavedAt && !cancelledInDrive(r) ? cancelBtn(i) : '') + '<button class="btn btn--ghost" data-u="' + i + '" type="button"' + (blk ? ' disabled title="' + esc(blk) + '"' : '') + '>Undo</button> <small class="cp-warn">' + esc(blk) + '</small></td></tr>';
     }).join('') : '';
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-v]'), function (b) { b.onclick = function () {
         var r = recs[b.dataset.v];
@@ -560,6 +584,7 @@
           .catch(function (e) { toast(false, 'Could not open the plan from Drive: ' + e.message); }).then(function () { b.disabled = false; });
       }; });
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-d]'), function (b) { b.onclick = function () { saveToDrive(recs[b.dataset.d], b); }; });
+    Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-x]'), function (b) { b.onclick = function () { cancelPlan(recs[b.dataset.x], b); }; });
     Array.prototype.forEach.call($('recTbl').querySelectorAll('[data-u]'), function (b) {
       b.onclick = function () {
         var r = recs[b.dataset.u];
