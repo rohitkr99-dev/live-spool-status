@@ -162,6 +162,32 @@
     });
   }
 
+  // Every note of every project (for the Excel export), newest first.
+  function loadAllNotes() {
+    if (state.mode !== "live") {
+      return loadPublished().then(function (p) {
+        var all = [];
+        p.projects.forEach(function (pr) {
+          (p.notes[pr.project_id] || []).forEach(function (n) {
+            all.push({ project: pr.project, date: n.date, remarks: n.remarks || "", items: n.items, dept: n.dept || "", by: "" });
+          });
+        });
+        return all;
+      });
+    }
+    return db.collection(NOTES).get().then(function (snap) {
+      var all = [];
+      snap.forEach(function (doc) {
+        var d = doc.data();
+        all.push({
+          project: d.project, date: d.date, remarks: d.remarks || "", items: d.items, dept: d.dept || "",
+          by: d.createdByEmail || "", ts: d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : 0
+        });
+      });
+      return all;
+    });
+  }
+
   // ---- saving --------------------------------------------------------------
 
   // entry: { project, date, remarks, items }
@@ -226,6 +252,7 @@
     projects: function () { return state.projects; },
     onChange: function (fn) { listeners.push(fn); },
     loadNotes: loadNotes,
+    loadAllNotes: loadAllNotes,
     saveNote: saveNote,
     importHistory: importHistory,
     projectId: projectId,

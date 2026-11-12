@@ -1,6 +1,7 @@
 /* SIOP Meeting Tracker - extras on top of work-queues.css */
 /* work-queues.css sets display:grid / flex on these, which would beat the hidden attribute */
 .mom-history[hidden], .mom-entry[hidden], .wq-filters[hidden] { display:none; }
+.mom .wq-button.mom-export { margin-left:auto; min-height:42px; padding:8px 18px; font-size:15px; }
 
 /* Larger, readable text (2026-11-11): work-queues.css uses 8-11px, too small for this page.
    Scoped to body.mom so the Work Queues page itself is unchanged. */
