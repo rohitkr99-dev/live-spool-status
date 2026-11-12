@@ -14,7 +14,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
-## SIOP Meeting Tracker: ONE RECORD PER PROJECT, no case numbers, no status (2026-11-12) - in a PR (branch `feature/mom-projects`, worktree `lss-worktree-mom`) - WAITING ON THE PERSON
+## SIOP Meeting Tracker: ONE RECORD PER PROJECT, no case numbers, no status (2026-11-12) - MERGED (PR 18, 1394009, Deploy green) - WAITING ON THE PERSON TO PUBLISH THE NEW RULES
+
+**Status:** PR 18 is merged and deployed. Until the person publishes the new `firestore.rules` (paste the whole file from `main`: https://raw.githubusercontent.com/rohitkr99-dev/live-spool-status/main/firestore.rules into Firebase console > Firestore Database > Rules > Publish), the live page cannot read `mom_projects` and shows the published Excel tracker read-only with the reason. After the rules: press "Import the existing history" once on Add update (Claude can do this in Chrome), then check one real save. The list below was written before the merge; steps (1) is done.
 
 The person rejected case numbers (they split one story across numbers and a closed case could not be reopened), then rejected Project + Department topics, and chose **Project only with no Open/Closed status**. Built and approved after a browser preview: tabs "Latest updates" / "History by project" / "Add update", a "+ Add project" button (near-match check + confirmation), notes in new collections `mom_projects` + `mom_notes` (add-only), and a one-time import that merges the 24 old cases into 10 projects. Full description: `CHANGELOG.md` entry "one record per project". **This replaces the numbered version that is currently live (PR 17).**
 
