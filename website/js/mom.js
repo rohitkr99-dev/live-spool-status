@@ -1,6 +1,6 @@
 /* SIOP Meeting Tracker: the latest update on every project, and each project's
-   history. The notes come from mom-data.js (live database, or the published
-   tracker as a read-only fallback). All text from the notes is inserted with
+   history. The notes come from mom-data.js (live database, or a saved history
+   snapshot as a read-only fallback). All text from the notes is inserted with
    textContent, never as HTML. */
 (function () {
   "use strict";
@@ -142,8 +142,8 @@
     var mode = MomData.mode();
     var user = MomData.user();
     if (mode === "live") setStatus("Live notes, shared with everyone signed in" + (user && user.email ? " · you are " + user.email : ""), "ok");
-    else if (mode === "empty") setStatus("The shared database is connected but has no notes yet. Showing the last published tracker (read-only). Import it on the Add update tab.", "");
-    else if (mode === "published") setStatus("Showing the last published tracker (read-only). " + MomData.note(), "error");
+    else if (mode === "empty") setStatus("The shared database is connected but has no notes yet. Showing the saved history (read-only). Import it on the Add update tab.", "");
+    else if (mode === "published") setStatus("Showing the saved history (read-only). " + MomData.note(), "error");
     else setStatus("Loading the latest SIOP meeting notes…", "");
   }
 
@@ -263,6 +263,7 @@
   function refresh() {
     renderStatusLine();
     renderKpis();
+    if (!exportDateTouched && lastMeeting()) $("export-date").value = lastMeeting();
     renderCurrent();
     renderProjects();
     if (selectedProject && !$("view-history").hidden) renderHistory();
@@ -276,101 +277,88 @@
     });
     $("search").addEventListener("input", renderCurrent);
     $("export-excel").addEventListener("click", exportToExcel);
+    $("export-date").addEventListener("change", function () { exportDateTouched = true; });
     MomData.onChange(refresh);
     MomData.connect();
   }
 
-  // ---- export to Excel ------------------------------------------------------
+  // ---- export to Excel: the minutes of a meeting ----------------------------
+  // The layout lives in mom-minutes.js and the .xlsx writer in mom-xlsx.js.
 
-  var XLSX_URL = "vendor/xlsx.core.min.js";
+  var EXPORT_LIBRARIES = ["vendor/jszip.min.js", "js/mom-xlsx.js", "js/mom-minutes.js"];
+  var XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  var exportDateTouched = false;
 
-  // The Excel library is only fetched when someone asks for an export.
-  function loadExcelLibrary() {
-    if (window.XLSX) return Promise.resolve();
+  function loadScript(src) {
     return new Promise(function (resolve, reject) {
       var script = document.createElement("script");
-      script.src = XLSX_URL;
+      script.src = src;
       script.onload = resolve;
-      script.onerror = function () { reject(new Error("The Excel library could not be loaded.")); };
+      script.onerror = function () { reject(new Error("Could not load " + src)); };
       document.head.appendChild(script);
     });
   }
 
-  // A date as an Excel serial number (so it sorts and filters as a date).
-  function dateSerial(iso) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
-    return m ? Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 86400000) : "";
+  // The export code is only fetched when someone asks for an export.
+  function loadExportLibraries() {
+    if (window.JSZip && window.MomXlsx && window.MomMinutes) return Promise.resolve();
+    return EXPORT_LIBRARIES.reduce(function (chain, src) {
+      return chain.then(function () { return loadScript(src); });
+    }, Promise.resolve());
   }
 
-  function itemLine(i) {
-    return (i.indent ? "- " : "") + i.label + (i.count != null ? ": " + i.count + " " + (i.unit || "spools") : "")
-      + (i.when ? " (" + i.when + ")" : "") + (i.note ? " [" + i.note + "]" : "");
+  function todayIso() {
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
   }
 
-  function sheetOf(rows, widths, dateColumns) {
-    var ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = widths.map(function (w) { return { wch: w }; });
-    for (var r = 1; r < rows.length; r++) {
-      dateColumns.forEach(function (c) {
-        var cell = ws[XLSX.utils.encode_cell({ r: r, c: c })];
-        if (cell && cell.t === "n") cell.z = "dd-mmm-yyyy";
-      });
-    }
-    return ws;
-  }
-
-  // Three sheets: the latest update per project, every note, and every table line.
-  function buildWorkbook(notes) {
-    var last = lastMeeting();
-    var latest = [["Project", "Last discussed", "Discussed at last meeting", "Updates", "Latest comment", "Latest table"]];
-    projects().forEach(function (p) {
-      latest.push([p.project, dateSerial(p.last_updated), p.last_updated === last ? "Yes" : "No", p.update_count,
-        p.latest.remarks || "", (p.latest.items || []).map(itemLine).join(" | ")]);
+  // The workbook for one meeting, as a Blob. Rejects with code "no-notes" if nothing was recorded that day.
+  function exportBlob(meeting) {
+    return Promise.all([loadExportLibraries(), MomData.loadAllNotes()]).then(function (r) {
+      var notes = r[1];
+      if (!window.MomMinutes.hasNotesOn(notes, meeting)) {
+        var error = new Error("No notes were recorded on " + window.MomMinutes.shortDate(meeting) + ".");
+        error.code = "no-notes";
+        throw error;
+      }
+      return window.MomXlsx.build(window.JSZip, window.MomMinutes.buildSheets(notes, meeting, todayIso()))
+        .generateAsync({ type: "blob", mimeType: XLSX_TYPE, compression: "DEFLATE" });
     });
-
-    var ordered = notes.slice().sort(function (a, b) {
-      return a.project.localeCompare(b.project) || b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0);
-    });
-    var all = [["Project", "Meeting date", "Department", "Comment", "Table", "Entered by"]];
-    var lines = [["Project", "Meeting date", "Level", "What", "How many", "Unit", "By when", "Note"]];
-    ordered.forEach(function (n) {
-      all.push([n.project, dateSerial(n.date), n.dept || "", n.remarks || "", (n.items || []).map(itemLine).join(" | "), n.by || ""]);
-      (n.items || []).forEach(function (i) {
-        lines.push([n.project, dateSerial(n.date), i.group ? "Total" : i.indent ? "Part" : "Line", i.label,
-          i.count != null ? i.count : "", i.count != null ? (i.unit || "spools") : "", i.when || "", i.note || ""]);
-      });
-    });
-
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, sheetOf(latest, [22, 15, 14, 9, 70, 70], [1]), "Latest updates");
-    XLSX.utils.book_append_sheet(wb, sheetOf(all, [22, 15, 14, 70, 70, 28], [1]), "All updates");
-    XLSX.utils.book_append_sheet(wb, sheetOf(lines, [22, 15, 8, 40, 10, 10, 20, 40], [1]), "Table lines");
-    return wb;
   }
 
-  function exportWorkbook() {
-    return Promise.all([loadExcelLibrary(), MomData.loadAllNotes()]).then(function (r) { return buildWorkbook(r[1]); });
+  function download(blob, name) {
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function () { URL.revokeObjectURL(link.href); }, 10000);
   }
 
   function exportToExcel() {
     var button = $("export-excel");
     var label = button.textContent;
+    var meeting = $("export-date").value || lastMeeting();
     button.disabled = true;
     button.textContent = "Preparing…";
-    exportWorkbook().then(function (wb) {
-      var d = new Date();
-      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-      XLSX.writeFile(wb, "SIOP-meeting-tracker-" + d.toISOString().slice(0, 10) + ".xlsx");
+    var reset = function (text) {
+      button.textContent = text;
+      setTimeout(function () { button.textContent = label; button.disabled = false; }, 4000);
+    };
+    exportBlob(meeting).then(function (blob) {
+      download(blob, "SIOP-MOM-" + meeting + ".xlsx");
       button.textContent = label;
+      button.disabled = false;
     }, function (error) {
-      button.textContent = "Export failed, try again";
-      setTimeout(function () { button.textContent = label; }, 4000);
+      reset(error && error.code === "no-notes" ? "No notes on that date" : "Export failed, try again");
       if (window.console) console.error(error);
-    }).then(function () { button.disabled = false; });
+    });
   }
 
   // What the Add update screen (mom-entry.js) needs from this page.
-  window.MomPage = { exportWorkbook: exportWorkbook, projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
+  window.MomPage = { exportBlob: exportBlob, projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
 
   init();
 })();
