@@ -275,12 +275,102 @@
       b.addEventListener("click", function () { setView(b.getAttribute("data-view")); });
     });
     $("search").addEventListener("input", renderCurrent);
+    $("export-excel").addEventListener("click", exportToExcel);
     MomData.onChange(refresh);
     MomData.connect();
   }
 
+  // ---- export to Excel ------------------------------------------------------
+
+  var XLSX_URL = "vendor/xlsx.core.min.js";
+
+  // The Excel library is only fetched when someone asks for an export.
+  function loadExcelLibrary() {
+    if (window.XLSX) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = XLSX_URL;
+      script.onload = resolve;
+      script.onerror = function () { reject(new Error("The Excel library could not be loaded.")); };
+      document.head.appendChild(script);
+    });
+  }
+
+  // A date as an Excel serial number (so it sorts and filters as a date).
+  function dateSerial(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+    return m ? Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 86400000) : "";
+  }
+
+  function itemLine(i) {
+    return (i.indent ? "- " : "") + i.label + (i.count != null ? ": " + i.count + " " + (i.unit || "spools") : "")
+      + (i.when ? " (" + i.when + ")" : "") + (i.note ? " [" + i.note + "]" : "");
+  }
+
+  function sheetOf(rows, widths, dateColumns) {
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = widths.map(function (w) { return { wch: w }; });
+    for (var r = 1; r < rows.length; r++) {
+      dateColumns.forEach(function (c) {
+        var cell = ws[XLSX.utils.encode_cell({ r: r, c: c })];
+        if (cell && cell.t === "n") cell.z = "dd-mmm-yyyy";
+      });
+    }
+    return ws;
+  }
+
+  // Three sheets: the latest update per project, every note, and every table line.
+  function buildWorkbook(notes) {
+    var last = lastMeeting();
+    var latest = [["Project", "Last discussed", "Discussed at last meeting", "Updates", "Latest comment", "Latest table"]];
+    projects().forEach(function (p) {
+      latest.push([p.project, dateSerial(p.last_updated), p.last_updated === last ? "Yes" : "No", p.update_count,
+        p.latest.remarks || "", (p.latest.items || []).map(itemLine).join(" | ")]);
+    });
+
+    var ordered = notes.slice().sort(function (a, b) {
+      return a.project.localeCompare(b.project) || b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0);
+    });
+    var all = [["Project", "Meeting date", "Department", "Comment", "Table", "Entered by"]];
+    var lines = [["Project", "Meeting date", "Level", "What", "How many", "Unit", "By when", "Note"]];
+    ordered.forEach(function (n) {
+      all.push([n.project, dateSerial(n.date), n.dept || "", n.remarks || "", (n.items || []).map(itemLine).join(" | "), n.by || ""]);
+      (n.items || []).forEach(function (i) {
+        lines.push([n.project, dateSerial(n.date), i.group ? "Total" : i.indent ? "Part" : "Line", i.label,
+          i.count != null ? i.count : "", i.count != null ? (i.unit || "spools") : "", i.when || "", i.note || ""]);
+      });
+    });
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sheetOf(latest, [22, 15, 14, 9, 70, 70], [1]), "Latest updates");
+    XLSX.utils.book_append_sheet(wb, sheetOf(all, [22, 15, 14, 70, 70, 28], [1]), "All updates");
+    XLSX.utils.book_append_sheet(wb, sheetOf(lines, [22, 15, 8, 40, 10, 10, 20, 40], [1]), "Table lines");
+    return wb;
+  }
+
+  function exportWorkbook() {
+    return Promise.all([loadExcelLibrary(), MomData.loadAllNotes()]).then(function (r) { return buildWorkbook(r[1]); });
+  }
+
+  function exportToExcel() {
+    var button = $("export-excel");
+    var label = button.textContent;
+    button.disabled = true;
+    button.textContent = "Preparing…";
+    exportWorkbook().then(function (wb) {
+      var d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      XLSX.writeFile(wb, "SIOP-meeting-tracker-" + d.toISOString().slice(0, 10) + ".xlsx");
+      button.textContent = label;
+    }, function (error) {
+      button.textContent = "Export failed, try again";
+      setTimeout(function () { button.textContent = label; }, 4000);
+      if (window.console) console.error(error);
+    }).then(function () { button.disabled = false; });
+  }
+
   // What the Add update screen (mom-entry.js) needs from this page.
-  window.MomPage = { projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
+  window.MomPage = { exportWorkbook: exportWorkbook, projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
 
   init();
 })();
