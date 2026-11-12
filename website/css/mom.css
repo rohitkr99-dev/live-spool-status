@@ -27,8 +27,11 @@
 .mom .wq-empty, .mom .wq-muted { font-size:15px; }
 .mom .wq-footer { font-size:13px; }
 
+.mom .wq-table-wrap td.mom-project-cell { color:var(--ink,#1b1a2e); font-size:15px; font-weight:800; }
 .mom-chip { display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:800; white-space:nowrap; background:#eeecfa; color:#352779; }
 .mom-chip--hold { background:#fdf1d8; color:#8a5b0d; }
+.mom-chip--tag { margin:6px 6px 0 0; background:#ececf2; color:#55566e; }
+.mom .wq-table-wrap td .mom-chip--hold { display:block; width:fit-content; margin-top:6px; white-space:normal; }
 .mom-chip--closed { background:#e6f4ea; color:#245c3d; }
 .mom-chip--cancelled { background:#ececf2; color:#55566e; }
 .mom-remarks { min-width:400px; max-width:700px; color:var(--ink,#1b1a2e); font-size:15px; line-height:1.55; white-space:pre-line; }
@@ -106,6 +109,7 @@
 .mom-field input:not([type="radio"]), .mom-field select, .mom-field textarea { min-height:42px; padding:8px 11px; border:1px solid #d9d9e4; border-radius:8px; background:#fff; color:var(--ink,#1b1a2e); font:15px var(--font-body,"Manrope",sans-serif); }
 .mom-field textarea { resize:vertical; line-height:1.5; }
 .mom-field :focus-visible, .mom-line :focus-visible { outline:3px solid #4333a5; outline-offset:2px; }
+.mom-lead { margin:0; color:var(--ink,#1b1a2e); font-size:16px; line-height:1.55; }
 .mom-hint, .mom-muted { margin:0; color:var(--frost-dim,#55566e); font-size:13px; }
 .mom-seg { display:flex; flex-wrap:wrap; gap:8px; }
 .mom-seg input { position:absolute; opacity:0; width:1px; height:1px; }

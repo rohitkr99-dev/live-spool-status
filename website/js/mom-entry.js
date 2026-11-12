@@ -1,23 +1,23 @@
 /* SIOP Meeting Tracker: "Add update" screen for use during the meeting.
-   Kept deliberately small: pick a case, set the status, type a total and how
-   it splits, add another line if needed, optionally add a comment.
+   Kept deliberately small: pick the project, type a total and how it splits,
+   add another line if needed, optionally add a comment. No status, no numbers.
    Saving goes through mom-data.js to the shared database.
    All text is inserted with textContent, never as HTML. */
 (function () {
   "use strict";
 
-  var PROJECTS = ["NE Vicksburg", "NE Franklin Farms", "VOGT Bison", "NE Gregory", "VOGT Tallgrass 1", "Siemens",
+  // The projects of the SIOP tracker's Lists sheet. A project that is not here
+  // yet (or has no notes) is added by adding its name to this list.
+  var PROJECT_NAMES = ["NE Vicksburg", "NE Franklin Farms", "VOGT Bison", "NE Gregory", "VOGT Tallgrass 1", "Siemens",
     "NE Viola", "VOGT Tallgrass 2", "General", "VOGT Urquhart", "NE Taweelah"];
-  var DEPTS = ["Production", "Painting", "QC", "PDI", "Projects", "Stores", "Procurement", "Design", "Dispatch"];
-  var STATUSES = ["Open", "Hold", "Closed", "Cancelled"];
-  var CLOSED = { closed: true, cancelled: true };
 
   var page = null;
-  var selected = null;   // a case id, "NEW", or null
-  var status = "Open";
+  var selected = "";   // a project name, or ""
   var lines = [];
   var notice = "";
   var busy = false;
+  var pending = [];    // projects added on this screen that have no note saved yet
+  var adding = null;   // the "Add project" steps, or null
 
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { return page.el(tag, cls, text); };
@@ -28,58 +28,46 @@
     return d.toISOString().slice(0, 10);
   }
 
-  function openCases() {
-    return page.cases().filter(page.isOpen).sort(function (a, b) {
-      return a.project.localeCompare(b.project) || a.case_id.localeCompare(b.case_id);
-    });
+  // Every project, with its record if it has notes yet.
+  function projectRows() {
+    var byName = {};
+    page.projects().forEach(function (p) { byName[p.project] = p; });
+    var names = PROJECT_NAMES.concat(pending);
+    Object.keys(byName).forEach(function (n) { if (names.indexOf(n) === -1) names.push(n); });
+    return names.sort().map(function (n) { return { name: n, record: byName[n] || null }; });
   }
 
-  function findCase(id) {
-    return page.cases().filter(function (c) { return c.case_id === id; })[0];
+  function findRecord(name) {
+    return page.projects().filter(function (p) { return p.project === name; })[0] || null;
   }
 
-  // ---- left: open cases ----------------------------------------------------
+  // ---- left: the projects --------------------------------------------------
 
   function renderList() {
     var box = $("entry-cases");
     box.textContent = "";
-    var open = openCases();
-    open.forEach(function (c) {
+    var rows = projectRows();
+    rows.forEach(function (row) {
       var button = el("button", "mom-project");
       button.type = "button";
-      button.setAttribute("aria-pressed", selected === c.case_id ? "true" : "false");
-      var left = el("span");
-      left.appendChild(el("strong", "", c.case_id));
-      left.appendChild(document.createTextNode(" · " + c.project));
-      button.appendChild(left);
-      button.appendChild(page.chip(c.status));
-      button.addEventListener("click", function () { selectCase(c.case_id); });
+      button.setAttribute("aria-pressed", selected === row.name ? "true" : "false");
+      button.appendChild(el("span", "", row.name));
+      button.appendChild(el("small", "", row.record ? "last " + page.fmtDate(row.record.last_updated) : "no updates yet"));
+      button.addEventListener("click", function () { selectProject(row.name); });
       box.appendChild(button);
     });
-    $("entry-count").textContent = open.length;
+    $("entry-count").textContent = rows.length;
   }
 
-  function selectCase(id) {
-    selected = id;
-    var found = id === "NEW" ? null : findCase(id);
-    status = found ? found.status : "Open";
+  function selectProject(name) {
+    adding = null;
+    selected = name;
     lines = newBlock();
     notice = "";
     render();
   }
 
   // ---- form pieces ---------------------------------------------------------
-
-  function selectEl(options, value) {
-    var s = el("select");
-    options.forEach(function (o) {
-      var option = el("option", "", Array.isArray(o) ? o[1] : o);
-      option.value = Array.isArray(o) ? o[0] : o;
-      s.appendChild(option);
-    });
-    if (value) s.value = value;
-    return s;
-  }
 
   function field(labelText, input, id) {
     var wrap = el("div", "mom-field");
@@ -243,7 +231,7 @@
         button.disabled = true;
         button.textContent = "Importing…";
         window.MomData.importHistory().then(function (r) {
-          notice = "Imported " + r.cases + " cases and " + r.updates + " updates.";
+          notice = "Imported " + r.projects + " projects and " + r.notes + " updates.";
         }, function (error) {
           notice = "The import failed: " + (error && error.message ? error.message : error);
           button.disabled = false;
@@ -277,19 +265,22 @@
     if (!selected) {
       title.textContent = "Add an update";
       sub.textContent = "";
-      body.appendChild(el("p", "wq-muted", "Pick an open case on the left, or start a new case."));
+      if (adding) { title.textContent = "Add a project"; renderAddProject(body); }
+      else body.appendChild(el("p", "wq-muted", "Pick a project on the left."));
       return;
     }
 
-    var found = selected === "NEW" ? null : findCase(selected);
-    title.textContent = found ? found.case_id + " · " + found.project : "New case";
-    sub.textContent = found ? found.dept : "";
+    var record = findRecord(selected);
+    title.textContent = selected;
+    sub.textContent = "";
 
-    if (found) {
+    if (record) {
       var last = el("section", "mom-last");
-      last.appendChild(el("h3", "", "Last update · " + page.fmtDate(found.latest.date)));
-      last.appendChild(page.remarkBlock(found.latest));
+      last.appendChild(el("h3", "", "Last update · " + page.fmtDate(record.latest.date)));
+      last.appendChild(page.remarkBlock(record.latest));
       body.appendChild(last);
+    } else {
+      body.appendChild(el("p", "mom-hint", "No updates for this project yet. This will be the first."));
     }
 
     var form = el("form", "mom-form");
@@ -301,36 +292,11 @@
     form.addEventListener("submit", function (e) { e.preventDefault(); save(); });
 
     var top = el("div", "mom-form__row");
-    if (!found) {
-      top.appendChild(field("Project", selectEl([["", "Choose…"]].concat(PROJECTS.map(function (p) { return [p, p]; }))), "mom-project"));
-      top.appendChild(field("Department", selectEl([["", "Choose…"]].concat(DEPTS.map(function (d) { return [d, d]; }))), "mom-dept"));
-    }
     var date = el("input");
     date.type = "date";
     date.value = today();
     top.appendChild(field("Meeting date", date, "mom-date"));
     form.appendChild(top);
-
-    var statusBox = el("div", "mom-field");
-    statusBox.appendChild(el("span", "mom-label", "Status after this meeting"));
-    var seg = el("div", "mom-seg");
-    seg.setAttribute("role", "radiogroup");
-    seg.setAttribute("aria-label", "Status after this meeting");
-    STATUSES.forEach(function (s) {
-      var radio = el("input");
-      radio.type = "radio";
-      radio.name = "mom-status";
-      radio.id = "mom-status-" + s;
-      radio.value = s;
-      radio.checked = s === status;
-      radio.addEventListener("change", function () { status = s; });
-      var label = el("label", "mom-seg__opt mom-seg__opt--" + s.toLowerCase(), s);
-      label.htmlFor = radio.id;
-      seg.appendChild(radio);
-      seg.appendChild(label);
-    });
-    statusBox.appendChild(seg);
-    form.appendChild(statusBox);
 
     var linesBox = el("div", "mom-field");
     linesBox.appendChild(el("span", "mom-label", "Total and how it splits"));
@@ -364,13 +330,106 @@
     saveButton.id = "mom-save";
     var cancel = el("button", "wq-secondary", "Cancel");
     cancel.type = "button";
-    cancel.addEventListener("click", function () { selected = null; notice = ""; render(); });
+    cancel.addEventListener("click", function () { selected = ""; notice = ""; render(); });
     actions.appendChild(saveButton);
     actions.appendChild(cancel);
     form.appendChild(actions);
 
     body.appendChild(form);
     renderLines();
+  }
+
+  // ---- adding a project ----------------------------------------------------
+
+  // Capitals, spaces and punctuation do not make a different project.
+  function norm(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+
+  function distance(a, b) {
+    var d = [];
+    var i, j;
+    for (i = 0; i <= a.length; i++) d[i] = [i];
+    for (j = 1; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) {
+      for (j = 1; j <= b.length; j++) {
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+    }
+    return d[a.length][b.length];
+  }
+
+  // The same project (exact) or one it looks like (near: contained in it, or a typo away).
+  function similarTo(name) {
+    var n = norm(name);
+    var exact = null;
+    var near = null;
+    projectRows().forEach(function (row) {
+      var m = norm(row.name);
+      if (m === n) exact = row.name;
+      else if (!near && n.length >= 3 && (m.indexOf(n) !== -1 || n.indexOf(m) !== -1 || (n.length >= 4 && distance(n, m) <= 2))) near = row.name;
+    });
+    return { exact: exact, near: near };
+  }
+
+  function startAdding() {
+    selected = "";
+    notice = "";
+    adding = { step: "name", name: "", message: "", found: "" };
+    render();
+  }
+
+  function renderAddProject(body) {
+    var form = el("form", "mom-form");
+    form.noValidate = true;
+    var actions = el("div", "mom-form__actions");
+    function button(text, cls, handler, submit) {
+      var b = el("button", cls, text);
+      b.type = submit ? "submit" : "button";
+      if (handler) b.addEventListener("click", handler);
+      actions.appendChild(b);
+    }
+    function go(step) { adding.step = step; renderForm(); }
+
+    if (adding.step === "name") {
+      var input = el("input");
+      input.type = "text";
+      input.maxLength = 80;
+      input.value = adding.name;
+      input.placeholder = "The exact project name, e.g. NE Franklin Farms 2";
+      form.appendChild(field("Project name", input, "mom-newname"));
+      setTimeout(function () { input.focus(); }, 0);
+      if (adding.message) form.appendChild(el("p", "mom-error", adding.message));
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = input.value.replace(/\s+/g, " ").trim();
+        adding.name = name;
+        adding.message = "";
+        if (name.length < 2) { adding.message = "Type the project name."; return renderForm(); }
+        var s = similarTo(name);
+        adding.found = s.exact || s.near || "";
+        go(s.exact ? "exists" : s.near ? "near" : "confirm");
+      });
+      button("Continue", "wq-primary", null, true);
+      button("Cancel", "wq-secondary", function () { adding = null; render(); });
+    } else if (adding.step === "exists") {
+      form.appendChild(el("p", "mom-lead", "“" + adding.found + "” is already in the list. Capitals and spacing don't make a different project."));
+      button("Open " + adding.found, "wq-primary", function () { selectProject(adding.found); });
+      button("Back", "wq-secondary", function () { go("name"); });
+    } else if (adding.step === "near") {
+      form.appendChild(el("p", "mom-lead", "Did you mean “" + adding.found + "”? It looks very like “" + adding.name + "”."));
+      button("Yes, use " + adding.found, "wq-primary", function () { selectProject(adding.found); });
+      button("No, it's a new project", "wq-secondary", function () { go("confirm"); });
+      button("Back", "wq-secondary", function () { go("name"); });
+    } else {
+      form.appendChild(el("p", "mom-lead", "This creates a new project called “" + adding.name + "”. Projects can't be deleted from the page, so check the spelling. It joins the list for everyone when you save its first update."));
+      button("Create project", "wq-primary", function () {
+        var name = adding.name;
+        pending.push(name);
+        selectProject(name);
+      });
+      button("Back", "wq-secondary", function () { go("name"); });
+    }
+    form.appendChild(actions);
+    body.appendChild(form);
   }
 
   // ---- saving --------------------------------------------------------------
@@ -386,24 +445,16 @@
     var items = toItems();
     var date = $("mom-date").value;
     if (!date) return fail("Pick the meeting date.");
-    if (selected === "NEW" && (!$("mom-project").value || !$("mom-dept").value)) return fail("Choose the project and department for the new case.");
     if (!comment && !items.length) return fail("Type a total or a comment first.");
 
-    var entry = { date: date, status: status, remarks: comment, items: items };
-    if (selected === "NEW") {
-      entry.project = $("mom-project").value;
-      entry.dept = $("mom-dept").value;
-    } else {
-      entry.case_id = selected;
-    }
-
+    var project = selected;
     busy = true;
     var saveButton = $("mom-save");
     saveButton.disabled = true;
     saveButton.textContent = "Saving…";
-    window.MomData.saveUpdate(entry).then(function (caseId) {
-      notice = caseId + " saved. It is now " + status + (CLOSED[status.toLowerCase()] ? " and has left the Current actions list." : ".");
-      selected = null;
+    window.MomData.saveNote({ project: project, date: date, remarks: comment, items: items }).then(function () {
+      notice = project + ": update saved for " + page.fmtDate(date) + ".";
+      selected = "";
       lines = [];
       busy = false;
       render();
@@ -436,9 +487,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    $("new-case").addEventListener("click", function () {
+    $("add-project").addEventListener("click", function () {
       page = window.MomPage;
-      if (window.MomData.mode() === "live") selectCase("NEW");
+      if (window.MomData.mode() === "live") startAdding();
     });
   });
 
