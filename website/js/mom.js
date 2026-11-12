@@ -1,11 +1,9 @@
-/* SIOP Meeting Tracker: current actions + history by project.
-   The notes come from mom-data.js (live database, or the published tracker as a
-   read-only fallback). All text from the notes is inserted with textContent,
-   never as HTML. */
+/* SIOP Meeting Tracker: the latest update on every project, and each project's
+   history. The notes come from mom-data.js (live database, or the published
+   tracker as a read-only fallback). All text from the notes is inserted with
+   textContent, never as HTML. */
 (function () {
   "use strict";
-
-  var CLOSED = { closed: true, cancelled: true };
 
   var selectedProject = "";
   var loadToken = 0;
@@ -22,22 +20,6 @@
     if (!iso) return "—";
     var d = new Date(iso + "T00:00:00");
     return isNaN(d) ? iso : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  }
-
-  function daysSince(iso) {
-    if (!iso) return null;
-    var d = new Date(iso + "T00:00:00");
-    if (isNaN(d)) return null;
-    var today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.max(0, Math.round((today - d) / 86400000));
-  }
-
-  function isOpen(c) { return !CLOSED[String(c.status).toLowerCase()]; }
-
-  function chip(status) {
-    var key = String(status || "Open").toLowerCase();
-    return el("span", "mom-chip" + (key === "hold" || key === "closed" || key === "cancelled" ? " mom-chip--" + key : ""), status || "Open");
   }
 
   function setStatus(text, state) {
@@ -124,25 +106,11 @@
     return table;
   }
 
-  // One-line version of the same facts for a collapsed case.
-  function headline(update) {
-    var box = el("span", "mom-case-latest");
-    var counted = (update.items || []).filter(function (i) { return i.count != null; }).slice(0, 4);
-    if (!counted.length) {
-      box.textContent = update.remarks;
-      return box;
-    }
-    counted.forEach(function (i) {
-      box.appendChild(el("span", "mom-pill mom-pill--" + (i.kind || "info"), i.count + " " + (i.unit || "spools") + " · " + i.label));
-    });
-    return box;
-  }
-
   // Structured table (or the plain comment) on top, the full comment one click
-  // below it. An update with neither just shows its full comment.
-  function remarkBlock(update) {
-    var items = update.items;
-    var full = update.remarks;
+  // below it. A note with neither just shows its full comment.
+  function remarkBlock(note) {
+    var items = note.items;
+    var full = note.remarks;
     var box = el("div", "mom-remark-block");
     if (items && items.length) {
       box.appendChild(itemsTable(items));
@@ -160,18 +128,14 @@
 
   // ---- data ----------------------------------------------------------------
 
-  function cases() { return MomData.cases(); }
-
-  function projectsList() {
-    var byName = {};
-    cases().forEach(function (c) { (byName[c.project] = byName[c.project] || []).push(c); });
-    return Object.keys(byName).sort().map(function (name) {
-      var list = byName[name].slice().sort(function (a, b) {
-        return b.last_updated.localeCompare(a.last_updated) || b.case_id.localeCompare(a.case_id);
-      });
-      var open = list.filter(isOpen).length;
-      return { project: name, open: open, closed: list.length - open, cases: list };
+  function projects() {
+    return MomData.projects().slice().sort(function (a, b) {
+      return b.last_updated.localeCompare(a.last_updated) || a.project.localeCompare(b.project);
     });
+  }
+
+  function lastMeeting() {
+    return MomData.projects().reduce(function (m, p) { return p.last_updated > m ? p.last_updated : m; }, "");
   }
 
   function renderStatusLine() {
@@ -184,145 +148,103 @@
   }
 
   function renderKpis() {
-    var all = cases();
-    var open = all.filter(isOpen);
-    var last = all.reduce(function (m, c) { return c.last_updated > m ? c.last_updated : m; }, "");
-    var raised = all.filter(function (c) { return c.first_raised === last; }).length;
-    var closed = all.filter(function (c) { return c.last_updated === last && !isOpen(c); }).length;
-    $("kpi-open").textContent = open.length;
-    $("kpi-hold").textContent = open.filter(function (c) { return String(c.status).toLowerCase() === "hold"; }).length;
-    $("kpi-new").textContent = raised;
-    $("kpi-closed").textContent = closed;
+    var all = MomData.projects();
+    var last = lastMeeting();
+    var discussed = all.filter(function (p) { return p.last_updated === last; }).length;
+    $("kpi-open").textContent = all.length;
+    $("kpi-hold").textContent = discussed;
+    $("kpi-new").textContent = all.length - discussed;
+    $("kpi-closed").textContent = all.reduce(function (n, p) { return n + p.update_count; }, 0);
     $("data-updated").textContent = last ? "Last meeting " + fmtDate(last) : "—";
-  }
-
-  function fillDeptFilter() {
-    var select = $("dept-filter");
-    var keep = select.value;
-    var depts = {};
-    cases().filter(isOpen).forEach(function (c) { if (c.dept) depts[c.dept] = true; });
-    select.textContent = "";
-    var all = el("option", "", "All departments");
-    all.value = "";
-    select.appendChild(all);
-    Object.keys(depts).sort().forEach(function (d) {
-      var option = el("option", "", d);
-      option.value = d;
-      select.appendChild(option);
-    });
-    select.value = depts[keep] ? keep : "";
   }
 
   function renderCurrent() {
     var query = $("search").value.trim().toLowerCase();
-    var dept = $("dept-filter").value;
     var body = $("current-body");
     body.textContent = "";
-    var open = cases().filter(isOpen).sort(function (a, b) { return a.case_id.localeCompare(b.case_id); });
-    var shown = open.filter(function (c) {
-      if (dept && c.dept !== dept) return false;
-      var labels = (c.latest.items || []).map(function (i) { return i.label; }).join(" ");
-      return !query || [c.case_id, c.project, c.dept, c.latest.remarks, labels].join(" ").toLowerCase().indexOf(query) !== -1;
+    var last = lastMeeting();
+    var all = projects();
+    var shown = all.filter(function (p) {
+      var labels = (p.latest.items || []).map(function (i) { return i.label; }).join(" ");
+      return !query || [p.project, p.latest.remarks, labels].join(" ").toLowerCase().indexOf(query) !== -1;
     });
-    shown.forEach(function (c) {
+    shown.forEach(function (p) {
       var tr = el("tr");
-      tr.appendChild(el("td", "mom-case", c.case_id));
-      tr.appendChild(el("td", "", c.project));
-      tr.appendChild(el("td", "", c.dept));
-      var status = el("td"); status.appendChild(chip(c.status)); tr.appendChild(status);
+      tr.appendChild(el("td", "mom-project-cell", p.project));
       var remarks = el("td", "mom-remarks");
-      remarks.appendChild(remarkBlock(c.latest));
+      remarks.appendChild(remarkBlock(p.latest));
+      if (p.latest.dept) remarks.appendChild(el("span", "mom-chip mom-chip--tag", p.latest.dept));
       tr.appendChild(remarks);
-      tr.appendChild(el("td", "", fmtDate(c.last_updated)));
-      var age = daysSince(c.first_raised);
-      tr.appendChild(el("td", "wq-age", age == null ? "—" : age + " d"));
+      var when = el("td");
+      when.appendChild(document.createTextNode(fmtDate(p.last_updated)));
+      if (p.last_updated < last) when.appendChild(el("span", "mom-chip mom-chip--hold", "Not discussed at the last meeting"));
+      tr.appendChild(when);
+      tr.appendChild(el("td", "wq-age", String(p.update_count)));
       var action = el("td");
       var button = el("button", "wq-button", "History");
       button.type = "button";
-      button.addEventListener("click", function () { selectProject(c.project, c.case_id); setView("history"); });
+      button.addEventListener("click", function () { selectProject(p.project); setView("history"); });
       action.appendChild(button);
       tr.appendChild(action);
       body.appendChild(tr);
     });
-    $("current-count").textContent = shown.length + " of " + open.length;
+    $("current-count").textContent = shown.length + " of " + all.length;
     $("current-empty").hidden = shown.length > 0;
   }
 
   function renderProjects() {
     var list = $("project-list");
     list.textContent = "";
-    var projects = projectsList();
-    projects.forEach(function (p) {
+    var all = MomData.projects().slice().sort(function (a, b) { return a.project.localeCompare(b.project); });
+    all.forEach(function (p) {
       var button = el("button", "mom-project");
       button.type = "button";
       button.setAttribute("aria-pressed", p.project === selectedProject ? "true" : "false");
       button.appendChild(el("span", "", p.project));
-      button.appendChild(el("small", "", p.open + " open · " + p.closed + " closed"));
+      button.appendChild(el("small", "", p.update_count + (p.update_count === 1 ? " update" : " updates")));
       button.addEventListener("click", function () { selectProject(p.project); });
       list.appendChild(button);
     });
-    $("projects-count").textContent = projects.length;
+    $("projects-count").textContent = all.length;
   }
 
-  function fillTimeline(timeline, updates) {
-    timeline.textContent = "";
-    updates.slice().reverse().forEach(function (u) {
-      var li = el("li");
-      li.appendChild(el("time", "", fmtDate(u.date)));
-      li.appendChild(chip(u.status));
-      li.appendChild(remarkBlock(u));
-      timeline.appendChild(li);
-    });
-  }
-
-  function renderCases(openCaseId) {
+  function renderHistory() {
     var list = $("case-list");
-    var wasOpen = {};
-    list.querySelectorAll(".mom-case-item[open]").forEach(function (d) { wasOpen[d.getAttribute("data-id")] = true; });
     list.textContent = "";
-    var project = projectsList().filter(function (p) { return p.project === selectedProject; })[0];
+    var project = MomData.projects().filter(function (p) { return p.project === selectedProject; })[0];
     if (!project) {
       $("history-title").textContent = "Select a project";
       $("history-count").textContent = "—";
-      list.appendChild(el("p", "wq-muted", "Pick a project to see every case raised for it, newest first."));
+      list.appendChild(el("p", "wq-muted", "Pick a project to see what was said about it at every meeting, newest first."));
       return;
     }
     $("history-title").textContent = project.project;
-    $("history-count").textContent = project.cases.length + (project.cases.length === 1 ? " case" : " cases");
-
-    var timelines = {};
-    project.cases.forEach(function (c) {
-      var item = el("details", "mom-case-item");
-      item.setAttribute("data-id", c.case_id);
-      if ((c.case_id && c.case_id === openCaseId) || wasOpen[c.case_id]) item.open = true;
-      var summary = el("summary");
-      summary.appendChild(el("span", "mom-case", c.case_id || "No case ID"));
-      summary.appendChild(chip(c.status));
-      if (c.dept) summary.appendChild(el("span", "mom-case-meta", c.dept));
-      summary.appendChild(el("span", "mom-case-meta", "Raised " + fmtDate(c.first_raised) + " · last update " + fmtDate(c.last_updated) + " · " + c.update_count + (c.update_count === 1 ? " update" : " updates")));
-      summary.appendChild(headline(c.latest));
-      item.appendChild(summary);
-      var timeline = el("ol", "mom-timeline");
-      timeline.appendChild(el("li", "", "Loading…"));
-      timelines[c.case_id] = timeline;
-      item.appendChild(timeline);
-      list.appendChild(item);
-    });
+    $("history-count").textContent = project.update_count + (project.update_count === 1 ? " update" : " updates") + " since " + fmtDate(project.first_date);
+    var timeline = el("ol", "mom-timeline");
+    timeline.appendChild(el("li", "", "Loading…"));
+    list.appendChild(timeline);
 
     var token = ++loadToken;
-    MomData.loadUpdates(project.project).then(function (byCase) {
+    MomData.loadNotes(project.project).then(function (notes) {
       if (token !== loadToken) return;
-      project.cases.forEach(function (c) { fillTimeline(timelines[c.case_id], byCase[c.case_id] || [c.latest]); });
+      timeline.textContent = "";
+      notes.slice().reverse().forEach(function (n) {
+        var li = el("li");
+        li.appendChild(el("time", "", fmtDate(n.date)));
+        if (n.dept) li.appendChild(el("span", "mom-chip mom-chip--tag", n.dept));
+        li.appendChild(remarkBlock(n));
+        timeline.appendChild(li);
+      });
     }, function () {
       if (token !== loadToken) return;
-      project.cases.forEach(function (c) { timelines[c.case_id].textContent = "The history could not be loaded."; });
+      timeline.textContent = "The history could not be loaded.";
     });
   }
 
-  function selectProject(name, openCaseId) {
+  function selectProject(name) {
     selectedProject = name;
     renderProjects();
-    renderCases(openCaseId);
+    renderHistory();
   }
 
   function setView(view) {
@@ -334,17 +256,16 @@
     $("current-filters").hidden = view !== "current";
     $("view-entry").hidden = view !== "entry";
     if (view === "entry" && window.MomEntry) window.MomEntry.open();
-    if (view === "history" && !selectedProject && projectsList().length) selectProject(projectsList()[0].project);
+    if (view === "history" && !selectedProject && MomData.projects().length) selectProject(projects()[0].project);
   }
 
   // Called on the first load and every time the shared notes change.
   function refresh() {
     renderStatusLine();
     renderKpis();
-    fillDeptFilter();
     renderCurrent();
     renderProjects();
-    if (selectedProject && !$("view-history").hidden) renderCases();
+    if (selectedProject && !$("view-history").hidden) renderHistory();
     if (window.MomEntry) window.MomEntry.onData();
   }
 
@@ -354,13 +275,12 @@
       b.addEventListener("click", function () { setView(b.getAttribute("data-view")); });
     });
     $("search").addEventListener("input", renderCurrent);
-    $("dept-filter").addEventListener("change", renderCurrent);
     MomData.onChange(refresh);
     MomData.connect();
   }
 
   // What the Add update screen (mom-entry.js) needs from this page.
-  window.MomPage = { cases: cases, isOpen: isOpen, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate, chip: chip };
+  window.MomPage = { projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
 
   init();
 })();

@@ -15,43 +15,40 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
-    // SIOP Meeting Tracker (2026-11-12). Any signed-in user can read and add notes;
-    // nobody can edit or delete an update, so the history stays whole.
-    function momStatusOk(s) { return s in ['Open', 'Hold', 'Closed', 'Cancelled']; }
-    function momCaseOk(d) {
-      return d.keys().hasOnly(['caseId', 'project', 'dept', 'status', 'firstRaised', 'lastUpdated', 'updateCount', 'latest'])
-        && d.keys().hasAll(['caseId', 'project', 'status', 'firstRaised', 'lastUpdated', 'latest'])
-        && d.caseId is string
+    // SIOP Meeting Tracker (2026-11-12). One running record per project (mom_projects)
+    // and one note per meeting (mom_notes). Any signed-in user can read and add notes;
+    // nobody can edit or delete a note, so the history stays whole.
+    function momProjectOk(d) {
+      return d.keys().hasOnly(['projectId', 'project', 'firstDate', 'lastUpdated', 'updateCount', 'latest'])
+        && d.keys().hasAll(['projectId', 'project', 'firstDate', 'lastUpdated', 'latest'])
+        && d.projectId is string
         && d.project is string && d.project.size() > 0 && d.project.size() <= 80
-        && (!('dept' in d) || (d.dept is string && d.dept.size() <= 40))
-        && momStatusOk(d.status)
-        && d.firstRaised is string && d.lastUpdated is string
+        && d.firstDate is string && d.lastUpdated is string
         && d.latest is map && d.latest.remarks is string && d.latest.remarks.size() <= 2000;
     }
 
-    match /mom_cases/{caseId} {
+    match /mom_projects/{projectId} {
       allow read: if signedIn();
       allow create: if signedIn()
-        && momCaseOk(request.resource.data)
-        && request.resource.data.caseId == caseId;
+        && momProjectOk(request.resource.data)
+        && request.resource.data.projectId == projectId;
       allow update: if signedIn()
-        && momCaseOk(request.resource.data)
-        && request.resource.data.caseId == resource.data.caseId
+        && momProjectOk(request.resource.data)
+        && request.resource.data.projectId == resource.data.projectId
         && request.resource.data.project == resource.data.project
-        && request.resource.data.firstRaised == resource.data.firstRaised;
+        && request.resource.data.firstDate == resource.data.firstDate;
       allow delete: if false;
     }
 
-    match /mom_updates/{updateId} {
+    match /mom_notes/{noteId} {
       allow read: if signedIn();
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['caseId', 'project', 'dept', 'date', 'status', 'remarks', 'items', 'createdByUid', 'createdByEmail', 'createdAt'])
-        && request.resource.data.keys().hasAll(['caseId', 'project', 'date', 'status', 'remarks', 'createdByUid', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['projectId', 'project', 'dept', 'date', 'remarks', 'items', 'createdByUid', 'createdByEmail', 'createdAt'])
+        && request.resource.data.keys().hasAll(['projectId', 'project', 'date', 'remarks', 'createdByUid', 'createdAt'])
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.createdAt == request.time
-        && momStatusOk(request.resource.data.status)
-        && request.resource.data.caseId is string
-        && request.resource.data.project is string && request.resource.data.project.size() <= 80
+        && request.resource.data.projectId is string
+        && request.resource.data.project is string && request.resource.data.project.size() > 0 && request.resource.data.project.size() <= 80
         && request.resource.data.date is string
         && request.resource.data.remarks is string && request.resource.data.remarks.size() <= 2000
         && (!('items' in request.resource.data) || (request.resource.data.items is list && request.resource.data.items.size() <= 40));
