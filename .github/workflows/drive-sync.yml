@@ -79,14 +79,6 @@ jobs:
         continue-on-error: true
         run: python3 painting_main.py
 
-      - name: Run the SIOP Meeting Tracker pipeline
-        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
-        # continue-on-error: additive (see src/mom/) - a missing or
-        # renamed MoM Tracker workbook must never block the commit
-        # step below. It lives in the Drive Projects folder.
-        continue-on-error: true
-        run: python3 mom_main.py
-
       - name: Commit and push updated dashboard data
         if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' || github.event.schedule == '30 3 * * *'
         env:

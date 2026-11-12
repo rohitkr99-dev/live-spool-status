@@ -7,9 +7,9 @@
    LIVE      Firestore (collections mom_projects + mom_notes), shared by everyone
              who is signed in; changes appear on every open page at once.
    EMPTY     Firestore is connected but nothing has been imported yet. The page
-             shows the last published tracker, read-only, and offers the import.
+             shows the saved history snapshot, read-only, and offers the import.
    PUBLISHED Firestore is not usable (not created, rules not published, offline).
-             The page shows the last published tracker, read-only.
+             The page shows the saved history snapshot, read-only.
 
    One record per project (mom_projects, with its latest note copied in so the
    list needs no extra reads) and one record per note (mom_notes).
@@ -17,7 +17,8 @@
 (function () {
   "use strict";
 
-  var PUBLISHED_URL = "data/c7d41e98ab.json";
+  // A frozen copy of the history imported from the old Excel tracker: the one-time import
+  // source, and the read-only fallback when the database cannot be used.
   var IMPORT_URL = "data/mom-import.json";
   var PROJECTS = "mom_projects";
   var NOTES = "mom_notes";
@@ -44,8 +45,8 @@
     };
   }
 
-  // The published tracker (data/c7d41e98ab.json) and the import file share one
-  // format, built around numbered cases with a status and a department. Here
+  // The import file (data/mom-import.json) is built around numbered cases with a
+  // status and a department, as the old Excel tracker was. Here
   // every case of a project is merged into the project's one record: the status
   // is dropped, the department stays as a small label on each note.
   function fromBundle(bundle) {
@@ -100,7 +101,7 @@
 
   function loadPublished() {
     if (published) return Promise.resolve(published);
-    return fetch(PUBLISHED_URL, { cache: "no-cache" })
+    return fetch(IMPORT_URL, { cache: "no-cache" })
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then(function (bundle) { published = fromBundle(bundle); return published; });
   }
