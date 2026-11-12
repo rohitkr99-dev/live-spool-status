@@ -14,7 +14,7 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 
 **Also watch for the shared origin/main moving mid-session** from the automated "Sync from Google Drive" workflow (runs hourly, commits data file updates) — if a push is rejected, fetch, confirm the new commit(s) only touch `website/data/*.json`, then `git reset --soft origin/main` + re-stage only your own intended files (never the data JSONs) + re-commit, rather than a full rebase.
 
-## SIOP Meeting Tracker: Export to Excel (2026-11-12) - in a PR (branch `feature/mom-export`)
+## SIOP Meeting Tracker: Export to Excel (2026-11-12) - LIVE (PR 19 merged, af4c62c, Deploy green); the person has not yet pressed it - ask them to open the downloaded file
 
 Asked by the person (the free Firebase plan has no automatic backup): an "Export to Excel" button on `website/mom.html`, visible on every tab, downloading a 3-sheet workbook (Latest updates / All updates / Table lines). Uses the bundled `vendor/xlsx.core.min.js` (loaded on click) and `MomData.loadAllNotes()`. Tested only against the in-memory stand-in; the real download was not triggered. Not merged: wait for the person's go-ahead. After merge, ask them to press it once and open the file. No database or rules change is needed for this feature. The person also asked what "the old Excel pipeline" means: it is `mom_main.py` + `src/mom/` + the "Run the SIOP Meeting Tracker pipeline" step in `drive-sync.yml`, which still re-reads `SIOP MoM Tracker.xlsx` from Drive and republishes `website/data/c7d41e98ab.json`; now only the read-only fallback. Removing it is optional and not done; ask before removing.
 
