@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-16T08:29:36.259371",
+  "generated_at": "2026-11-16T11:53:17.954293",
   "master_spools": [
     {
       "Composite Key": "TJ/25-26/172|1-V17556-PIND-0005|1-LHP-X169-01",
@@ -656085,7 +656085,7 @@
     }
   ],
   "dashboard_summary": {
-    "generated_at": "2026-11-16T08:29:27.416759",
+    "generated_at": "2026-11-16T11:53:12.786894",
     "kpis": {
       "total_spools": 16002,
       "planned": 12967,
@@ -656093,6 +656093,15 @@
       "completed": 9886,
       "average_total_age_days": 30.8,
       "oldest_spool": {
+        "composite_key": "TJ/25-26/188|1-V17565-PIND-0084|V17565-PIND-0084-03",
+        "project_code": "TJ/25-26/188",
+        "project_name": "VOGT Bison",
+        "drawing_no": "1-V17565-PIND-0084",
+        "spool_no": "V17565-PIND-0084-03",
+        "total_age": 101,
+        "current_stage": "Packing"
+      },
+      "oldest_spool_overall": {
         "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
         "project_code": "TJ/25-26/172",
         "project_name": "VOGT FP",
@@ -656192,6 +656201,15 @@
             "total_age": 53,
             "current_stage": "Under Painting"
           },
+          "oldest_spool_overall": {
+            "composite_key": "TE/25-26/196|20EKT30BR002|20EKT30BR002_SP3",
+            "project_code": "TE/25-26/196",
+            "project_name": "Siemens",
+            "drawing_no": "20EKT30BR002",
+            "spool_no": "20EKT30BR002_SP3",
+            "total_age": 53,
+            "current_stage": "Under Painting"
+          },
           "planning_variance_days": 2.3
         }
       },
@@ -656227,6 +656245,15 @@
             "total_age": 11,
             "current_stage": "Partial Fit-Up/Welding"
           },
+          "oldest_spool_overall": {
+            "composite_key": "TE/25-26/198|V38000-PIND-0019|V38000-PIND-0019-01",
+            "project_code": "TE/25-26/198",
+            "project_name": "VOGT Urquhart",
+            "drawing_no": "V38000-PIND-0019",
+            "spool_no": "V38000-PIND-0019-01",
+            "total_age": 11,
+            "current_stage": "Partial Fit-Up/Welding"
+          },
           "planning_variance_days": -1.7
         }
       },
@@ -656253,7 +656280,8 @@
           "unplanned": 0,
           "completed": 39,
           "average_total_age_days": 8.0,
-          "oldest_spool": {
+          "oldest_spool": null,
+          "oldest_spool_overall": {
             "composite_key": "TJ/22-23/097|403202-28-HM-0014-01|28-HM-0014-01-01",
             "project_code": "TJ/22-23/097",
             "project_name": "Tilenga",
@@ -656287,7 +656315,8 @@
           "unplanned": 0,
           "completed": 1138,
           "average_total_age_days": 54.0,
-          "oldest_spool": {
+          "oldest_spool": null,
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/172|1-V17556-PIND-0314|V17556-PIND-0314-01",
             "project_code": "TJ/25-26/172",
             "project_name": "VOGT FP",
@@ -656323,6 +656352,15 @@
           "completed": 1024,
           "average_total_age_days": 33.5,
           "oldest_spool": {
+            "composite_key": "TJ/25-26/182|241537_1A_LP002_087R|241537-1A-LP-087-08R",
+            "project_code": "TJ/25-26/182",
+            "project_name": "NE Vicksburg",
+            "drawing_no": "241537_1A_LP002_087R",
+            "spool_no": "241537-1A-LP-087-08R",
+            "total_age": 5,
+            "current_stage": "Fit-Up"
+          },
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/182|241535_1A_LP001_039|241535-1A-LP-039-01",
             "project_code": "TJ/25-26/182",
             "project_name": "NE Vicksburg",
@@ -656358,6 +656396,15 @@
           "completed": 2082,
           "average_total_age_days": 35.6,
           "oldest_spool": {
+            "composite_key": "TJ/25-26/183|251137_1A_LP002_086R|251137-1A-LP-086-10R",
+            "project_code": "TJ/25-26/183",
+            "project_name": "NE Franklin Farms",
+            "drawing_no": "251137_1A_LP002_086R",
+            "spool_no": "251137-1A-LP-086-10R",
+            "total_age": 5,
+            "current_stage": "Partial Fit-Up/Welding"
+          },
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/183|251135_1A_HP001_002|251135-1A-HP-002-08",
             "project_code": "TJ/25-26/183",
             "project_name": "NE Franklin Farms",
@@ -656392,7 +656439,8 @@
           "unplanned": 0,
           "completed": 1314,
           "average_total_age_days": 38.2,
-          "oldest_spool": {
+          "oldest_spool": null,
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/184|V17551-PIND-0114|V17551-PIND-0114-10",
             "project_code": "TJ/25-26/184",
             "project_name": "VOGT CB",
@@ -656429,13 +656477,22 @@
           "completed": 2723,
           "average_total_age_days": 28.7,
           "oldest_spool": {
-            "composite_key": "TJ/25-26/188|1-PLUG&JACKSCREW-188|JACKSCREW &PLUG",
+            "composite_key": "TJ/25-26/188|1-V17565-PIND-0084|V17565-PIND-0084-03",
             "project_code": "TJ/25-26/188",
             "project_name": "VOGT Bison",
-            "drawing_no": "1-PLUG&JACKSCREW-188",
-            "spool_no": "JACKSCREW &PLUG",
-            "total_age": 103,
-            "current_stage": "Fit-Up"
+            "drawing_no": "1-V17565-PIND-0084",
+            "spool_no": "V17565-PIND-0084-03",
+            "total_age": 101,
+            "current_stage": "Packing"
+          },
+          "oldest_spool_overall": {
+            "composite_key": "TJ/25-26/188|1-V17565-PIND-0084|V17565-PIND-0084-03",
+            "project_code": "TJ/25-26/188",
+            "project_name": "VOGT Bison",
+            "drawing_no": "1-V17565-PIND-0084",
+            "spool_no": "V17565-PIND-0084-03",
+            "total_age": 101,
+            "current_stage": "Packing"
           },
           "planning_variance_days": 0.5
         }
@@ -656463,7 +656520,8 @@
           "unplanned": 0,
           "completed": 721,
           "average_total_age_days": 38.7,
-          "oldest_spool": {
+          "oldest_spool": null,
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/189|251235_00_HP001_001|251235-00-HP-001-05",
             "project_code": "TJ/25-26/189",
             "project_name": "NE Gregory",
@@ -656507,6 +656565,15 @@
             "total_age": 76,
             "current_stage": "Under Painting"
           },
+          "oldest_spool_overall": {
+            "composite_key": "TJ/25-26/206|V17566-PIND-0103|V17566-PIND-0103-04",
+            "project_code": "TJ/25-26/206",
+            "project_name": "VOGT Tallgrass 1",
+            "drawing_no": "V17566-PIND-0103",
+            "spool_no": "V17566-PIND-0103-04",
+            "total_age": 76,
+            "current_stage": "Under Painting"
+          },
           "planning_variance_days": 1.5
         }
       },
@@ -656534,6 +656601,15 @@
           "completed": 177,
           "average_total_age_days": 9.7,
           "oldest_spool": {
+            "composite_key": "TJ/25-26/207|251335_1A_IP001_001|251335-1A-IP-001-01",
+            "project_code": "TJ/25-26/207",
+            "project_name": "NE Viola",
+            "drawing_no": "251335_1A_IP001_001",
+            "spool_no": "251335-1A-IP-001-01",
+            "total_age": 43,
+            "current_stage": "Packing"
+          },
+          "oldest_spool_overall": {
             "composite_key": "TJ/25-26/207|251335_1A_IP001_001|251335-1A-IP-001-01",
             "project_code": "TJ/25-26/207",
             "project_name": "NE Viola",
@@ -656577,6 +656653,15 @@
             "total_age": 50,
             "current_stage": "Fit-Up"
           },
+          "oldest_spool_overall": {
+            "composite_key": "TJ/25-26/209|V17573-PIND-0104|V17573-PIND-0104-05",
+            "project_code": "TJ/25-26/209",
+            "project_name": "VOGT Tallgrass 2",
+            "drawing_no": "V17573-PIND-0104",
+            "spool_no": "V17573-PIND-0104-05",
+            "total_age": 50,
+            "current_stage": "Fit-Up"
+          },
           "planning_variance_days": 2.7
         }
       },
@@ -656604,6 +656689,15 @@
           "completed": 0,
           "average_total_age_days": 2.3,
           "oldest_spool": {
+            "composite_key": "TJ/26-27/212|254435_11_HP001_110|254435-11-HP110-02",
+            "project_code": "TJ/26-27/212",
+            "project_name": "NE Taweelah",
+            "drawing_no": "254435_11_HP001_110",
+            "spool_no": "254435-11-HP110-02",
+            "total_age": 10,
+            "current_stage": "Under Painting"
+          },
+          "oldest_spool_overall": {
             "composite_key": "TJ/26-27/212|254435_11_HP001_110|254435-11-HP110-02",
             "project_code": "TJ/26-27/212",
             "project_name": "NE Taweelah",
