@@ -27,16 +27,31 @@ const SpoolKPI = {
 
     this.setNumber("kpi-avg-age", kpis.average_total_age_days, (v) => this.formatNumber(v));
 
-    if (kpis.oldest_spool) {
-      this.setNumber("kpi-oldest-age", kpis.oldest_spool.total_age, (v) => `${this.formatNumber(v)}d`);
-      const projectLabel = kpis.oldest_spool.project_name
-        ? `${kpis.oldest_spool.project_name} (${kpis.oldest_spool.project_code})`
-        : kpis.oldest_spool.project_code;
-      document.getElementById("kpi-oldest-key").textContent =
-        `${projectLabel} · ${kpis.oldest_spool.spool_no}`;
+    // The big figure is the oldest spool still in the process (work started, not
+    // packed yet). The small line is the oldest spool counting packed ones too.
+    const spoolLine = (spool) => {
+      const projectLabel = spool.project_name
+        ? `${spool.project_name} (${spool.project_code})`
+        : spool.project_code;
+      return `${projectLabel} · ${spool.spool_no} · ${spool.current_stage}`;
+    };
+    const inProcess = kpis.oldest_spool;
+    const overall = kpis.oldest_spool_overall;
+
+    if (inProcess) {
+      this.setNumber("kpi-oldest-age", inProcess.total_age, (v) => `${this.formatNumber(v)}d`);
+      document.getElementById("kpi-oldest-key").textContent = spoolLine(inProcess);
     } else {
       document.getElementById("kpi-oldest-age").textContent = "—";
-      document.getElementById("kpi-oldest-key").textContent = "no data";
+      document.getElementById("kpi-oldest-key").textContent = overall ? "no spool in process" : "no data";
+    }
+
+    const allWrap = document.getElementById("kpi-oldest-all-wrap");
+    const sameSpool = overall && inProcess && overall.composite_key === inProcess.composite_key;
+    allWrap.hidden = !overall || sameSpool;
+    if (overall && !sameSpool) {
+      document.getElementById("kpi-oldest-all").textContent =
+        `${this.formatNumber(overall.total_age)}d · ${spoolLine(overall)}`;
     }
 
     const varianceEl = document.getElementById("kpi-variance");

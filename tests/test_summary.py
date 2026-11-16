@@ -193,7 +193,11 @@ def test_dashboard_summary_kpis(engine, sample_dataframe):
     assert summary["kpis"]["total_spools"] == 3
     assert summary["kpis"]["planned"] == 2
     assert summary["kpis"]["completed"] == 1
-    assert summary["kpis"]["oldest_spool"]["spool_no"] == "S002"
+    # The card spool is the oldest one still in process (S001, not packed);
+    # the packed S002 is the "including packed" figure, and the P002 spool
+    # (no work done at all) is never either.
+    assert summary["kpis"]["oldest_spool"]["spool_no"] == "S001"
+    assert summary["kpis"]["oldest_spool_overall"]["spool_no"] == "S002"
     assert summary["current_stage_distribution"]["Fit-Up"] == 1
     assert summary["current_stage_distribution"]["Dispatch"] == 1
 
@@ -240,7 +244,8 @@ def test_dashboard_summary_excludes_not_released_from_average_age(engine, sample
         summary["kpis"]["average_total_age_days"]
         == baseline["kpis"]["average_total_age_days"]
     )
-    assert summary["kpis"]["oldest_spool"]["spool_no"] == "S002"
+    assert summary["kpis"]["oldest_spool"]["spool_no"] == "S001"
+    assert summary["kpis"]["oldest_spool_overall"]["spool_no"] == "S002"
 
 
 # -----------------------------------------------------
