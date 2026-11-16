@@ -231,6 +231,19 @@ html[data-skin="studio"] .kpi-card__sub {
   opacity: 0.62;
   overflow-wrap: anywhere;
 }
+/* The small second figure on a card (Oldest Spool: oldest incl. packed spools). */
+html[data-skin="studio"] .kpi-card__note {
+  order: 3;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: inherit;
+  opacity: 0.7;
+}
 html[data-skin="studio"] .kpi-card--complete .kpi-card__value,
 html[data-skin="studio"] .kpi-card--warning .kpi-card__value { color: inherit; }
 

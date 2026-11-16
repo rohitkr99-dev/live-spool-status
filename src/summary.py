@@ -87,6 +87,7 @@ from constants import (
     FIRST_ACTIVITY_DATE,
     GROUP,
     LAST_ACTIVITY_DATE,
+    LINE_HISTORY_STAGE,
     MATERIAL_HOLD_STATUS,
     NEXT_STAGE,
     PACKING,
@@ -506,18 +507,42 @@ class SummaryEngine:
             round(ageable[TOTAL_AGE].mean(), 1) if len(ageable) else 0
         )
 
-        oldest_spool = None
-        if len(ageable):
-            oldest_row = ageable.loc[ageable[TOTAL_AGE].idxmax()]
-            oldest_spool = {
-                "composite_key": to_json_safe(oldest_row.get(COMPOSITE_KEY)),
-                "project_code": to_json_safe(oldest_row.get(PROJECT_CODE)),
-                "project_name": to_json_safe(oldest_row.get(PROJECT_NAME)),
-                "drawing_no": to_json_safe(oldest_row.get(DRAWING_NO)),
-                "spool_no": to_json_safe(oldest_row.get(SPOOL_NO)),
-                "total_age": to_json_safe(oldest_row.get(TOTAL_AGE)),
-                "current_stage": to_json_safe(oldest_row.get(CURRENT_STAGE)),
+        # Oldest Spool (2026-11-16): the oldest spool still IN THE PROCESS -
+        # some work has started on it and it is not packed yet. A packed
+        # spool's Total Age is just the time it took, so counting it kept the
+        # card on a finished job; and loose items that exist only on paper
+        # (e.g. "JACKSCREW &PLUG": released, but no fit-up / welding / painting
+        # date at all) have no real work to age. The oldest spool INCLUDING
+        # packed ones is kept as a second figure for the same card
+        # ("oldest_spool_overall"); it never counts no-work spools either.
+        def has_value(series: pd.Series) -> pd.Series:
+            return series.map(lambda value: not is_empty(value)).astype(bool)
+
+        started = pd.Series(False, index=ageable.index, dtype=bool)
+        for field in self.stage_date_fields:
+            if field in ageable.columns:
+                started = started | has_value(ageable[field])
+        if LINE_HISTORY_STAGE in ageable.columns:
+            started = started | has_value(ageable[LINE_HISTORY_STAGE])
+        packed = ageable[COMPLETED_FLAG].fillna(False).astype(bool)
+
+        def oldest_of(rows: pd.DataFrame) -> dict | None:
+            ages = rows[TOTAL_AGE].dropna()
+            if ages.empty:
+                return None
+            row = rows.loc[ages.idxmax()]
+            return {
+                "composite_key": to_json_safe(row.get(COMPOSITE_KEY)),
+                "project_code": to_json_safe(row.get(PROJECT_CODE)),
+                "project_name": to_json_safe(row.get(PROJECT_NAME)),
+                "drawing_no": to_json_safe(row.get(DRAWING_NO)),
+                "spool_no": to_json_safe(row.get(SPOOL_NO)),
+                "total_age": to_json_safe(row.get(TOTAL_AGE)),
+                "current_stage": to_json_safe(row.get(CURRENT_STAGE)),
             }
+
+        oldest_spool = oldest_of(ageable[started & ~packed])
+        oldest_spool_overall = oldest_of(ageable[started | packed])
 
         variances = dataframe[PLANNING_VARIANCE].dropna()
         planning_variance_days = (
@@ -531,6 +556,7 @@ class SummaryEngine:
             "completed": completed,
             "average_total_age_days": average_total_age,
             "oldest_spool": oldest_spool,
+            "oldest_spool_overall": oldest_spool_overall,
             "planning_variance_days": planning_variance_days,
         }
 
