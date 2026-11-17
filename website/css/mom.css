@@ -142,3 +142,4 @@
 .mom .wq-primary, .mom .wq-secondary { min-height:44px; padding:9px 20px; font-size:15px; }
 @media(max-width:1280px) { .mom-line { grid-template-columns:1fr 120px; } .mom-line--head { display:none; } .mom-line--part { margin-left:12px; } }
 @media(max-width:1080px) { .mom-projects { flex-direction:row; flex-wrap:wrap; max-height:none; } }
+.mom .mom-timeline .mom-edit, .mom .mom-last .mom-edit { margin-top:8px; }
