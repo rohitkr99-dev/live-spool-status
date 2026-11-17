@@ -28,6 +28,10 @@
   var published = null;   // { projects: [...], notes: { projectId: [...] } }
   var listeners = [];
 
+  // The people who may correct saved updates. firestore.rules holds the same list and is what
+  // actually enforces it; this copy only decides who sees the Edit button.
+  var EDITORS = ["rohitk.choubey@deepiping.co.th"];
+
   function emit() { listeners.forEach(function (fn) { fn(); }); }
 
   // ---- names ---------------------------------------------------------------
@@ -155,6 +159,7 @@
       snap.forEach(function (doc) {
         var d = doc.data();
         list.push({
+          id: doc.id, edited: d.editedByEmail || "",
           date: d.date, remarks: d.remarks || "", items: d.items, dept: d.dept || "",
           by: d.createdByEmail || "", ts: d.createdAt && d.createdAt.toMillis ? d.createdAt.toMillis() : 0
         });
@@ -246,6 +251,48 @@
       });
   }
 
+  function canEdit() {
+    var user = window.firebase && firebase.auth && firebase.auth().currentUser;
+    return state.mode === "live" && !!user && !!user.email && EDITORS.indexOf(user.email.toLowerCase()) !== -1;
+  }
+
+  // Correct a saved note (editors only): its date, comment and table can change, never its
+  // project. The project's "latest" copy is rebuilt, because the note may be the newest one.
+  // entry: { id, project, date, remarks, items }
+  function editNote(entry) {
+    if (!canEdit()) return Promise.reject(new Error("Only the editors can change saved updates."));
+    var user = firebase.auth().currentUser;
+    var FieldValue = firebase.firestore.FieldValue;
+    var hasItems = !!(entry.items && entry.items.length);
+    return loadNotes(entry.project).then(function (notes) {
+      if (!notes.some(function (n) { return n.id === entry.id; })) throw new Error("That update no longer exists.");
+      var all = notes.map(function (n) {
+        return n.id !== entry.id ? n : {
+          id: n.id, date: entry.date, remarks: entry.remarks || "", items: hasItems ? entry.items : undefined, dept: n.dept, ts: n.ts
+        };
+      });
+      var newest = all.slice().sort(function (a, b) { return b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0); })[0];
+      var id = projectId(entry.project);
+      var projectRef = db.collection(PROJECTS).doc(id);
+      var noteRef = db.collection(NOTES).doc(entry.id);
+      return db.runTransaction(function (tx) {
+        return tx.get(projectRef).then(function (snap) {
+          if (!snap.exists) throw new Error("That project no longer exists.");
+          var before = snap.data();
+          tx.update(noteRef, {
+            date: entry.date, remarks: entry.remarks || "",
+            items: hasItems ? entry.items : FieldValue.delete(),
+            editedAt: FieldValue.serverTimestamp(), editedByEmail: user.email || ""
+          });
+          tx.set(projectRef, {
+            projectId: id, project: entry.project, firstDate: before.firstDate,
+            lastUpdated: newest.date, updateCount: before.updateCount || all.length, latest: latestOf(newest)
+          });
+        });
+      });
+    });
+  }
+
   window.MomData = {
     connect: connect,
     mode: function () { return state.mode; },
@@ -255,6 +302,8 @@
     loadNotes: loadNotes,
     loadAllNotes: loadAllNotes,
     saveNote: saveNote,
+    canEdit: canEdit,
+    editNote: editNote,
     importHistory: importHistory,
     projectId: projectId,
     user: function () { return window.firebase && firebase.auth && firebase.auth().currentUser; }

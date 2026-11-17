@@ -17,7 +17,7 @@ service cloud.firestore {
 
     // SIOP Meeting Tracker (2026-11-12). One running record per project (mom_projects)
     // and one note per meeting (mom_notes). Any signed-in user can read and add notes;
-    // nobody can edit or delete a note, so the history stays whole.
+    // only the named editors can correct one (never delete), so the history stays whole.
     function momProjectOk(d) {
       return d.keys().hasOnly(['projectId', 'project', 'firstDate', 'lastUpdated', 'updateCount', 'latest'])
         && d.keys().hasAll(['projectId', 'project', 'firstDate', 'lastUpdated', 'latest'])
@@ -25,6 +25,11 @@ service cloud.firestore {
         && d.project is string && d.project.size() > 0 && d.project.size() <= 80
         && d.firstDate is string && d.lastUpdated is string
         && d.latest is map && d.latest.remarks is string && d.latest.remarks.size() <= 2000;
+    }
+
+    // The people who may correct a saved note. Keep in step with EDITORS in website/js/mom-data.js.
+    function momEditor() {
+      return signedIn() && request.auth.token.email.lower() in ['rohitk.choubey@deepiping.co.th'];
     }
 
     match /mom_projects/{projectId} {
@@ -52,7 +57,15 @@ service cloud.firestore {
         && request.resource.data.date is string
         && request.resource.data.remarks is string && request.resource.data.remarks.size() <= 2000
         && (!('items' in request.resource.data) || (request.resource.data.items is list && request.resource.data.items.size() <= 40));
-      allow update, delete: if false;
+      // Only an editor may correct a note, and only its date, comment and table.
+      allow update: if momEditor()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'remarks', 'items', 'editedAt', 'editedByEmail'])
+        && request.resource.data.editedByEmail == request.auth.token.email
+        && request.resource.data.editedAt == request.time
+        && request.resource.data.date is string
+        && request.resource.data.remarks is string && request.resource.data.remarks.size() <= 2000
+        && (!('items' in request.resource.data) || (request.resource.data.items is list && request.resource.data.items.size() <= 40));
+      allow delete: if false;
     }
 
     match /work_handoffs/{handoffId} {

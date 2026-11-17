@@ -208,6 +208,13 @@
     $("projects-count").textContent = all.length;
   }
 
+  function editButton(projectName, note) {
+    var button = el("button", "wq-button mom-edit", "Edit");
+    button.type = "button";
+    button.addEventListener("click", function () { if (window.MomEntry) window.MomEntry.startEdit(projectName, note); });
+    return button;
+  }
+
   function renderHistory() {
     var list = $("case-list");
     list.textContent = "";
@@ -232,7 +239,9 @@
         var li = el("li");
         li.appendChild(el("time", "", fmtDate(n.date)));
         if (n.dept) li.appendChild(el("span", "mom-chip mom-chip--tag", n.dept));
+        if (n.edited) li.appendChild(el("span", "mom-chip mom-chip--tag", "edited"));
         li.appendChild(remarkBlock(n));
+        if (n.id && MomData.canEdit()) li.appendChild(editButton(project.project, n));
         timeline.appendChild(li);
       });
     }, function () {
@@ -358,7 +367,7 @@
   }
 
   // What the Add update screen (mom-entry.js) needs from this page.
-  window.MomPage = { exportBlob: exportBlob, projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
+  window.MomPage = { setView: setView, selectProject: selectProject, exportBlob: exportBlob, projects: function () { return MomData.projects(); }, remarkBlock: remarkBlock, el: el, fmtDate: fmtDate };
 
   init();
 })();

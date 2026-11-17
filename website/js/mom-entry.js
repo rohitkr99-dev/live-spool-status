@@ -16,6 +16,7 @@
   var lines = [];
   var notice = "";
   var busy = false;
+  var editing = null;  // { id, project, date, remarks } while an editor corrects a saved update
   var pending = [];    // projects added on this screen that have no note saved yet
   var adding = null;   // the "Add project" steps, or null
 
@@ -61,6 +62,7 @@
 
   function selectProject(name) {
     adding = null;
+    editing = null;
     selected = name;
     lines = newBlock();
     notice = "";
@@ -82,6 +84,20 @@
   // One "line" = a total and the parts it splits into. Leave a part empty to skip it.
   function newLine(type) { return { type: type, label: "", count: "", when: "" }; }
   function newBlock() { return [newLine("total"), newLine("part"), newLine("part")]; }
+
+  // The saved table back as form lines. The form has no box for the unit, the colour or the
+  // split between "when" and "why", so those are kept and put back unless the line is changed.
+  function linesFromItems(items) {
+    var out = (items || []).map(function (i) {
+      var box = [i.when, i.note].filter(Boolean).join(" · ");
+      return {
+        type: i.group ? "total" : i.indent ? "part" : "total",
+        label: i.label || "", count: i.count == null ? "" : String(i.count), when: box,
+        orig: { label: i.label || "", kind: i.kind, unit: i.unit, when: i.when, note: i.note, boxText: box }
+      };
+    });
+    return out.length ? out : newBlock();
+  }
 
   function lineRow(ln, i) {
     var frag = document.createDocumentFragment();
@@ -173,6 +189,7 @@
   }
 
   function removeLine(i) {
+    if (!lines[i]) return;
     var count = 1;
     if (lines[i].type === "total") while (lines[i + count] && lines[i + count].type === "part") count++;
     lines.splice(i, count);
@@ -210,6 +227,17 @@
       if (ln.count !== "") item.count = Number(ln.count);
       // A short text is a date / week chip; anything longer is a reason.
       if (when) item[when.length <= 22 ? "when" : "note"] = when;
+      var orig = ln.orig;
+      if (orig && orig.label === label) {
+        if (orig.unit) item.unit = orig.unit;
+        if (!isGroup && orig.kind) item.kind = orig.kind;
+        if (when === orig.boxText) {
+          delete item.when;
+          delete item.note;
+          if (orig.when) item.when = orig.when;
+          if (orig.note) item.note = orig.note;
+        }
+      }
       if (isGroup) item.group = true;
       else if (ln.type === "part") item.indent = true;
       items.push(item);
@@ -271,13 +299,21 @@
     }
 
     var record = findRecord(selected);
-    title.textContent = selected;
+    title.textContent = editing ? "Edit update · " + selected : selected;
     sub.textContent = "";
 
-    if (record) {
+    if (editing) {
+      body.appendChild(el("p", "mom-lead", "You are correcting the update of " + page.fmtDate(editing.date) + ". What you save here replaces it."));
+    } else if (record) {
       var last = el("section", "mom-last");
       last.appendChild(el("h3", "", "Last update · " + page.fmtDate(record.latest.date)));
       last.appendChild(page.remarkBlock(record.latest));
+      if (window.MomData.canEdit()) {
+        var editLast = el("button", "wq-button mom-edit", "Edit last update");
+        editLast.type = "button";
+        editLast.addEventListener("click", function () { editLatest(selected); });
+        last.appendChild(editLast);
+      }
       body.appendChild(last);
     } else {
       body.appendChild(el("p", "mom-hint", "No updates for this project yet. This will be the first."));
@@ -294,7 +330,7 @@
     var top = el("div", "mom-form__row");
     var date = el("input");
     date.type = "date";
-    date.value = today();
+    date.value = editing ? editing.date : today();
     top.appendChild(field("Meeting date", date, "mom-date"));
     form.appendChild(top);
 
@@ -316,6 +352,7 @@
     comment.rows = 3;
     comment.maxLength = 2000;
     comment.placeholder = "Optional: the full comment, as you would write it in the tracker";
+    if (editing) comment.value = editing.remarks;
     form.appendChild(field("Comment (optional)", comment, "mom-comment"));
 
     var error = el("p", "mom-error");
@@ -325,12 +362,16 @@
     form.appendChild(error);
 
     var actions = el("div", "mom-form__actions");
-    var saveButton = el("button", "wq-primary", "Save update");
+    var saveLabel = editing ? "Save changes" : "Save update";
+    var saveButton = el("button", "wq-primary", saveLabel);
     saveButton.type = "submit";
     saveButton.id = "mom-save";
     var cancel = el("button", "wq-secondary", "Cancel");
     cancel.type = "button";
-    cancel.addEventListener("click", function () { selected = ""; notice = ""; render(); });
+    cancel.addEventListener("click", function () {
+      if (editing) { leaveEdit(); return; }
+      selected = ""; notice = ""; render();
+    });
     actions.appendChild(saveButton);
     actions.appendChild(cancel);
     form.appendChild(actions);
@@ -450,8 +491,23 @@
     var project = selected;
     busy = true;
     var saveButton = $("mom-save");
+    var saveLabel = saveButton.textContent;
     saveButton.disabled = true;
     saveButton.textContent = "Saving…";
+    if (editing) {
+      window.MomData.editNote({ id: editing.id, project: project, date: date, remarks: comment, items: items }).then(function () {
+        busy = false;
+        leaveEdit();
+      }, function (error) {
+        busy = false;
+        saveButton.disabled = false;
+        saveButton.textContent = saveLabel;
+        fail(error && error.code === "permission-denied"
+          ? "The database refused this change. The rules may not be published yet, or you are not an editor."
+          : "Could not save: " + (error && error.message ? error.message : error));
+      });
+      return;
+    }
     window.MomData.saveNote({ project: project, date: date, remarks: comment, items: items }).then(function () {
       notice = project + ": update saved for " + page.fmtDate(date) + ".";
       selected = "";
@@ -461,11 +517,39 @@
     }, function (error) {
       busy = false;
       saveButton.disabled = false;
-      saveButton.textContent = "Save update";
+      saveButton.textContent = saveLabel;
       fail(error && error.code === "permission-denied"
         ? "The database refused this update. The rules may not be published yet."
         : "Could not save: " + (error && error.message ? error.message : error));
     });
+  }
+
+  // ---- correcting a saved update (editors only) -----------------------------
+
+  function startEdit(project, note) {
+    page = window.MomPage;
+    editing = { id: note.id, project: project, date: note.date, remarks: note.remarks || "" };
+    selected = project;
+    lines = linesFromItems(note.items);
+    notice = "";
+    page.setView("entry");
+  }
+
+  // The newest note of a project (the one the "Last update" box shows).
+  function editLatest(project) {
+    window.MomData.loadNotes(project).then(function (notes) {
+      var newest = notes.slice().sort(function (a, b) { return b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0); })[0];
+      if (newest && newest.id) startEdit(project, newest);
+    });
+  }
+
+  function leaveEdit() {
+    var project = editing.project;
+    editing = null;
+    selected = "";
+    lines = [];
+    page.setView("history");
+    page.selectProject(project);
   }
 
   function render() {
@@ -493,5 +577,5 @@
     });
   });
 
-  window.MomEntry = { open: open, onData: onData };
+  window.MomEntry = { open: open, onData: onData, startEdit: startEdit };
 })();
