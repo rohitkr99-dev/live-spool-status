@@ -134,15 +134,22 @@
       var sp = { key: p + '|' + sk, project: p, drawing: drawing, spool: spool, week: t.week || '', group: t.group || '', lines: lines };
       lines.forEach(function (l) { l.sp = sp; });
       spoolsList.push(sp); spoolByKey[sp.key] = sp;
-      // pipes: match each BOM pipe line to a planned piece (same item code and length, else same code) and use its cut + bevel result
-      var list = pcs[nk(drawing) + '|' + nk(spool)] || [];
-      lines.forEach(function (l) {
-        if (!l.pipe) return;
+      // pipes: match each BOM pipe line to a planned piece and use its cut + bevel result. First every line takes a piece of its own item code AND
+      // length (so a piece is never given to the wrong line); lines still without a piece then take any unused piece of the same item code.
+      // Where several pieces fit, one that is already cut + bevelled is taken first (a spare uncut duplicate must not hide a finished piece).
+      var list = pcs[nk(drawing) + '|' + nk(spool)] || [], pipeLines = lines.filter(function (l) { return l.pipe; }), got = {};
+      var take = function (l, exact) {
         var q = Number(l.qty), hit = null;
-        list.forEach(function (x) { if (!hit && !x.used && x.code === nk(l.code) && Math.abs(x.len - q) < 0.5) hit = x; });
-        if (!hit) list.forEach(function (x) { if (!hit && !x.used && x.code === nk(l.code)) hit = x; });
-        if (hit) { hit.used = true; if (hit.done) pipeAuto[l.k] = true; }
-      });
+        list.forEach(function (x) {
+          if (x.used || x.code !== nk(l.code) || (exact && Math.abs(x.len - q) >= 0.5)) return;
+          if (!hit || (x.done && !hit.done)) hit = x;
+        });
+        if (hit) hit.used = true;
+        return hit;
+      };
+      pipeLines.forEach(function (l) { var h = take(l, true); if (h) got[l.k] = h; });
+      pipeLines.forEach(function (l) { if (!got[l.k]) { var h = take(l, false); if (h) got[l.k] = h; } });
+      pipeLines.forEach(function (l) { if (got[l.k] && got[l.k].done) pipeAuto[l.k] = true; });
     });
     stateRows.forEach(function (r) { base[r[0]] = rowOf(r); });
     groupRows.forEach(function (g) { grpSaved[p + '|' + g[0] + '|' + g[1]] = g[2]; });

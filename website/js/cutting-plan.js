@@ -101,8 +101,8 @@
      order; extra columns are ignored. A small preview under the box shows how every pasted column was read, and
      each column has a dropdown so a heading that was not recognised can be assigned by hand. */
   var FIELDS = {
-    cut: [['project', 'Project'], ['drawing', 'Drawing No.'], ['spool', 'Spool No.'], ['item', 'Item Code', 1], ['length', 'Length', 1], ['group', 'Group'], ['bevel', 'Bevel'], ['qty', 'Qty']],
-    bar: [['barcode', 'Barcode', 1], ['item', 'Item Code', 1], ['length', 'Length', 1], ['control', 'Control No.'], ['heat', 'Heat No.']]
+    cut: [['project', 'Project Code', 1], ['drawing', 'Drawing No.', 1], ['spool', 'Spool No.', 1], ['item', 'Item Code', 1], ['length', 'Length', 1], ['group', 'Group', 1], ['bevel', 'Bevel', 1], ['qty', 'Qty']],
+    bar: [['barcode', 'Barcode', 1], ['item', 'Item Code', 1], ['length', 'Length', 1], ['control', 'Control No.', 1], ['heat', 'Heat No.', 1]]
   };
   var KIND_LABEL = { cut: 'cut list', bar: 'available pipes' };
   var paste = { cut: null, bar: null };
@@ -165,7 +165,7 @@
       if (!st || st.text.trim() !== txt) { st = paste[kind] = parsePaste($(kind + 'Paste').value, kind); renderMap(kind); }
       if (!st) return Promise.reject(new Error('The pasted ' + KIND_LABEL[kind] + ' is empty.'));
       var miss = missingFields(st, kind);
-      if (miss.length) return Promise.reject(new Error('Pasted ' + KIND_LABEL[kind] + ': choose a column for ' + miss.join(' and ') + ' (see the column boxes under the paste area).'));
+      if (miss.length) return Promise.reject(new Error('Pasted ' + KIND_LABEL[kind] + ': no column found for ' + miss.map(function (m) { return m.replace(/\.$/, ''); }).join(' and ') + '. If your list has it under another heading, choose it in the boxes under the paste area; if your list does not have it, add the column and paste again. All columns of the template are required.'));
       return Promise.resolve(st.rows.map(function (r) {
         var o = {}; FIELDS[kind].forEach(function (fl) { o[fl[0]] = ''; });
         st.map.forEach(function (fld, i) { if (fld) o[fld] = r[i] == null ? '' : r[i]; });
@@ -203,6 +203,20 @@
     return best;
   }
 
+  /* Tell the user what is wrong with the data instead of fixing it quietly: every column of the template is required (Qty is optional).
+     A column that is missing or empty, or rows with an empty cell, stop the plan with a message that says exactly what to fix. */
+  function checkRows(rows, kind) {
+    var label = kind === 'cut' ? 'Cut list' : 'Available pipes', out = [];
+    FIELDS[kind].filter(function (f) { return f[2]; }).forEach(function (f) {
+      var blank = rows.filter(function (r) { return String(r[f[0]] == null ? '' : r[f[0]]).trim() === ''; });
+      if (!blank.length) return;
+      var ex = blank[0], where = kind === 'cut' ? [ex.drawing, ex.spool].filter(Boolean).join(' / ') : (ex.barcode || '');
+      if (blank.length === rows.length) out.push(label + ': there is no "' + f[1] + '" column, or it is empty. Add it to your file (or choose the column under the paste area).');
+      else out.push(label + ': ' + blank.length + ' of ' + rows.length + ' rows have no ' + f[1] + (where ? ' (first: ' + where + ')' : '') + '.');
+    });
+    return out;
+  }
+
   $('run').onclick = function () {
     var msg = $('msg'); msg.className = ''; msg.textContent = ''; $('warns').hidden = true;
     var planNo = $('planNo').value.trim();
@@ -212,7 +226,11 @@
     if (!planDate) return fail('Enter the date as DD-MM-YYYY, for example ' + D.dmy(D.todayIso()) + '.');
     if (loadRecs().some(function (r) { return r.planNo.toLowerCase() === planNo.toLowerCase(); })) return fail('Plan No. ' + planNo + ' is already accepted. Use a new number, or undo it first.');
     Promise.all([readInput('cut'), readInput('bar')]).then(function (r) {
-      var pieces = r[0], bars = r[1];
+      var pieces = r[0], bars = r[1], bad = checkRows(pieces, 'cut').concat(checkRows(bars, 'bar'));
+      if (bad.length) {
+        $('warns').hidden = false; $('warns').innerHTML = '<div class="cp-card__head"><h3 class="cp-bad">Plan not made - please fix your data and try again</h3></div>' + bad.map(esc).join('<br>');
+        throw new Error('Plan not made: ' + bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in your data (see below).');
+      }
       var res = CutPlan.plan(pieces, bars, { kerf: +$('kerf').value || 0, trim: +$('trim').value || 0 });
       draft = { planNo: planNo, project: topProject(pieces), date: D.dmy(planDate), kerf: res.opts.kerf, trim: res.opts.trim, createdAt: Date.now(), bars: res.bars.map(slimBar), unplaced: res.unplaced.map(slimPiece), summary: res.summary };
       var w = res.errors.slice(), recs = loadRecs().sort(function (a, c) { return c.createdAt - a.createdAt; });
@@ -454,6 +472,10 @@
     }, function () { throw new Error('Could not reach Google. Check your internet and try again.'); });
   }
   function saveToDrive(rec, rowBtn) {
+    if (rec.bars.some(function (b) { return b.pieces.some(function (p) { return !String(p.project || '').trim(); }); })) {
+      toast(false, 'NOT saved to Drive: some pieces of plan ' + rec.planNo + ' have no Project Code, so the handover could not find them. Undo the plan and make it again with the Project Code.');
+      return;
+    }
     var note = rowBtn ? document.createElement('p') : $('actnote'), btn = rowBtn || $('drv'), label = rowBtn ? 'Save to Drive' : btn.textContent;
     note.className = 'cp-note'; note.textContent = 'Saving to Drive...'; btn.disabled = true; btn.textContent = 'Saving...';
     var done = function () { btn.disabled = false; btn.textContent = label; };
