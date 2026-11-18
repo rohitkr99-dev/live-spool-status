@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
-FORMAT = 3   # 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
+FORMAT = 4   # 4 = each project file also carries qty {drawing|spool: N} for spools made N times; 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
 EXT_RE = re.compile(r"\.xls[xmb]$", re.I)                                  # any Excel format
 BOM_NAME_RE = re.compile(r"line[\s_.-]*list|bom", re.I)                          # "Drawing Line List ...", "Drawing_Line_List", "BOM ..." - the exact wording does not matter
 DATE_RE = re.compile(r"(?<!\d)(\d{1,2})[-./_ ](\d{1,2})[-./_ ](\d{4}|\d{2})(?!\d)")   # first date in the name: 06-11-2026, 6.11.26, 06_11_26 ...
@@ -140,6 +140,8 @@ def convert(xlsx_path):
     """-> {project: {"spools": {"<drawing>|<spool>": [item lines]}}} (spool header rows are skipped)."""
     head = None
     out = {}
+    qtys = {}        # project -> {"drawing|spool": N} for spools made more than once (the Quantity of the spool's own header row)
+    hdr_seen = {}    # the header quantities found, only to print an overview (a wrong column would show up here)
     for n, vals in enumerate(iter_rows(xlsx_path)):
         if n == 0:
             head = {h: i for i, h in enumerate(vals)}
@@ -150,12 +152,19 @@ def convert(xlsx_path):
         g = lambda name: vals[head[name]] if name in head and head[name] < len(vals) else ""
         desc = g(COLS["desc"])
         project, drawing, spool = g(COLS["project"]).strip(), g(COLS["drawing"]).strip(), g(COLS["spool"]).strip()
-        if not project or not spool or _clean(desc).lower() == "spool":
+        if not project or not spool:
+            continue
+        if _clean(desc).lower() == "spool":
+            q = _num(g(COLS["qty"]))
+            hdr_seen[q] = hdr_seen.get(q, 0) + 1
+            if isinstance(q, (int, float)) and q >= 2 and float(q).is_integer():
+                qtys.setdefault(project, {})[drawing + "|" + spool] = int(q)
             continue
         code = (g(COLS["aicd"]) or g(COLS["icd"])).strip()
         line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"])), _clean(g(COLS["sched"]))]
         out.setdefault(project, {}).setdefault(drawing + "|" + spool, []).append(line)
-    return {p: {"spools": s} for p, s in out.items()}
+    print("Spool header quantities (value: number of spools): " + ", ".join("%s: %d" % (k if k != "" else "(empty)", v) for k, v in sorted(hdr_seen.items(), key=lambda kv: -kv[1])[:8]))
+    return {p: ({"spools": s, "qty": qtys[p]} if qtys.get(p) else {"spools": s}) for p, s in out.items()}
 
 
 def safe_name(project: str) -> str:
@@ -169,6 +178,7 @@ def write_local(xlsx_path, outdir, source_name=None):
     manifest = {"source": source_name or os.path.basename(xlsx_path), "built": built, "projects": {}}
     for project, body in data.items():
         payload = {"project": project, "source": manifest["source"], "built": built, "spools": body["spools"]}
+        if body.get("qty"): payload["qty"] = body["qty"]
         text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         with open(os.path.join(outdir, safe_name(project)), "w", encoding="utf-8") as fh:
             fh.write(text)
@@ -271,6 +281,7 @@ def run_drive():
     missing = []
     for project, body in data.items():
         payload = {"project": project, "source": src["name"], "built": built, "spools": body["spools"]}
+        if body.get("qty"): payload["qty"] = body["qty"]
         text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         ex = _find(svc, data_id, safe_name(project))
         if not ex:   # a service account cannot create files in a personal Drive (no storage quota); it can only update files that exist

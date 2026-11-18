@@ -20,6 +20,8 @@
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
   var pn = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ''); };
   var fmtN = function (n) { return Number(n).toLocaleString('en-US'); };
+  var pieceOf = function (l) { return l.copies > 1 ? l.copy + ' of ' + l.copies : ''; };
+  var qtyText = function (l) { return esc(l.qty) + ' ' + esc(l.uom) + (l.copies > 1 ? ' <small>(' + pieceOf(l) + ')</small>' : ''); };
   var area3 = function (v) { return v === '' || v == null || isNaN(v) ? '' : Number(v).toFixed(3); };
   var today = D.todayIso;
 
@@ -126,10 +128,17 @@
     pieces.forEach(function (x) { (pcs[nk(x[0]) + '|' + nk(x[1])] = pcs[nk(x[0]) + '|' + nk(x[1])] || []).push({ code: nk(x[2]), len: x[3], done: !!x[4], used: false }); });
     Object.keys(bom.spools).forEach(function (sk) {
       var parts = sk.split('|'), drawing = parts[0], spool = parts.slice(1).join('|'), t = wk[nk(drawing) + '|' + nk(spool)] || {}, seen = {}, lines = [];
+      // A spool that is made N times (an assembly of 2 NOS; N is bom.qty of the spool) shows every item N times: "1 of 2", "2 of 2", each ticked on its
+      // own. The quantity of a line is per piece, the surface area in the BOM is for all N copies, so each copy shows its share. Copy 1 keeps the key of the
+      // BOM line (entries already saved stay valid); copy c gets n + 1000 * (c - 1).
+      var N = Math.max(1, Math.floor(Number(bom.qty && bom.qty[sk]) || 1));
       bom.spools[sk].forEach(function (a) {
-        var code = a[1] || a[2] || 'NOCODE', n = (seen[code] = (seen[code] || 0) + 1);
-        var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], area: a[7] == null ? '' : a[7], pipe: a[4] === 'MM', sk: sk };
-        lines.push(l); lineByKey[l.k] = l;
+        var code = a[1] || a[2] || 'NOCODE', n0 = (seen[code] = (seen[code] || 0) + 1);
+        for (var c = 1; c <= N; c++) {
+          var n = n0 + 1000 * (c - 1), ar = a[7] == null || a[7] === '' || isNaN(a[7]) ? '' : Number(a[7]) / N;
+          var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], area: ar, pipe: a[4] === 'MM', sk: sk, copy: c, copies: N };
+          lines.push(l); lineByKey[l.k] = l;
+        }
       });
       var sp = { key: p + '|' + sk, project: p, drawing: drawing, spool: spool, week: t.week || '', group: t.group || '', lines: lines };
       lines.forEach(function (l) { l.sp = sp; });
@@ -324,7 +333,7 @@
           (st.recv && savedRecv ? ' <button class="btn btn--ghost cp-small" type="button" data-ret="' + k + '">Return</button>' : '') +
           (ret && !st.recv ? ' <span class="cp-tag">Returned: ' + esc(ret.reason) + '</span> <small>' + esc(D.dmy(ret.at).slice(0, 10)) + '</small>' : '');
       var handCell = '<input type="checkbox" data-h="' + k + '"' + (st.hand ? ' checked' : '') + ' aria-label="Handed over: ' + esc(l.code) + '">' + (st.hand ? ' <input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-hd="' + k + '" value="' + esc(D.dmy(st.handDate)) + '">' : '');
-      return '<tr' + (dirty ? ' class="cp-dirtyrow"' : '') + '><td>' + esc(l.code) + '</td><td>' + esc(l.desc) + (l.size ? ' <small>' + esc(l.size) + '</small>' : '') + '</td><td class="n">' + esc(l.qty) + ' ' + esc(l.uom) + '</td><td class="n">' + area3(l.area) + '</td>' +
+      return '<tr' + (dirty ? ' class="cp-dirtyrow"' : '') + '><td>' + esc(l.code) + '</td><td>' + esc(l.desc) + (l.size ? ' <small>' + esc(l.size) + '</small>' : '') + '</td><td class="n">' + qtyText(l) + '</td><td class="n">' + area3(l.area) + '</td>' +
         '<td class="cp-tick">' + recvCell + '</td><td class="cp-tick">' + handCell + '</td><td><input type="text" class="cp-remark" data-rm="' + k + '" value="' + esc(st.remark) + '" maxlength="300" placeholder="Remark" aria-label="Remark: ' + esc(l.code) + '"></td></tr>';
     }).join('');
     return '<tr class="cp-detail"><td colspan="' + (multi() ? 11 : 10) + '">' +
@@ -400,7 +409,7 @@
   function openReturn(k) {
     if (dirtyKeys().length || dirtyGroups().length) return toast(false, 'Save or discard your unsaved changes first, then return the item.');
     var l = lineByKey[k]; retTarget = l;
-    $('hRetWhat').innerHTML = '<b>' + esc(l.code) + '</b> - ' + esc(l.desc) + ' (' + esc(l.qty) + ' ' + esc(l.uom) + '), spool ' + esc(l.sp.spool) + '.';
+    $('hRetWhat').innerHTML = '<b>' + esc(l.code) + '</b> - ' + esc(l.desc) + ' (' + esc(l.qty) + ' ' + esc(l.uom) + (l.copies > 1 ? ', ' + pieceOf(l) : '') + '), spool ' + esc(l.sp.spool) + '.';
     $('hRetReason').value = ''; $('hRetRemark').value = ''; retDlg.showModal();
   }
   $('hRetCancel').onclick = function () { retDlg.close(); };
@@ -462,7 +471,7 @@
 
   $('hReport').onclick = function () {
     if (!filtered.length) return toast(false, 'Nothing to download. Check the filters.');
-    var items = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Area m2', 'Received', 'Received Date', 'Handed Over', 'Handover Date', 'Handed Over To', 'Returned', 'Remark']];
+    var items = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Area m2', 'Received', 'Received Date', 'Handed Over', 'Handover Date', 'Handed Over To', 'Returned', 'Remark', 'Piece']];
     var spl = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Items', 'Area m2', 'Received', 'Handed Over', 'Status']];
     filtered.forEach(function (sp) {
       var stt = statusOf(sp), hc = 0;
@@ -470,7 +479,7 @@
       spl.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), sp.lines.length, areaNum(spoolArea(sp)), stt.r, hc, statusText(stt)]);
       visLines(sp).forEach(function (l) {
         var st = stateOf(l);
-        items.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), isRecv(l) ? (l.pipe ? 'Yes (cutting)' : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo, isReturned(l) ? retBy[l.k].reason : '', st.remark]);
+        items.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), isRecv(l) ? (l.pipe ? 'Yes (cutting)' : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo, isReturned(l) ? retBy[l.k].reason : '', st.remark, pieceOf(l)]);
       });
     });
     writeBook('material-handover', [['Items', items], ['Spools', spl], ['Report info', info('Material Handover (items)')]]);
@@ -478,12 +487,12 @@
 
   // every item of the loaded project(s) that is not received yet, with its remark - to send to the project team
   $('hMna').onclick = function () {
-    var rows = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Area m2', 'Expected from', 'Returned', 'Remark', 'Spool status']];
+    var rows = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Area m2', 'Expected from', 'Returned', 'Remark', 'Spool status', 'Piece']];
     spoolsList.forEach(function (sp) {
       var stt = statusOf(sp);
       sp.lines.forEach(function (l) {
         if (isRecv(l)) return;
-        rows.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), l.pipe ? 'Cutting station' : 'Store / vendor', isReturned(l) ? retBy[l.k].reason : '', stateOf(l).remark, statusText(stt)]);
+        rows.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), l.pipe ? 'Cutting station' : 'Store / vendor', isReturned(l) ? retBy[l.k].reason : '', stateOf(l).remark, statusText(stt), pieceOf(l)]);
       });
     });
     if (rows.length === 1) return toast(false, 'Nothing is missing: every item of this project is received.');
