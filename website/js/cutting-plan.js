@@ -217,6 +217,19 @@
     return out;
   }
 
+  /* The Drive script checks the new plan against the BOM and the other plans (checkPlan): the same pipes planned again BLOCK the plan, a spool or
+     item code or length that does not fit the BOM only WARNS. Returns null when the check could not be made (offline): the plan is then made with a note. */
+  function remoteCheck(planNo, pieces) {
+    if (!DRIVE_URL) return Promise.resolve(undefined);
+    var others = [];
+    loadRecs().forEach(function (r) {
+      if (r.driveSavedAt || String(r.planNo).toLowerCase() === planNo.toLowerCase()) return;     // plans saved to Drive are read by the script
+      r.bars.forEach(function (b) { b.pieces.forEach(function (p) { others.push({ project: p.project, drawing: p.drawing, spool: p.spool, item: p.item || b.item, length: p.length, plan: r.planNo }); }); });
+    });
+    return api('checkPlan', { planNo: planNo, pieces: pieces.map(function (p) { return { project: p.project, drawing: p.drawing, spool: p.spool, item: p.item, length: p.length }; }), others: others })
+      .then(function (x) { return x; }, function () { return null; });
+  }
+
   $('run').onclick = function () {
     var msg = $('msg'); msg.className = ''; msg.textContent = ''; $('warns').hidden = true;
     var planNo = $('planNo').value.trim();
@@ -231,9 +244,18 @@
         $('warns').hidden = false; $('warns').innerHTML = '<div class="cp-card__head"><h3 class="cp-bad">Plan not made - please fix your data and try again</h3></div>' + bad.map(esc).join('<br>');
         throw new Error('Plan not made: ' + bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in your data (see below).');
       }
+      return remoteCheck(planNo, pieces).then(function (chk) {
+      if (chk && chk.duplicates && chk.duplicates.length) {
+        $('warns').hidden = false; $('warns').innerHTML = '<div class="cp-card__head"><h3 class="cp-bad">Plan not made - the same pipes are planned again</h3></div>' + chk.duplicates.map(function (d) {
+          return esc('Spool ' + d.spool + ' (' + d.item + '): ' + d.length + ' mm is planned ' + (d.in_other_plans + d.in_this_plan) + ' times (' + (d.in_other_plans ? d.in_other_plans + ' already in plan ' + d.plans.join(', ') + ' and ' : '') + d.in_this_plan + ' in your list), but the BOM of the spool needs ' + d.bom_needs + '. Remove the pieces that are already planned and try again.');
+        }).join('<br>');
+        throw new Error('Plan not made: ' + chk.duplicates.length + ' piece length' + (chk.duplicates.length === 1 ? ' is' : 's are') + ' planned more often than the BOM needs (see below).');
+      }
       var res = CutPlan.plan(pieces, bars, { kerf: +$('kerf').value || 0, trim: +$('trim').value || 0 });
       draft = { planNo: planNo, project: topProject(pieces), date: D.dmy(planDate), kerf: res.opts.kerf, trim: res.opts.trim, createdAt: Date.now(), bars: res.bars.map(slimBar), unplaced: res.unplaced.map(slimPiece), summary: res.summary };
       var w = res.errors.slice(), recs = loadRecs().sort(function (a, c) { return c.createdAt - a.createdAt; });
+      if (chk === null) w.push('The plan could not be checked against the BOM and the other plans (no connection to Google). Check it yourself, or make it again later.');
+      else if (chk) chk.warnings.forEach(function (x) { w.push('Spool ' + x.spool + ' (' + x.item + '): ' + x.why + '.'); });
       bars.forEach(function (b) { // ledger check: uploaded length vs the last recorded remain
         var last = null;
         recs.some(function (rec) { var x = rec.bars.find(function (y) { return y.barcode === b.barcode; }); if (x) last = x; return !!x; });
@@ -241,6 +263,7 @@
       });
       if (w.length) { $('warns').hidden = false; $('warns').innerHTML = '<div class="cp-card__head"><h3 class="cp-warn">Please check</h3></div>' + w.map(esc).join('<br>'); }
       show(draft, false); msg.textContent = pieces.length + ' pieces, ' + bars.length + ' pipes read' + ($('cutPaste').value.trim() || $('barPaste').value.trim() ? ' (pasted data used where pasted)' : '') + '.'; msg.className = 'cp-ok';
+      });
     }).catch(function (e) { fail(e.message || 'Could not read the data.'); });
   };
 

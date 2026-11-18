@@ -204,6 +204,15 @@
     <!-- ============ MATERIAL HANDOVER ============ -->
     <section id="secHandover" hidden>
       <div class="cp-card">
+        <div class="cp-card__head"><h3>Quick check - one drawing or spool</h3><span class="cp-hint">Fast: only that drawing is loaded</span></div>
+        <div class="cp-grid">
+          <label>Drawing No.<input type="text" id="qDrawing" placeholder="e.g. V17566-PIND-0404 (part of it is enough)" autocomplete="off"></label>
+          <label>Spool No. (optional)<input type="text" id="qSpool" placeholder="e.g. V17566-PIND-0404-04" autocomplete="off"></label>
+        </div>
+        <div class="cp-row"><button class="btn btn--primary" id="qGo" type="button">Check status</button><span id="qNote" class="cp-note" style="margin:0" role="status"></span></div>
+        <p class="cp-note">Shows the handover status of the spools of that drawing without loading the whole project. You can tick and save here just like after "Load data".</p>
+      </div>
+      <div class="cp-card">
         <div class="cp-card__head"><h3>Choose what to load</h3><span class="cp-hint" id="hBomInfo"></span></div>
         <div class="cp-grid">
           <label>Project<select id="hProject"><option value="">- choose a project (or a week) -</option></select></label>
@@ -251,6 +260,7 @@
           <div class="cp-tw"><table class="cp-sttbl" id="hTable"></table></div>
           <div class="cp-row"><button class="btn btn--ghost" id="hMore" type="button" hidden>Show more</button><button class="btn btn--primary" id="hReport" type="button">Download shown items (Excel)</button><button class="btn btn--primary" id="hMna" type="button">Download MNA list (Excel)</button></div>
           <p class="cp-note">Open a spool with the arrow to see its items. Ticking <b>Received</b> or <b>Handed over</b> on a spool row ticks all its shown items. Dates start as the date above and can be changed. The <b>Group</b> of a spool can be changed on its row (it is saved with the data, and items handed over go to that group). Type a <b>Remark</b> on an item, for example why it is MNA: it goes into both Excel files. <b>Return</b> (next to a received fitting) sends a dented or wrong-ICD item back and makes it not received again. <b>Download MNA list</b> lists every item of the project that is not received, with its remark. Nothing is saved until you press <b>Save changes</b>; a warning appears if you hand over items that were not received, and you can still save.</p>
+          <div class="cp-card" id="hProblems" hidden></div>
           <div class="cp-savebar" id="hSaveBar" hidden>
             <span id="hDirty"></span>
             <button class="btn btn--ghost" id="hDiscard" type="button">Discard</button>
@@ -307,9 +317,9 @@
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="js/cutplan-engine.js?v=20261104"></script>
 <script src="js/config.js?v=20261021"></script>
-<script src="js/cutting-plan.js?v=20261118"></script>
+<script src="js/cutting-plan.js?v=20261120"></script>
 <script src="js/cutting-status.js?v=20261108"></script>
-<script src="js/material-handover.js?v=20261118"></script>
+<script src="js/material-handover.js?v=20261120"></script>
 <script src="js/remain-inventory.js?v=20261111"></script>
 </body>
 </html>

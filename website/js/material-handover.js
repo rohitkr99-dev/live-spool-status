@@ -30,6 +30,7 @@
   var projects = [];       // codes of the loaded project(s)
   var projList = [], projKey = {};   // projects that have a BOM (from the manifest); pn(code) -> code
   var multi = function () { return projects.length > 1; };
+  var quickSets = null;    // project -> [exact drawing numbers] while a quick check is shown (a save then reads back only these drawings)
   var base = {};           // item key -> saved state
   var edits = {};          // item key -> changed state (not saved yet)
   var pipeAuto = {};       // item key -> true when the pipe line is cut AND bevelled
@@ -50,7 +51,9 @@
   CS.dirtyFns.push(function () { return dirtyCount() > 0; });
   CS.sectionHooks.handover = init;
 
-  var isRecv = function (l) { return l.pipe ? !!pipeAuto[l.k] : stateOf(l).recv; };
+  // A pipe line is received when it is cut AND bevelled in the Cutting Status, or when it has been handed over (a handed-over pipe obviously exists: it was cut
+  // before the system, or the cutting was never ticked). Handed-over spools are therefore complete and not in the MNA list.
+  var isRecv = function (l) { return l.pipe ? !!(pipeAuto[l.k] || stateOf(l).hand) : stateOf(l).recv; };
   var isReturned = function (l) { return !l.pipe && !!retBy[l.k] && !stateOf(l).recv; };
   var tickDate = function () { return D.iso($('hDate').value) || today(); };
   var rowOf = function (r) { return { recv: r[5] === 'Yes', recvDate: D.iso(r[6]), hand: r[8] === 'Yes', handDate: D.iso(r[9]), handTo: r[10] || '', remark: r[11] || '' }; };
@@ -119,7 +122,7 @@
     rows.forEach(function (r) { retBy[r[0]] = { reason: r[7], remark: r[8], at: r[9], by: r[10] }; });
   }
 
-  function reset() { projects = []; edits = {}; base = {}; pipeAuto = {}; lineByKey = {}; spoolByKey = {}; spoolsList = []; grpEdit = {}; grpSaved = {}; }
+  function reset() { quickSets = null; projects = []; edits = {}; base = {}; pipeAuto = {}; lineByKey = {}; spoolByKey = {}; spoolsList = []; grpEdit = {}; grpSaved = {}; }
 
   function addProject(p, bom, stateRows, pieces, groupRows, tracker) {
     var wk = {};
@@ -146,7 +149,9 @@
       // pipes: match each BOM pipe line to a planned piece and use its cut + bevel result. First every line takes a piece of its own item code AND
       // length (so a piece is never given to the wrong line); lines still without a piece then take any unused piece of the same item code.
       // Where several pieces fit, one that is already cut + bevelled is taken first (a spare uncut duplicate must not hide a finished piece).
-      var list = pcs[nk(drawing) + '|' + nk(spool)] || [], pipeLines = lines.filter(function (l) { return l.pipe; }), got = {};
+      var list = pcs[nk(drawing) + '|' + nk(spool)] || [];
+      sp.hasPlan = list.length > 0;
+      var pipeLines = lines.filter(function (l) { return l.pipe; }), got = {};
       var take = function (l, exact) {
         var q = Number(l.qty), hit = null;
         list.forEach(function (x) {
@@ -170,7 +175,10 @@
 
   /* After a return or a save: read the saved state again (the BOM is not read again). */
   function reloadState() {
-    return Promise.all(projects.map(function (p) { return Promise.all([api('getItemStates', { project: p }), api('getReturns', { project: p }), api('getSpoolGroups', { project: p })]); })).then(function (rs) {
+    return Promise.all(projects.map(function (p) {
+      if (quickSets) return api('getDrawing', { project: p, drawings: quickSets[p], stateOnly: true }).then(function (r) { return [{ rows: r.items }, { rows: r.returns }, { rows: r.groups }]; });
+      return Promise.all([api('getItemStates', { project: p }), api('getReturns', { project: p }), api('getSpoolGroups', { project: p })]);
+    })).then(function (rs) {
       base = {}; grpSaved = {}; var ret = [];
       rs.forEach(function (r, n) {
         r[0].rows.forEach(function (x) { base[x[0]] = rowOf(x); });
@@ -328,7 +336,7 @@
     var rows = vl.map(function (l) {
       var st = stateOf(l), k = esc(l.k), dirty = edits[l.k] && differs(edits[l.k], base[l.k] || blank), ret = retBy[l.k], savedRecv = !!(base[l.k] && base[l.k].recv) && !edits[l.k];
       var recvCell = l.pipe
-        ? (pipeAuto[l.k] ? '<span class="cp-pipe-ok">&#10003; cut &amp; bevelled</span>' : '<span class="cp-pipe-no">waiting for cutting &amp; beveling</span>')
+        ? (pipeAuto[l.k] ? '<span class="cp-pipe-ok">&#10003; cut &amp; bevelled</span>' : st.hand ? '<span class="cp-pipe-ok">&#10003; handed over</span>' : '<span class="cp-pipe-no">waiting for cutting &amp; beveling</span>')
         : '<input type="checkbox" data-r="' + k + '"' + (st.recv ? ' checked' : '') + ' aria-label="Received: ' + esc(l.code) + '">' + (st.recv ? ' <input type="text" class="cp-date" size="10" maxlength="10" placeholder="DD-MM-YYYY" data-rd="' + k + '" value="' + esc(D.dmy(st.recvDate)) + '">' : '') +
           (st.recv && savedRecv ? ' <button class="btn btn--ghost cp-small" type="button" data-ret="' + k + '">Return</button>' : '') +
           (ret && !st.recv ? ' <span class="cp-tag">Returned: ' + esc(ret.reason) + '</span> <small>' + esc(D.dmy(ret.at).slice(0, 10)) + '</small>' : '');
@@ -368,7 +376,11 @@
     st.recv = on; st.recvDate = on ? (st.recvDate || tickDate()) : '';
     store(l, st);
   }
+  var refused = 0;
+  var canHand = function (l) { return l.pipe ? !(l.sp.hasPlan && !pipeAuto[l.k]) : stateOf(l).recv; };     // pipes of spools without any cutting plan were cut before the system: allowed
+  function reportRefused() { if (refused) toast(false, fmtN(refused) + ' item(s) were not ticked as handed over: an item must be received first, and a pipe must be cut and bevelled first.'); refused = 0; }
   function setHand(l, on) {
+    if (on && !canHand(l)) { refused++; return; }
     var st = Object.assign({}, stateOf(l));
     st.hand = on; st.handDate = on ? (st.handDate || tickDate()) : ''; st.handTo = on ? groupOf(l.sp) : '';
     store(l, st);
@@ -376,7 +388,7 @@
   var vlOf = function (sk) { return visLines(spoolByKey[sk]); };
 
   $('hAllRecv').onchange = function () { var on = this.checked; filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { setRecv(l, on); }); }); render(); };
-  $('hAllHand').onchange = function () { var on = this.checked; filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { setHand(l, on); }); }); render(); };
+  $('hAllHand').onchange = function () { var on = this.checked; filtered.forEach(function (sp) { visLines(sp).forEach(function (l) { setHand(l, on); }); }); render(); reportRefused(); };
 
   $('hTable').addEventListener('click', function (e) {
     var rb = e.target.closest('[data-ret]');
@@ -387,9 +399,9 @@
   $('hTable').addEventListener('change', function (e) {
     var t = e.target, d = t.dataset, l;
     if (d.sr) { var on = t.checked; vlOf(d.sr).forEach(function (x) { setRecv(x, on); }); render(); }
-    else if (d.sh) { var on2 = t.checked; vlOf(d.sh).forEach(function (x) { setHand(x, on2); }); render(); }
+    else if (d.sh) { var on2 = t.checked; vlOf(d.sh).forEach(function (x) { setHand(x, on2); }); render(); reportRefused(); }
     else if (d.r) { setRecv(lineByKey[d.r], t.checked); render(); }
-    else if (d.h) { setHand(lineByKey[d.h], t.checked); render(); }
+    else if (d.h) { setHand(lineByKey[d.h], t.checked); render(); reportRefused(); }
     else if (d.rm) { l = lineByKey[d.rm]; store(l, Object.assign({}, stateOf(l), { remark: t.value.trim() })); render(); }
     else if (d.rd || d.hd) {
       l = lineByKey[d.rd || d.hd]; var iso = D.iso(t.value), st = Object.assign({}, stateOf(l));
@@ -435,11 +447,58 @@
     var n = dirtyCount();
     $('hSaveBar').hidden = n === 0; $('hDirty').textContent = fmtN(n) + ' unsaved change' + (n === 1 ? '' : 's');
   }
-  $('hDiscard').onclick = function () { edits = {}; grpEdit = {}; render(); };
+  $('hDiscard').onclick = function () { edits = {}; grpEdit = {}; $('hProblems').hidden = true; render(); };
+  /* Problems that stop a save (the user is told what to fix): handed over but not received, a pipe handed over before it is cut and bevelled, a handover
+     dated before the receipt, a handover to a group that is not the spool's group. */
+  function saveProblems(keys) {
+    var bad = { unrecv: [], pipe: [], date: [], group: [] };
+    keys.forEach(function (k) {
+      var l = lineByKey[k], st = edits[k], sp = l.sp, who = sp.spool + ' / ' + l.code + (l.copies > 1 ? ' (' + pieceOf(l) + ')' : '');
+      if (!st.hand) return;
+      if (l.pipe) { if (sp.hasPlan && !pipeAuto[l.k]) bad.pipe.push(who); } else if (!st.recv) bad.unrecv.push(who);
+      if (st.recv && st.recvDate && st.handDate && st.handDate < st.recvDate) bad.date.push(who + ' (received ' + D.dmy(st.recvDate) + ', handed over ' + D.dmy(st.handDate) + ')');
+      var g = groupOf(sp); if (st.handTo && g && nk(st.handTo) !== nk(g)) bad.group.push(who + ' (handed to ' + st.handTo + ', the spool\'s group is ' + g + ')');
+    });
+    var T = [['unrecv', 'handed over but not received', 'Tick Received first, then Handed over.'], ['pipe', 'pipes handed over although the Cutting Status shows them not cut and bevelled', 'Hand over a pipe only after Cutting and Beveling are ticked for it.'],
+      ['date', 'handover dated before the item was received', 'Check both dates.'], ['group', 'handed to a group that is not the spool\'s group', 'Hand over to the spool\'s group (change the spool\'s group first if it changed).']];
+    return T.filter(function (t) { return bad[t[0]].length; }).map(function (t) { return fmtN(bad[t[0]].length) + ' item(s) ' + t[1] + '. ' + t[2] + ' First: ' + bad[t[0]].slice(0, 3).join('; ') + '.'; });
+  }
+
+  /* ---------- Quick check: one drawing or spool, without loading the whole project ---------- */
+  $('qGo').onclick = function () {
+    var d = $('qDrawing').value.trim(), s = $('qSpool').value.trim(), btn = $('qGo'), note = function (cls, t) { $('qNote').className = 'cp-note ' + cls; $('qNote').textContent = t; };
+    if (d.length < 4 && s.length < 4) return note('cp-warn', 'Type at least 4 characters of the drawing or the spool number.');
+    if (dirtyCount() && !confirm('You have unsaved changes. Check another drawing and lose them?')) return;
+    btn.disabled = true; btn.textContent = 'Checking...'; note('', 'Looking up the drawing...');
+    Promise.all([CS.spools(), manifest ? Promise.resolve() : api('getBomManifest').then(function (r) { manifest = r.manifest; projList = Object.keys(manifest.projects || {}).sort(); projKey = {}; projList.forEach(function (p) { projKey[pn(p)] = p; }); })]).then(function (r) {
+      var tracker = r[0], dl = nk(d), sl = nk(s), by = {}, count = 0;
+      tracker.forEach(function (t) {
+        var proj = projKey[pn(t.project)];
+        if (!proj || (dl && nk(t.drawing).indexOf(dl) < 0) || (sl && nk(t.spool).indexOf(sl) < 0)) return;
+        var set = by[proj] || (by[proj] = {}); if (!set[t.drawing]) { set[t.drawing] = 1; count++; }
+      });
+      if (!count) throw new Error('No spool of a project with a BOM matches that number.');
+      if (count > 40) throw new Error(fmtN(count) + ' drawings match. Type more of the number.');
+      var targets = Object.keys(by).sort();
+      note('', 'Loading ' + count + ' drawing' + (count === 1 ? '' : 's') + '...');
+      return Promise.all(targets.map(function (p) { return api('getDrawing', { project: p, drawings: Object.keys(by[p]) }); })).then(function (rs) {
+        reset(); projects = targets; var ret = [], qs = {};
+        rs.forEach(function (x, n) { qs[targets[n]] = Object.keys(by[targets[n]]); addProject(targets[n], x.bom, x.items, x.pieces, x.groups, tracker); ret = ret.concat(x.returns); });
+        quickSets = qs; setReturns(ret); finishBuild();
+        $('hBomInfo').textContent = 'Quick check of ' + count + ' drawing' + (count === 1 ? '' : 's') + ' - BOM: ' + rs[0].bom.source;
+        note('', ''); $('hBody').hidden = false; shown = PAGE; open = {};
+        $('hDrawing').value = d; $('hSpool').value = s; $('hStatus').value = ''; $('hLines').value = ''; $('hItem').value = '';
+        apply();
+        if (filtered.length === 1) { open[filtered[0].key] = true; render(); }
+      });
+    }).catch(function (e) { note('cp-bad', e.message); }).then(function () { btn.disabled = false; btn.textContent = 'Check status'; });
+  };
+
   $('hSave').onclick = function () {
     var keys = dirtyKeys(), gkeys = dirtyGroups(); if (!keys.length && !gkeys.length) return;
-    var unreceived = keys.filter(function (k) { return edits[k].hand && !isRecv(lineByKey[k]); }).length;
-    if (unreceived && !confirm(fmtN(unreceived) + ' item(s) are marked handed over but not received yet. Save anyway?')) return;
+    var pr = saveProblems(keys);
+    if (pr.length) { $('hProblems').hidden = false; $('hProblems').innerHTML = '<div class="cp-card__head"><h3 class="cp-bad">Not saved - please fix this and save again</h3></div>' + pr.map(esc).join('<br>'); toast(false, 'NOT saved: ' + pr.length + ' kind' + (pr.length === 1 ? '' : 's') + ' of problem (see below the list).'); $('hProblems').scrollIntoView({ block: 'center' }); return; }
+    $('hProblems').hidden = true;
     var btn = $('hSave'); btn.disabled = true; btn.textContent = 'Saving...';
     var rows = keys.map(function (k) {
       var l = lineByKey[k], st = edits[k];
@@ -479,7 +538,7 @@
       spl.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), sp.lines.length, areaNum(spoolArea(sp)), stt.r, hc, statusText(stt)]);
       visLines(sp).forEach(function (l) {
         var st = stateOf(l);
-        items.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), isRecv(l) ? (l.pipe ? 'Yes (cutting)' : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo, isReturned(l) ? retBy[l.k].reason : '', st.remark, pieceOf(l)]);
+        items.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), isRecv(l) ? (l.pipe ? (pipeAuto[l.k] ? 'Yes (cutting)' : 'Yes (handed over)') : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo, isReturned(l) ? retBy[l.k].reason : '', st.remark, pieceOf(l)]);
       });
     });
     writeBook('material-handover', [['Items', items], ['Spools', spl], ['Report info', info('Material Handover (items)')]]);
