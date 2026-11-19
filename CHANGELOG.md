@@ -39,6 +39,10 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-11-19 - Drive script v18: saving a plan again no longer leaves old pieces behind
+
+Plan VOGT 198-039 WEEK-35 was saved twice under one number; the Status sheet kept 5 rows of the first version, so the new duplicate check wrongly blocked spools 0012/0013. The script now replaces a plan's unticked Status rows when the plan is saved again (ticked rows stay). Extra rows of 3 plans were removed once (backup copy made first).
+
 ### 2026-10-12 - Cutting Plan page (Coming Soon) + pipe cutting tool
 
 - **Asked:** add the Cutting Plan tool to the website as a new page, keep it "Coming Soon", output both Excel and a real PDF, and guide the Google Drive part.
