@@ -10,7 +10,7 @@
   "TE/25-26/196|20LBA90BR404|20LBA90BR404_SP5": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-11-16",
         "hold_start": "2026-10-05"
       }
     ]
@@ -58,8 +58,16 @@
   "TE/25-26/196|20LDK02BR019|20LDK02BR019_SP1": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-10-30",
         "hold_start": "2026-10-30"
+      }
+    ]
+  },
+  "TE/25-26/196|20LDK73BR001|20LDK73BR001_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-16"
       }
     ]
   },
@@ -87,11 +95,35 @@
       }
     ]
   },
+  "TE/25-26/196|20MAL12BR004|20MAL12BR004_SP2": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-18"
+      }
+    ]
+  },
+  "TE/25-26/196|20MAV71BR004|20MAV71BR004_SP1": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-16"
+      }
+    ]
+  },
   "TE/25-26/196|20MAW20BR003|20MAW20BR003_SP1": {
     "hold_periods": [
       {
         "hold_removed": "2026-11-04",
         "hold_start": "2026-11-02"
+      }
+    ]
+  },
+  "TE/25-26/196|21EKG70BR022|21EKG70BR022_SP17": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-18"
       }
     ]
   },
@@ -455,6 +487,14 @@
       }
     ]
   },
+  "TJ/25-26/206|V17566-PIND-0324|V17566-PIND-0324-03": {
+    "hold_periods": [
+      {
+        "hold_removed": null,
+        "hold_start": "2026-11-13"
+      }
+    ]
+  },
   "TJ/25-26/207|251335_1A_IP001_003|251335-1A-IP-003-01": {
     "hold_periods": [
       {
@@ -482,7 +522,7 @@
   "TJ/26-27/212|254435_11_HP001_001|254435-11-HP001-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-11-18",
         "hold_start": "2026-11-05"
       }
     ]
@@ -490,7 +530,7 @@
   "TJ/26-27/212|254435_11_LP001_068|254435-11-LP068-011": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-11-18",
         "hold_start": "2026-11-04"
       }
     ]
@@ -498,7 +538,7 @@
   "TJ/26-27/212|254435_11_RP001_001|254435-11-RP001-04": {
     "hold_periods": [
       {
-        "hold_removed": null,
+        "hold_removed": "2026-11-18",
         "hold_start": "2026-11-04"
       }
     ]
