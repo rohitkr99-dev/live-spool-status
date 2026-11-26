@@ -6,7 +6,7 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
-## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live"
+## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
 `scripts/build_bom.py` takes Description / Category / Normal Size / Schedule of every BOM item code from the newest `Item Master DD-MM-YY.xlsb` in Drive BOM/ (already uploaded there); `cutting-plan.js` (v20261126) re-looks up a saved plan's short pipe description when the plan is opened.  Also there: a "Preview plan" button next to the downloads (opens the same PDF in a new tab). After going live: push to main, run the Build BOM data workflow, check NE_190-020_WEEK-36 shows DN 350, SCH 30. Cause: the 25-11 xlsb Drawing Line List has no Normal Size / Schedule columns.
 
 ## ⚠️ Gotcha, hit repeatedly — check this before editing anything
