@@ -7,9 +7,11 @@ Drive layout (inside the tracker's shared root folder, GDRIVE_FOLDER_ID):
     BOM/                                   <- you upload the Drawing Line List here (any file name; see _newest_source)
     BOM/data/<project>.json                <- written by this script (private, Drive only - never the public repo)
     BOM/data/_manifest.json                <- which source file the data came from
+    BOM/Item Master DD-MM-YY.xlsb          <- optional: master of all item codes; Description, Item Category Code, Normal Size and
+                                              Schedule of every BOM item code are taken from the newest one (see read_master)
 
 Run:  python3 scripts/build_bom.py            (needs GDRIVE_SA_KEY + GDRIVE_FOLDER_ID; the service account needs Editor on BOM/)
-      python3 scripts/build_bom.py --local FILE.xlsx OUTDIR     (no Drive: convert a local file, for testing)
+      python3 scripts/build_bom.py --local FILE.xlsx OUTDIR [ITEM_MASTER]     (no Drive: convert local files, for testing)
 """
 import base64
 import io
@@ -26,6 +28,7 @@ NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 FORMAT = 4   # 4 = each project file also carries qty {drawing|spool: N} for spools made N times; 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
 EXT_RE = re.compile(r"\.xls[xmb]$", re.I)                                  # any Excel format
 BOM_NAME_RE = re.compile(r"line[\s_.-]*list|bom", re.I)                          # "Drawing Line List ...", "Drawing_Line_List", "BOM ..." - the exact wording does not matter
+MASTER_NAME_RE = re.compile(r"item[\s_.-]*master", re.I)                    # "Item Master DD-MM-YY.xlsb"
 DATE_RE = re.compile(r"(?<!\d)(\d{1,2})[-./_ ](\d{1,2})[-./_ ](\d{4}|\d{2})(?!\d)")   # first date in the name: 06-11-2026, 6.11.26, 06_11_26 ...
 
 
@@ -80,27 +83,27 @@ def _cell_text(v):
     return str(v)
 
 
-def iter_rows_xlsb(path):
-    """The same rows from an .xlsb workbook: the first sheet whose header row has a Project Code column."""
+def iter_rows_xlsb(path, key="Project Code"):
+    """The same rows from an .xlsb workbook: the first sheet whose header row has the key column."""
     from pyxlsb import open_workbook
     with open_workbook(str(path)) as wb:
         for name in wb.sheets:
             with wb.get_sheet(name) as sheet:
                 rows = sheet.rows()
                 first = next(rows, None)
-                if first is None or "Project Code" not in [_cell_text(c.v).strip() for c in first]:
+                if first is None or key not in [_cell_text(c.v).strip() for c in first]:
                     continue
                 yield [_cell_text(c.v) for c in first]
                 for row in rows:
                     yield [_cell_text(c.v) for c in row]
                 return
-    raise RuntimeError("no sheet with a 'Project Code' column found in " + str(path))
+    raise RuntimeError("no sheet with a '%s' column found in %s" % (key, path))
 
 
-def iter_rows(xlsx_path):
+def iter_rows(xlsx_path, key="Project Code"):
     """Streams the biggest worksheet row by row as lists of strings (handles inline and shared strings)."""
     if str(xlsx_path).lower().endswith(".xlsb"):
-        yield from iter_rows_xlsb(xlsx_path)
+        yield from iter_rows_xlsb(xlsx_path, key)
         return
     z = zipfile.ZipFile(xlsx_path)
     sheets = [i for i in z.infolist() if re.match(r"xl/worksheets/sheet\d+\.xml$", i.filename)]
@@ -136,8 +139,26 @@ def iter_rows(xlsx_path):
             yield vals
 
 
-def convert(xlsx_path):
-    """-> {project: {"spools": {"<drawing>|<spool>": [item lines]}}} (spool header rows are skipped)."""
+def read_master(path):
+    """Item Master -> {ITEM CODE: (description, category, normal size, schedule)}. Only these four fields are read (never costs)."""
+    head, out = None, {}
+    for vals in iter_rows(path, key="No."):
+        if head is None:
+            head = {h.strip(): i for i, h in enumerate(vals)}
+            missing = [c for c in ("No.", "Description", "Item Category Code", "Normal Size", "Schedule") if c not in head]
+            if missing:
+                raise RuntimeError("Item Master columns missing: %s" % missing)
+            continue
+        g = lambda name: _clean(vals[head[name]]) if head[name] < len(vals) else ""
+        if g("No."):
+            out[g("No.").upper()] = (g("Description"), g("Item Category Code"), g("Normal Size"), g("Schedule"))
+    return out
+
+
+def convert(xlsx_path, master=None):
+    """-> {project: {"spools": {"<drawing>|<spool>": [item lines]}}} (spool header rows are skipped).
+    master (from read_master): its non-empty values replace the BOM's description, category, size and schedule of the same item code."""
+    used, unknown = set(), set()
     head = None
     out = {}
     qtys = {}        # project -> {"drawing|spool": N} for spools made more than once (the Quantity of the spool's own header row)
@@ -162,8 +183,19 @@ def convert(xlsx_path):
             continue
         code = (g(COLS["aicd"]) or g(COLS["icd"])).strip()
         line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"])), _clean(g(COLS["sched"]))]
+        if master is not None and code:
+            m = master.get(code.upper())
+            if m:
+                used.add(code.upper())
+                for pos, value in zip((2, 5, 6, 8), m):
+                    if value:
+                        line[pos] = value
+            else:
+                unknown.add(code.upper())
         out.setdefault(project, {}).setdefault(drawing + "|" + spool, []).append(line)
     print("Spool header quantities (value: number of spools): " + ", ".join("%s: %d" % (k if k != "" else "(empty)", v) for k, v in sorted(hdr_seen.items(), key=lambda kv: -kv[1])[:8]))
+    if master is not None:
+        print("Item Master: %d item codes of the BOM found, %d not in the master (BOM values kept)%s" % (len(used), len(unknown), ": " + ", ".join(sorted(unknown)[:10]) if unknown else ""))
     return {p: ({"spools": s, "qty": qtys[p]} if qtys.get(p) else {"spools": s}) for p, s in out.items()}
 
 
@@ -171,9 +203,9 @@ def safe_name(project: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", project) + ".json"
 
 
-def write_local(xlsx_path, outdir, source_name=None):
+def write_local(xlsx_path, outdir, source_name=None, master_path=None):
     os.makedirs(outdir, exist_ok=True)
-    data = convert(xlsx_path)
+    data = convert(xlsx_path, read_master(master_path) if master_path else None)
     built = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     manifest = {"source": source_name or os.path.basename(xlsx_path), "built": built, "projects": {}}
     for project, body in data.items():
@@ -207,7 +239,7 @@ def _find(svc, parent, name, folder=False):
     return r.get("files", [])
 
 
-def _newest_source(svc, bom_id):
+def _newest_source(svc, bom_id, name_re=BOM_NAME_RE, label="BOM"):
     """The newest BOM workbook in BOM/, whatever it is called. Any Excel file whose name mentions "Line List" or "BOM" counts (temporary
     "~$" files and anything that is not Excel are ignored). Newest = the date written in the name; a file without a readable date counts
     from the day it was last modified in Drive; ties go to the file modified last. Every file seen is printed so a surprise is visible."""
@@ -216,7 +248,7 @@ def _newest_source(svc, bom_id):
     cands, skipped = [], []
     for f in r.get("files", []):
         name = f["name"].strip()
-        if name.startswith("~$") or not EXT_RE.search(name) or not BOM_NAME_RE.search(name):
+        if name.startswith("~$") or not EXT_RE.search(name) or not name_re.search(name):
             skipped.append(name)
             continue
         mod = f.get("modifiedTime") or ""
@@ -228,8 +260,8 @@ def _newest_source(svc, bom_id):
         cands.append(((eff, mod), f, nd))
     cands.sort(key=lambda c: c[0])
     for key, f, nd in cands:
-        print("  BOM file: %-50s date %s (%s)" % (f["name"].strip(), key[0], "from the name" if nd else "from the Drive modified date"))
-    if skipped:
+        print("  %s file: %-50s date %s (%s)" % (label, f["name"].strip(), key[0], "from the name" if nd else "from the Drive modified date"))
+    if skipped and label == "BOM":
         print("  ignored (not a BOM workbook): " + ", ".join(skipped))
     return cands[-1][1] if cands else None
 
@@ -256,28 +288,35 @@ def run_drive():
     if not src:
         print("ACTION NEEDED: no BOM workbook (an Excel file with 'Line List' or 'BOM' in its name) found in the Drive BOM folder.")
         return 1
+    mst = _newest_source(svc, bom_id, MASTER_NAME_RE, "Item Master")
+    if not mst:
+        print("No Item Master in BOM/ - descriptions come from the BOM file only.")
+    mst_id = "%s|%s|%s" % (mst["name"], mst.get("size"), mst.get("modifiedTime")) if mst else None
     data_f = _find(svc, bom_id, "data", folder=True)
     data_id = data_f[0]["id"] if data_f else svc.files().create(body={"name": "data", "parents": [bom_id], "mimeType": "application/vnd.google-apps.folder"}, fields="id", supportsAllDrives=True).execute()["id"]
     man = _find(svc, data_id, "_manifest.json")
     old = {}
     if man:
         old = json.loads(svc.files().get_media(fileId=man[0]["id"]).execute().decode("utf-8"))
-        if old.get("source") == src["name"] and old.get("size") == src.get("size") and old.get("modified") == src.get("modifiedTime") and old.get("format") == FORMAT:
+        if old.get("source") == src["name"] and old.get("size") == src.get("size") and old.get("modified") == src.get("modifiedTime") and old.get("format") == FORMAT and old.get("master") == mst_id:
             print("Up to date: %s (already converted)." % src["name"])
             return 0
     print("Converting %s ..." % src["name"])
-    tmp = os.path.join(tempfile.gettempdir(), "bom_source" + os.path.splitext(src["name"])[1].lower())
-    with open(tmp, "wb") as fh:
-        dl = MediaIoBaseDownload(fh, svc.files().get_media(fileId=src["id"]))
-        done = False
-        while not done:
-            _, done = dl.next_chunk()
-    data = convert(tmp)
+    def fetch(f, stem):
+        path = os.path.join(tempfile.gettempdir(), stem + os.path.splitext(f["name"].strip())[1].lower())
+        with open(path, "wb") as fh:
+            dl = MediaIoBaseDownload(fh, svc.files().get_media(fileId=f["id"]))
+            done = False
+            while not done:
+                _, done = dl.next_chunk()
+        return path
+
+    data = convert(fetch(src, "bom_source"), read_master(fetch(mst, "item_master")) if mst else None)
     built = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     # Projects missing from today's BOM are left exactly as they are: their files are never deleted or changed, and they stay in the
     # manifest (project list of the page) with the source/date of the BOM they came from. Only projects present in the BOM are updated.
     old_projects = old.get("projects") if isinstance(old.get("projects"), dict) else {}
-    manifest = {"source": src["name"], "size": src.get("size"), "modified": src.get("modifiedTime"), "format": FORMAT, "built": built, "projects": dict(old_projects)}
+    manifest = {"source": src["name"], "size": src.get("size"), "modified": src.get("modifiedTime"), "format": FORMAT, "master": mst_id, "built": built, "projects": dict(old_projects)}
     missing = []
     for project, body in data.items():
         payload = {"project": project, "source": src["name"], "built": built, "spools": body["spools"]}
@@ -303,7 +342,7 @@ def run_drive():
 
 if __name__ == "__main__":
     if len(sys.argv) >= 4 and sys.argv[1] == "--local":
-        m = write_local(sys.argv[2], sys.argv[3])
+        m = write_local(sys.argv[2], sys.argv[3], master_path=sys.argv[4] if len(sys.argv) > 4 else None)
         for p, i in m["projects"].items():
             print("%-14s %5d spools %6d items %7.0f KB" % (p, i["spools"], i["items"], i["bytes"] / 1024))
         print("total %.1f MB" % (sum(i["bytes"] for i in m["projects"].values()) / 1048576))

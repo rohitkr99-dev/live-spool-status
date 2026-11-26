@@ -288,7 +288,7 @@
     if (!DRIVE_URL) return;
     var byProject = {};
     rec.bars.forEach(function (b, i) {
-      if (typeof b.spec === 'string') return;
+      if (typeof b.spec === 'string' && b.spec.split(', ').length >= 4) return;     // description, category, size and schedule are there
       var p = (b.pieces[0] && b.pieces[0].project) || rec.project || '';
       if (p) (byProject[p] = byProject[p] || []).push(i);
     });
@@ -296,7 +296,8 @@
       bomSpecs(p).then(function (map) {
         if (!map) return;
         byProject[p].forEach(function (i) {
-          var b = rec.bars[i]; b.spec = map[String(b.item || '').trim().toUpperCase()] || '';
+          var b = rec.bars[i], found = map[String(b.item || '').trim().toUpperCase()] || '';
+          if (typeof b.spec !== 'string' || found.length > b.spec.length) b.spec = found;     // a saved short description is replaced by a fuller one
           var el = shown === rec && document.querySelector('[data-spec="' + i + '"]');
           if (el) el.textContent = b.spec;
         });
@@ -310,7 +311,7 @@
     $('sheet').hidden = false;
     var s = rec.summary, m = function (v) { return (v / 1000).toFixed(2); };
     $('actions').innerHTML = (accepted ? '' : '<button class="btn btn--primary" id="acc" type="button">Accept plan</button> ') +
-      '<button class="btn btn--ghost" id="pdf" type="button">Download plan (PDF)</button> <button class="btn btn--ghost" id="xl" type="button">Download plan &amp; updates (Excel)</button>' +
+      '<button class="btn btn--ghost" id="pv" type="button">Preview plan</button> <button class="btn btn--ghost" id="pdf" type="button">Download plan (PDF)</button> <button class="btn btn--ghost" id="xl" type="button">Download plan &amp; updates (Excel)</button>' +
       (accepted && DRIVE_URL ? ' <button class="btn btn--ghost" id="drv" type="button">Save to Drive</button>' : '') +
       '<p class="cp-note" id="actnote">' + (accepted ? '' : 'Nothing is recorded until you accept.') + '</p>';
     var k = [['Pieces', s.pieces], ['Planned', s.placed], ['MNA (no pipe)', s.unplaced], ['Pipes used', s.bars], ['Pipe length used (m)', m(s.startMm)], ['Net cut (m)', m(s.netMm)], ['Remain after (m)', m(s.remainMm)], ['Yield %', s.yieldPct.toFixed(1)]];
@@ -323,6 +324,7 @@
       return '<div class="cp-card cp-bar"><div class="cp-barhd"><h3>' + barTitle(b, i) + '</h3><small>Barcode ' + esc(b.barcode) + '</small><small>Heat ' + esc(b.heat) + '</small><small>Length ' + b.startLength + '</small><b>Remain ' + b.remain + '</b></div><div class="cp-spec" data-spec="' + i + '">' + esc(b.spec || '') + '</div>' +
         '<div class="cp-lay">' + seg + '</div><div class="cp-tw"><table><tr><th>#</th><th>Project</th><th>Drawing No.</th><th>Spool No.</th><th>Group</th><th>Bevel</th><th class="n">Length</th></tr>' + rows + '</table></div></div>';
     }).join('');
+    $('pv').onclick = function () { window.open(buildPdf(rec).output('bloburl'), '_blank'); };     // the same PDF, shown in a new tab instead of saved
     $('pdf').onclick = function () { buildPdf(rec).save(fileBase(rec) + '.pdf'); };
     $('xl').onclick = function () { XLSX.writeFile(buildWorkbook(rec), fileBase(rec) + '.xlsx'); };
     if (!accepted) $('acc').onclick = accept;

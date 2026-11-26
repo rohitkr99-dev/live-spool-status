@@ -39,6 +39,10 @@ memory of past sessions, start here:
 
 ## Session Log
 
+### 2026-11-26 - Item Master fills BOM descriptions; Preview plan button
+
+The BOM sync takes Description, Category, Normal Size and Schedule of each item code from the newest `Item Master` workbook in Drive BOM/ (the 25-11 Drawing Line List had no size/schedule columns). A saved cutting plan with a short pipe description is completed when opened. New "Preview plan" button opens the PDF in a new tab.
+
 ### 2026-11-19 - Drive script v18: saving a plan again no longer leaves old pieces behind
 
 Plan VOGT 198-039 WEEK-35 was saved twice under one number; the Status sheet kept 5 rows of the first version, so the new duplicate check wrongly blocked spools 0012/0013. The script now replaces a plan's unticked Status rows when the plan is saved again (ticked rows stay). Extra rows of 3 plans were removed once (backup copy made first).
