@@ -6,6 +6,9 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
+## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live"
+`scripts/build_bom.py` takes Description / Category / Normal Size / Schedule of every BOM item code from the newest `Item Master DD-MM-YY.xlsb` in Drive BOM/ (already uploaded there); `cutting-plan.js` (v20261126) re-looks up a saved plan's short pipe description when the plan is opened.  Also there: a "Preview plan" button next to the downloads (opens the same PDF in a new tab). After going live: push to main, run the Build BOM data workflow, check NE_190-020_WEEK-36 shows DN 350, SCH 30. Cause: the 25-11 xlsb Drawing Line List has no Normal Size / Schedule columns.
+
 ## ⚠️ Gotcha, hit repeatedly — check this before editing anything
 
 **Before editing any file in this repo, confirm the primary checkout (`live-spool-status/`) isn't stale.** Run `git log -1 --oneline` and compare against `git log -1 --oneline origin/main` (after `git fetch origin main`). This checkout's `main` branch has drifted behind `origin/main` multiple times now (2026-09-07, 2026-09-15, 2026-09-21, and again by 2026-09-22 — the hourly Drive-sync workflow moved `origin/main` by one commit between this session's clone and its first push) — editing there directly risks building on stale code and losing/conflicting with upstream commits.
