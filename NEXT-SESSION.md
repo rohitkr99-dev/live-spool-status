@@ -10,9 +10,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`). Weeks = **Initial Week Planned** (person's rule; all 10,605 spools with a Week have it, 787 were moved). Live
 Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover still filters by current Week. First load ~23 s (comparison ~37 s).
 
-**Target + work front (2026-11-28): BUILT on branch `cutting-target-workfront`, PR open, NOT merged.** Person: leave handover dates as recorded (production's batch ticking
-stays visible; no date check). Checked locally with stand-in data only. After merge: run the "Build BOM data" workflow (FORMAT 5 rebuild) so Inch Dia reaches the site, then
-check the live Dashboard and Material Handover (browser may hold old data for ~10 min). The "Spools / Inch Dia" switch is not built (not confirmed).
+**Target + work front (2026-11-28): MERGED (PR 26, a7620d2) and deployed** (first deploy failed on a GitHub "artifact not found" glitch; rerun succeeded). "Build BOM data" run
+after merge updated all 15 projects with Inch Dia. Person: leave handover dates as recorded (production's batch ticking stays visible; no date check). **Still to do:** check the
+live Dashboard and Material Handover on real data (the person's Chrome was signed out). The "Spools / Inch Dia" switch is not built (not confirmed).
 Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without these changes.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
