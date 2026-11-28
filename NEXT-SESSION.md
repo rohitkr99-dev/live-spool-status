@@ -6,16 +6,17 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
-## Cutting Station Dashboard (2026-11-28) - LIVE (PR 24 merged, 58abdb9) and checked on live data
-Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`), no script change. Live check, Week 35: 598 spools, 431 complete / 146 partial / 21 balance - identical to Material
-Handover. First load: figures after ~23 s, week-by-week chart after ~37 s (later opens show the saved view at once). If that is too slow, option: let the Drive script do the
-totals (needs a redeploy by the person). **Next (answered 2026-11-28, NOT built):** (1) Target rule from the person: every spool starting in week N must be handed over by the end of week N-1. (2) For a partial
-spool show "% work front available" from the BOM's per-component **Inch Dia** column (it exists in the `Drawing Line List` .xlsb; build_bom.py does not read it yet - needs
-COLS + FORMAT bump, PR first). Need to see the column: ask to download the file or for a screenshot of one spool's rows. (3) Found on live data: handover dates look bulk
-entered (Week 34: 313 spools dated 18-11, after its 16-11 start; Week 35: 345 dated 26-11, start 23-11), so an on-time measure needs real dates - ask the person.
-**Initial week (2026-11-28):** the person: use "Initial Week Planned" only (not Week). Built on branch `cutting-dashboard-initial-week` (PR). After merge, run "Sync from
-Google Drive" so the column reaches the published data; until then the Dashboard says it is waiting. Then check how many spools with a Week have no initial week.
-Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without this change.
+## Cutting Station Dashboard (2026-11-28) - LIVE (PR 24 + PR 25 merged, sync run, checked on live data)
+Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`). Weeks = **Initial Week Planned** (person's rule; all 10,605 spools with a Week have it, 787 were moved). Live
+Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover still filters by current Week. First load ~23 s (comparison ~37 s).
+
+**Open 1 - target:** every spool starting in week N must be handed over by the end of week N-1. NOT built. Asked the person whether handover dates are real: Week 34 has 313
+spools dated 18-11 (start 16-11), Week 35 has 345 dated 26-11 (start 23-11) - either truly late, or ticked later with the default date.
+**Open 2 - work front % of partial spools:** NOT built, proposal sent. BOM `Drawing Line List` column "Inch Dia" checked (25-11-26 file, copy deleted): the "Spool" heading
+row = total for all N copies; item rows = per piece split (items x N = heading for all 36 multi spools and 20,285 of 20,286 single ones), so NOT divided by N in build_bom
+(unlike area). Item total = tracker spool Inch Dia for 13,696 of 15,629 (88%). Needs build_bom.py COLS + FORMAT bump (PR first), then work front = Inch Dia of available
+items / Inch Dia of all items; "Inch Dia Cutting" column is empty. The "Spools / Inch Dia" switch is also still not built.
+Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without these changes.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
 `scripts/build_bom.py` takes Description / Category / Normal Size / Schedule of every BOM item code from the newest `Item Master DD-MM-YY.xlsb` in Drive BOM/ (already uploaded there); `cutting-plan.js` (v20261126) re-looks up a saved plan's short pipe description when the plan is opened.  Also there: a "Preview plan" button next to the downloads (opens the same PDF in a new tab). After going live: push to main, run the Build BOM data workflow, check NE_190-020_WEEK-36 shows DN 350, SCH 30. Cause: the 25-11 xlsb Drawing Line List has no Normal Size / Schedule columns.
