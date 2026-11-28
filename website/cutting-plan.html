@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css?v=20260921">
-<link rel="stylesheet" href="css/cutting-plan.css?v=20261111">
+<link rel="stylesheet" href="css/cutting-plan.css?v=20261128">
 <link rel="stylesheet" href="css/studio.css?v=20261019">
 </head>
 <body class="is-ready">
@@ -58,6 +58,7 @@
       <button class="btn btn--ghost" id="secBtnStatus" type="button">Cutting &amp; Beveling Status</button>
       <button class="btn btn--ghost" id="secBtnHandover" type="button">Material Handover</button>
       <button class="btn btn--ghost" id="secBtnInventory" type="button">Remain inventory</button>
+      <button class="btn btn--ghost" id="secBtnDashboard" type="button">Dashboard</button>
     </div>
 
     <div id="secPlan">
@@ -285,6 +286,20 @@
       </div>
     </section>
 
+    <!-- ============ DASHBOARD (weekly summary for management, read only) ============ -->
+    <section id="secDashboard" hidden>
+      <div class="cp-card db-filters">
+        <label>Week<select id="dbWeek"><option value="">Loading...</option></select></label>
+        <label>Group<select id="dbGroup"><option value="">All groups</option></select></label>
+        <button class="btn btn--ghost" id="dbRefresh" type="button">Refresh</button>
+        <div class="db-state">
+          <span id="dbNote" role="status"></span>
+          <div class="db-progress" id="dbProgress" hidden><i></i></div>
+        </div>
+      </div>
+      <div id="dbBody"></div>
+    </section>
+
     <section id="secInventory" hidden>
       <p class="cp-lock" role="status">You can view the lists, but your login is not allowed to change them in the Cutting Station. Ask the administrator to add your login email.</p>
       <div class="cp-card">
@@ -318,8 +333,9 @@
 <script src="js/cutplan-engine.js?v=20261104"></script>
 <script src="js/config.js?v=20261021"></script>
 <script src="js/cutting-plan.js?v=20261126"></script>
-<script src="js/cutting-status.js?v=20261108"></script>
-<script src="js/material-handover.js?v=20261120"></script>
+<script src="js/cutting-status.js?v=20261128"></script>
+<script src="js/material-handover.js?v=20261128"></script>
 <script src="js/remain-inventory.js?v=20261111"></script>
+<script src="js/mh-dashboard.js?v=20261128"></script>
 </body>
 </html>
