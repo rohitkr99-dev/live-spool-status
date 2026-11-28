@@ -12,6 +12,9 @@ Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover 
 
 **Open 1 - target:** every spool starting in week N must be handed over by the end of week N-1. NOT built. Asked the person whether handover dates are real: Week 34 has 313
 spools dated 18-11 (start 16-11), Week 35 has 345 dated 26-11 (start 23-11) - either truly late, or ticked later with the default date.
+Answer: B - production received earlier, ticked later, so recorded dates are not real. The tracker's own Material Handover dates are single-day too (Week 33: 549 on 09-11,
+Week 34: 322 on 17-11), so they do not give true dates. Proposed (awaiting yes): judge on-time from Week 37 (due 06-12); team sets "Date for my ticks"; optional date
+confirmation on save. Do not rewrite old entries without real dates from the person.
 **Open 2 - work front % of partial spools:** NOT built, proposal sent. BOM `Drawing Line List` column "Inch Dia" checked (25-11-26 file, copy deleted): the "Spool" heading
 row = total for all N copies; item rows = per piece split (items x N = heading for all 36 multi spools and 20,285 of 20,286 single ones), so NOT divided by N in build_bom
 (unlike area). Item total = tracker spool Inch Dia for 13,696 of 15,629 (88%). Needs build_bom.py COLS + FORMAT bump (PR first), then work front = Inch Dia of available
