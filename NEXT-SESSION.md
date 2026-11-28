@@ -9,9 +9,10 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 ## Cutting Station Dashboard (2026-11-28) - LIVE (PR 24 merged, 58abdb9) and checked on live data
 Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`), no script change. Live check, Week 35: 598 spools, 431 complete / 146 partial / 21 balance - identical to Material
 Handover. First load: figures after ~23 s, week-by-week chart after ~37 s (later opens show the saved view at once). If that is too slow, option: let the Drive script do the
-totals (needs a redeploy by the person). **Next:** Inch Dia - plan sent, NOT built, waiting for answers: "Count by: Spools / Inch Dia" switch plus an "Inch Dia progress" card
-(scope / material complete / cutting complete / handed / held by MNA, a spool counts fully or not at all; pipe and fitting bars stay in pieces); is all-or-nothing right, and is
-there a weekly Inch Dia target?
+totals (needs a redeploy by the person). **Next (answered 2026-11-28, NOT built):** (1) Target rule from the person: every spool starting in week N must be handed over by the end of week N-1. (2) For a partial
+spool show "% work front available" from the BOM's per-component **Inch Dia** column (it exists in the `Drawing Line List` .xlsb; build_bom.py does not read it yet - needs
+COLS + FORMAT bump, PR first). Need to see the column: ask to download the file or for a screenshot of one spool's rows. (3) Found on live data: handover dates look bulk
+entered (Week 34: 313 spools dated 18-11, after its 16-11 start; Week 35: 345 dated 26-11, start 23-11), so an on-time measure needs real dates - ask the person.
 Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without this change.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
