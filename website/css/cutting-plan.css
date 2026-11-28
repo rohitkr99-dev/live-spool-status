@@ -200,3 +200,18 @@ circle.db-s-pipe { fill: var(--db-pipe); } circle.db-s-hand { fill: var(--db-han
 @media (max-width: 900px) { .db-two { grid-template-columns: minmax(0, 1fr); } .db-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .db-state { text-align: left; } }
 @media (max-width: 520px) { .db-kpi .kpi-card__value { font-size: 34px; } .db-bar { grid-template-columns: 76px minmax(0, 1fr) 84px; gap: 8px; } .db-bar--miss { grid-template-columns: 110px minmax(0, 1fr) 46px; } .db-filters label, .db-filters select { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .db-track i, .db-stack i, .db-progress i, .db-meter i { transition: none; } }
+
+/* handover target and work front */
+#secDashboard { --db-ontime: var(--status-complete); }
+.db-target { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: center; }
+.db-big b { display: block; font: 800 52px/1 var(--font-display); color: var(--status-complete); font-variant-numeric: tabular-nums; }
+.db-big--front b { color: var(--db-fit); }
+.db-big span { display: block; margin-top: 6px; font-size: 12.5px; color: var(--frost-dim); }
+.db-card--over { border-color: var(--db-none); }
+.db-c-ontime { background: var(--status-complete); } .db-c-late { background: var(--db-partial); } .db-c-overdue { background: var(--db-none); }
+.db-c-pending { background: color-mix(in srgb, var(--frost) 28%, transparent); }
+.db-legend .db-s-ontime { background: var(--db-ontime); }
+polyline.db-s-ontime { stroke: var(--db-ontime); } circle.db-s-ontime { fill: var(--db-ontime); }
+.cp-front { display: block; margin-top: 3px; font-size: 11.5px; color: var(--frost-dim); }
+.cp-front b { color: var(--frost); }
+@media (max-width: 700px) { .db-target { grid-template-columns: minmax(0, 1fr); gap: 12px; } }

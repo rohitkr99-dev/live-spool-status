@@ -10,7 +10,7 @@
   var $ = CS.el, esc = CS.esc, api = CS.api;
 
   var TREND_FROM = '2026-11-09';   // first week whose cutting and handover ticks are all kept in this system (older weeks would look unfinished)
-  var TREND_MAX = 6, POOL = 4, STALE_MS = 5 * 60 * 1000, CACHE_KEY = 'mhDashboardV2';
+  var TREND_MAX = 6, POOL = 4, STALE_MS = 5 * 60 * 1000, CACHE_KEY = 'mhDashboardV3';
 
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
   var pn = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ''); };
@@ -68,11 +68,11 @@
 
   // one small record per BOM spool of a project (the BOM itself is not kept)
   function summarise(p, bom, stateRows, groupRows, base) {
-    var state = {}; stateRows.forEach(function (r) { state[r[0]] = { recv: r[5] === 'Yes', hand: r[8] === 'Yes' }; });
+    var state = {}; stateRows.forEach(function (r) { state[r[0]] = { recv: r[5] === 'Yes', hand: r[8] === 'Yes', date: CS.D.iso(r[9]) }; });
     var grp = {}; groupRows.forEach(function (g) { grp[nk(g[0]) + '|' + nk(g[1])] = g[2]; });
     var built = CS.mhBuild(p, bom, base.pieces[pn(p)] || [], base.spools);
     return built.spools.map(function (sp) {
-      var o = { k: skey(p, sp.drawing, sp.spool), g: grp[nk(sp.drawing) + '|' + nk(sp.spool)], n: sp.lines.length, r: 0, h: 0, wait: 0, pReq: 0, pPlan: 0, pCut: 0, pBev: 0, fReq: 0, fRecv: 0, fHand: 0, miss: {} };
+      var o = { k: skey(p, sp.drawing, sp.spool), g: grp[nk(sp.drawing) + '|' + nk(sp.spool)], n: sp.lines.length, r: 0, h: 0, wait: 0, pReq: 0, pPlan: 0, pCut: 0, pBev: 0, fReq: 0, fRecv: 0, fHand: 0, miss: {}, id: 0, idGot: 0, hd: '', nodate: false };
       sp.lines.forEach(function (l) {
         var st = state[l.k] || {}, hand = !!st.hand, hit = built.hits[l.k], recv;
         if (l.pipe) {   // a handed-over pipe obviously was cut, even if the cutting was never ticked (same rule as Material Handover)
@@ -88,8 +88,9 @@
           if (hand) o.fHand++;
           if (!recv && !hand) { var t = typeOf(l.desc); o.miss[t] = (o.miss[t] || 0) + 1; }
         }
-        if (recv) o.r++;
-        if (hand) o.h++;
+        o.id += l.idia;
+        if (recv) { o.r++; o.idGot += l.idia; }
+        if (hand) { o.h++; if (!st.date) o.nodate = true; else if (st.date > o.hd) o.hd = st.date; }   // the spool's handover date is its last item's
         if (recv && !hand) o.wait++;
       });
       return o;
@@ -133,8 +134,10 @@
     return rows;
   }
 
-  function totals(rows) {
-    var t = { scope: rows.length, found: 0, handed: 0, complete: 0, partial: 0, none: 0, pReq: 0, pPlan: 0, pCut: 0, pBev: 0, fReq: 0, fRecv: 0, fHand: 0, miss: {}, groups: {}, projects: {} };
+  // start: the week's first day. A spool meets the target when it was handed over before that day (by the end of the week before).
+  function totals(rows, start) {
+    var t = { scope: rows.length, found: 0, handed: 0, complete: 0, partial: 0, none: 0, pReq: 0, pPlan: 0, pCut: 0, pBev: 0, fReq: 0, fRecv: 0, fHand: 0, miss: {}, groups: {}, projects: {},
+      onTime: 0, id: 0, idHanded: 0, idOnTime: 0, front: { spools: 0, id: 0, got: 0, high: 0, mid: 0, low: 0 } };
     rows.forEach(function (row) {
       t.projects[pn(row.project)] = 1;
       var o = row.o;
@@ -142,7 +145,16 @@
       t.found++;
       var status = o.r === o.n ? 'complete' : (o.r === 0 ? 'none' : 'partial');
       t[status]++;
-      if (o.h > 0 && o.wait === 0) t.handed++;
+      t.id += o.id;
+      if (o.h > 0 && o.wait === 0) {
+        t.handed++; t.idHanded += o.id;
+        if (!o.nodate && o.hd && start && o.hd < start) { t.onTime++; t.idOnTime += o.id; }
+      }
+      if (status === 'partial' && o.id) {
+        var share = o.idGot / o.id;
+        t.front.spools++; t.front.id += o.id; t.front.got += o.idGot;
+        t.front[share >= 0.75 ? 'high' : share >= 0.5 ? 'mid' : 'low']++;
+      }
       ['pReq', 'pPlan', 'pCut', 'pBev', 'fReq', 'fRecv', 'fHand'].forEach(function (f) { t[f] += o[f]; });
       Object.keys(o.miss).forEach(function (m) { t.miss[m] = (t.miss[m] || 0) + o.miss[m]; });
       var g = t.groups[row.group] = t.groups[row.group] || { complete: 0, partial: 0, none: 0, total: 0 };
@@ -164,14 +176,44 @@
       '<span class="db-bar__v"><b>' + fmt(v) + '</b> <small>' + pct(v, max) + '%</small></span></div>';
   }
   var PARTS = [['complete', 'Complete material'], ['partial', 'Partial MNA'], ['none', 'Material balance (nothing received)']];
-  function stack(c, total, cls, labels) {
-    return '<div class="db-stack ' + (cls || '') + '">' + PARTS.map(function (p) {
+  function stack(c, total, cls, labels, parts) {
+    return '<div class="db-stack ' + (cls || '') + '">' + (parts || PARTS).map(function (p) {
       var v = c[p[0]], w = total ? v / total * 100 : 0;
       return v ? '<i class="db-c-' + p[0] + '" data-w="' + w + '" title="' + p[1] + ': ' + fmt(v) + ' (' + pct(v, total) + '%)">' + (labels && w >= 7 ? Math.round(w) + '%' : '') + '</i>' : '';
     }).join('') + '</div>';
   }
-  function legend(c, total) {
-    return '<div class="db-legend">' + PARTS.map(function (p) { return '<span><i class="db-c-' + p[0] + '"></i>' + p[1] + (c ? ' <b>' + fmt(c[p[0]]) + '</b> <small>' + pct(c[p[0]], total) + '%</small>' : '') + '</span>'; }).join('') + '</div>';
+  function legend(c, total, parts) {
+    return '<div class="db-legend">' + (parts || PARTS).map(function (p) { return '<span><i class="db-c-' + p[0] + '"></i>' + p[1] + (c ? ' <b>' + fmt(c[p[0]]) + '</b> <small>' + pct(c[p[0]], total) + '%</small>' : '') + '</span>'; }).join('') + '</div>';
+  }
+
+  var dayBefore = function (iso) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
+  var inch = function (n) { return fmt(Math.round(n)); };
+
+  function targetCard(t, start) {
+    if (!start) return card('Handover target', '', '<p class="cp-note">This week has no Planned Start date, so it has no due date.</p>');
+    var due = dayBefore(start), over = todayIso() > due, pending = t.scope - t.handed, late = t.handed - t.onTime;
+    var c = { ontime: t.onTime, late: late, pending: pending };
+    var parts = [['ontime', 'Handed over by the due date'], ['late', 'Handed over after it'], [over ? 'overdue' : 'pending', over ? 'Overdue: not handed over' : 'Still to hand over']];
+    if (over) c.overdue = pending;
+    var id = t.id ? '<p class="cp-note">In Inch Dia: <b>' + inch(t.idOnTime) + '</b> of ' + inch(t.id) + ' by the due date (' + pct(t.idOnTime, t.id) + '%), ' + inch(t.idHanded - t.idOnTime) + ' after it, ' + inch(t.id - t.idHanded) + ' not handed over.</p>' : '';
+    return card('Handover target', 'all ' + fmt(t.scope) + ' spools due by ' + dmy(due) + ', the end of the week before',
+      '<div class="db-target"><div class="db-big"><b>' + pct(t.onTime, t.scope) + '%</b><span>' + fmt(t.onTime) + ' of ' + fmt(t.scope) + ' spools on time</span></div>' +
+      '<div class="db-target__bar">' + stack(c, t.scope, 'db-stack--big', true, parts) + legend(c, t.scope, parts) + '</div></div>' + id +
+      '<p class="cp-note">Dates are those recorded in this system: a handover that is ticked later counts on the day it was ticked.</p>', over && pending ? 'db-card--over' : '');
+  }
+
+  function frontCard(t) {
+    var f = t.front, body;
+    if (!t.id) body = '<p class="cp-note">The BOM data has no Inch Dia yet. It arrives with the next BOM build.</p>';
+    else if (!f.spools) body = '<p class="cp-note">No partial spool in this selection.</p>';
+    else {
+      var rows = [['75% or more', f.high], ['50 to 74%', f.mid], ['Below 50%', f.low]], max = Math.max(f.high, f.mid, f.low);
+      body = '<div class="db-target"><div class="db-big db-big--front"><b>' + Math.min(99, pct(f.got, f.id)) + '%</b><span>' + inch(f.got) + ' of ' + inch(f.id) + ' Inch Dia available</span></div>' +
+        '<div class="db-target__bar">' + rows.map(function (r) {
+          return '<div class="db-bar db-bar--miss"><span class="db-bar__l">' + r[0] + ' ready</span><span class="db-track"><i class="db-c-fit" data-w="' + (max ? r[1] / max * 100 : 0) + '"></i></span><span class="db-bar__v"><b>' + fmt(r[1]) + '</b></span></div>';
+        }).join('') + '</div></div><p class="cp-note">Spools by how much of their Inch Dia is available. A guide only: a joint needs both of its parts, and the BOM counts it against one.</p>';
+    }
+    return card('Work front in partial spools', fmt(f.spools) + ' partial spools', body);
   }
 
   function trendSvg(points) {
@@ -180,8 +222,8 @@
     var W = 900, H = 210, L = 42, R = 56, top = 22, bottom = 170;
     var x = function (i) { return points.length === 1 ? (L + W - R) / 2 : L + 30 + i * (W - L - R - 60) / (points.length - 1); };
     var y = function (v) { return bottom - v / 100 * (bottom - top); };
-    var series = [['bev', 'Cut and beveled', 'db-s-pipe', -10], ['hand', 'Handed to production', 'db-s-hand', 18]];
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(points.map(function (p) { return p.name + ': cut and beveled ' + p.bev + '%, handed to production ' + p.hand + '%'; }).join('; ')) + '">';
+    var series = [['bev', 'Cut and beveled', 'db-s-pipe', -10], ['hand', 'Handed to production', 'db-s-hand', 18], ['ontime', 'Handed over by the due date', 'db-s-ontime', -10]];
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(points.map(function (p) { return p.name + ': cut and beveled ' + p.bev + '%, handed to production ' + p.hand + '%, by the due date ' + p.ontime + '%'; }).join('; ')) + '">';
     [0, 50, 100].forEach(function (v) { svg += '<line class="db-grid" x1="' + L + '" x2="' + (W - 10) + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="db-axis" x="4" y="' + (y(v) + 4) + '">' + v + '%</text>'; });
     series.forEach(function (s) {
       if (points.length > 1) svg += '<polyline class="db-line ' + s[2] + '" points="' + points.map(function (p, i) { return x(i) + ',' + y(p[s[0]]); }).join(' ') + '"/>';
@@ -191,7 +233,7 @@
       });
     });
     points.forEach(function (p, i) { svg += '<text class="db-axis" text-anchor="middle" x="' + x(i) + '" y="' + (H - 12) + '">' + esc(p.name) + '</text>'; });
-    return '<div class="db-legend"><span><i class="db-s-pipe"></i>Cut and beveled</span><span><i class="db-s-hand"></i>Handed to production (dashed)</span></div><div class="db-trend">' + svg + '</svg></div>';
+    return '<div class="db-legend"><span><i class="db-s-pipe"></i>Cut and beveled</span><span><i class="db-s-hand"></i>Handed to production (dashed)</span><span><i class="db-s-ontime"></i>Handed over by the due date</span></div><div class="db-trend">' + svg + '</svg></div>';
   }
 
   function render() {
@@ -201,13 +243,16 @@
     var names = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
     if (g && !groups[g]) g = '';
     $('dbGroup').innerHTML = '<option value="">All groups</option>' + names.map(function (n) { return '<option' + (n === g ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('');
-    var t = totals(g ? view.rows.filter(function (r) { return r.group === g; }) : view.rows), nProj = Object.keys(t.projects).length;
+    var startOf = {}; view.weeks.forEach(function (w) { startOf[w.name] = w.start; });
+    var t = totals(g ? view.rows.filter(function (r) { return r.group === g; }) : view.rows, startOf[view.week]), nProj = Object.keys(t.projects).length;
 
     var html = '<section class="kpi-strip db-kpis" aria-label="Week summary">' +
       kpi('db-kpi--scope', 'Weekly scope', fmt(t.scope), 'spools in ' + nProj + ' project' + (nProj === 1 ? '' : 's')) +
       kpi('db-kpi--pipe', 'Cut and beveled', pct(t.pBev, t.pReq) + '%', fmt(t.pBev) + ' of ' + fmt(t.pReq) + ' pipe pieces', pct(t.pBev, t.pReq)) +
       kpi('db-kpi--fit', 'Received from store', pct(t.fRecv, t.fReq) + '%', fmt(t.fRecv) + ' of ' + fmt(t.fReq) + ' fittings and items', pct(t.fRecv, t.fReq)) +
       kpi('db-kpi--hand', 'Handed to production', pct(t.handed, t.scope) + '%', fmt(t.handed) + ' of ' + fmt(t.scope) + ' spools', pct(t.handed, t.scope)) + '</section>';
+
+    html += targetCard(t, startOf[view.week]);
 
     html += '<div class="db-two">' +
       card('Pipes: cutting station', 'pipe lines of the BOM', bar('Required', t.pReq, t.pReq, 'db-c-pipe db-c-soft') + bar('Planned', t.pPlan, t.pReq, 'db-c-pipe') + bar('Cut', t.pCut, t.pReq, 'db-c-pipe') + bar('Beveled', t.pBev, t.pReq, 'db-c-pipe') +
@@ -217,6 +262,8 @@
 
     html += card('MNA status', fmt(t.found) + ' spools with a BOM', stack(t, t.found, 'db-stack--big', true) + legend(t, t.found) +
       (t.scope > t.found ? '<p class="cp-note">' + fmt(t.scope - t.found) + ' spool(s) of the week have no BOM lines yet, so they have no material status.</p>' : ''));
+
+    html += frontCard(t);
 
     var gNames = Object.keys(t.groups).sort(function (a, b) { return t.groups[b].total - t.groups[a].total || a.localeCompare(b); });
     var gMax = gNames.length ? t.groups[gNames[0]].total : 0;
@@ -232,8 +279,8 @@
       }).join('') || '<p class="cp-note">Everything has been received.</p>') + '</div>';
 
     var points = view.trend && view.trend.map(function (w) {
-      var x = totals(g ? w.rows.filter(function (r) { return r.group === g; }) : w.rows);
-      return { name: w.name, bev: pct(x.pBev, x.pReq), hand: pct(x.handed, x.scope) };
+      var x = totals(g ? w.rows.filter(function (r) { return r.group === g; }) : w.rows, startOf[w.name]);
+      return { name: w.name, bev: pct(x.pBev, x.pReq), hand: pct(x.handed, x.scope), ontime: pct(x.onTime, x.scope) };
     });
     html += card('Week by week', 'how complete each week is today, from ' + dmy(TREND_FROM), trendSvg(points));
     html += '<p class="cp-note db-foot">A week holds the spools whose Initial Week Planned it is, even if they were moved later. Counted from what is ticked in this system. A pipe counts as cut and beveled when both are ticked, or when it has already been handed over. A spool counts as handed to production when everything received for it has been handed over.</p>';
