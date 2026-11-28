@@ -6,6 +6,9 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
+## Cutting Station and SIOP Meeting Tracker are LIVE (2026-11-28, person's request)
+Home cards show Live; Cutting page Testing badge/wording removed. Older notes below that call them Testing / Coming Soon are history.
+
 ## Cutting Station Dashboard (2026-11-28) - LIVE (PR 24 + PR 25 merged, sync run, checked on live data)
 Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`). Weeks = **Initial Week Planned** (person's rule; all 10,605 spools with a Week have it, 787 were moved). Live
 Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover still filters by current Week. First load ~23 s (comparison ~37 s).

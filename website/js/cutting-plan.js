@@ -2,7 +2,7 @@
  * cutting-plan.js - UI for the Cutting Plan page (engine: cutplan-engine.js).
  * Runs entirely in the browser. Accepted plans are kept in localStorage and can
  * optionally be saved to Google Drive through the Apps Script inbox (DRIVE_URL).
- * The page is in a Testing phase: the tool is visible, with a Testing badge in the top bar.
+ * The page has been Live since 2026-11-28.
  */
 (function () {
   'use strict';

@@ -2623,3 +2623,8 @@ visible, no date check or correction. Work front = Inch Dia of available items /
 Each of the four top cards has an Inch Dia line (from the BOM). A spool's Inch Dia counts only when the whole spool is done for that card: all pipe cut and beveled, all
 fittings received (a spool with none counts), handed over as the spool count does. Approved by the person from a preview with live Week 35 figures
 (3,866 planned / 3,745 cut / 2,101 received / 1,770 handed over).
+
+### 2026-11-28 - Cutting Station and SIOP Meeting Tracker marked Live
+
+On the person's request: both home-page cards now show Live (Cutting was Testing, the tracker Coming Soon). The Cutting page's Testing badge and "keep using your master
+workbook" wording are removed; "Check each plan before cutting." stays.
