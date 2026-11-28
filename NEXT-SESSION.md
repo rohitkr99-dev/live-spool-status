@@ -11,8 +11,9 @@ Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`). Weeks = **Initial Wee
 Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover still filters by current Week. First load ~23 s (comparison ~37 s).
 
 **Target + work front (2026-11-28): MERGED (PR 26, a7620d2) and deployed** (first deploy failed on a GitHub "artifact not found" glitch; rerun succeeded). "Build BOM data" run
-after merge updated all 15 projects with Inch Dia. Person: leave handover dates as recorded (production's batch ticking stays visible; no date check). **Still to do:** check the
-live Dashboard and Material Handover on real data (the person's Chrome was signed out). The "Spools / Inch Dia" switch is not built (not confirmed).
+after merge updated all 15 projects with Inch Dia. Person: leave handover dates as recorded (production's batch ticking stays visible; no date check). **Checked live 2026-11-28 (Week 35):** target 0 of 581 on time (345 after the due date, 236 not handed over; 3,866 Inch Dia in all); work front 861 of 1,706 Inch Dia (50%) in
+146 partial spools; Material Handover shows the % per partial spool. Nothing left to verify.
+The "Spools / Inch Dia" switch is not built (not confirmed).
 Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without these changes.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
