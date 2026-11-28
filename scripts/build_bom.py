@@ -25,7 +25,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
-FORMAT = 4   # 4 = each project file also carries qty {drawing|spool: N} for spools made N times; 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
+FORMAT = 5   # 5 = item lines also carry the Inch Dia; 4 = each project file also carries qty {drawing|spool: N} for spools made N times; 3 = item lines also carry the Schedule; (2 = surface area); bump it to force a rebuild of every project file
 EXT_RE = re.compile(r"\.xls[xmb]$", re.I)                                  # any Excel format
 BOM_NAME_RE = re.compile(r"line[\s_.-]*list|bom", re.I)                          # "Drawing Line List ...", "Drawing_Line_List", "BOM ..." - the exact wording does not matter
 MASTER_NAME_RE = re.compile(r"item[\s_.-]*master", re.I)                    # "Item Master DD-MM-YY.xlsb"
@@ -46,10 +46,11 @@ def _name_date(name):
         return None
 
 # BOM column -> short key used in the per-spool item arrays
-# item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM), schedule]
+# item line = [serial, code, description, qty, uom, category, size, surface area m2 (for all copies of the spool, as in the BOM), schedule,
+#              Inch Dia of ONE copy (the "Spool" heading row holds the total of all copies; the item rows split one copy's share)]
 COLS = {
     "project": "Project Code", "drawing": "Drawing No.", "spool": "Spool No", "serial": "S.No.", "icd": "ICD", "aicd": "Current AICD",
-    "desc": "Description", "qty": "Quantity", "uom": "Unit of Measure", "cat": "Item Category Code", "size": "Normal Size", "area": "Surface Area Out", "sched": "Schedule",
+    "desc": "Description", "qty": "Quantity", "uom": "Unit of Measure", "cat": "Item Category Code", "size": "Normal Size", "area": "Surface Area Out", "sched": "Schedule", "idia": "Inch Dia",
 }
 
 
@@ -182,7 +183,7 @@ def convert(xlsx_path, master=None):
                 qtys.setdefault(project, {})[drawing + "|" + spool] = int(q)
             continue
         code = (g(COLS["aicd"]) or g(COLS["icd"])).strip()
-        line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"])), _clean(g(COLS["sched"]))]
+        line = [g(COLS["serial"]), code, _clean(desc), _num(g(COLS["qty"])), g(COLS["uom"]).strip(), g(COLS["cat"]).strip(), _clean(g(COLS["size"])), _num(g(COLS["area"])), _clean(g(COLS["sched"])), _num(g(COLS["idia"]))]
         if master is not None and code:
             m = master.get(code.upper())
             if m:

@@ -10,15 +10,9 @@ I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping
 Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`). Weeks = **Initial Week Planned** (person's rule; all 10,605 spools with a Week have it, 787 were moved). Live
 Week 35: 581 spools, 414 complete / 146 partial / 21 balance. Material Handover still filters by current Week. First load ~23 s (comparison ~37 s).
 
-**Open 1 - target:** every spool starting in week N must be handed over by the end of week N-1. NOT built. Asked the person whether handover dates are real: Week 34 has 313
-spools dated 18-11 (start 16-11), Week 35 has 345 dated 26-11 (start 23-11) - either truly late, or ticked later with the default date.
-Answer: B - production received earlier, ticked later, so recorded dates are not real. The tracker's own Material Handover dates are single-day too (Week 33: 549 on 09-11,
-Week 34: 322 on 17-11), so they do not give true dates. Proposed (awaiting yes): judge on-time from Week 37 (due 06-12); team sets "Date for my ticks"; optional date
-confirmation on save. Do not rewrite old entries without real dates from the person.
-**Open 2 - work front % of partial spools:** NOT built, proposal sent. BOM `Drawing Line List` column "Inch Dia" checked (25-11-26 file, copy deleted): the "Spool" heading
-row = total for all N copies; item rows = per piece split (items x N = heading for all 36 multi spools and 20,285 of 20,286 single ones), so NOT divided by N in build_bom
-(unlike area). Item total = tracker spool Inch Dia for 13,696 of 15,629 (88%). Needs build_bom.py COLS + FORMAT bump (PR first), then work front = Inch Dia of available
-items / Inch Dia of all items; "Inch Dia Cutting" column is empty. The "Spools / Inch Dia" switch is also still not built.
+**Target + work front (2026-11-28): BUILT on branch `cutting-target-workfront`, PR open, NOT merged.** Person: leave handover dates as recorded (production's batch ticking
+stays visible; no date check). Checked locally with stand-in data only. After merge: run the "Build BOM data" workflow (FORMAT 5 rebuild) so Inch Dia reaches the site, then
+check the live Dashboard and Material Handover (browser may hold old data for ~10 min). The "Spools / Inch Dia" switch is not built (not confirmed).
 Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without these changes.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)

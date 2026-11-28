@@ -141,7 +141,7 @@
         var code = a[1] || a[2] || 'NOCODE', n0 = (seen[code] = (seen[code] || 0) + 1);
         for (var c = 1; c <= N; c++) {
           var n = n0 + 1000 * (c - 1), ar = a[7] == null || a[7] === '' || isNaN(a[7]) ? '' : Number(a[7]) / N;
-          var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], area: ar, pipe: a[4] === 'MM', sk: sk, copy: c, copies: N };
+          var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], area: ar, idia: Number(a[9]) || 0, pipe: a[4] === 'MM', sk: sk, copy: c, copies: N };
           lines.push(l);
         }
       });
@@ -216,6 +216,13 @@
     return { cls: cls, text: text, sfx: handed ? (key === 'complete' ? ', spool handed over' : ', but spool handed over') : '', r: r, n: n, key: key };
   }
   var statusText = function (s) { return s.text + s.sfx; };
+  // Work front of a partial spool: the Inch Dia of the items that are available, out of the Inch Dia of all its items (null when the BOM gives none).
+  function frontOf(sp) {
+    if (statusOf(sp).key !== 'partial') return null;
+    var all = 0, got = 0;
+    sp.lines.forEach(function (l) { all += l.idia; if (isRecv(l)) got += l.idia; });
+    return all ? { got: Math.round(got * 10) / 10, all: Math.round(all * 10) / 10, pct: Math.min(99, Math.round(got / all * 100)) } : null;
+  }
 
   /* ---------- filters ---------- */
   var timer = null;
@@ -328,7 +335,7 @@
   function tri(c, n) { return (n && c === n ? ' checked' : '') + (c > 0 && c < n ? ' data-partial="1"' : ''); }
   function spoolArea(sp) { var t = 0, any = false; sp.lines.forEach(function (l) { if (l.area !== '' && !isNaN(l.area)) { t += Number(l.area); any = true; } }); return any ? t : ''; }
   function spoolRow(sp) {
-    var vl = visLines(sp), stt = statusOf(sp), isOpen = !!open[sp.key], k = esc(sp.key);
+    var vl = visLines(sp), stt = statusOf(sp), fr = frontOf(sp), isOpen = !!open[sp.key], k = esc(sp.key);
     var rc = 0, rn = 0, hc = 0;
     vl.forEach(function (l) { if (!l.pipe) { rn++; if (stateOf(l).recv) rc++; } if (stateOf(l).hand) hc++; });
     var pipesOnly = sp.lines.filter(function (l) { return !l.pipe; }).length === 0;
@@ -340,7 +347,7 @@
       '<td class="n">' + area3(spoolArea(sp)) + '</td>' +
       '<td class="cp-tick">' + (pipesOnly ? '<span class="cp-note" style="margin:0">pipes only</span>' : '<input type="checkbox" data-sr="' + k + '"' + tri(rc, rn) + (rn ? '' : ' disabled') + ' aria-label="Received: all items of this spool"> <small>' + rc + '/' + rn + '</small>') + '</td>' +
       '<td class="cp-tick"><input type="checkbox" data-sh="' + k + '"' + tri(hc, vl.length) + (vl.length ? '' : ' disabled') + ' aria-label="Handed over: all items of this spool"> <small>' + hc + '/' + vl.length + '</small></td>' +
-      '<td><span class="cp-badge cp-badge--' + stt.cls + '">' + esc(stt.text) + '</span>' + (stt.sfx ? '<span class="cp-sfx">' + esc(stt.sfx) + '</span>' : '') + ' <small>' + stt.r + '/' + stt.n + '</small></td></tr>';
+      '<td><span class="cp-badge cp-badge--' + stt.cls + '">' + esc(stt.text) + '</span>' + (stt.sfx ? '<span class="cp-sfx">' + esc(stt.sfx) + '</span>' : '') + ' <small>' + stt.r + '/' + stt.n + '</small>' + (fr ? '<span class="cp-front">Work front <b>' + fr.pct + '%</b> (' + fr.got + ' of ' + fr.all + ' Inch Dia)</span>' : '') + '</td></tr>';
     if (isOpen) out += detailRow(sp, vl);
     return out;
   }
@@ -543,11 +550,11 @@
   $('hReport').onclick = function () {
     if (!filtered.length) return toast(false, 'Nothing to download. Check the filters.');
     var items = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Item Code', 'Description', 'Size', 'Qty', 'UoM', 'Area m2', 'Received', 'Received Date', 'Handed Over', 'Handover Date', 'Handed Over To', 'Returned', 'Remark', 'Piece']];
-    var spl = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Items', 'Area m2', 'Received', 'Handed Over', 'Status']];
+    var spl = [['Project', 'Drawing No.', 'Spool No.', 'Week', 'Group', 'Items', 'Area m2', 'Received', 'Handed Over', 'Status', 'Work front % (Inch Dia)']];
     filtered.forEach(function (sp) {
       var stt = statusOf(sp), hc = 0;
       sp.lines.forEach(function (l) { if (stateOf(l).hand) hc++; });
-      spl.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), sp.lines.length, areaNum(spoolArea(sp)), stt.r, hc, statusText(stt)]);
+      spl.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), sp.lines.length, areaNum(spoolArea(sp)), stt.r, hc, statusText(stt), frontOf(sp) ? frontOf(sp).pct : '']);
       visLines(sp).forEach(function (l) {
         var st = stateOf(l);
         items.push([sp.project, sp.drawing, sp.spool, sp.week, groupOf(sp), l.code, l.desc, l.size, numOrText(l.qty), l.uom, areaNum(l.area), isRecv(l) ? (l.pipe ? (pipeAuto[l.k] ? 'Yes (cutting)' : 'Yes (handed over)') : 'Yes') : 'No', l.pipe ? '' : D.dmy(st.recvDate), st.hand ? 'Yes' : 'No', D.dmy(st.handDate), st.handTo, isReturned(l) ? retBy[l.k].reason : '', st.remark, pieceOf(l)]);
