@@ -2595,3 +2595,12 @@ Asked: ASSEMBLY BOM-196 | 479736-PM010818 is 2 NOS, so every item has 2 pieces. 
 ### 2026-11-20 - New checks, Quick check by drawing, handed-over pipes count as received (script v16)
 
 Plan page: `checkPlan` (script) compares a new plan with the BOM and the other plans - the same pipes planned again BLOCK the plan, spool / item code / length that do not fit the BOM only WARN. Handover page: an item can only be ticked handed over when received, a pipe when cut + bevelled (spools without any cutting plan exempt); the save is blocked for handed-not-received, pipe-not-cut, handover dated before receipt, wrong group; Quick check card (`getDrawing`): one drawing or spool without loading the whole project. Status fix: a pipe line counts as received when cut + bevelled OR handed over, so handed-over spools are Complete and leave the MNA list (live numbers: complete 647 -> 9,141 of the 9,187 spools planned up to Week 33). Files: `website/js/cutting-plan.js`, `website/js/material-handover.js`, `website/cutting-plan.html` (v20261120), `Documents/Cutting Plan/drive-inbox.gs` (v16, v15 backup `drive-inbox.v15.bak`). Also done in data (no code): handover update up to Week 34 with the user's new MNA list (see NEXT-SESSION.md).
+
+### 2026-11-28 - Dashboard section on the Cutting Station page
+
+New tab **Dashboard** (`website/js/mh-dashboard.js`) for management, read only, seen by everyone signed in: weekly scope, cut and beveled, received from store, handed to
+production, MNA status, material status by group, items not yet received by type (from the BOM description) and a week-by-week comparison, with Week and Group filters.
+It uses only existing Drive-script actions (no script change). Pipe matching moved into `CS.mhBuild` (material-handover.js) so both sections count the same way; checked on
+stand-in data: Week 35 gave identical spool / complete / partial / balance counts in both. The comparison starts at the week of 2026-11-09 (`TREND_FROM`), because ticks of
+older weeks are not all in this system. The last view is kept in the browser and shown at once while it refreshes (first load on live data takes roughly 20-30 s).
+Inch Dia on the dashboard is not built yet (to be agreed with the person).

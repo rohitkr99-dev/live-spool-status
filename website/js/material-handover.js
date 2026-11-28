@@ -124,11 +124,13 @@
 
   function reset() { quickSets = null; projects = []; edits = {}; base = {}; pipeAuto = {}; lineByKey = {}; spoolByKey = {}; spoolsList = []; grpEdit = {}; grpSaved = {}; }
 
-  function addProject(p, bom, stateRows, pieces, groupRows, tracker) {
-    var wk = {};
+  // The BOM spools of one project, with every pipe line matched to a planned piece. pieces: [drawing, spool, item code, length, cut and bevelled, ...].
+  // Returns { spools, hits: line key -> matched piece }. Also used by the Dashboard section, so both always count the same way.
+  function buildSpools(p, bom, pieces, tracker) {
+    var wk = {}, out = [], hits = {};
     tracker.forEach(function (t) { if (pn(t.project) === pn(p)) wk[nk(t.drawing) + '|' + nk(t.spool)] = t; });
     var pcs = {};
-    pieces.forEach(function (x) { (pcs[nk(x[0]) + '|' + nk(x[1])] = pcs[nk(x[0]) + '|' + nk(x[1])] || []).push({ code: nk(x[2]), len: x[3], done: !!x[4], used: false }); });
+    pieces.forEach(function (x) { (pcs[nk(x[0]) + '|' + nk(x[1])] = pcs[nk(x[0]) + '|' + nk(x[1])] || []).push({ code: nk(x[2]), len: x[3], done: !!x[4], raw: x, used: false }); });
     Object.keys(bom.spools).forEach(function (sk) {
       var parts = sk.split('|'), drawing = parts[0], spool = parts.slice(1).join('|'), t = wk[nk(drawing) + '|' + nk(spool)] || {}, seen = {}, lines = [];
       // A spool that is made N times (an assembly of 2 NOS; N is bom.qty of the spool) shows every item N times: "1 of 2", "2 of 2", each ticked on its
@@ -140,12 +142,12 @@
         for (var c = 1; c <= N; c++) {
           var n = n0 + 1000 * (c - 1), ar = a[7] == null || a[7] === '' || isNaN(a[7]) ? '' : Number(a[7]) / N;
           var l = { k: p + '|' + drawing + '|' + spool + '|' + code + '|' + n, code: code, n: n, serial: a[0], desc: a[2], qty: a[3], uom: a[4], cat: a[5], size: a[6], area: ar, pipe: a[4] === 'MM', sk: sk, copy: c, copies: N };
-          lines.push(l); lineByKey[l.k] = l;
+          lines.push(l);
         }
       });
       var sp = { key: p + '|' + sk, project: p, drawing: drawing, spool: spool, week: t.week || '', group: t.group || '', lines: lines };
       lines.forEach(function (l) { l.sp = sp; });
-      spoolsList.push(sp); spoolByKey[sp.key] = sp;
+      out.push(sp);
       // pipes: match each BOM pipe line to a planned piece and use its cut + bevel result. First every line takes a piece of its own item code AND
       // length (so a piece is never given to the wrong line); lines still without a piece then take any unused piece of the same item code.
       // Where several pieces fit, one that is already cut + bevelled is taken first (a spare uncut duplicate must not hide a finished piece).
@@ -163,8 +165,18 @@
       };
       pipeLines.forEach(function (l) { var h = take(l, true); if (h) got[l.k] = h; });
       pipeLines.forEach(function (l) { if (!got[l.k]) { var h = take(l, false); if (h) got[l.k] = h; } });
-      pipeLines.forEach(function (l) { if (got[l.k] && got[l.k].done) pipeAuto[l.k] = true; });
+      pipeLines.forEach(function (l) { if (got[l.k]) hits[l.k] = got[l.k]; });
     });
+    return { spools: out, hits: hits };
+  }
+  CS.mhBuild = buildSpools;
+  function addProject(p, bom, stateRows, pieces, groupRows, tracker) {
+    var built = buildSpools(p, bom, pieces, tracker);
+    built.spools.forEach(function (sp) {
+      sp.lines.forEach(function (l) { lineByKey[l.k] = l; });
+      spoolsList.push(sp); spoolByKey[sp.key] = sp;
+    });
+    Object.keys(built.hits).forEach(function (k) { if (built.hits[k].done) pipeAuto[k] = true; });
     stateRows.forEach(function (r) { base[r[0]] = rowOf(r); });
     groupRows.forEach(function (g) { grpSaved[p + '|' + g[0] + '|' + g[1]] = g[2]; });
   }
