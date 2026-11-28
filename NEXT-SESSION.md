@@ -6,11 +6,13 @@ Paste this to start the next chat cold.
 
 I'm continuing work on my `rohitkr99-dev/live-spool-status` repo (the DEE Piping Systems spool tracker). Read `CHANGELOG.md` first — it has the project's full history and reasoning. This file is just the handoff for exactly where I left off.
 
-## Cutting Station Dashboard (2026-11-28) - on branch `cutting-dashboard`, PR open, NOT merged yet
-New Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`), layout approved by the person from a preview; "seen by all". No script change. After merge: open it on the live
-site, time the first load, and compare Week 35 counts with the Material Handover section. **Next:** the person wants Inch Dia on it too - agree the plan first (proposal:
-a "Count by: Spools / Inch Dia" switch using the tracker's Inch Dia per spool for scope, handed over, MNA status, groups and the comparison; pipe and fitting bars stay in pieces).
-Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine both with and without the change.
+## Cutting Station Dashboard (2026-11-28) - LIVE (PR 24 merged, 58abdb9) and checked on live data
+Dashboard tab on cutting-plan.html (`js/mh-dashboard.js`), no script change. Live check, Week 35: 598 spools, 431 complete / 146 partial / 21 balance - identical to Material
+Handover. First load: figures after ~23 s, week-by-week chart after ~37 s (later opens show the saved view at once). If that is too slow, option: let the Drive script do the
+totals (needs a redeploy by the person). **Next:** Inch Dia - plan sent, NOT built, waiting for answers: "Count by: Spools / Inch Dia" switch plus an "Inch Dia progress" card
+(scope / material complete / cutting complete / handed / held by MNA, a spool counts fully or not at all; pipe and fitting bars stay in pieces); is all-or-nothing right, and is
+there a weekly Inch Dia target?
+Note: `python -m pytest` shows 35 failures + 1 collection error (test_production_classify) on this machine, with or without this change.
 
 ## Item Master fills BOM descriptions (2026-11-26) - MADE LIVE on the person's "make it live" (PR 23, f80e1c1; Deploy green; Build BOM run 45751224801: 15 projects, 8203 codes from the master, 56 not in it; NE_190-020_WEEK-36 checked live: "Seamless Pipe, SS, DN 350, SCH 30"; Preview opens the PDF tab). Open: the person has not yet looked at the preview PDF; replace the Item Master in Drive BOM/ when a newer one comes (name Item Master DD-MM-YY)
 `scripts/build_bom.py` takes Description / Category / Normal Size / Schedule of every BOM item code from the newest `Item Master DD-MM-YY.xlsb` in Drive BOM/ (already uploaded there); `cutting-plan.js` (v20261126) re-looks up a saved plan's short pipe description when the plan is opened.  Also there: a "Preview plan" button next to the downloads (opens the same PDF in a new tab). After going live: push to main, run the Build BOM data workflow, check NE_190-020_WEEK-36 shows DN 350, SCH 30. Cause: the 25-11 xlsb Drawing Line List has no Normal Size / Schedule columns.
