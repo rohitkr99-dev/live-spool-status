@@ -25,7 +25,7 @@
     if (typeof SPOOL_STATUS_CONFIG === 'undefined') return Promise.reject(new Error('The tracker data is not available on this page.'));
     spoolsPromise = fetch(SPOOL_STATUS_CONFIG.publishedDataUrl).then(function (r) { return r.json(); }).then(function (d) {
       return (d.master_spools || []).map(function (s) {
-        return { project: s['Project Code'], projectName: s['Project Name'], drawing: s['Drawing No'], spool: s['Spool No'], week: s.Week || '', group: s.Group || '', plannedStart: String(s['Planned Start'] || '').slice(0, 10), oldHandover: s['Material Handover'] || '' };
+        return { project: s['Project Code'], projectName: s['Project Name'], drawing: s['Drawing No'], spool: s['Spool No'], week: s.Week || '', initialWeek: s['Initial Week Planned'] || '', group: s.Group || '', plannedStart: String(s['Planned Start'] || '').slice(0, 10), oldHandover: s['Material Handover'] || '' };
       });
     });
     spoolsPromise.catch(function () { spoolsPromise = null; });

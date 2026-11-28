@@ -2604,3 +2604,9 @@ It uses only existing Drive-script actions (no script change). Pipe matching mov
 stand-in data: Week 35 gave identical spool / complete / partial / balance counts in both. The comparison starts at the week of 2026-11-09 (`TREND_FROM`), because ticks of
 older weeks are not all in this system. The last view is kept in the browser and shown at once while it refreshes (first load on live data takes roughly 20-30 s).
 Inch Dia on the dashboard is not built yet (to be agreed with the person).
+
+### 2026-11-28 - Dashboard weeks are the Initial Week Planned
+
+The person's rule: use the Weekly Production file's "Initial Week Planned" column for the Cutting Station Dashboard, because "Week" is changed when material is late or
+the customer puts a hold. `master_spools` now carries that column (`summary.py`), and `mh-dashboard.js` groups by it. The Material Handover section still filters by the
+current Week, so its counts for a week no longer have to equal the Dashboard's.
