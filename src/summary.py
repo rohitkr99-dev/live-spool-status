@@ -89,6 +89,7 @@ from constants import (
     LAST_ACTIVITY_DATE,
     LINE_HISTORY_STAGE,
     MATERIAL_HOLD_STATUS,
+    INITIAL_WEEK_PLANNED,
     NEXT_STAGE,
     PACKING,
     PDQC,
@@ -363,6 +364,8 @@ class SummaryEngine:
             "Material Handover",
             "Line History Stage", MATERIAL_HOLD_STATUS,
             TOTAL_AGE_EXCL_HOLD, STAGE_AGE_EXCL_HOLD,
+            # the week a spool was first planned for; "Week" moves on when material or a customer hold delays it
+            INITIAL_WEEK_PLANNED,
         ):
             if optional_field in dataframe.columns:
                 columns.append(optional_field)

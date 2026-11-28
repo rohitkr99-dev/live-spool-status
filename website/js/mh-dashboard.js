@@ -10,7 +10,7 @@
   var $ = CS.el, esc = CS.esc, api = CS.api;
 
   var TREND_FROM = '2026-11-09';   // first week whose cutting and handover ticks are all kept in this system (older weeks would look unfinished)
-  var TREND_MAX = 6, POOL = 4, STALE_MS = 5 * 60 * 1000, CACHE_KEY = 'mhDashboardV1';
+  var TREND_MAX = 6, POOL = 4, STALE_MS = 5 * 60 * 1000, CACHE_KEY = 'mhDashboardV2';
 
   var nk = function (s) { return String(s == null ? '' : s).trim().toLowerCase(); };
   var pn = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ''); };
@@ -50,17 +50,20 @@
     return baseP;
   }
 
-  // every week that has a project with a BOM, newest first; a week's date is the Planned Start most of its spools have
+  // The weeks are the "Initial Week Planned" of the Weekly Production file: a spool that is moved later (material, customer hold) stays in its first week.
+  // Every such week that has a project with a BOM, newest first. A week's date is the Planned Start most spools of that week have; spools that were moved
+  // carry the date of their new week, so only spools still in the week are asked (all of them if every one has moved).
   function weekList(spools, projects) {
-    var w = {};
+    var still = {}, any = {}, names = {};
+    var add = function (m, week, date) { var x = m[week] = m[week] || {}; if (date) x[date] = (x[date] || 0) + 1; };
     spools.forEach(function (s) {
-      if (!s.week || !projects[pn(s.project)]) return;
-      var x = w[s.week] = w[s.week] || {};
-      x[s.plannedStart] = (x[s.plannedStart] || 0) + 1;
+      if (s.week) add(still, s.week, s.plannedStart);
+      if (!s.initialWeek || !projects[pn(s.project)]) return;
+      names[s.initialWeek] = 1; add(any, s.initialWeek, s.plannedStart);
     });
-    return Object.keys(w).map(function (name) {
-      return { name: name, start: Object.keys(w[name]).sort(function (a, b) { return w[name][b] - w[name][a]; })[0] };
-    }).sort(function (a, b) { return String(b.start).localeCompare(String(a.start)); });
+    var most = function (x) { return x ? Object.keys(x).sort(function (a, b) { return x[b] - x[a]; })[0] : ''; };
+    return Object.keys(names).map(function (name) { return { name: name, start: most(still[name]) || most(any[name]) || '' }; })
+      .sort(function (a, b) { return b.start.localeCompare(a.start); });
   }
 
   // one small record per BOM spool of a project (the BOM itself is not kept)
@@ -113,7 +116,7 @@
     return Promise.all(all).then(function () { return out; });
   }
 
-  var weekSpools = function (base, week) { return base.spools.filter(function (s) { return s.week === week; }); };
+  var weekSpools = function (base, week) { return base.spools.filter(function (s) { return s.initialWeek === week; }); };
   var codesOf = function (base, list) { var c = {}; list.forEach(function (s) { var m = base.projects[pn(s.project)]; if (m) c[m] = 1; }); return Object.keys(c).sort(); };
 
   // the week's spools (the scope) joined with their BOM records
@@ -233,7 +236,7 @@
       return { name: w.name, bev: pct(x.pBev, x.pReq), hand: pct(x.handed, x.scope) };
     });
     html += card('Week by week', 'how complete each week is today, from ' + dmy(TREND_FROM), trendSvg(points));
-    html += '<p class="cp-note db-foot">Counted from what is ticked in this system. A pipe counts as cut and beveled when both are ticked, or when it has already been handed over. A spool counts as handed to production when everything received for it has been handed over.</p>';
+    html += '<p class="cp-note db-foot">A week holds the spools whose Initial Week Planned it is, even if they were moved later. Counted from what is ticked in this system. A pipe counts as cut and beveled when both are ticked, or when it has already been handed over. A spool counts as handed to production when everything received for it has been handed over.</p>';
 
     var body = $('dbBody');
     body.innerHTML = html;
@@ -264,7 +267,7 @@
     return loadBase().then(function (b) {
       if (mine !== run) return null;
       base = b; weeks = b.weeks;
-      if (!weeks.length) throw new Error('No week with a BOM was found.');
+      if (!weeks.length) throw new Error('No spool has an Initial Week Planned yet. It arrives with the next data sync.');
       if (!weeks.some(function (w) { return w.name === week; })) {   // default: the week that has started most recently
         var today = todayIso();
         week = (weeks.filter(function (w) { return w.start && w.start <= today; })[0] || weeks[0]).name;

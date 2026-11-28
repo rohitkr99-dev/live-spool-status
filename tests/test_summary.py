@@ -679,3 +679,9 @@ def test_generate_all_produces_every_output(engine, sample_dataframe):
     ]:
         assert key in outputs
         json.dumps(outputs[key])  # every output must be JSON-safe
+
+
+def test_master_spools_carry_the_initial_week_planned(engine, sample_dataframe):
+    enriched = engine.enrich(sample_dataframe)
+    enriched["Initial Week Planned"] = "Week 10"
+    assert engine.generate_master_spools(enriched)[0]["Initial Week Planned"] == "Week 10"
