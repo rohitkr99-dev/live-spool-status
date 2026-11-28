@@ -158,6 +158,9 @@
 .db-kpi--scope { --kpi-glow: var(--ember); } .db-kpi--pipe { --kpi-glow: var(--db-pipe); } .db-kpi--fit { --kpi-glow: var(--db-fit); } .db-kpi--hand { --kpi-glow: var(--db-hand); }
 .db-meter { display: block; height: 7px; margin-top: 6px; border-radius: 99px; background: color-mix(in srgb, var(--frost) 8%, transparent); overflow: hidden; }
 .db-meter i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--kpi-glow); transition: width .9s var(--ease-out); }
+.db-kpi__id { display: block; order: 99; margin-top: 10px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent); font-size: 13.5px; }
+.db-kpi__id b { margin-right: 4px; font: 800 28px var(--font-display); font-variant-numeric: tabular-nums; }
+.db-kpi--scope .db-kpi__id { color: #fff; }
 
 .db-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
 .db-two > .cp-card { margin-bottom: 0; }

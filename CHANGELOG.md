@@ -2617,3 +2617,9 @@ Person's rule: every spool starting in week N (Initial Week Planned) is to be ha
 not handed over, spools and Inch Dia) and a third line on the week-by-week chart. Dates are used as recorded: production ticks in batches and the person said to leave that
 visible, no date check or correction. Work front = Inch Dia of available items / Inch Dia of all items of a partial spool: Dashboard card and per spool in Material Handover
 (+ Excel column). `build_bom.py` now carries the BOM "Inch Dia" per item (FORMAT 5).
+
+### 2026-11-28 - Inch Dia on the Dashboard's top cards
+
+Each of the four top cards has an Inch Dia line (from the BOM). A spool's Inch Dia counts only when the whole spool is done for that card: all pipe cut and beveled, all
+fittings received (a spool with none counts), handed over as the spool count does. Approved by the person from a preview with live Week 35 figures
+(3,866 planned / 3,745 cut / 2,101 received / 1,770 handed over).

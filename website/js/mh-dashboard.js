@@ -137,7 +137,7 @@
   // start: the week's first day. A spool meets the target when it was handed over before that day (by the end of the week before).
   function totals(rows, start) {
     var t = { scope: rows.length, found: 0, handed: 0, complete: 0, partial: 0, none: 0, pReq: 0, pPlan: 0, pCut: 0, pBev: 0, fReq: 0, fRecv: 0, fHand: 0, miss: {}, groups: {}, projects: {},
-      onTime: 0, id: 0, idHanded: 0, idOnTime: 0, front: { spools: 0, id: 0, got: 0, high: 0, mid: 0, low: 0 } };
+      onTime: 0, id: 0, idCut: 0, idRecv: 0, idHanded: 0, idOnTime: 0, front: { spools: 0, id: 0, got: 0, high: 0, mid: 0, low: 0 } };
     rows.forEach(function (row) {
       t.projects[pn(row.project)] = 1;
       var o = row.o;
@@ -146,6 +146,8 @@
       var status = o.r === o.n ? 'complete' : (o.r === 0 ? 'none' : 'partial');
       t[status]++;
       t.id += o.id;
+      if (o.pBev === o.pReq) t.idCut += o.id;     // a spool's Inch Dia counts only when the whole spool is done for that card
+      if (o.fRecv === o.fReq) t.idRecv += o.id;
       if (o.h > 0 && o.wait === 0) {
         t.handed++; t.idHanded += o.id;
         if (!o.nodate && o.hd && start && o.hd < start) { t.onTime++; t.idOnTime += o.id; }
@@ -164,9 +166,9 @@
   }
 
   /* ---------- drawing ---------- */
-  function kpi(cls, label, value, sub, meter) {
+  function kpi(cls, label, value, sub, meter, idLine) {
     return '<div class="kpi-card db-kpi ' + cls + '"><span class="kpi-card__label">' + label + '</span><span class="kpi-card__value">' + value + '</span><span class="kpi-card__sub">' + sub + '</span>' +
-      (meter == null ? '' : '<span class="db-meter"><i data-w="' + meter + '"></i></span>') + '</div>';
+      (meter == null ? '' : '<span class="db-meter"><i data-w="' + meter + '"></i></span>') + (idLine ? '<span class="db-kpi__id">' + idLine + '</span>' : '') + '</div>';
   }
   function card(title, hint, body, cls) {
     return '<div class="cp-card db-card ' + (cls || '') + '"><div class="cp-card__head"><h3>' + title + '</h3><span class="cp-hint">' + (hint || '') + '</span></div>' + body + '</div>';
@@ -246,11 +248,12 @@
     var startOf = {}; view.weeks.forEach(function (w) { startOf[w.name] = w.start; });
     var t = totals(g ? view.rows.filter(function (r) { return r.group === g; }) : view.rows, startOf[view.week]), nProj = Object.keys(t.projects).length;
 
+    var idLine = function (v, share) { return t.id ? '<b>' + inch(v) + '</b> Inch Dia' + (share ? ' &middot; ' + pct(v, t.id) + '%' : ' planned') : ''; };
     var html = '<section class="kpi-strip db-kpis" aria-label="Week summary">' +
-      kpi('db-kpi--scope', 'Weekly scope', fmt(t.scope), 'spools in ' + nProj + ' project' + (nProj === 1 ? '' : 's')) +
-      kpi('db-kpi--pipe', 'Cut and beveled', pct(t.pBev, t.pReq) + '%', fmt(t.pBev) + ' of ' + fmt(t.pReq) + ' pipe pieces', pct(t.pBev, t.pReq)) +
-      kpi('db-kpi--fit', 'Received from store', pct(t.fRecv, t.fReq) + '%', fmt(t.fRecv) + ' of ' + fmt(t.fReq) + ' fittings and items', pct(t.fRecv, t.fReq)) +
-      kpi('db-kpi--hand', 'Handed to production', pct(t.handed, t.scope) + '%', fmt(t.handed) + ' of ' + fmt(t.scope) + ' spools', pct(t.handed, t.scope)) + '</section>';
+      kpi('db-kpi--scope', 'Weekly scope', fmt(t.scope), 'spools in ' + nProj + ' project' + (nProj === 1 ? '' : 's'), null, idLine(t.id)) +
+      kpi('db-kpi--pipe', 'Cut and beveled', pct(t.pBev, t.pReq) + '%', fmt(t.pBev) + ' of ' + fmt(t.pReq) + ' pipe pieces', pct(t.pBev, t.pReq), idLine(t.idCut, true)) +
+      kpi('db-kpi--fit', 'Received from store', pct(t.fRecv, t.fReq) + '%', fmt(t.fRecv) + ' of ' + fmt(t.fReq) + ' fittings and items', pct(t.fRecv, t.fReq), idLine(t.idRecv, true)) +
+      kpi('db-kpi--hand', 'Handed to production', pct(t.handed, t.scope) + '%', fmt(t.handed) + ' of ' + fmt(t.scope) + ' spools', pct(t.handed, t.scope), idLine(t.idHanded, true)) + '</section>';
 
     html += targetCard(t, startOf[view.week]);
 
@@ -283,7 +286,7 @@
       return { name: w.name, bev: pct(x.pBev, x.pReq), hand: pct(x.handed, x.scope), ontime: pct(x.onTime, x.scope) };
     });
     html += card('Week by week', 'how complete each week is today, from ' + dmy(TREND_FROM), trendSvg(points));
-    html += '<p class="cp-note db-foot">A week holds the spools whose Initial Week Planned it is, even if they were moved later. Counted from what is ticked in this system. A pipe counts as cut and beveled when both are ticked, or when it has already been handed over. A spool counts as handed to production when everything received for it has been handed over.</p>';
+    html += '<p class="cp-note db-foot">On the top cards a spool\'s Inch Dia (from the BOM) counts only when the whole spool is done for that card. A week holds the spools whose Initial Week Planned it is, even if they were moved later. Counted from what is ticked in this system. A pipe counts as cut and beveled when both are ticked, or when it has already been handed over. A spool counts as handed to production when everything received for it has been handed over.</p>';
 
     var body = $('dbBody');
     body.innerHTML = html;
